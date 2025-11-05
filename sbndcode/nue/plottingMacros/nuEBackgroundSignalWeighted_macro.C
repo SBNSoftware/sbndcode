@@ -101,222 +101,127 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
-void styleDrawSignalBNBAll(){
-}
-
-void styleDrawSignalAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+void styleDrawAll(histGroup_struct hists,
+                  double ymin, double ymax, double xmin, double xmax,
+                  const char* filename, const std::string& legendLocation,
+                  int* drawLine = nullptr, int* linePos = nullptr,
+                  bool includeSignal = true, bool includeBNB = true, bool includeCosmic = true)
+{
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
 
-    hists.currentSignal->SetLineWidth(2);
-    hists.currentSignal->SetLineColor(kBlue+1);
-    hists.ubooneSignal->SetLineWidth(2);
-    hists.ubooneSignal->SetLineColor(kBlue-7);
-    hists.nuESignal->SetLineWidth(2);
-    hists.nuESignal->SetLineColor(kAzure+5);
+    //--- Style setup
+    hists.currentCosmic->SetLineWidth(2);  hists.currentCosmic->SetLineColor(kPink+9);
+    hists.ubooneCosmic->SetLineWidth(2);   hists.ubooneCosmic->SetLineColor(kPink+1);
+    hists.nuECosmic->SetLineWidth(2);      hists.nuECosmic->SetLineColor(kPink-2);
 
+    hists.currentSignal->SetLineWidth(2);  hists.currentSignal->SetLineColor(kBlue+1);
+    hists.ubooneSignal->SetLineWidth(2);   hists.ubooneSignal->SetLineColor(kBlue-7);
+    hists.nuESignal->SetLineWidth(2);      hists.nuESignal->SetLineColor(kAzure+5);
+
+    hists.currentSignalFuzzy->SetLineWidth(2);  hists.currentSignalFuzzy->SetLineColor(kGreen+3);
+    hists.ubooneSignalFuzzy->SetLineWidth(2);   hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
+    hists.nuESignalFuzzy->SetLineWidth(2);      hists.nuESignalFuzzy->SetLineColor(kGreen-7);
+    
+    hists.currentBNB->SetLineWidth(2);  hists.currentBNB->SetLineColor(kOrange+7);
+    hists.ubooneBNB->SetLineWidth(2);   hists.ubooneBNB->SetLineColor(kOrange+6);
+    hists.nuEBNB->SetLineWidth(2);      hists.nuEBNB->SetLineColor(kOrange-5);
+    
+    hists.currentBNBFuzzy->SetLineWidth(2);  hists.currentBNBFuzzy->SetLineColor(kViolet+1);
+    hists.ubooneBNBFuzzy->SetLineWidth(2);   hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
+    hists.nuEBNBFuzzy->SetLineWidth(2);      hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
+
+    //--- Axis ranges
     if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum()});
-    double yminVal;
+    //--- Dynamic Y range
+    double maxYValue = std::max({
+        hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum(),
+        hists.currentCosmic->GetMaximum(), hists.ubooneCosmic->GetMaximum(), hists.nuECosmic->GetMaximum(),
+        hists.currentSignalFuzzy->GetMaximum(), hists.ubooneSignalFuzzy->GetMaximum(), hists.nuESignalFuzzy->GetMaximum(),
+        hists.currentBNB->GetMaximum(), hists.ubooneBNB->GetMaximum(), hists.nuEBNB->GetMaximum(),
+        hists.currentBNBFuzzy->GetMaximum(), hists.ubooneBNBFuzzy->GetMaximum(), hists.nuEBNBFuzzy->GetMaximum()
+    });
+    double yminVal = 0;
     if((ymin == 999) && (ymax == 999)){
-        yminVal = 0;
         double ymaxVal = (maxYValue * 1.1);
         hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
 
-    hists.currentSignal->Draw("hist");
-    hists.ubooneSignal->Draw("histsame");
-    hists.nuESignal->Draw("histsame");
+    //--- Drawing block
+    bool first = true;
+    auto draw = [&](TH1* hist){
+        if (!hist) return;
+        hist->Draw(first ? "hist" : "histsame");
+        first = false;
+    };
 
+    if (includeSignal) {
+        draw(hists.currentSignal);
+        draw(hists.ubooneSignal);
+        draw(hists.nuESignal);
+        draw(hists.currentSignalFuzzy);
+        draw(hists.ubooneSignalFuzzy);
+        draw(hists.nuESignalFuzzy);
+    }
+    if (includeBNB) {
+        draw(hists.currentBNB);
+        draw(hists.ubooneBNB);
+        draw(hists.nuEBNB);
+        draw(hists.currentBNBFuzzy);
+        draw(hists.ubooneBNBFuzzy);
+        draw(hists.nuEBNBFuzzy);
+    }
+    if (includeCosmic) {
+        draw(hists.currentCosmic);
+        draw(hists.ubooneCosmic);
+        draw(hists.nuECosmic);
+    }
+
+    //--- Axes and stats
     hists.currentSignal->SetStats(0);
     hists.currentSignal->GetXaxis()->SetTickLength(0.04);
     hists.currentSignal->GetYaxis()->SetTickLength(0.03);
     hists.currentSignal->GetXaxis()->SetTickSize(0.02);
     hists.currentSignal->GetYaxis()->SetTickSize(0.02);
 
-    double Lxmin = 0;
-    double Lxmax = 0;
-    double Lymin = 0;
-    double Lymax = 0;
-
-    if(legendLocation == "topRight"){
-        Lxmin = 0.48;
-        Lymax = 0.863;
-        Lxmax = 0.87;
-        Lymin = 0.640;
-    } else if(legendLocation == "topLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.863;
-        Lxmax = 0.52;
-        Lymin = 0.640;
-    } else if(legendLocation == "bottomRight"){
-        Lxmin = 0.48;
-        Lymax = 0.36;
-        Lxmax = 0.87;
-        Lymin = 0.137;
-    } else if(legendLocation == "bottomLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.36;
-        Lxmax = 0.52;
-        Lymin = 0.137;
-    }
+    //--- Legend positioning
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.67; Lymax=0.863; Lxmax=0.87; Lymin=0.640; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.33; Lymin=0.640; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.67; Lymax=0.36; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.36; Lxmax=0.33; Lymin=0.137; }
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-
-    legend->AddEntry(hists.currentSignal, "Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneSignal, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuESignal, "Pandora Deep Learning: SBND Nu+E Tune", "f");
-    legend->SetTextSize(0.0225);
-    legend->SetMargin(0.12);
-    legend->Draw();
-    
-    if(drawLine){
-        TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
-        line->SetLineColor(kGray+2);
-        line->SetLineStyle(2);
-        line->SetLineWidth(2);
-        line->Draw("same");
-
-        TLatex* latex = nullptr;    
-        // Labels line on the left
-        double ymaxValLine = maxYValue*0.95;
-        if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, ymaxValLine, "2m_{e}");
-        } else{
-            latex = new TLatex(1.022 + 0.2, ymaxValLine, "2m_{e}");
-        }
-
-        latex->SetTextSize(0.035); 
-        latex->SetTextAlign(11);
-        latex->Draw("same");
+    if (includeSignal) {
+        legend->AddEntry(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "f");
+        legend->AddEntry(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    }
+    if (includeBNB) {
+        legend->AddEntry(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "f");
+        legend->AddEntry(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    }
+    if (includeCosmic) {
+        legend->AddEntry(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "f");
     }
 
-    hists.canvas->SaveAs(filename);
-}
-
-void styleDrawAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-
-    hists.currentCosmic->SetLineWidth(2);
-    hists.currentCosmic->SetLineColor(kPink+9);
-    hists.ubooneCosmic->SetLineWidth(2);
-    hists.ubooneCosmic->SetLineColor(kPink+1);
-    hists.nuECosmic->SetLineWidth(2);
-    hists.nuECosmic->SetLineColor(kPink-2);
-
-    hists.currentSignal->SetLineWidth(2);
-    hists.currentSignal->SetLineColor(kBlue+1);
-    hists.ubooneSignal->SetLineWidth(2);
-    hists.ubooneSignal->SetLineColor(kBlue-7);
-    hists.nuESignal->SetLineWidth(2);
-    hists.nuESignal->SetLineColor(kAzure+5);
-
-    hists.currentSignalFuzzy->SetLineWidth(2);
-    hists.currentSignalFuzzy->SetLineColor(kGreen+3);
-    hists.ubooneSignalFuzzy->SetLineWidth(2);
-    hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
-    hists.nuESignalFuzzy->SetLineWidth(2);
-    hists.nuESignalFuzzy->SetLineColor(kGreen-7);
-    
-    hists.currentBNB->SetLineWidth(2);
-    hists.currentBNB->SetLineColor(kOrange+7);
-    hists.ubooneBNB->SetLineWidth(2);
-    hists.ubooneBNB->SetLineColor(kOrange+6);
-    hists.nuEBNB->SetLineWidth(2);
-    hists.nuEBNB->SetLineColor(kOrange-5);
-    
-    hists.currentBNBFuzzy->SetLineWidth(2);
-    hists.currentBNBFuzzy->SetLineColor(kViolet+1);
-    hists.ubooneBNBFuzzy->SetLineWidth(2);
-    hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
-    hists.nuEBNBFuzzy->SetLineWidth(2);
-    hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
-
-    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
-    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
-
-    double maxYValue = std::max({hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum(), hists.currentCosmic->GetMaximum(), hists.ubooneCosmic->GetMaximum(), hists.nuECosmic->GetMaximum(), hists.currentSignalFuzzy->GetMaximum(), hists.ubooneSignalFuzzy->GetMaximum(), hists.nuESignalFuzzy->GetMaximum(), hists.currentBNB->GetMaximum(), hists.ubooneBNB->GetMaximum(), hists.nuEBNB->GetMaximum(), hists.currentBNBFuzzy->GetMaximum(), hists.ubooneBNBFuzzy->GetMaximum(), hists.nuEBNBFuzzy->GetMaximum()});
-    double yminVal;
-    if((ymin == 999) && (ymax == 999)){
-        yminVal = 0;
-        double ymaxVal = (maxYValue * 1.1);
-        hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-    }
-
-    hists.currentSignal->Draw("hist");
-    hists.ubooneSignal->Draw("histsame");
-    hists.nuESignal->Draw("histsame");
-    hists.currentCosmic->Draw("histsame");
-    hists.ubooneCosmic->Draw("histsame");
-    hists.nuECosmic->Draw("histsame");
-    hists.currentSignalFuzzy->Draw("histsame");
-    hists.ubooneSignalFuzzy->Draw("histsame");
-    hists.nuESignalFuzzy->Draw("histsame");
-    hists.currentBNB->Draw("histsame");
-    hists.ubooneBNB->Draw("histsame");
-    hists.nuEBNB->Draw("histsame");
-    hists.currentBNBFuzzy->Draw("histsame");
-    hists.ubooneBNBFuzzy->Draw("histsame");
-    hists.nuEBNBFuzzy->Draw("histsame");
-
-    hists.currentSignal->SetStats(0);
-    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
-    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
-    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
-    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
-
-    double Lxmin = 0;
-    double Lxmax = 0;
-    double Lymin = 0;
-    double Lymax = 0;
-
-    if(legendLocation == "topRight"){
-        Lxmin = 0.67;
-        Lymax = 0.863;
-        Lxmax = 0.87;
-        Lymin = 0.640;
-    } else if(legendLocation == "topLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.863;
-        Lxmax = 0.33;
-        Lymin = 0.640;
-    } else if(legendLocation == "bottomRight"){
-        Lxmin = 0.67;
-        Lymax = 0.36;
-        Lxmax = 0.87;
-        Lymin = 0.137;
-    } else if(legendLocation == "bottomLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.36;
-        Lxmax = 0.33;
-        Lymin = 0.137;
-    }
-
-    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    legend->AddEntry(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    legend->AddEntry(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    legend->AddEntry(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    legend->AddEntry(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    legend->AddEntry(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "f");
     legend->SetTextSize(0.01);
     legend->SetMargin(0.12);
     legend->Draw();
     
+    //--- Optional vertical line
     if(drawLine){
         TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
         line->SetLineColor(kGray+2);
@@ -324,21 +229,73 @@ void styleDrawAll(histGroup_struct hists, double ymin, double ymax, double xmin,
         line->SetLineWidth(2);
         line->Draw("same");
 
-        TLatex* latex = nullptr;    
-        // Labels line on the left
         double ymaxValLine = maxYValue*0.95;
-        if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, ymaxValLine, "2m_{e}");
-        } else{
-            latex = new TLatex(1.022 + 0.2, ymaxValLine, "2m_{e}");
-        }
-
+        TLatex* latex = new TLatex((*linePos == 0 ? 1.022 - 0.2 : 1.022 + 0.2), ymaxValLine, "2m_{e}");
         latex->SetTextSize(0.035); 
         latex->SetTextAlign(11);
         latex->Draw("same");
     }
 
     hists.canvas->SaveAs(filename);
+}
+
+void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiency_way = 0.0){
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    TH1F* currentSignalEff = (TH1F*) hists.currentSignal->Clone("eff hist");
+    currentSignalEff->Reset();
+    currentSignalEff->GetYaxis()->SetTitle("Efficiency");
+    currentSignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    TH1F* currentSignalFuzzyEff = (TH1F*) hists.currentSignalFuzzy->Clone("eff hist");
+    currentSignalFuzzyEff->Reset();
+    currentSignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
+    currentSignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+    TH1F* ubooneSignalEff = (TH1F*) hists.ubooneSignal->Clone("eff hist");
+    ubooneSignalEff->Reset();
+    ubooneSignalEff->GetYaxis()->SetTitle("Efficiency");
+    ubooneSignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    TH1F* ubooneSignalFuzzyEff = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff hist");
+    ubooneSignalFuzzyEff->Reset();
+    ubooneSignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
+    ubooneSignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    
+    TH1F* nuESignalEff = (TH1F*) hists.nuESignal->Clone("eff hist");
+    nuESignalEff->Reset();
+    nuESignalEff->GetYaxis()->SetTitle("Efficiency");
+    nuESignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    TH1F* nuESignalFuzzyEff = (TH1F*) hists.nuESignalFuzzy->Clone("eff hist");
+    nuESignalFuzzyEff->Reset();
+    nuESignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
+    nuESignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+
+    int numBins = hists.currentSignal->GetNbinsX();
+
+    double currentSignalSum = 0.0;
+    double currentSignalTotal = 0.0;
+    double currentSignalFuzzySum = 0.0;
+    double currentSignalFuzzyTotal = 0.0;
+    double ubooneSignalSum = 0.0;
+    double ubooneSignalTotal = 0.0;
+    double ubooneSignalFuzzySum = 0.0;
+    double ubooneSignalFuzzyTotal = 0.0;
+    double nuESignalSum = 0.0;
+    double nuESignalTotal = 0.0;
+    double nuESignalFuzzySum = 0.0;
+    double nuESignalFuzzyTotal = 0.0;
+
+    // efficiencyWay == -1 includes everything to the right of the cut
+    for(efficiencyWay == -1){
+        for(int i = 0; i <= numBins+1; ++i){
+            currentSignalTotal += hists.currentSignal->GetBinContent(i);
+            std::cout << "Bin " << i << ": Entries = " << hists.currentSignal->GetBinContent(i) << std::endl;
+           
+        }
+        std::cout << "Total = " << currentSignalTotal << std::endl;
+    }
 }
 
 void nuEBackgroundSignalWeighted_macro(){
@@ -1195,7 +1152,7 @@ void nuEBackgroundSignalWeighted_macro(){
     int left = 0;
     int right = 1;
 
-    styleDrawSignalAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right);
+    styleDrawAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right, true, false, false);
     
     styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
@@ -1211,12 +1168,12 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 
-    styleDrawSignalAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-
-    
+    styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+    styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+    styleDrawAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+    styleDrawAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+    styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+    styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
+   
+    efficiency(trueETheta2); 
 }
