@@ -239,7 +239,7 @@ void styleDrawAll(histGroup_struct hists,
     hists.canvas->SaveAs(filename);
 }
 
-void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiency_way = 0.0){
+void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -288,7 +288,7 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     double nuESignalFuzzyTotal = 0.0;
 
     // efficiencyWay == -1 includes everything to the right of the cut
-    for(efficiencyWay == -1){
+    if(efficiencyWay == -1){
         for(int i = 0; i <= numBins+1; ++i){
             currentSignalTotal += hists.currentSignal->GetBinContent(i);
             std::cout << "Bin " << i << ": Entries = " << hists.currentSignal->GetBinContent(i) << std::endl;
@@ -1175,5 +1175,5 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
     styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
    
-    efficiency(trueETheta2); 
+    efficiency(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_eff.pdf").c_str(), "bottomRight", nullptr, &right, -1); 
 }
