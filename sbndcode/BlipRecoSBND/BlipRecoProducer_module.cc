@@ -88,6 +88,7 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   produces< std::vector<  recob::SpacePoint > >();
   produces< art::Assns <  recob::Hit, recob::SpacePoint> >();
   produces< std::vector< blip::Blip > >(); 
+  produces< std::vector<blip::HitClust> >();
   
   //produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
   produces< art::Assns <  blip::Blip,         recob::Hit> >();
@@ -124,6 +125,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   std::unique_ptr< art::Assns <blip::Blip, recob::Hit> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
   std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
+  std::unique_ptr< std::vector< blip::HitClust> > collection_hitclust(std::make_unique<std::vector<blip::HitClust>>());
   
 
   art::PtrMaker<blip::Blip> makeBlipPtr(evt);
@@ -180,6 +182,12 @@ void BlipRecoProducer::produce(art::Event & evt)
     }
   
   }
+  //adding all the collection hit clusters
+  for(int iclust=0; iclust<int(fBlipAlg->hitclust.size()); iclust++)
+  {
+    if( (fBlipAlg->hitclust)[iclust].Plane != fBlipAlg->fCaloPlane) continue;
+    collection_hitclust->push_back((fBlipAlg->hitclust)[iclust]);
+  }
     
   //===========================================
   // Put them on the event
@@ -189,6 +197,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   evt.put(std::move(blip_v));
   //evt.put(std::move(assn_blip_sps_v));
   evt.put(std::move(assn_blip_hit_v));
+  evt.put(std::move(collection_hitclust));
 }//END EVENT LOOP
 
 DEFINE_ART_MODULE(BlipRecoProducer)

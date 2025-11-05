@@ -118,6 +118,7 @@ namespace blip {
     float   kDriftVelocity;
     float   kTickPeriod;
     int     kNumChannels;
+    int     fCaloPlane;
 
    private:
     
@@ -173,7 +174,7 @@ namespace blip {
     bool                fKeepAllClusts[kNplanes];
 
     // --- Calorimetry configs ---
-    int                 fCaloPlane;
+    //int                 fCaloPlane;
     float               fCalodEdx;
     float               fESTAR_p0;
     float     	      	fESTAR_p1;
