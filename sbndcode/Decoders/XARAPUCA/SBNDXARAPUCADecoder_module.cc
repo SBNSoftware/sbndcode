@@ -13,6 +13,7 @@
  * the SBN Document 43891-v1 in the SBN Document Database.
  * @note A Python version of the binary decoding is available for testing purposes. You can find 
  * it [here: V1740 binary decoder](https://github.com/aliciavr/V1740_binary_decoder).
+ * @version 4.0
  */
 
 #include "art/Framework/Core/EDProducer.h"
