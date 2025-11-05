@@ -244,33 +244,38 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
 
-    TH1F* currentSignalEff = (TH1F*) hists.currentSignal->Clone("eff hist");
-    currentSignalEff->Reset();
-    currentSignalEff->GetYaxis()->SetTitle("Efficiency");
-    currentSignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    TH1F* currentSignalFuzzyEff = (TH1F*) hists.currentSignalFuzzy->Clone("eff hist");
-    currentSignalFuzzyEff->Reset();
-    currentSignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
-    currentSignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+   
+    histGroup_struct effHists;
 
-    TH1F* ubooneSignalEff = (TH1F*) hists.ubooneSignal->Clone("eff hist");
-    ubooneSignalEff->Reset();
-    ubooneSignalEff->GetYaxis()->SetTitle("Efficiency");
-    ubooneSignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    TH1F* ubooneSignalFuzzyEff = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff hist");
-    ubooneSignalFuzzyEff->Reset();
-    ubooneSignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
-    ubooneSignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    
-    TH1F* nuESignalEff = (TH1F*) hists.nuESignal->Clone("eff hist");
-    nuESignalEff->Reset();
-    nuESignalEff->GetYaxis()->SetTitle("Efficiency");
-    nuESignalEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    TH1F* nuESignalFuzzyEff = (TH1F*) hists.nuESignalFuzzy->Clone("eff hist");
-    nuESignalFuzzyEff->Reset();
-    nuESignalFuzzyEff->GetYaxis()->SetTitle("Efficiency");
-    nuESignalFuzzyEff->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    effHists.currentSignal = (TH1F*) hists.currentSignal->Clone("eff_currentSignal");
+    effHists.currentSignal->Reset();
+    effHists.currentSignal->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentSignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
 
+    effHists.currentSignalFuzzy = (TH1F*) hists.currentSignalFuzzy->Clone("eff_currentSignalFuzzy");
+    effHists.currentSignalFuzzy->Reset();
+    effHists.currentSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+    effHists.ubooneSignal = (TH1F*) hists.ubooneSignal->Clone("eff_ubooneSignal");
+    effHists.ubooneSignal->Reset();
+    effHists.ubooneSignal->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneSignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+    effHists.ubooneSignalFuzzy = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff_ubooneSignalFuzzy");
+    effHists.ubooneSignalFuzzy->Reset();
+    effHists.ubooneSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+    effHists.nuESignal = (TH1F*) hists.nuESignal->Clone("eff_nuESignal");
+    effHists.nuESignal->Reset();
+    effHists.nuESignal->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuESignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+
+    effHists.nuESignalFuzzy = (TH1F*) hists.nuESignalFuzzy->Clone("eff_nuESignalFuzzy");
+    effHists.nuESignalFuzzy->Reset();
+    effHists.nuESignalFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuESignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
 
     int numBins = hists.currentSignal->GetNbinsX();
 
@@ -288,14 +293,68 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     double nuESignalFuzzyTotal = 0.0;
 
     // efficiencyWay == -1 includes everything to the right of the cut
-    if(efficiencyWay == -1){
-        for(int i = 0; i <= numBins+1; ++i){
-            currentSignalTotal += hists.currentSignal->GetBinContent(i);
-            std::cout << "Bin " << i << ": Entries = " << hists.currentSignal->GetBinContent(i) << std::endl;
-           
-        }
-        std::cout << "Total = " << currentSignalTotal << std::endl;
+    for(int i = 0; i <= numBins+1; ++i){
+        currentSignalTotal += hists.currentSignal->GetBinContent(i);
+        currentSignalFuzzyTotal += hists.currentSignalFuzzy->GetBinContent(i);
+        ubooneSignalTotal += hists.ubooneSignal->GetBinContent(i);
+        ubooneSignalFuzzyTotal += hists.ubooneSignalFuzzy->GetBinContent(i);
+        nuESignalTotal += hists.nuESignal->GetBinContent(i);
+        nuESignalFuzzyTotal += hists.nuESignalFuzzy->GetBinContent(i);
+        std::cout << "Bin " << i << ": Num Entries = " << hists.nuESignal->GetBinContent(i) << std::endl;
     }
+
+    printf("TOTALS:\n Signal: Current = %f, Uboone = %f, NuE = %f\nSignal Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentSignalTotal, ubooneSignalTotal, nuESignalTotal, currentSignalFuzzyTotal, ubooneSignalFuzzyTotal, nuESignalFuzzyTotal);
+    
+    for(int i = 0; i <= numBins+1; ++i){
+        currentSignalSum += hists.currentSignal->GetBinContent(i);
+        currentSignalFuzzySum += hists.currentSignalFuzzy->GetBinContent(i);
+        ubooneSignalSum += hists.ubooneSignal->GetBinContent(i);
+        ubooneSignalFuzzySum += hists.ubooneSignalFuzzy->GetBinContent(i);
+        nuESignalSum += hists.nuESignal->GetBinContent(i);
+        nuESignalFuzzySum += hists.nuESignalFuzzy->GetBinContent(i);
+        std::cout << "Bin " << i << ": Sum = " << nuESignalSum << std::endl;
+
+        std::cout << "a" << std::endl;    
+        double currentSignalEffVal = 0;
+        double currentSignalFuzzyEffVal = 0;
+        double ubooneSignalEffVal = 0;
+        double ubooneSignalFuzzyEffVal = 0;
+        double nuESignalEffVal = 0;
+        double nuESignalFuzzyEffVal = 0;
+
+        if(efficiencyWay == -1){
+            // efficiencyWay == -1 includes everything to the right of the cut
+            currentSignalEffVal = (1 - (currentSignalSum/currentSignalTotal));
+            currentSignalFuzzyEffVal = (1 - (currentSignalFuzzySum/currentSignalFuzzyTotal));
+            ubooneSignalEffVal = (1 - (ubooneSignalSum/ubooneSignalTotal));
+            ubooneSignalFuzzyEffVal = (1 - (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal));
+            nuESignalEffVal = (1 - (nuESignalSum/nuESignalTotal));
+            nuESignalFuzzyEffVal = (1 - (nuESignalFuzzySum/nuESignalFuzzyTotal));
+
+        } else if(efficiencyWay == 1){
+            std::cout << "b" << std::endl;    
+            // efficiencyWay == 1 includes everything to the left of the cut
+            currentSignalEffVal = (currentSignalSum/currentSignalTotal);
+            currentSignalFuzzyEffVal = (currentSignalFuzzySum/currentSignalFuzzyTotal);
+            ubooneSignalEffVal = (ubooneSignalSum/ubooneSignalTotal);
+            ubooneSignalFuzzyEffVal = (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal);
+            nuESignalEffVal = (nuESignalSum/nuESignalTotal);
+            nuESignalFuzzyEffVal = (nuESignalFuzzySum/nuESignalFuzzyTotal);
+            std::cout << "c" << std::endl;    
+        }
+        std::cout << "d" << std::endl;    
+
+        effHists.currentSignal->SetBinContent(i, currentSignalEffVal);
+        effHists.currentSignalFuzzy->SetBinContent(i, currentSignalFuzzyEffVal);
+        effHists.ubooneSignal->SetBinContent(i, ubooneSignalEffVal);
+        effHists.ubooneSignalFuzzy->SetBinContent(i, ubooneSignalFuzzyEffVal);
+        effHists.nuESignal->SetBinContent(i, nuESignalEffVal);
+        effHists.nuESignalFuzzy->SetBinContent(i, nuESignalFuzzyEffVal);
+        std::cout << "e" << std::endl;    
+    }
+
+    std::string newFilename = std::string(filename) + "_eff.pdf";
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, newFilename.c_str(), legendLocation, drawLine, linePos, true, false, false);
 }
 
 void nuEBackgroundSignalWeighted_macro(){
@@ -1175,5 +1234,5 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
     styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
    
-    efficiency(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_eff.pdf").c_str(), "bottomRight", nullptr, &right, -1); 
+    efficiency(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2").c_str(), "bottomRight", nullptr, &right, 1); 
 }
