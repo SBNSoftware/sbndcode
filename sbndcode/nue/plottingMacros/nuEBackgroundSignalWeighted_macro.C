@@ -19,6 +19,14 @@
 #include <TMath.h>
 
 typedef struct{
+    TCanvas * canvas;
+    TH1F* baseHist;
+    TH1F* current;
+    TH1F* uboone;
+    TH1F* nuE;
+} purHist_struct;
+
+typedef struct{
     TCanvas* canvas;
     TH1F* baseHist;
     TH1F* currentCosmic;
@@ -243,10 +251,16 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
-
    
     histGroup_struct effHists;
+    effHists.canvas = hists.canvas;
+    effHists.baseHist = hists.baseHist;
 
+    effHists.currentCosmic = (TH1F*) hists.currentCosmic->Clone("eff_currentCosmic");
+    effHists.currentCosmic->Reset();
+    effHists.currentCosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentCosmic->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
+    
     effHists.currentSignal = (TH1F*) hists.currentSignal->Clone("eff_currentSignal");
     effHists.currentSignal->Reset();
     effHists.currentSignal->GetYaxis()->SetTitle("Efficiency");
@@ -256,26 +270,66 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     effHists.currentSignalFuzzy->Reset();
     effHists.currentSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
     effHists.currentSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    
+    effHists.currentBNB = (TH1F*) hists.currentBNB->Clone("eff_currentBNB");
+    effHists.currentBNB->Reset();
+    effHists.currentBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentBNB->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
 
+    effHists.currentBNBFuzzy = (TH1F*) hists.currentBNBFuzzy->Clone("eff_currentBNBFuzzy");
+    effHists.currentBNBFuzzy->Reset();
+    effHists.currentBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentBNBFuzzy->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
+
+    effHists.ubooneCosmic = (TH1F*) hists.ubooneCosmic->Clone("eff_ubooneCosmic");
+    effHists.ubooneCosmic->Reset();
+    effHists.ubooneCosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneCosmic->GetXaxis()->SetTitle(hists.ubooneCosmic->GetXaxis()->GetTitle());
+    
     effHists.ubooneSignal = (TH1F*) hists.ubooneSignal->Clone("eff_ubooneSignal");
     effHists.ubooneSignal->Reset();
     effHists.ubooneSignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    effHists.ubooneSignal->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
 
     effHists.ubooneSignalFuzzy = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff_ubooneSignalFuzzy");
     effHists.ubooneSignalFuzzy->Reset();
     effHists.ubooneSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    effHists.ubooneSignalFuzzy->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
+    
+    effHists.ubooneBNB = (TH1F*) hists.ubooneBNB->Clone("eff_ubooneBNB");
+    effHists.ubooneBNB->Reset();
+    effHists.ubooneBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneBNB->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
 
+    effHists.ubooneBNBFuzzy = (TH1F*) hists.ubooneBNBFuzzy->Clone("eff_ubooneBNBFuzzy");
+    effHists.ubooneBNBFuzzy->Reset();
+    effHists.ubooneBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneBNBFuzzy->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
+
+    effHists.nuECosmic = (TH1F*) hists.nuECosmic->Clone("eff_nuECosmic");
+    effHists.nuECosmic->Reset();
+    effHists.nuECosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuECosmic->GetXaxis()->SetTitle(hists.nuECosmic->GetXaxis()->GetTitle());
+    
     effHists.nuESignal = (TH1F*) hists.nuESignal->Clone("eff_nuESignal");
     effHists.nuESignal->Reset();
     effHists.nuESignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    effHists.nuESignal->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
 
     effHists.nuESignalFuzzy = (TH1F*) hists.nuESignalFuzzy->Clone("eff_nuESignalFuzzy");
     effHists.nuESignalFuzzy->Reset();
     effHists.nuESignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
+    effHists.nuESignalFuzzy->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
+    
+    effHists.nuEBNB = (TH1F*) hists.nuEBNB->Clone("eff_nuEBNB");
+    effHists.nuEBNB->Reset();
+    effHists.nuEBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuEBNB->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
+
+    effHists.nuEBNBFuzzy = (TH1F*) hists.nuEBNBFuzzy->Clone("eff_nuEBNBFuzzy");
+    effHists.nuEBNBFuzzy->Reset();
+    effHists.nuEBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuEBNBFuzzy->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
 
     int numBins = hists.currentSignal->GetNbinsX();
 
@@ -292,6 +346,25 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     double nuESignalFuzzySum = 0.0;
     double nuESignalFuzzyTotal = 0.0;
 
+    double currentCosmicSum = 0.0;
+    double currentCosmicTotal = 0.0;
+    double ubooneCosmicSum = 0.0;
+    double ubooneCosmicTotal = 0.0;
+    double nuECosmicSum = 0.0;
+    double nuECosmicTotal = 0.0;
+    double currentBNBSum = 0.0;
+    double currentBNBTotal = 0.0;
+    double ubooneBNBSum = 0.0;
+    double ubooneBNBTotal = 0.0;
+    double nuEBNBSum = 0.0;
+    double nuEBNBTotal = 0.0;
+    double currentBNBFuzzySum = 0.0;
+    double currentBNBFuzzyTotal = 0.0;
+    double ubooneBNBFuzzySum = 0.0;
+    double ubooneBNBFuzzyTotal = 0.0;
+    double nuEBNBFuzzySum = 0.0;
+    double nuEBNBFuzzyTotal = 0.0;
+
     // efficiencyWay == -1 includes everything to the right of the cut
     for(int i = 0; i <= numBins+1; ++i){
         currentSignalTotal += hists.currentSignal->GetBinContent(i);
@@ -300,21 +373,47 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
         ubooneSignalFuzzyTotal += hists.ubooneSignalFuzzy->GetBinContent(i);
         nuESignalTotal += hists.nuESignal->GetBinContent(i);
         nuESignalFuzzyTotal += hists.nuESignalFuzzy->GetBinContent(i);
-        std::cout << "Bin " << i << ": Num Entries = " << hists.nuESignal->GetBinContent(i) << std::endl;
+    
+        currentCosmicTotal += hists.currentCosmic->GetBinContent(i);
+        ubooneCosmicTotal += hists.ubooneCosmic->GetBinContent(i);
+        nuECosmicTotal += hists.nuECosmic->GetBinContent(i);
+        currentBNBTotal += hists.currentBNB->GetBinContent(i);
+        ubooneBNBTotal += hists.ubooneBNB->GetBinContent(i);
+        nuEBNBTotal += hists.nuEBNB->GetBinContent(i);
+        currentBNBFuzzyTotal += hists.currentBNBFuzzy->GetBinContent(i);
+        ubooneBNBFuzzyTotal += hists.ubooneBNBFuzzy->GetBinContent(i);
+        nuEBNBFuzzyTotal += hists.nuEBNBFuzzy->GetBinContent(i);
     }
 
     printf("TOTALS:\n Signal: Current = %f, Uboone = %f, NuE = %f\nSignal Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentSignalTotal, ubooneSignalTotal, nuESignalTotal, currentSignalFuzzyTotal, ubooneSignalFuzzyTotal, nuESignalFuzzyTotal);
+    printf("BNB: Current = %f, Uboone = %f, NuE = %f\nBNB Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentBNBTotal, ubooneBNBTotal, nuEBNBTotal, currentBNBFuzzyTotal, ubooneBNBFuzzyTotal, nuEBNBFuzzyTotal);
+    printf("Cosmic: Current = %f, Uboone = %f, NuE = %f\n", currentCosmicTotal, ubooneCosmicTotal, nuECosmicTotal);
     
     for(int i = 0; i <= numBins+1; ++i){
+        printf("--------------------------\n");
         currentSignalSum += hists.currentSignal->GetBinContent(i);
         currentSignalFuzzySum += hists.currentSignalFuzzy->GetBinContent(i);
         ubooneSignalSum += hists.ubooneSignal->GetBinContent(i);
         ubooneSignalFuzzySum += hists.ubooneSignalFuzzy->GetBinContent(i);
         nuESignalSum += hists.nuESignal->GetBinContent(i);
         nuESignalFuzzySum += hists.nuESignalFuzzy->GetBinContent(i);
-        std::cout << "Bin " << i << ": Sum = " << nuESignalSum << std::endl;
 
-        std::cout << "a" << std::endl;    
+        currentCosmicSum += hists.currentCosmic->GetBinContent(i);
+        ubooneCosmicSum += hists.ubooneCosmic->GetBinContent(i);
+        nuECosmicSum += hists.nuECosmic->GetBinContent(i);
+        currentBNBSum += hists.currentBNB->GetBinContent(i);
+        ubooneBNBSum += hists.ubooneBNB->GetBinContent(i);
+        nuEBNBSum += hists.nuEBNB->GetBinContent(i);
+        currentBNBFuzzySum += hists.currentBNBFuzzy->GetBinContent(i);
+        ubooneBNBFuzzySum += hists.ubooneBNBFuzzy->GetBinContent(i);
+        nuEBNBFuzzySum += hists.nuEBNBFuzzy->GetBinContent(i);
+
+        printf("Cosmic Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentCosmicSum, ubooneCosmicSum, nuECosmicSum);
+        printf("BNB Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBSum, ubooneBNBSum, nuEBNBSum);
+        printf("BNB Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBFuzzySum, ubooneBNBFuzzySum, nuEBNBFuzzySum);
+        printf("Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentSignalSum, ubooneSignalSum, nuESignalSum);
+        printf("Signal Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalFuzzySum, ubooneSignalFuzzySum, nuESignalFuzzySum);
+
         double currentSignalEffVal = 0;
         double currentSignalFuzzyEffVal = 0;
         double ubooneSignalEffVal = 0;
@@ -322,6 +421,35 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
         double nuESignalEffVal = 0;
         double nuESignalFuzzyEffVal = 0;
 
+        double currentAllSignalEffVal = 0.0;
+        double ubooneAllSignalEffVal = 0.0;
+        double nuEAllSignalEffVal = 0.0;
+
+        double currentCosmicRejVal = 0;
+        double ubooneCosmicRejVal = 0;
+        double nuECosmicRejVal = 0;
+        double currentBNBRejVal = 0;
+        double ubooneBNBRejVal = 0;
+        double nuEBNBRejVal = 0;
+        double currentBNBFuzzyRejVal = 0;
+        double ubooneBNBFuzzyRejVal = 0;
+        double nuEBNBFuzzyRejVal = 0;
+
+        double keptSignalCurrent = 0.0;
+        double keptBackgroundCurrent = 0.0;
+        double keptSignalUboone = 0.0;
+        double keptBackgroundUboone = 0.0;
+        double keptSignalNuE = 0.0;
+        double keptBackgroundNuE = 0.0;
+
+        double currentPurity = 0.0;
+        double uboonePurity = 0.0;
+        double nuEPurity = 0.0;
+       
+        double currentEffPur = 0.0;
+        double ubooneEffPur = 0.0;
+        double nuEEffPur = 0.0;
+        
         if(efficiencyWay == -1){
             // efficiencyWay == -1 includes everything to the right of the cut
             currentSignalEffVal = (1 - (currentSignalSum/currentSignalTotal));
@@ -330,9 +458,29 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
             ubooneSignalFuzzyEffVal = (1 - (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal));
             nuESignalEffVal = (1 - (nuESignalSum/nuESignalTotal));
             nuESignalFuzzyEffVal = (1 - (nuESignalFuzzySum/nuESignalFuzzyTotal));
+            
+            currentCosmicRejVal = (currentCosmicSum/currentCosmicTotal);
+            ubooneCosmicRejVal = (ubooneCosmicSum/ubooneCosmicTotal);
+            nuECosmicRejVal = (nuECosmicSum/nuECosmicTotal);
+            currentBNBRejVal = (currentBNBSum/currentBNBTotal);
+            ubooneBNBRejVal = (ubooneBNBSum/ubooneBNBTotal);
+            nuEBNBRejVal = (nuEBNBSum/nuEBNBTotal);
+            currentBNBFuzzyRejVal = (currentBNBFuzzySum/currentBNBFuzzyTotal);
+            ubooneBNBFuzzyRejVal = (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal);
+            nuEBNBFuzzyRejVal = (nuEBNBFuzzySum/nuEBNBFuzzyTotal);
+
+            keptSignalCurrent = ((currentSignalTotal - currentSignalSum) + (currentSignalFuzzyTotal - currentSignalFuzzySum)); 
+            keptBackgroundCurrent = ((currentBNBTotal - currentBNBSum) + (currentBNBFuzzyTotal - currentBNBFuzzySum) + (currentCosmicTotal - currentCosmicSum));
+            keptSignalUboone = ((ubooneSignalTotal - ubooneSignalSum) + (ubooneSignalFuzzyTotal - ubooneSignalFuzzySum)); 
+            keptBackgroundUboone = ((ubooneBNBTotal - ubooneBNBSum) + (ubooneBNBFuzzyTotal - ubooneBNBFuzzySum) + (ubooneCosmicTotal - ubooneCosmicSum));
+            keptSignalNuE = ((nuESignalTotal - nuESignalSum) + (nuESignalFuzzyTotal - nuESignalFuzzySum)); 
+            keptBackgroundNuE = ((nuEBNBTotal - nuEBNBSum) + (nuEBNBFuzzyTotal - nuEBNBFuzzySum) + (nuECosmicTotal - nuECosmicSum));
+
+            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal + currentSignalFuzzyTotal));
+            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal + ubooneSignalFuzzyTotal));
+            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal + nuESignalFuzzyTotal));
 
         } else if(efficiencyWay == 1){
-            std::cout << "b" << std::endl;    
             // efficiencyWay == 1 includes everything to the left of the cut
             currentSignalEffVal = (currentSignalSum/currentSignalTotal);
             currentSignalFuzzyEffVal = (currentSignalFuzzySum/currentSignalFuzzyTotal);
@@ -340,26 +488,70 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
             ubooneSignalFuzzyEffVal = (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal);
             nuESignalEffVal = (nuESignalSum/nuESignalTotal);
             nuESignalFuzzyEffVal = (nuESignalFuzzySum/nuESignalFuzzyTotal);
-            std::cout << "c" << std::endl;    
+            
+            currentCosmicRejVal = (1- (currentCosmicSum/currentCosmicTotal));
+            ubooneCosmicRejVal = (1 - (ubooneCosmicSum/ubooneCosmicTotal));
+            nuECosmicRejVal = (1 - (nuECosmicSum/nuECosmicTotal));
+            currentBNBRejVal = (1 - (currentBNBSum/currentBNBTotal));
+            ubooneBNBRejVal = (1 - (ubooneBNBSum/ubooneBNBTotal));
+            nuEBNBRejVal = (1 - (nuEBNBSum/nuEBNBTotal));
+            currentBNBFuzzyRejVal = (1 - (currentBNBFuzzySum/currentBNBFuzzyTotal));
+            ubooneBNBFuzzyRejVal = (1 - (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal));
+            nuEBNBFuzzyRejVal = (1 - (nuEBNBFuzzySum/nuEBNBFuzzyTotal));
+        
+            keptSignalCurrent = (currentSignalSum + currentSignalFuzzySum);
+            keptBackgroundCurrent = (currentCosmicSum + currentBNBSum + currentBNBFuzzySum);  
+            keptSignalUboone = (ubooneSignalSum + ubooneSignalFuzzySum);
+            keptBackgroundUboone = (ubooneCosmicSum + ubooneBNBSum + ubooneBNBFuzzySum);  
+            keptSignalNuE = (nuESignalSum + nuESignalFuzzySum);
+            keptBackgroundNuE = (nuECosmicSum + nuEBNBSum + nuEBNBFuzzySum);  
+            
+            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal + currentSignalFuzzyTotal));
+            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal + ubooneSignalFuzzyTotal));
+            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal + nuESignalFuzzyTotal));
         }
-        std::cout << "d" << std::endl;    
 
-        effHists.currentSignal->SetBinContent(i, currentSignalEffVal);
-        effHists.currentSignalFuzzy->SetBinContent(i, currentSignalFuzzyEffVal);
-        effHists.ubooneSignal->SetBinContent(i, ubooneSignalEffVal);
-        effHists.ubooneSignalFuzzy->SetBinContent(i, ubooneSignalFuzzyEffVal);
-        effHists.nuESignal->SetBinContent(i, nuESignalEffVal);
-        effHists.nuESignalFuzzy->SetBinContent(i, nuESignalFuzzyEffVal);
-        std::cout << "e" << std::endl;    
+        currentPurity = (keptSignalCurrent / (keptSignalCurrent + keptBackgroundCurrent));
+        uboonePurity = (keptSignalUboone / (keptSignalUboone + keptBackgroundUboone));
+        nuEPurity = (keptSignalNuE / (keptSignalNuE + keptBackgroundNuE));
+
+        currentEffPur = (currentAllSignalEffVal * currentPurity);
+        ubooneEffPur = (ubooneAllSignalEffVal * uboonePurity);
+        nuEEffPur = (nuEAllSignalEffVal * nuEPurity);
+        printf("All Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", keptSignalCurrent, keptSignalUboone, keptSignalNuE);
+
+        printf("Efficiency Values:\nSignal: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy Signal: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalEffVal, ubooneSignalEffVal, nuESignalEffVal, currentSignalFuzzyEffVal, ubooneSignalFuzzyEffVal, nuESignalFuzzyEffVal);
+        printf("Rejection Values:\nBNB: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy BNB: Current = %f, Uboone = %f, Nu+E = %f\nCosmics: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentBNBRejVal, ubooneBNBRejVal, nuEBNBRejVal, currentBNBFuzzyRejVal, ubooneBNBFuzzyRejVal, nuEBNBFuzzyRejVal, currentCosmicRejVal, ubooneCosmicRejVal, nuECosmicRejVal);
+        printf("Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentPurity, uboonePurity, nuEPurity);
+        printf("Eff x Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n", currentEffPur, ubooneEffPur, nuEEffPur);
+        printf("--------------------------\n");
+        if(!std::isnan(currentSignalEffVal)) effHists.currentSignal->SetBinContent(i, currentSignalEffVal);
+        if(!std::isnan(currentSignalFuzzyEffVal)) effHists.currentSignalFuzzy->SetBinContent(i, currentSignalFuzzyEffVal);
+        if(!std::isnan(ubooneSignalEffVal)) effHists.ubooneSignal->SetBinContent(i, ubooneSignalEffVal);
+        if(!std::isnan(ubooneSignalFuzzyEffVal)) effHists.ubooneSignalFuzzy->SetBinContent(i, ubooneSignalFuzzyEffVal);
+        if(!std::isnan(nuESignalEffVal)) effHists.nuESignal->SetBinContent(i, nuESignalEffVal);
+        if(!std::isnan(nuESignalFuzzyEffVal)) effHists.nuESignalFuzzy->SetBinContent(i, nuESignalFuzzyEffVal);
+    
+        if(!std::isnan(currentCosmicRejVal)) effHists.currentCosmic->SetBinContent(i, currentCosmicRejVal);
+        if(!std::isnan(ubooneCosmicRejVal)) effHists.ubooneCosmic->SetBinContent(i, ubooneCosmicRejVal);
+        if(!std::isnan(nuECosmicRejVal)) effHists.nuECosmic->SetBinContent(i, nuECosmicRejVal);
+        if(!std::isnan(currentBNBRejVal)) effHists.currentBNB->SetBinContent(i, currentBNBRejVal);
+        if(!std::isnan(ubooneBNBRejVal)) effHists.ubooneBNB->SetBinContent(i, ubooneBNBRejVal);
+        if(!std::isnan(nuEBNBRejVal)) effHists.nuEBNB->SetBinContent(i, nuEBNBRejVal);
+        if(!std::isnan(currentBNBFuzzyRejVal)) effHists.currentBNBFuzzy->SetBinContent(i, currentBNBFuzzyRejVal);
+        if(!std::isnan(ubooneBNBFuzzyRejVal)) effHists.ubooneBNBFuzzy->SetBinContent(i, ubooneBNBFuzzyRejVal);
+        if(!std::isnan(nuEBNBFuzzyRejVal)) effHists.nuEBNBFuzzy->SetBinContent(i, nuEBNBFuzzyRejVal);
     }
-
-    std::string newFilename = std::string(filename) + "_eff.pdf";
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, newFilename.c_str(), legendLocation, drawLine, linePos, true, false, false);
+   
+    std::string filenameEff = std::string(filename) + "_eff.pdf";
+    std::string filenameRej = std::string(filename) + "_rej.pdf";
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, false, false);
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, true, true);
 }
 
 void nuEBackgroundSignalWeighted_macro(){
 
-    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
+    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutputSignalMerged.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
 
     if(!file){
@@ -1234,5 +1426,19 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
     styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, false, false);
    
-    efficiency(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2").c_str(), "bottomRight", nullptr, &right, 1); 
+    efficiency(ERecoSumThetaRecoDist, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, -1); 
+    
+    //efficiency(trueETheta2, 0, 1, 999, 999, (base_path + "trueETheta2").c_str(), "bottomRight", &drawLine, &right, 1);
+    
+    //efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
+    //efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
+    //efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
+    //efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "topRight", nullptr, &right, 1);
+
+    //efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "topRight", nullptr, &right, 1);
+    //efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "topRight", nullptr, &right, 1);
+
+    //efficiency(ETrueThetaReco, 0, 1, 999, 999, (base_path + "ETrueThetaReco").c_str(), "topRight", nullptr, &right, 1);
+    //efficiency(ERecoSumThetaTrue, 0, 1, 999, 999, (base_path + "ERecoSumThetaTrue").c_str(), "topRight", nullptr, &right, 1);
+    //efficiency(ERecoHighestThetaTrue, 0, 1, 999, 999, (base_path + "ERecoHighestThetaTrue").c_str(), "topRight", nullptr, &right, 1);
 }
