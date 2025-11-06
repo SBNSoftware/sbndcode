@@ -11,6 +11,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            lardataobj::RawData
                            lardataobj::RecoBase
                            lardata::RecoObjects
+			   larreco::Calorimetry
                            larpandora::LArPandoraInterface
                            nusimdata::SimulationBase
                            cetlib::cetlib
@@ -34,7 +35,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            sbndcode_CRTUtils
                            sbnobj::Common_CRT
                            #sbndcode_CosmicIdUtils
-                           sbndcode_BlipUtils
+                           BlipUtils
 )
 
 install_headers()
