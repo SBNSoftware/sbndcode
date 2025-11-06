@@ -178,6 +178,21 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << dbname << "\n";
     fPMTCalibrationData[channel].gauss_wc = _gauss_wc;
 
+    double _nonlinearity_pesat = 0.;
+    error = db.GetNamedChannelData(channel, "nonlinearity_pesat", _nonlinearity_pesat);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'nonlinearity_pesat' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].nonlinearity_pesat = _nonlinearity_pesat;
+    double _nonlinearity_alpha = 0.;
+    error = db.GetNamedChannelData(channel, "nonlinearity_alpha", _nonlinearity_alpha);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'nonlinearity_alpha' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].nonlinearity_alpha = _nonlinearity_alpha;
+    
     // Read SER
     std::vector<double> _ser;
     std::string name_base = "ser_vec_";

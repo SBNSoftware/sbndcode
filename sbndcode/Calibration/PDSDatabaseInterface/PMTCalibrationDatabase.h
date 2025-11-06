@@ -32,6 +32,8 @@ namespace sbndDB {
     virtual double getSPEAmplitudeStd(unsigned int channelID) const = 0;
     virtual double getGaussFilterPower(unsigned int channelID) const = 0;
     virtual double getGaussFilterWC(unsigned int channelID) const = 0;
+    virtual double getNonLineatiryPESat(unsigned int channelID) const = 0;
+    virtual double getNonLineatiryAlpha(unsigned int channelID) const = 0;
     virtual std::vector<double> getSER(unsigned int channelID) const = 0;
   }; // end class
 

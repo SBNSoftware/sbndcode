@@ -71,6 +71,12 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         double getGaussFilterWC( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).gauss_wc;
         };
+        double getNonLineatiryPESat( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).nonlinearity_pesat;
+        };
+        double getNonLineatiryAlpha( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).nonlinearity_alpha;
+        };
         std::vector<double> getSER( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).ser;
         };
@@ -96,11 +102,12 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             double spe_amplitude_std=0.;
             double gauss_wc_power=0.;
             double gauss_wc=0.;
+            double nonlinearity_pesat=0.;
+            double nonlinearity_alpha=0.;
             std::vector<double> ser={};
             };
             
-        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, 0, 0.0, 0.0, 0.0, {}};
-
+        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
         
