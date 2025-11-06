@@ -34,7 +34,7 @@
 #include <vector>
 #include <map>
 
-#include "sbnobj/SBND/Blip/DataTypes.h"
+#include "sbnobj/SBND/Blip/BlipDataTypes.h"
 #include "TH1D.h"
 
 
