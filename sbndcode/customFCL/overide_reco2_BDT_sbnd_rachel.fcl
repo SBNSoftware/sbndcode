@@ -1,0 +1,38 @@
+#include "standard_reco2_sbnd.fcl"
+
+physics.reco2: [
+      rns
+    , pandora
+    , pandoraTrack
+    , pandoraShower
+    , pandoraShowerSBN
+    , pandoraCalo
+    , pandoraPid
+    , crtveto
+    , crtspacepointmatching
+    , crttrackmatching
+    , fmatch
+    , fmatchop
+    , fmatchara
+    , fmatchopara
+    , caloskimCalorimetry
+    , opt0finder
+    , tpcpmtbarycentermatching
+    , pandoraSCE
+    , pandoraSCETrack
+    , pandoraSCEShower
+    , pandoraSCEShowerSBN
+    , pandoraSCECalo
+    , pandoraSCEPid
+    , crtspacepointmatchingSCE
+    , crttrackmatchingSCE
+    , fmatchSCE
+    , fmatchopSCE
+    , fmatcharaSCE
+    , fmatchoparaSCE
+    , opt0finderSCE
+    # , cvn
+    # , cvnSCE
+]
+
+physics.producers.pandora.ConfigFile: "PandoraSettings_Master_SBND.xml"
