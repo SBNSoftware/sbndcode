@@ -208,7 +208,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         e.getByLabel(fSPECTDCLabel, tdcHandle);
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            return;
+            ResetSliceInfo();
+            continue;
         }
         else{
             const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
