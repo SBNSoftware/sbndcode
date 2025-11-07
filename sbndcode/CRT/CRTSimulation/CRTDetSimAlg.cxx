@@ -525,7 +525,7 @@ namespace crt {
         double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
 
         double npeExpected =
-            fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
+	  fParams.NpeScaleNorm() * (pow(fParams.NpeScaleShift(), 2) / pow(distToReadout - fParams.NpeScaleShift(), 2)) * qr;
 
         // Put PE on channels weighted by transverse distance across the strip,
         // using an exponential model
