@@ -125,6 +125,8 @@ private:
   art::ServiceHandle<art::TFileService> tfs; /**<  ServiceHandle object to store the histograms in the decoder_hist.root output file. */
   int fstore_debug_waveforms; /**< Number of waveforms to store in the ServiceHandle object for debugging purposes (0: none, -1: all, n: first n waveforms each event). */
 
+  bool fcombine_ext_frag; /**< If `true` combines extended fragments into a single raw::OpDetWaveform object. */
+
   bool fdebug_tdc_handle; /**< If `true` SPEC-TDC information is printed. */
   bool fdebug_ptb_handle; /**< If `true` PTB information is printed. */
   bool fdebug_fragments_handle; /**< If `true` V1740B CAEN fragments art::Handle information is printed. */
@@ -132,10 +134,11 @@ private:
   bool fdebug_buffer; /**< If `true` the buffer status is printed. */
   bool fdebug_waveforms; /**< If `true` waveforms decoding data is printed. */
   bool fdebug_extended_fragments; /**< If `true` extended fragments information is printed. */
+  bool fdebug_jittering; /**< If `true` trigger jittering information is printed. */
   bool fverbose; /**< If `true` it increases verbosity of console output for detailed processing steps. */
 
   // Main processing method.
-  void decode_fragment(int32_t& prev_TTT, uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, bool last_one);
+  void decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, bool last_one);
   
   // Timing.
   void shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp);
@@ -212,6 +215,9 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   // Gets the number of waveforms to store in the debug output file.
   fstore_debug_waveforms = p.get<int> ("store_debug_waveforms", 0);
 
+  // Gets the combination of extended fragments option.
+  fcombine_ext_frag = p.get<bool> ("combine_ext_frag", true);
+
   // Gets the debug and verbose options.
   fdebug_ptb_handle = p.get<bool> ("debug_ptb_handle", false);
   fdebug_tdc_handle = p.get<bool> ("debug_tdc_handle", false);
@@ -219,6 +225,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   fdebug_timing = p.get<bool> ("debug_timing", false);
   fdebug_waveforms = p.get<bool> ("debug_waveforms", false);
   fdebug_extended_fragments = p.get<bool> ("debug_extended_fragments", false);
+  fdebug_jittering = p.get<bool> ("debug_jittering", false);
   fdebug_buffer = p.get<bool> ("debug_buffer", false);
   fverbose = p.get<bool> ("verbose", false);
 
@@ -320,7 +327,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
   }
   
   int32_t nominal_TTT = TTT_DEFAULT;
-  int32_t prev_TTT = TTT_DEFAULT;
+  int32_t prev_TTT = 0;
   uint64_t nominal_frag_timestamp = TTT_DEFAULT;
   bool last_one = false;
 
@@ -361,7 +368,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
             for (size_t f = 0; f < num_caen_fragments; f++) {
               const artdaq::Fragment fragment = *container_fragment[f].get();
               last_one = f == (num_caen_fragments - 1);
-              decode_fragment(prev_TTT, timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
+              decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, prev_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
             } // End CAEN V1740 fragments loop.
           }
         } // End Container fragments loop.
@@ -374,7 +381,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
         for (size_t f = 0; f < frag_handle_size; f++) {
           const artdaq::Fragment fragment = fragment_handle->at(f);
           last_one = f == (frag_handle_size - 1);
-          decode_fragment(prev_TTT, timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
+          decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, prev_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
         } // End CAEN V1740 fragments loop.
       }
     } // End extracting CAEN V1740 fragments.
@@ -426,7 +433,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
  * @see dump_waveforms
  */
 
-void sbndaq::SBNDXARAPUCADecoder::decode_fragment(int32_t& prev_TTT, uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms, bool last_one) {
+void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms, bool last_one) {
   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
   auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
   size_t board_idx;
@@ -506,68 +513,76 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(int32_t& prev_TTT, uint64_t ti
     double ini_wvfm_timestamp = 0;
     double end_wvfm_timestamp = 0;
     
-    bool is_nominal_length = (num_nominal_samples_per_wvfm == num_samples_per_wvfm);
-    bool is_first = (fragment_indices[board_idx] == 0);
-
-    int32_t TTT_dif = 0;
-    // If the fragment timestamp is greater than the TTT end timestamp, it means that rollover occurred.
-    if (nominal_TTT > TTT_end_ns) {
-      if (fverbose | fdebug_timing) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN TTT rollover occurred." << std::endl;
-      TTT_dif = nominal_TTT - (NANOSEC_IN_SEC - TTT_end_ns);
-    } else {
-      TTT_dif = TTT_end_ns - nominal_TTT;
-    }
-    bool is_in_time = TTT_dif <= static_cast<int>(num_nominal_samples_per_wvfm * fns_per_sample);
-    
     if (fverbose) {
       std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: processing the decoded fragment and combines the extended ones to their nominal ones if needed." << std::endl;
     }
-    if (is_nominal_length) {
-      /////
+
+    if (fcombine_ext_frag) {
+      bool is_nominal_length = (num_nominal_samples_per_wvfm == num_samples_per_wvfm);
+      bool is_first = (fragment_indices[board_idx] == 0);
+
+      int32_t TTT_dif = 0;
+      // If the fragment timestamp is greater than the TTT end timestamp, it means that rollover occurred.
+      if (nominal_TTT > TTT_end_ns) {
+        if (fverbose | fdebug_timing) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN TTT rollover occurred." << std::endl;
+        TTT_dif = nominal_TTT - (NANOSEC_IN_SEC - TTT_end_ns);
+      } else {
+        TTT_dif = TTT_end_ns - nominal_TTT;
+      }
+      bool is_in_time = TTT_dif <= static_cast<int>(num_nominal_samples_per_wvfm * fns_per_sample);
+      
       int32_t TTT_ini_ns = TTT_end_ns - static_cast<int32_t>(num_nominal_samples_per_wvfm * fns_per_sample);
-      std::cout << "\t\t NOMINAL fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
-      //////
-      if (!is_first) {
-        if (fdebug_extended_fragments) {
-          std::cout << "\t\t NOT FIRST NOMINAL fragment " << std::endl;
-          std::cout << "\t\t nominal_TTT: " << nominal_TTT << " TTT_end_ns: " << TTT_end_ns << std::endl;
-          std::cout << "\t\t nominal_frag_timestamp: " << nominal_frag_timestamp << " frag_timestamp : " << frag_timestamp << std::endl;
+   
+      if (is_nominal_length) {
+        if (fdebug_jittering) {
+          std::cout << "\t\t NOMINAL fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
         }
+        if (!is_first) {
+          if (fdebug_extended_fragments) {
+            std::cout << "\t\t NOT FIRST NOMINAL fragment " << std::endl;
+            std::cout << "\t\t nominal_TTT: " << nominal_TTT << " TTT_end_ns: " << TTT_end_ns << std::endl;
+            std::cout << "\t\t nominal_frag_timestamp: " << nominal_frag_timestamp << " frag_timestamp : " << frag_timestamp << std::endl;
+          }
+          shift_time(TTT_ticks, nominal_TTT, nominal_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+          dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+        } else {
+          if (fdebug_extended_fragments) std::cout << "\t\t FIRST NOMINAL fragment " << std::endl;
+        }
+        combine_waveforms(wvfms, fragment_wvfms, num_channels);
+        nominal_TTT = TTT_end_ns;
+        nominal_frag_timestamp = frag_timestamp;
+      } else if (is_in_time) {
+        if (fdebug_extended_fragments) {
+          std::cout << "\t\t EXTENDED fragment " << std::endl;
+          std::cout << "\t\t TTT_dif w.r.t. nominal TTT: " << TTT_dif << " ns, is_in_time: " << is_in_time << std::endl;
+        }
+        if (fdebug_jittering) {
+          std::cout << "\t\t EXTENDED fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
+        }
+
+        combine_waveforms(wvfms, fragment_wvfms, num_channels);
+      } else if (!is_in_time) {
+        //combine_waveforms(wvfms, fragment_wvfms, num_channels); //TEMP!!!!!
+        if (fdebug_jittering) {
+          std::cout << "\t\t EXTENDED? fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
+        }
+        std::cout << "\t\t WARNING: EXTENDED fragment out of time window! TTT_dif: " << TTT_dif << " ns, fragment idx: " << fragment_indices[board_idx] << ", board idx: " << board_idx << " (slot " << fboard_id_list[board_idx] << "), " << num_samples_per_wvfm << " samples. Skipping this fragment..." << std::endl;
+      }
+    
+      fragment_indices[board_idx]++;  
+
+      if (last_one) {
+        if (fdebug_extended_fragments) std::cout << "\t\t LAST fragment " << std::endl;
         shift_time(TTT_ticks, nominal_TTT, nominal_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
         dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
-      } else {
-        if (fdebug_extended_fragments) std::cout << "\t\t FIRST NOMINAL fragment " << std::endl;
       }
-      combine_waveforms(wvfms, fragment_wvfms, num_channels);
-      nominal_TTT = TTT_end_ns;
-      nominal_frag_timestamp = frag_timestamp;
-    } else if (is_in_time) {
-      if (fdebug_extended_fragments) {
-        std::cout << "\t\t EXTENDED fragment " << std::endl;
-        std::cout << "\t\t TTT_dif w.r.t. nominal TTT: " << TTT_dif << " ns, is_in_time: " << is_in_time << std::endl;
-      }
-      /////
-      int32_t TTT_ini_ns = TTT_end_ns - static_cast<int32_t>(num_nominal_samples_per_wvfm * fns_per_sample);
-      std::cout << "\t\t EXTENDED fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
-      //////
-      combine_waveforms(wvfms, fragment_wvfms, num_channels);
-    } else if (!is_in_time) {
-      //combine_waveforms(wvfms, fragment_wvfms, num_channels); //TEMP!!!!!
-      /////
-      int32_t TTT_ini_ns = TTT_end_ns - static_cast<int32_t>(num_nominal_samples_per_wvfm * fns_per_sample);
-      std::cout << "\t\t EXTENDED? fragment (" << num_samples_per_wvfm << "), [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_end_ns - prev_TTT << " ns, length: " << num_samples_per_wvfm * fns_per_sample << " ns, diff_with_length: " <<  (TTT_end_ns - prev_TTT) - (num_samples_per_wvfm * fns_per_sample) << std::endl;
-      //////
-      std::cout << "\t\t WARNING: EXTENDED fragment out of time window! TTT_dif: " << TTT_dif << " ns, fragment idx: " << fragment_indices[board_idx] << ", board idx: " << board_idx << " (slot " << fboard_id_list[board_idx] << "), " << num_samples_per_wvfm << " samples. Skipping this fragment..." << std::endl;
+      prev_TTT = TTT_end_ns;
+    } else {
+      shift_time(TTT_ticks, TTT_end_ns, frag_timestamp, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+      dump_waveforms(prod_wvfms, fragment_wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+      fragment_indices[board_idx]++; 
     }
-  
-    fragment_indices[board_idx]++;  
 
-    if (last_one) {
-      if (fdebug_extended_fragments) std::cout << "\t\t LAST fragment " << std::endl;
-      shift_time(TTT_ticks, nominal_TTT, nominal_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
-      dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
-    }
-    prev_TTT = TTT_end_ns;
   }
 
 }
