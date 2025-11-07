@@ -732,7 +732,7 @@ void sbnd::NuE::Slices(art::Event const& e){
 
                 int sliceCategory = -999999;
                 // Slice Categories: Cosmic = 0, Signal = 1, Fuzzy Signal = 2, BNB = 3, Fuzzy BNB = 4
-                if(sliceMCTruth->Origin() == simb::kCosmicRay) sliceCategory = 0;
+                if(sliceMCTruth->Origin() == simb::kCosmicRay || sliceMCTruth->Origin() == 0) sliceCategory = 0;
                 else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() == 1098 && sliceCompleteness > 0.5 && slicePurity > 0.3) sliceCategory = 1; 
                 else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() == 1098 && sliceCompleteness < 0.5 && sliceCompleteness > 0.1) sliceCategory = 2;
                 else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() != 1098 && sliceCompleteness > 0.5 && slicePurity > 0.3) sliceCategory = 3;
@@ -752,9 +752,13 @@ void sbnd::NuE::Slices(art::Event const& e){
                     reco_sliceTrueVY.push_back(sliceMCNeutrinoParticle.Vy());        
                     reco_sliceTrueVZ.push_back(sliceMCNeutrinoParticle.Vz());       
                     std::cout << "True Neutrino Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vz() << ")" << std::endl; 
-                }
-                else if(sliceMCTruth->Origin() == simb::kCosmicRay){
+                } else if(sliceMCTruth->Origin() == simb::kCosmicRay){
                     reco_sliceInteraction.push_back(-100);        
+                    reco_sliceTrueVX.push_back(-999999);
+                    reco_sliceTrueVY.push_back(-999999);
+                    reco_sliceTrueVZ.push_back(-999999);
+                } else {
+                    reco_sliceInteraction.push_back(-999999);        
                     reco_sliceTrueVX.push_back(-999999);
                     reco_sliceTrueVY.push_back(-999999);
                     reco_sliceTrueVZ.push_back(-999999);
@@ -809,6 +813,9 @@ void sbnd::NuE::clearVectors(){
     reco_sliceScore.clear();
     reco_sliceCategory.clear();
     reco_sliceInteraction.clear();
+    reco_sliceTrueVX.clear();
+    reco_sliceTrueVY.clear();
+    reco_sliceTrueVZ.clear();
 
     reco_particlePDG.clear();
     reco_particleIsPrimary.clear();
