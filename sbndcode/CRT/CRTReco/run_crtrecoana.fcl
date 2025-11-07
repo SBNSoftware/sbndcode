@@ -3,7 +3,7 @@
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 #include "crtana_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
 
 process_name: CRTRecoAna
 
@@ -11,8 +11,8 @@ services:
 {
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
+  @table::crt_services_sbnd
   ParticleInventoryService: @local::standard_particleinventoryservice
-  CRTGeoService:            @local::crtgeoservice_sbnd
 }
 
 source:

@@ -1,12 +1,12 @@
 BEGIN_PROLOG
 
-crtgeoservice_sbnd:
+crt_geo_service_sbnd:
 {
   DefaultGain: 0.025
   MC:          true
 }
 
-crtgeoservice_data_sbnd:
+crt_geo_service_data_sbnd:
 {
   DefaultGain: 0.025
   MC:          false
