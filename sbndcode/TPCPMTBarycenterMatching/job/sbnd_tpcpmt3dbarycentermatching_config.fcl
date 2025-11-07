@@ -23,7 +23,7 @@ TPCPMTBarycenterMatchProducer:
     YError: 23 // cm
     ZError: 23 // cm
     AngleError: 27 // deg
-    FlashVetoWindow: [-1500000,1500000] // ns
+    FlashVetoWindow: [-5,5] // ns
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
