@@ -126,8 +126,8 @@ sbnd_reco2_producer_sequence: [
     #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
-    , cvn
-    , cvnSCE
+    #, cvn
+    #, cvnSCE
     , blipreco
 ]
 
