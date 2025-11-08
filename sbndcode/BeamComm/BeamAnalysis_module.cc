@@ -122,11 +122,21 @@ private:
     std::vector<uint64_t> _tdc_ch4_utc;
 
     // Frame stuff
+    uint64_t _timing_raw_daq_header_timestamp;
+    uint64_t _timing_tdc_crtt1;
+    uint64_t _timing_tdc_bes;
+    uint64_t _timing_tdc_rwm;
+    uint64_t _timing_tdc_etrig;
+    uint64_t _timing_hlt_crtt1;
+    uint64_t _timing_hlt_etrig;
+    uint64_t _timing_hlt_beam_gate;
+
     double _frame_tdc_crtt1;
     double _frame_tdc_bes;
     double _frame_tdc_rwm;
     double _frame_hlt_crtt1;
     double _frame_hlt_gate;
+    double   _frame_apply_at_caf;
 
     // Ptb stuff
     std::vector<uint64_t> _ptb_hlt_trigger;
@@ -135,6 +145,7 @@ private:
     std::vector<int> _ptb_hlt_trunmask;
       
     // CRT spacepoint
+    int _ncrt_sp;
     std::vector<double> _crt_sp_x;
     std::vector<double> _crt_sp_y;
     std::vector<double> _crt_sp_z;
@@ -146,6 +157,16 @@ private:
     std::vector<double> _crt_sp_ts0e;
     std::vector<double> _crt_sp_ts1e;
     std::vector<int> _crt_sp_tagger;
+    std::vector<bool> _crt_sp_tpc_matched;
+    std::vector<double> _crt_sp_tpc_start_x;
+    std::vector<double> _crt_sp_tpc_start_y;
+    std::vector<double> _crt_sp_tpc_start_z;
+    std::vector<double> _crt_sp_tpc_end_x;
+    std::vector<double> _crt_sp_tpc_end_y;
+    std::vector<double> _crt_sp_tpc_end_z;
+    std::vector<double> _crt_sp_tpc_length;
+    std::vector<double> _crt_sp_tpc_theta;
+    std::vector<double> _crt_sp_tpc_phi;
 
     // CRT track
     int _ncrt_trk;
@@ -166,6 +187,16 @@ private:
     std::vector<double> _crt_trk_end_x;
     std::vector<double> _crt_trk_end_y;
     std::vector<double> _crt_trk_end_z;
+    std::vector<bool> _crt_trk_tpc_matched;
+    std::vector<double> _crt_trk_tpc_start_x;
+    std::vector<double> _crt_trk_tpc_start_y;
+    std::vector<double> _crt_trk_tpc_start_z;
+    std::vector<double> _crt_trk_tpc_end_x;
+    std::vector<double> _crt_trk_tpc_end_y;
+    std::vector<double> _crt_trk_tpc_end_z;
+    std::vector<double> _crt_trk_tpc_length;
+    std::vector<double> _crt_trk_tpc_theta;
+    std::vector<double> _crt_trk_tpc_phi;
     std::vector<std::vector<double>> _crt_trk_sp_x;
     std::vector<std::vector<double>> _crt_trk_sp_y;
     std::vector<std::vector<double>> _crt_trk_sp_z;
@@ -178,43 +209,9 @@ private:
     std::vector<std::vector<double>> _crt_trk_sp_ts1e;
     std::vector<std::vector<int>>    _crt_trk_sp_tagger;
 
-    //TPC Track
-    int _ntpc_trk;
-    std::vector<int>    _tpc_trk_id;
-    std::vector<double> _tpc_start_x;
-    std::vector<double> _tpc_start_y;
-    std::vector<double> _tpc_start_z;
-    std::vector<double> _tpc_end_x;
-    std::vector<double> _tpc_end_y;
-    std::vector<double> _tpc_end_z;
-    std::vector<double> _tpc_length;
-
-    std::vector<bool> _tpc_sp_matched;
-    std::vector<double> _tpc_sp_xshift;
-    std::vector<double> _tpc_sp_ts0;
-    std::vector<double> _tpc_sp_ts1;
-    std::vector<double> _tpc_sp_x;
-    std::vector<double> _tpc_sp_y;
-    std::vector<double> _tpc_sp_z;
-    std::vector<double> _tpc_sp_score;
-    std::vector<int> _tpc_sp_tagger;
-    std::vector<int> _tpc_sp_nhits;
-
-    std::vector<bool> _tpc_tr_matched;
-    std::vector<double> _tpc_tr_ts0;
-    std::vector<double> _tpc_tr_ts1;
-    std::vector<double> _tpc_tr_score;
-    std::vector<std::vector<int>> _tpc_tr_taggers;
-    std::vector<double> _tpc_tr_start_x;
-    std::vector<double> _tpc_tr_start_y;
-    std::vector<double> _tpc_tr_start_z;
-    std::vector<double> _tpc_tr_end_x;
-    std::vector<double> _tpc_tr_end_y;
-    std::vector<double> _tpc_tr_end_z;
-
     // PMT Timing
-    uint16_t _pmt_timing_type;
-    uint16_t _pmt_timing_ch;
+    //uint16_t _pmt_timing_type;
+    //uint16_t _pmt_timing_ch;
 
     // PMT Metric
     float _metric_peakpe;
@@ -275,16 +272,15 @@ private:
     bool fDebugPtb;
     bool fDebugCrtSP;
     bool fDebugCrtTrack;
-    bool fDebugCrtMatch;
     bool fDebugPmt;
     bool fDebugFrame;
     
     // Which data products to include
     bool fDataMode;
+    bool fIncludeTdc;
     bool fIncludePtb;
     bool fIncludeCrtSP;
     bool fIncludeCrtTrack;
-    bool fIncludeCrtMatch;
     bool fIncludePmtMetric;
     bool fIncludePmt;
 };
@@ -312,13 +308,12 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fDebugPtb = p.get<bool>("DebugPtb", false);
     fDebugCrtSP = p.get<bool>("DebugCrtSP", false);
     fDebugCrtTrack = p.get<bool>("DebugCrtTrack", false);
-    fDebugCrtMatch = p.get<bool>("DebugCrtMatch", false);
     fDebugPmt = p.get<bool>("DebugPmt", false);
 
+    fIncludeTdc = p.get<bool>("IncludeTdc", true);
     fIncludePtb = p.get<bool>("IncludePtb", true);
     fIncludeCrtSP = p.get<bool>("IncludeCrtSP", false);
     fIncludeCrtTrack = p.get<bool>("IncludeCrtTrack", false);
-    fIncludeCrtMatch = p.get<bool>("IncludeCrtMatch", false);
     fIncludePmtMetric = p.get<bool>("IncludePmtMetric", false);
     fIncludePmt = p.get<bool>("IncludePmt", false);
 
@@ -337,50 +332,35 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
     if (fDebugTdc | fDebugCrtSP | fDebugCrtTrack | fDebugPmt)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
-    //---------------------------TDC-----------------------------//
-    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-    e.getByLabel(fTdcDecodeLabel, tdcHandle);
+    //------------------------------------------------------------//
+    art::Handle<sbnd::timing::TimingInfo> timingHandle;
+    e.getByLabel(fFrameLabel, timingHandle);
 
-    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-        if (fDebugTdc) std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-        return;
+    if (!timingHandle.isValid()){
+        if (fDebugTdc) std::cout << "No TimingInfo products found." << std::endl;
     }
     else{
-        
-        const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-        
-        for (size_t i=0; i<tdc_v.size(); i++){
-            auto tdc = tdc_v[i];
-            const uint32_t  ch = tdc.Channel();
-            const uint64_t  ts = tdc.Timestamp();
-            //const uint64_t  offset = tdc.Offset();
-            const std::string name  = tdc.Name();
+        sbnd::timing::TimingInfo const& timing(*timingHandle);
 
-            if (fDebugTdc) std::cout << "Ch " << ch << " " << name
-                                << ", ts (ns) = " << ts%uint64_t(1e9)
-                                << ", sec (s) = " << ts/uint64_t(1e9)
-                                << std::endl;
+        _timing_raw_daq_header_timestamp = timing.RawDAQHeaderTimestamp();
+        _timing_tdc_crtt1 = timing.TdcCrtt1();
+        _timing_tdc_bes = timing.TdcBes();
+        _timing_tdc_rwm = timing.TdcRwm();
+        _timing_tdc_etrig = timing.TdcEtrig();
+        _timing_hlt_crtt1 = timing.HltCrtt1();
+        _timing_hlt_etrig = timing.HltEtrig();
+        _timing_hlt_beam_gate = timing.HltBeamGate();
 
-            if(ch == 0){
-                _tdc_ch0_utc.push_back(ts);
-                _tdc_ch0.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 1){
-                _tdc_ch1_utc.push_back(ts);
-                _tdc_ch1.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 2){
-                _tdc_ch2_utc.push_back(ts);
-                _tdc_ch2.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 3){
-                _tdc_ch3_utc.push_back(ts);
-                _tdc_ch3.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 4){
-                _tdc_ch4_utc.push_back(ts);
-                _tdc_ch4.push_back(ts%uint64_t(1e9));
-            }
+        if (fDebugFrame){
+            std::cout << "Timing Info:" << std::endl;
+            std::cout << std::setprecision(9) << "  Raw DAQ Header Timestamp = " << _timing_raw_daq_header_timestamp << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Crt T1 = " << _timing_tdc_crtt1 << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Bes = " << _timing_tdc_bes << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Rwm = " << _timing_tdc_rwm << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Etrig = " << _timing_tdc_etrig << std::endl;
+            std::cout << std::setprecision(9) << "  Hlt Crt T1 = " << _timing_hlt_crtt1 << std::endl;
+            std::cout << std::setprecision(9) << "  Hlt Etrig = " << _timing_hlt_etrig << std::endl;
+            std::cout << std::setprecision(9) << "  Hlt Gate = " << _timing_hlt_beam_gate << std::endl;
         } 
     }
     //------------------------------------------------------------//
@@ -397,6 +377,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         _frame_tdc_rwm = frame.FrameTdcRwm();
         _frame_hlt_crtt1 = frame.FrameHltCrtt1();
         _frame_hlt_gate = frame.FrameHltBeamGate();
+        _frame_apply_at_caf = frame.FrameApplyAtCaf();
 
         if (fDebugFrame){
             std::cout << "Frame Shift:" << std::endl;
@@ -405,6 +386,56 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
             std::cout << std::setprecision(9) << "  Tdc Rwm = " << _frame_tdc_rwm << std::endl;
             std::cout << std::setprecision(9) << "  Hlt Crt T1 = " << _frame_hlt_crtt1 << std::endl;
             std::cout << std::setprecision(9) << "  Hlt Gate = " << _frame_hlt_gate << std::endl;
+            std::cout << std::setprecision(9) << "  Apply At Caf = " << _frame_apply_at_caf << std::endl;
+        } 
+    }
+
+    //---------------------------TDC-----------------------------//
+    if (fIncludeTdc){
+        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+        e.getByLabel(fTdcDecodeLabel, tdcHandle);
+
+        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+            if (fDebugTdc) std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+            return;
+        }
+        else{
+
+            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+
+            for (size_t i=0; i<tdc_v.size(); i++){
+                auto tdc = tdc_v[i];
+                const uint32_t  ch = tdc.Channel();
+                const uint64_t  ts = tdc.Timestamp();
+                //const uint64_t  offset = tdc.Offset();
+                const std::string name  = tdc.Name();
+
+                if (fDebugTdc) std::cout << "Ch " << ch << " " << name
+                                    << ", ts (ns) = " << ts%uint64_t(1e9)
+                                    << ", sec (s) = " << ts/uint64_t(1e9)
+                                    << std::endl;
+
+                if(ch == 0){
+                    _tdc_ch0_utc.push_back(ts);
+                    _tdc_ch0.push_back(ts%uint64_t(1e9));
+                }
+                if(ch == 1){
+                    _tdc_ch1_utc.push_back(ts);
+                    _tdc_ch1.push_back(ts%uint64_t(1e9));
+                }
+                if(ch == 2){
+                    _tdc_ch2_utc.push_back(ts);
+                    _tdc_ch2.push_back(ts%uint64_t(1e9));
+                }
+                if(ch == 3){
+                    _tdc_ch3_utc.push_back(ts);
+                    _tdc_ch3.push_back(ts%uint64_t(1e9));
+                }
+                if(ch == 4){
+                    _tdc_ch4_utc.push_back(ts);
+                    _tdc_ch4.push_back(ts%uint64_t(1e9));
+                }
+            } 
         }
     }
     //------------------------------------------------------------//
@@ -502,6 +533,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
             art::fill_ptr_vector(crt_sp_v, crtSpacePointHandle);
             art::FindManyP<sbnd::crt::CRTCluster> crtSPClusterAssoc(crt_sp_v, e, fCrtSpacePointLabel);
+            art::FindOneP<recob::Track, anab::T0> crtTrkTrackAssoc(crt_sp_v, e, fCRTSpacePointMatchingModuleLabel);
 
             for (auto const& crt_sp: crt_sp_v){
                 
@@ -524,12 +556,46 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 _crt_sp_ts0e.push_back(crt_sp->Ts0Err());
                 _crt_sp_ts1e.push_back(crt_sp->Ts1Err());
                 _crt_sp_tagger.push_back(crt_cluster->Tagger());
+                _ncrt_sp++;
+
+                // Get associated TPC Track
+                const art::Ptr<recob::Track> tpc_trk = crtTrkTrackAssoc.at(crt_sp.key());
+                if (!tpc_trk.isNull()){
+
+                    auto start = tpc_trk->Start();
+                    auto end = tpc_trk->End();
+
+                    _crt_sp_tpc_matched.push_back(true);
+                    _crt_sp_tpc_start_x.push_back(start.X());
+                    _crt_sp_tpc_start_y.push_back(start.Y());
+                    _crt_sp_tpc_start_z.push_back(start.Z());
+                    _crt_sp_tpc_end_x.push_back(end.X());
+                    _crt_sp_tpc_end_y.push_back(end.Y());
+                    _crt_sp_tpc_end_z.push_back(end.Z());
+                    _crt_sp_tpc_length.push_back(tpc_trk->Length());
+                    _crt_sp_tpc_theta.push_back(tpc_trk->Theta());
+                    _crt_sp_tpc_phi.push_back(tpc_trk->Phi());
+
+                }
+                else{
+                    _crt_sp_tpc_matched.push_back(false);
+                    _crt_sp_tpc_start_x.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_start_y.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_start_z.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_end_x.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_end_y.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_end_z.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_length.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_theta.push_back(std::numeric_limits<double>::max());
+                    _crt_sp_tpc_phi.push_back(std::numeric_limits<double>::max());
+                }   
 
                 if (fDebugCrtSP){
                     std::cout << "CRT Space Point------------------------------------" << std::endl;
                     std::cout << "   x = " << _crt_sp_x.back() << ", y = " << _crt_sp_y.back() << ", z = " << _crt_sp_z.back() << std::endl;
                     std::cout << "   ts0 = " << _crt_sp_ts0.back() << ", ts1 = " << _crt_sp_ts1.back() << std::endl;
                     std::cout << "   tagger = " << _crt_sp_tagger.back() << std::endl;
+                    std::cout << "   TPC matched = " << _crt_sp_tpc_matched.back() << std::endl;
             
                 }
             }
@@ -555,6 +621,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
             art::fill_ptr_vector(crt_trk_v, crtTrackHandle);
             art::FindManyP<sbnd::crt::CRTSpacePoint> crtTrkSPAssoc(crt_trk_v, e, fCrtTrackLabel);
+            art::FindOneP<recob::Track, anab::T0> crtTrkTrackAssoc(crt_trk_v, e, fCRTTrackMatchingModuleLabel);
             
             art::fill_ptr_vector(crt_sp_v, crtSpacePointHandle);
             art::FindManyP<sbnd::crt::CRTCluster> crtSPClusterAssoc(crt_sp_v, e, fCrtSpacePointLabel);
@@ -584,6 +651,40 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 _crt_trk_end_y.push_back(crt_trk->End().Y());
                 _crt_trk_end_z.push_back(crt_trk->End().Z());
 
+                // Get associated TPC Track
+                const art::Ptr<recob::Track> tpc_trk = crtTrkTrackAssoc.at(crt_trk.key());
+                if (!tpc_trk.isNull()){
+
+                    auto start = tpc_trk->Start();
+                    auto end = tpc_trk->End();
+
+                    _crt_trk_tpc_matched.push_back(true);
+                    _crt_trk_tpc_start_x.push_back(start.X());
+                    _crt_trk_tpc_start_y.push_back(start.Y());
+                    _crt_trk_tpc_start_z.push_back(start.Z());
+                    _crt_trk_tpc_end_x.push_back(end.X());
+                    _crt_trk_tpc_end_y.push_back(end.Y());
+                    _crt_trk_tpc_end_z.push_back(end.Z());
+                    _crt_trk_tpc_length.push_back(tpc_trk->Length());
+                    _crt_trk_tpc_theta.push_back(tpc_trk->Theta());
+                    _crt_trk_tpc_phi.push_back(tpc_trk->Phi());
+
+                }
+                else{
+                    _crt_trk_tpc_matched.push_back(false);
+                    _crt_trk_tpc_start_x.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_start_y.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_start_z.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_end_x.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_end_y.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_end_z.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_length.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_theta.push_back(std::numeric_limits<double>::max());
+                    _crt_trk_tpc_phi.push_back(std::numeric_limits<double>::max());
+                }   
+
+                // Get associated CRT Space Points
+
                 _crt_trk_sp_x.push_back({});
                 _crt_trk_sp_y.push_back({});
                 _crt_trk_sp_z.push_back({});
@@ -595,10 +696,10 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 _crt_trk_sp_ts0e.push_back({});
                 _crt_trk_sp_ts1e.push_back({});
                 _crt_trk_sp_tagger.push_back({});
-
+                
                 const std::vector<art::Ptr<sbnd::crt::CRTSpacePoint>> crt_trk_sp_v(crtTrkSPAssoc.at(crt_trk.key()));
 
-                if (fDebugCrtTrack) std::cout << "Found associated CRT Space Point size = " << crt_sp_v.size() << std::endl;
+                //if (fDebugCrtTrack) std::cout << "Found associated CRT Space Point size = " << crt_trk_sp_v.size() << std::endl;
 
                 for (auto const& crt_sp: crt_trk_sp_v){
 
@@ -617,7 +718,6 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                     _crt_trk_sp_ts1e[_ncrt_trk].push_back(crt_sp->Ts1Err());
                     _crt_trk_sp_tagger[_ncrt_trk].push_back(crt_cluster->Tagger());
                 }
-
                 _ncrt_trk++;
 
                 if (fDebugCrtTrack){
@@ -633,130 +733,13 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                     auto start = crt_trk->Start();
                     auto end = crt_trk->End();
                     std::cout << " Length = " << crt_trk->Length() << std::endl;
-                    std::cout << " Start x = " << start.X()  << ", y = " << start.Y() << ", z = " << start.Z() << std::endl;
-                    std::cout << " End x = " << end.X()  << ", y = " << end.Y() << ", z = " << end.Z() << std::endl;
+                    std::cout << " Start x = " << start.X() << ", y = " << start.Y() << ", z = " << start.Z() << std::endl;
+                    std::cout << " End x = " << end.X() << ", y = " << end.Y() << ", z = " << end.Z() << std::endl;
+
+                    std::cout << " has " << crt_trk_sp_v.size() << " associated CRT Space Points." << std::endl;
+                    std::cout << " has matched TPC Track: " << (_crt_trk_tpc_matched.back() ? "Yes" : "No") << std::endl;
+                    std::cout << "----------------------------------------------" << std::endl;
                 }
-            }
-        }
-    }
-
-    //---------------------------CRT-Matched-----------------------------//
-    if (fIncludeCrtMatch){
-
-        art::Handle<std::vector<recob::Track>> trkHandle;
-        std::vector<art::Ptr<recob::Track>> trk_v;
-        e.getByLabel(fTrackLabel, trkHandle);
-
-        art::Handle<std::vector<sbnd::crt::CRTTrack>> crtTrackHandle;
-        std::vector<art::Ptr<sbnd::crt::CRTTrack>> crt_trk_v;
-        e.getByLabel(fCrtTrackLabel, crtTrackHandle);
-
-        art::Handle<std::vector<sbnd::crt::CRTSpacePoint>> crtSpacePointHandle;
-        std::vector<art::Ptr<sbnd::crt::CRTSpacePoint>> crt_sp_v;
-        e.getByLabel(fCrtSpacePointLabel, crtSpacePointHandle);
-
-        //const detinfo::DetectorClocksData clockData   = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
-        const detinfo::DetectorPropertiesData detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
-        geo::GeometryCore const* geometryService      = lar::providerFrom<geo::Geometry>();
-
-        if (!trkHandle.isValid() || trkHandle->size() == 0){
-            if (fDebugCrtMatch) std::cout << "No Track products found." << std::endl;
-        }
-        else{
-            art::fill_ptr_vector(trk_v, trkHandle);
-            art::fill_ptr_vector(crt_trk_v, crtTrackHandle);
-            art::fill_ptr_vector(crt_sp_v, crtSpacePointHandle);
-            
-            art::FindOneP<sbnd::crt::CRTSpacePoint, anab::T0>  tracksToSPMatches(trkHandle, e, fCRTSpacePointMatchingModuleLabel);
-            art::FindOneP<sbnd::crt::CRTTrack, anab::T0>       tracksToTrackMatches(trkHandle, e, fCRTTrackMatchingModuleLabel);
-            art::FindManyP<recob::Hit>                       tracksToHits(trkHandle, e, fTrackLabel);
-            art::FindManyP<sbnd::crt::CRTCluster> crtSPClusterAssoc(crt_sp_v, e, fCrtSpacePointLabel);
-            
-            for (auto const& trk: trk_v){
-                auto start = trk->Start();
-                _tpc_start_x.push_back(start.X());
-                _tpc_start_y.push_back(start.Y());
-                _tpc_start_z.push_back(start.Z());
-
-                auto end = trk->End();
-                _tpc_end_x.push_back(end.X());
-                _tpc_end_y.push_back(end.Y());
-                _tpc_end_z.push_back(end.Z());
-
-                _tpc_length.push_back(trk->Length());
-
-                const art::Ptr<sbnd::crt::CRTSpacePoint> spacepoint = tracksToSPMatches.at(trk.key());
-                const art::Ptr<sbnd::crt::CRTTrack> crttrack = tracksToTrackMatches.at(trk.key());
-                const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(trk.key());
-
-                if(spacepoint.isNonnull()){
-                    const anab::T0 spMatch                             = tracksToSPMatches.data(trk.key()).ref();
-                    const std::vector<art::Ptr<sbnd::crt::CRTCluster>> crt_cluster_v(crtSPClusterAssoc.at(spacepoint.key()));
-                    const art::Ptr<sbnd::crt::CRTCluster>& crt_cluster(crt_cluster_v.front());
-                    
-                    const int driftDirection     = TPCGeoUtil::DriftDirectionFromHits(geometryService, trackHits);
-                    const double crtShiftingTime = fDataMode ? spacepoint->Ts0() * 1e-3 : spacepoint->Ts1() * 1e-3;
-                    
-                    _tpc_sp_matched.push_back(true);
-                    _tpc_sp_xshift.push_back(driftDirection * crtShiftingTime * detProp.DriftVelocity());
-                    _tpc_sp_ts0.push_back(spacepoint->Ts0());
-                    _tpc_sp_ts1.push_back(spacepoint->Ts1());
-                    _tpc_sp_tagger.push_back(crt_cluster->Tagger());
-                    _tpc_sp_x.push_back(spacepoint->X());
-                    _tpc_sp_y.push_back(spacepoint->Y());
-                    _tpc_sp_z.push_back(spacepoint->Z());
-                    _tpc_sp_score.push_back(spMatch.TriggerConfidence());
-                }
-                else{
-                    _tpc_sp_matched.push_back(false);
-                    _tpc_sp_xshift.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_ts0.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_ts1.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_tagger.push_back(std::numeric_limits<int>::max());
-                    _tpc_sp_x.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_y.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_z.push_back(std::numeric_limits<double>::max());
-                    _tpc_sp_score.push_back(std::numeric_limits<double>::max());
-                }
-                
-                if(crttrack.isNonnull()){
-                    const anab::T0 trackMatch = tracksToTrackMatches.data(trk.key()).ref();
-                
-                    _tpc_tr_matched.push_back(true);
-                    _tpc_tr_ts0.push_back(crttrack->Ts0());
-                    _tpc_tr_ts1.push_back(crttrack->Ts1());
-                    _tpc_tr_score.push_back(trackMatch.TriggerConfidence());
-
-                    std::vector<int> taggers;
-                    for(auto const t: crttrack->Taggers())
-                        taggers.push_back(t);
-                    _tpc_tr_taggers.push_back(taggers);
-                
-                    const geo::Point_t start          = crttrack->Start();
-                    const geo::Point_t end            = crttrack->End();
-                
-                    _tpc_tr_start_x.push_back(start.X());
-                    _tpc_tr_start_y.push_back(start.Y());
-                    _tpc_tr_start_z.push_back(start.Z());
-                    _tpc_tr_end_x.push_back(end.X());
-                    _tpc_tr_end_y.push_back(end.Y());
-                    _tpc_tr_end_z.push_back(end.Z());
-                }
-                else{
-                    _tpc_tr_matched.push_back(false);
-                    _tpc_tr_ts0.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_ts1.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_score.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_taggers.push_back(std::vector<int>());
-                    _tpc_tr_start_x.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_start_y.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_start_z.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_end_x.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_end_y.push_back(-std::numeric_limits<double>::max());
-                    _tpc_tr_end_z.push_back(-std::numeric_limits<double>::max());
-                }
-        
-                _ntpc_trk++;
             }
         }
     }
@@ -786,25 +769,25 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         }
     }
     if (fIncludePmt){
-        //------------------------PMT Timing--------------------------//
-        art::Handle<raw::TimingReferenceInfo> timingRefHandle;
-        e.getByLabel(fPmtTimingLabel, timingRefHandle);
+        ////------------------------PMT Timing--------------------------//
+        //art::Handle<raw::TimingReferenceInfo> timingRefHandle;
+        //e.getByLabel(fPmtTimingLabel, timingRefHandle);
 
-        if (!timingRefHandle.isValid()){
-            if (fDebugPmt) std::cout << "No Timing Reference products found." << std::endl;
-        }
-        else{
-            raw::TimingReferenceInfo const& pmt_timing(*timingRefHandle);
-            
-            _pmt_timing_type = pmt_timing.timingType;
-            _pmt_timing_ch = pmt_timing.timingChannel;
+        //if (!timingRefHandle.isValid()){
+        //    if (fDebugPmt) std::cout << "No Timing Reference products found." << std::endl;
+        //}
+        //else{
+        //    raw::TimingReferenceInfo const& pmt_timing(*timingRefHandle);
+        //    
+        //    _pmt_timing_type = pmt_timing.timingType;
+        //    _pmt_timing_ch = pmt_timing.timingChannel;
 
-            if (fDebugPmt){
-                std::cout << "Timing Reference For Decoding PMT" << std::endl;
-                std::cout << "   Type = " << _pmt_timing_type << " (SPECTDC = 0; Ptb HLT = 1; CAEN-only = 3)." << std::endl;
-                std::cout << "   Channel = " << _pmt_timing_ch << " (TDC ETRIG = 4; Ptb BNB Beam+Light = 2)." << std::endl;
-            }
-        }
+        //    if (fDebugPmt){
+        //        std::cout << "Timing Reference For Decoding PMT" << std::endl;
+        //        std::cout << "   Type = " << _pmt_timing_type << " (SPECTDC = 0; Ptb HLT = 1; CAEN-only = 3)." << std::endl;
+        //        std::cout << "   Channel = " << _pmt_timing_ch << " (TDC ETRIG = 4; Ptb BNB Beam+Light = 2)." << std::endl;
+        //    }
+        //}
 
         //---------------------------OpHit-----------------------------//
         //art::Handle<std::vector<recob::OpHit>> opHitHandle;
@@ -909,16 +892,15 @@ void sbnd::BeamAnalysis::beginJob()
     fTree->Branch("run", &_run);
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
-    fTree->Branch("tdc_ch0", &_tdc_ch0);
-    fTree->Branch("tdc_ch1", &_tdc_ch1);
-    fTree->Branch("tdc_ch2", &_tdc_ch2);
-    fTree->Branch("tdc_ch3", &_tdc_ch3);
-    fTree->Branch("tdc_ch4", &_tdc_ch4);
-    fTree->Branch("tdc_ch0_utc", &_tdc_ch0_utc);
-    fTree->Branch("tdc_ch1_utc", &_tdc_ch1_utc);
-    fTree->Branch("tdc_ch2_utc", &_tdc_ch2_utc);
-    fTree->Branch("tdc_ch3_utc", &_tdc_ch3_utc);
-    fTree->Branch("tdc_ch4_utc", &_tdc_ch4_utc);
+
+    fTree->Branch("timing_raw_daq_header_timestamp", &_timing_raw_daq_header_timestamp);
+    fTree->Branch("timing_tdc_crtt1", &_timing_tdc_crtt1);
+    fTree->Branch("timing_tdc_bes", &_timing_tdc_bes);
+    fTree->Branch("timing_tdc_rwm", &_timing_tdc_rwm);
+    fTree->Branch("timing_tdc_etrig", &_timing_tdc_etrig);
+    fTree->Branch("timing_hlt_crtt1", &_timing_hlt_crtt1);
+    fTree->Branch("timing_hlt_beam_gate", &_timing_hlt_beam_gate);
+    fTree->Branch("timing_hlt_etrig", &_timing_hlt_etrig);
 
     fTree->Branch("frame_tdc_crtt1", &_frame_tdc_crtt1);
     fTree->Branch("frame_tdc_bes", &_frame_tdc_bes);
@@ -926,14 +908,28 @@ void sbnd::BeamAnalysis::beginJob()
     fTree->Branch("frame_hlt_crtt1", &_frame_hlt_crtt1);
     fTree->Branch("frame_hlt_gate", &_frame_hlt_gate);
 
+    if (fIncludeTdc){
+        fTree->Branch("tdc_ch0", &_tdc_ch0);
+        fTree->Branch("tdc_ch1", &_tdc_ch1);
+        fTree->Branch("tdc_ch2", &_tdc_ch2);
+        fTree->Branch("tdc_ch3", &_tdc_ch3);
+        fTree->Branch("tdc_ch4", &_tdc_ch4);
+        fTree->Branch("tdc_ch0_utc", &_tdc_ch0_utc);
+        fTree->Branch("tdc_ch1_utc", &_tdc_ch1_utc);
+        fTree->Branch("tdc_ch2_utc", &_tdc_ch2_utc);
+        fTree->Branch("tdc_ch3_utc", &_tdc_ch3_utc);
+        fTree->Branch("tdc_ch4_utc", &_tdc_ch4_utc);
+    }
+
     if (fIncludePtb){
-        fTree->Branch("ptb_hlt_trigger", &_ptb_hlt_trigger);
-        fTree->Branch("ptb_hlt_timestamp", &_ptb_hlt_timestamp);
+        //fTree->Branch("ptb_hlt_trigger", &_ptb_hlt_trigger);
+        //fTree->Branch("ptb_hlt_timestamp", &_ptb_hlt_timestamp);
         fTree->Branch("ptb_hlt_trunmask", &_ptb_hlt_trunmask);
         fTree->Branch("ptb_hlt_unmask_timestamp", &_ptb_hlt_unmask_timestamp);
     }
 
     if (fIncludeCrtSP){
+        fTree->Branch("ncrt_sp", &_ncrt_sp);
         fTree->Branch("crt_sp_x", &_crt_sp_x);
         fTree->Branch("crt_sp_y", &_crt_sp_y);
         fTree->Branch("crt_sp_z", &_crt_sp_z);
@@ -945,6 +941,16 @@ void sbnd::BeamAnalysis::beginJob()
         fTree->Branch("crt_sp_ts0e", &_crt_sp_ts0e);
         fTree->Branch("crt_sp_ts1e", &_crt_sp_ts1e);
         fTree->Branch("crt_sp_tagger", &_crt_sp_tagger);
+        fTree->Branch("crt_sp_tpc_matched", &_crt_sp_tpc_matched);
+        fTree->Branch("crt_sp_tpc_start_x", &_crt_sp_tpc_start_x);
+        fTree->Branch("crt_sp_tpc_start_y", &_crt_sp_tpc_start_y);
+        fTree->Branch("crt_sp_tpc_start_z", &_crt_sp_tpc_start_z);
+        fTree->Branch("crt_sp_tpc_end_x", &_crt_sp_tpc_end_x);
+        fTree->Branch("crt_sp_tpc_end_y", &_crt_sp_tpc_end_y);
+        fTree->Branch("crt_sp_tpc_end_z", &_crt_sp_tpc_end_z);
+        fTree->Branch("crt_sp_tpc_length", &_crt_sp_tpc_length);
+        fTree->Branch("crt_sp_tpc_theta", &_crt_sp_tpc_theta);
+        fTree->Branch("crt_sp_tpc_phi", &_crt_sp_tpc_phi);
     }
     
     if (fIncludeCrtTrack){
@@ -966,6 +972,16 @@ void sbnd::BeamAnalysis::beginJob()
         fTree->Branch("crt_trk_end_x", &_crt_trk_end_x);
         fTree->Branch("crt_trk_end_y", &_crt_trk_end_y);
         fTree->Branch("crt_trk_end_z", &_crt_trk_end_z);
+        fTree->Branch("crt_trk_tpc_matched", &_crt_trk_tpc_matched);
+        fTree->Branch("crt_trk_tpc_start_x", &_crt_trk_tpc_start_x);
+        fTree->Branch("crt_trk_tpc_start_y", &_crt_trk_tpc_start_y);
+        fTree->Branch("crt_trk_tpc_start_z", &_crt_trk_tpc_start_z);
+        fTree->Branch("crt_trk_tpc_end_x", &_crt_trk_tpc_end_x);
+        fTree->Branch("crt_trk_tpc_end_y", &_crt_trk_tpc_end_y);
+        fTree->Branch("crt_trk_tpc_end_z", &_crt_trk_tpc_end_z);
+        fTree->Branch("crt_trk_tpc_length", &_crt_trk_tpc_length);
+        fTree->Branch("crt_trk_tpc_theta", &_crt_trk_tpc_theta);
+        fTree->Branch("crt_trk_tpc_phi", &_crt_trk_tpc_phi);
         fTree->Branch("crt_trk_sp_x", &_crt_trk_sp_x);
         fTree->Branch("crt_trk_sp_y", &_crt_trk_sp_y);
         fTree->Branch("crt_trk_sp_z", &_crt_trk_sp_z);
@@ -978,40 +994,6 @@ void sbnd::BeamAnalysis::beginJob()
         fTree->Branch("crt_trk_sp_ts1e", &_crt_trk_sp_ts1e);
         fTree->Branch("crt_trk_sp_tagger", &_crt_trk_sp_tagger);
     }
-    if (fIncludeCrtMatch){
-        fTree->Branch("ntpc_trk", &_ntpc_trk);
-        fTree->Branch("tpc_trk_id", &_tpc_trk_id);
-        fTree->Branch("tpc_trk_start_x", &_tpc_start_x);
-        fTree->Branch("tpc_trk_start_y", &_tpc_start_y);
-        fTree->Branch("tpc_trk_start_z", &_tpc_start_z);
-        fTree->Branch("tpc_trk_end_x", &_tpc_end_x);
-        fTree->Branch("tpc_trk_end_y", &_tpc_end_y);
-        fTree->Branch("tpc_trk_end_z", &_tpc_end_z);
-        fTree->Branch("tpc_trk_length", &_tpc_length);
-
-        fTree->Branch("tpc_crt_sp_matched", &_tpc_sp_matched);
-        fTree->Branch("tpc_crt_sp_xshift", &_tpc_sp_xshift);
-        fTree->Branch("tpc_crt_sp_ts0", &_tpc_sp_ts0);
-        fTree->Branch("tpc_crt_sp_ts1", &_tpc_sp_ts1);
-        fTree->Branch("tpc_crt_sp_x", &_tpc_sp_x);
-        fTree->Branch("tpc_crt_sp_y", &_tpc_sp_y);
-        fTree->Branch("tpc_crt_sp_z", &_tpc_sp_z);
-        fTree->Branch("tpc_crt_sp_score", &_tpc_sp_score);
-        fTree->Branch("tpc_crt_sp_tagger", &_tpc_sp_tagger);
-        fTree->Branch("tpc_crt_sp_nhits", &_tpc_sp_nhits);
-
-        fTree->Branch("tpc_crt_trk_matched", &_tpc_tr_matched);
-        fTree->Branch("tpc_crt_trk_ts0", &_tpc_tr_ts0);
-        fTree->Branch("tpc_crt_trk_ts1", &_tpc_tr_ts1);
-        fTree->Branch("tpc_crt_trk_score", &_tpc_tr_score);
-        fTree->Branch("tpc_crt_trk_taggers", &_tpc_tr_taggers);
-        fTree->Branch("tpc_crt_trk_start_x", &_tpc_tr_start_x);
-        fTree->Branch("tpc_crt_trk_start_y", &_tpc_tr_start_y);
-        fTree->Branch("tpc_crt_trk_start_z", &_tpc_tr_start_z);
-        fTree->Branch("tpc_crt_trk_end_x", &_tpc_tr_end_x);
-        fTree->Branch("tpc_crt_trk_end_y", &_tpc_tr_end_y);
-        fTree->Branch("tpc_crt_trk_end_z", &_tpc_tr_end_z);
-    }
 
     if (fIncludePmtMetric){
         fTree->Branch("metric_peakpe", &_metric_peakpe);
@@ -1020,8 +1002,8 @@ void sbnd::BeamAnalysis::beginJob()
     }
 
     if (fIncludePmt){
-        fTree->Branch("pmt_timing_type", &_pmt_timing_type);
-        fTree->Branch("pmt_timing_ch", &_pmt_timing_ch);
+        //fTree->Branch("pmt_timing_type", &_pmt_timing_type);
+        //fTree->Branch("pmt_timing_ch", &_pmt_timing_ch);
 
         //fTree->Branch("nophits", &_nophits);
         //fTree->Branch("ophit_opch", &_ophit_opch);
@@ -1063,24 +1045,37 @@ void sbnd::BeamAnalysis::endJob()
 void sbnd::BeamAnalysis::ResetEventVars()
 {
     _run = -1; _subrun = -1; _event = -1;
-   
-    _tdc_ch0.clear();
-    _tdc_ch1.clear();
-    _tdc_ch2.clear();
-    _tdc_ch3.clear();
-    _tdc_ch4.clear();
 
-    _tdc_ch0_utc.clear();
-    _tdc_ch1_utc.clear();
-    _tdc_ch2_utc.clear();
-    _tdc_ch3_utc.clear();
-    _tdc_ch4_utc.clear();
+    _timing_raw_daq_header_timestamp = 0;
+    _timing_tdc_crtt1 = 0;
+    _timing_tdc_bes = 0;
+    _timing_tdc_rwm = 0;
+    _timing_tdc_etrig = 0;
+    _timing_hlt_crtt1 = 0;
+    _timing_hlt_beam_gate = 0;
+    _timing_hlt_etrig = 0;
 
     _frame_tdc_crtt1 = 0;
     _frame_tdc_bes = 0;
     _frame_tdc_rwm = 0;
     _frame_hlt_crtt1 = 0;
-    _frame_tdc_rwm = 0;
+    _frame_hlt_gate = 0;
+    _frame_apply_at_caf = 0;
+   
+    if (fIncludeTdc){
+        _tdc_ch0.clear();
+        _tdc_ch1.clear();
+        _tdc_ch2.clear();
+        _tdc_ch3.clear();
+        _tdc_ch4.clear();
+
+        _tdc_ch0_utc.clear();
+        _tdc_ch1_utc.clear();
+        _tdc_ch2_utc.clear();
+        _tdc_ch3_utc.clear();
+        _tdc_ch4_utc.clear();
+    }
+
 
     if (fIncludePtb){
         _ptb_hlt_trigger.clear();
@@ -1090,6 +1085,7 @@ void sbnd::BeamAnalysis::ResetEventVars()
     }
 
     if (fIncludeCrtSP){
+        _ncrt_sp = 0;
         _crt_sp_x.clear();
         _crt_sp_y.clear();
         _crt_sp_z.clear();
@@ -1101,6 +1097,16 @@ void sbnd::BeamAnalysis::ResetEventVars()
         _crt_sp_ts0e.clear();
         _crt_sp_ts1e.clear();
         _crt_sp_tagger.clear();
+        _crt_sp_tpc_matched.clear();
+        _crt_sp_tpc_start_x.clear();
+        _crt_sp_tpc_start_y.clear();
+        _crt_sp_tpc_start_z.clear();
+        _crt_sp_tpc_end_x.clear();
+        _crt_sp_tpc_end_y.clear();
+        _crt_sp_tpc_end_z.clear();
+        _crt_sp_tpc_length.clear();
+        _crt_sp_tpc_theta.clear();
+        _crt_sp_tpc_phi.clear();
     }
 
     if (fIncludeCrtTrack){
@@ -1122,6 +1128,16 @@ void sbnd::BeamAnalysis::ResetEventVars()
         _crt_trk_end_x.clear();
         _crt_trk_end_y.clear();
         _crt_trk_end_z.clear();
+        _crt_trk_tpc_matched.clear();
+        _crt_trk_tpc_start_x.clear();
+        _crt_trk_tpc_start_y.clear();
+        _crt_trk_tpc_start_z.clear();
+        _crt_trk_tpc_end_x.clear();
+        _crt_trk_tpc_end_y.clear();
+        _crt_trk_tpc_end_z.clear();
+        _crt_trk_tpc_length.clear();
+        _crt_trk_tpc_theta.clear();
+        _crt_trk_tpc_phi.clear();
         _crt_trk_sp_x.clear();
         _crt_trk_sp_y.clear();
         _crt_trk_sp_z.clear();
@@ -1135,40 +1151,6 @@ void sbnd::BeamAnalysis::ResetEventVars()
         _crt_trk_sp_tagger.clear();
     }
 
-    if (fIncludeCrtMatch){
-        _ntpc_trk = 0;
-        _tpc_start_x.clear();
-        _tpc_start_y.clear();
-        _tpc_start_z.clear();
-        _tpc_end_x.clear();
-        _tpc_end_y.clear();
-        _tpc_end_z.clear();
-        _tpc_length.clear();
-
-        _tpc_sp_matched.clear();
-        _tpc_sp_xshift.clear();
-        _tpc_sp_ts0.clear();
-        _tpc_sp_ts1.clear();
-        _tpc_sp_x.clear();
-        _tpc_sp_y.clear();
-        _tpc_sp_z.clear();
-        _tpc_sp_score.clear();
-        _tpc_sp_tagger.clear();
-        _tpc_sp_nhits.clear();
-
-        _tpc_tr_matched.clear();
-        _tpc_tr_ts0.clear();
-        _tpc_tr_ts1.clear();
-        _tpc_tr_score.clear();
-        _tpc_tr_taggers.clear();
-        _tpc_tr_start_x.clear();
-        _tpc_tr_start_y.clear();
-        _tpc_tr_start_z.clear();
-        _tpc_tr_end_x.clear();
-        _tpc_tr_end_y.clear();
-        _tpc_tr_end_z.clear();
-    }
-
     if (fIncludePmtMetric){
         _metric_peakpe = -1;
         _metric_peaktime = -9999;
@@ -1176,8 +1158,8 @@ void sbnd::BeamAnalysis::ResetEventVars()
     }
 
     if (fIncludePmt){
-        _pmt_timing_type = -1;
-        _pmt_timing_ch = -1;
+        //_pmt_timing_type = -1;
+        //_pmt_timing_ch = -1;
 
         //_nophits = 0;
         //_ophit_opch.clear();
