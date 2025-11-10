@@ -1,3 +1,0 @@
-#include "prodcorsika_cosmics_proton_sbnd.fcl"
-
-physics.producers.generator.BufferBox: [ -300, 300, -300, 600, -300, 300 ]
