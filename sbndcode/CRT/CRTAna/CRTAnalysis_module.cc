@@ -1748,7 +1748,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_tr_ts1[nActualTracks]     = crttrack->Ts1();
           _tpc_tr_score[nActualTracks]   = trackMatch.TriggerConfidence();
 
-          const std::set<CRTTagger> taggers = crttrack->Taggers();
+          const std::vector<CRTTagger> taggers = crttrack->Taggers();
           const geo::Point_t start          = crttrack->Start();
           const geo::Point_t end            = crttrack->End();
 

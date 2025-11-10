@@ -118,14 +118,14 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
     
     std::cout << " Corrected flash time is " << correctedopflash->OpFlashT0 << std::endl;
     std::cout << " Associated with slice id " << slice_v[0]->ID() << std::endl;
-    std::cout << "Corrected flash time light only  " << correctedopflash->UpstreamTime_lightonly << std::endl;
-    std::cout << "Corrected flash time tpc z corr " << correctedopflash->UpstreamTime_tpczcorr << std::endl;
-    std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->UpstreamTime_propcorr_tpczcorr << std::endl;
+    //std::cout << "Corrected flash time light only  " << correctedopflash->UpstreamTime_lightonly << std::endl;
+    //std::cout << "Corrected flash time tpc z corr " << correctedopflash->UpstreamTime_tpczcorr << std::endl;
+    //std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->UpstreamTime_propcorr_tpczcorr << std::endl;
 
     fOpFlashT0 = correctedopflash->OpFlashT0;
-    fUpstreamTime_lightonly = correctedopflash->UpstreamTime_lightonly;
-    fUpstreamTime_tpczcorr = correctedopflash->UpstreamTime_tpczcorr;
-    fUpstreamTime_propcorr_tpczcorr = correctedopflash->UpstreamTime_propcorr_tpczcorr;
+    //fUpstreamTime_lightonly = correctedopflash->UpstreamTime_lightonly;
+    //fUpstreamTime_tpczcorr = correctedopflash->UpstreamTime_tpczcorr;
+    //fUpstreamTime_propcorr_tpczcorr = correctedopflash->UpstreamTime_propcorr_tpczcorr;
     fTree->Fill();
   }
 }
