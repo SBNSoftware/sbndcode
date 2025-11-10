@@ -12,3 +12,4 @@ physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
 physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
 
 physics.analyzers.crtana: @local::crtana_data_sbnd
+physics.analyzers.crtana.NoTPC: true
