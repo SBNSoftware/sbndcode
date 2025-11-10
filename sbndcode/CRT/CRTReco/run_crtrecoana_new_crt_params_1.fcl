@@ -1,0 +1,11 @@
+#include "run_crtrecoana.fcl"
+
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.PEAttenuation: -908
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.PropDelay:     0.06441
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeWalkNorm:  7.3
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeWalkScale: 0.087
+
+physics.analyzers.crtana.PEAttenuation: -908
+physics.analyzers.crtana.PropDelay:     0.06441
+physics.analyzers.crtana.TimeWalkNorm:  7.3
+physics.analyzers.crtana.TimeWalkScale: 0.087
