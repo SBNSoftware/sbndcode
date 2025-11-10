@@ -1,0 +1,3 @@
+#include "run_crtrecoana_data_new_crt_params_1_calibrated_gains.fcl"
+
+services.CRTCalibrationDatabase.Database.ChannelTableName: "crt_channel_calibration_gains"
