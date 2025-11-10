@@ -1,0 +1,9 @@
+#include "standard_detsim_sbnd.fcl"
+
+physics.producers.crtsim.DetSimParams.Q0:            1.68e-3
+physics.producers.crtsim.DetSimParams.NpeScaleNorm:  44.60
+physics.producers.crtsim.DetSimParams.NpeScaleShift: -908
+physics.producers.crtsim.DetSimParams.PropDelay:     0.06441
+physics.producers.crtsim.DetSimParams.TDelayNorm:    7.3
+physics.producers.crtsim.DetSimParams.TDelayScale:   0.087
+physics.producers.crtsim.DetSimParams.AdcSaturation: 4089
