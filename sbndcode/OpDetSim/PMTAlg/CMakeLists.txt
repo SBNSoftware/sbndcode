@@ -20,14 +20,14 @@ cet_build_plugin(PMTNonLinearityTF1 art::tool
             ROOT::Hist
 )
 
-#cet_build_plugin(PMTNonLinearityTF1ChannelByChannel art::tool 
-#      SOURCE
-#            PMTNonLinearityTF1ChannelByChannel_tool.cc 
-#      LIBRARIES
-#            art::Framework_Services_Registry
-#            ROOT::Hist
-#            larcore::Geometry_Geometry_service
-#)
+cet_build_plugin(PMTNonLinearityTF1ChannelByChannel art::tool 
+      SOURCE
+            PMTNonLinearityTF1ChannelByChannel_tool.cc 
+      LIBRARIES
+            art::Framework_Services_Registry
+            ROOT::Hist
+            larcore::Geometry_Geometry_service
+)
 
 install_headers()
 install_fhicl()
