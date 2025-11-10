@@ -597,7 +597,7 @@ namespace sbnd::crt {
             if(trackTime < fMinTime || trackTime > fMaxTime)
               continue;
 
-            std::set<CRTTagger> taggers = track->Taggers();
+            std::vector<CRTTagger> taggers = track->Taggers();
 
             bool none = fChoseTaggers;
             for(auto const& tagger : taggers)
