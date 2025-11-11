@@ -67,11 +67,10 @@ private:
   std::vector<std::vector<double>> fAttenuationFormParams;
   unsigned int fAttenuationPreTime;
   std::vector<unsigned int> fNonLinearRange;
-
   geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
 
   //TF1 for non linearity function
-  std::map<int, TF1*> fNonLinearTF1Map;
+  std::map<int, std::unique_ptr<TF1>> fNonLinearTF1Map;
 
   // Vector to store non linearity attenuation values
   std::vector<std::vector<double>> fPEAttenuation_V;
@@ -90,7 +89,7 @@ opdet::PMTNonLinearityTF1ChannelByChannel::PMTNonLinearityTF1ChannelByChannel(ar
 {
   //Initialize TF1 for each channel with channel-dependent parameters
   for(size_t opch=0; opch<fWireReadout.NOpChannels(); opch++){
-    fNonLinearTF1Map[opch] = new TF1(("NonLinearTF1_"+std::to_string(opch)).c_str(), fAttenuationForm.c_str());
+    fNonLinearTF1Map[opch] = std::make_unique<TF1>(("NonLinearTF1_"+std::to_string(opch)).c_str(), fAttenuationForm.c_str());
     for(size_t k=0; k<fAttenuationFormParams[opch].size(); k++){
       fNonLinearTF1Map[opch]->SetParameter(k, fAttenuationFormParams[opch][k]);
     }
