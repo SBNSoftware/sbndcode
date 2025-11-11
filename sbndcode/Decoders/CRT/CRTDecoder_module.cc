@@ -119,7 +119,7 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
     {
       bool mac5_is_valid = fCRTChannelMapService->MAC5IsValid(bern_frag_meta->MAC5());
 
-      if(mac5_is_valid)
+      if(!mac5_is_valid)
         {
           mf::LogInfo("CRTDecoder") << "===========================================================\n"
                                     << "ERROR: Cannot find simulation module for MAC5: "
