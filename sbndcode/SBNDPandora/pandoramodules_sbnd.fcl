@@ -75,11 +75,14 @@ sbnd_showertrackfindercheater.LArPandoraShowerCheatingAlg: @local::sbnd_larpando
 # Pandora Shower Configurations
 standard_pandoraModularShowerCreation.UseAllParticles: true
 
-sbnd_legacy_pandoraModularShowerCreation:      @local::legacy_pandoraModularShowerCreation
-sbnd_basic_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
-sbnd_3dTraj_pandoraModularShowerCreation:      @local::standard_pandoraModularShowerCreation
-sbnd_incremental_pandoraModularShowerCreation: @local::standard_pandoraModularShowerCreation
-sbnd_cheat_pandoraModularShowerCreation:       @local::standard_pandoraModularShowerCreation
+sbnd_legacy_pandoraModularShowerCreation:                           @local::legacy_pandoraModularShowerCreation
+sbnd_basic_pandoraModularShowerCreation:                            @local::standard_pandoraModularShowerCreation
+sbnd_basic_pandoraModularShowerCreation.ShowerBestPlaneLabel:       ""
+sbnd_basic_pandoraModularShowerCreation.ShowerBestPlaneEnergyLabel: "ShowerBestPlaneEnergy"
+sbnd_basic_pandoraModularShowerCreation.ShowerBestPlanedEdxLabel:   "ShowerBestPlanedEdx"
+sbnd_3dTraj_pandoraModularShowerCreation:                           @local::sbnd_basic_pandoraModularShowerCreation
+sbnd_incremental_pandoraModularShowerCreation:                      @local::sbnd_basic_pandoraModularShowerCreation
+sbnd_cheat_pandoraModularShowerCreation:                            @local::sbnd_basic_pandoraModularShowerCreation
 
 # Create SBND specific versions of tools which require SBND calorimetry numbers
 sbnd_showerlinearenergy:          @local::showerlinearenergy
@@ -88,14 +91,17 @@ sbnd_showertrajpointdedx:         @local::showertrajpointdedx
 sbnd_showernumelectronsenergy:    @local::showernumelectronsenergy
 sbnd_showerbayesiantrucatingdedx: @local::showerbayesiantrucatingdedx
 
-sbnd_showerlinearenergy.Gradients: [0.00155644, 0.00173915, 0.00153631]
-sbnd_showerlinearenergy.Intercepts: [5.92931, -2.13307, 5.19711]
-sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
-sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
-sbnd_showerunidirectiondedx.SumHitSnippets:   true
-sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
-sbnd_showertrajpointdedx.SumHitSnippets:      true
-sbnd_showerbayesiantrucatingdedx.PriorFname: "PandoraMVAs/ShowerBayesdEdxPriors.root"
+sbnd_showerlinearenergy.Gradients:                        [0.00155644, 0.00173915, 0.00153631]
+sbnd_showerlinearenergy.Intercepts:                       [5.92931, -2.13307, 5.19711]
+sbnd_showernumelectronsenergy.CalorimetryAlg:             @local::sbnd_calorimetryalgmc
+sbnd_showernumelectronsenergy.ShowerBestPlaneOutputLabel: "ShowerBestPlaneEnergy"
+sbnd_showerunidirectiondedx.CalorimetryAlg:               @local::sbnd_calorimetryalgmc
+sbnd_showerunidirectiondedx.SumHitSnippets:               true
+sbnd_showerunidirectiondedx.ShowerBestPlaneOutputLabel:   "ShowerBestPlanedEdx"
+sbnd_showertrajpointdedx.CalorimetryAlg:                  @local::sbnd_calorimetryalgmc
+sbnd_showertrajpointdedx.SumHitSnippets:                  true
+sbnd_showertrajpointdedx.ShowerBestPlaneOutputLabel:      "ShowerBestPlanedEdx"
+sbnd_showerbayesiantrucatingdedx.PriorFname:              "PandoraMVAs/ShowerBayesdEdxPriors.root"
 
 sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::showerpfpvertexstartposition,
