@@ -169,204 +169,6 @@ void styleDrawPur(purHist_struct hists,
 
 /*
 void styleDrawAll(histGroup_struct hists,
-                  double ymin, double ymax,
-                  double xmin, double xmax,
-                  const char* filename,
-                  const std::string& legendLocation,
-                  int* drawLine = nullptr, int* linePos = nullptr,
-                  bool includeSignal = true,
-                  bool includeBNB = true,
-                  bool includeCosmic = true, int* log = nullptr)
-{
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-
-    if(log && *log){
-        gPad->SetLogy();
-        hists.currentCosmic->SetMinimum(0.0000001);
-        hists.ubooneCosmic->SetMinimum(0.0000001);
-        hists.nuECosmic->SetMinimum(0.0000001);
-        hists.currentSignal->SetMinimum(0.0000001);
-        hists.ubooneSignal->SetMinimum(0.0000001);
-        hists.nuESignal->SetMinimum(0.0000001);
-        hists.currentSignalFuzzy->SetMinimum(0.0000001);
-        hists.ubooneSignalFuzzy->SetMinimum(0.0000001);
-        hists.nuESignalFuzzy->SetMinimum(0.0000001);
-        hists.currentBNB->SetMinimum(0.0000001);
-        hists.ubooneBNB->SetMinimum(0.0000001);
-        hists.nuEBNB->SetMinimum(0.0000001);
-        hists.currentBNBFuzzy->SetMinimum(0.0000001);
-        hists.ubooneBNBFuzzy->SetMinimum(0.0000001);
-        hists.nuEBNBFuzzy->SetMinimum(0.0000001);
-    }
-
-    gPad->Update();
-
-    //--- Style setup
-    hists.currentCosmic->SetLineWidth(2);
-    hists.currentCosmic->SetLineColor(kPink+9);
-    hists.ubooneCosmic->SetLineWidth(2);
-    hists.ubooneCosmic->SetLineColor(kPink+1);
-    hists.nuECosmic->SetLineWidth(2);
-    hists.nuECosmic->SetLineColor(kPink-2);
-
-    hists.currentSignal->SetLineWidth(2);
-    hists.currentSignal->SetLineColor(kBlue+1);
-    hists.ubooneSignal->SetLineWidth(2);
-    hists.ubooneSignal->SetLineColor(kBlue-7);
-    hists.nuESignal->SetLineWidth(2);
-    hists.nuESignal->SetLineColor(kAzure+5);
-
-    hists.currentSignalFuzzy->SetLineWidth(2);
-    hists.currentSignalFuzzy->SetLineColor(kGreen+3);
-    hists.ubooneSignalFuzzy->SetLineWidth(2);
-    hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
-    hists.nuESignalFuzzy->SetLineWidth(2);
-    hists.nuESignalFuzzy->SetLineColor(kGreen-7);
-
-    hists.currentBNB->SetLineWidth(2);
-    hists.currentBNB->SetLineColor(kOrange+7);
-    hists.ubooneBNB->SetLineWidth(2);
-    hists.ubooneBNB->SetLineColor(kOrange+6);
-    hists.nuEBNB->SetLineWidth(2);
-    hists.nuEBNB->SetLineColor(kOrange-5);
-
-    hists.currentBNBFuzzy->SetLineWidth(2);
-    hists.currentBNBFuzzy->SetLineColor(kViolet+1);
-    hists.ubooneBNBFuzzy->SetLineWidth(2);
-    hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
-    hists.nuEBNBFuzzy->SetLineWidth(2);
-    hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
-
-    //--- Axis ranges
-    if ((ymin != 999) && (ymax != 999))
-        hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
-
-    if ((xmin != 999) && (xmax != 999))
-        hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
-
-    //--- Dynamic Y range
-    double maxYValue = std::max({
-        hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum(),
-        hists.currentCosmic->GetMaximum(), hists.ubooneCosmic->GetMaximum(), hists.nuECosmic->GetMaximum(),
-        hists.currentSignalFuzzy->GetMaximum(), hists.ubooneSignalFuzzy->GetMaximum(), hists.nuESignalFuzzy->GetMaximum(),
-        hists.currentBNB->GetMaximum(), hists.ubooneBNB->GetMaximum(), hists.nuEBNB->GetMaximum(),
-        hists.currentBNBFuzzy->GetMaximum(), hists.ubooneBNBFuzzy->GetMaximum(), hists.nuEBNBFuzzy->GetMaximum()
-    });
-
-    double yminVal = 0;
-    if ((ymin == 999) && (ymax == 999)) {
-        double ymaxVal = (maxYValue * 1.1);
-        hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-    }
-
-    //--- Drawing block
-    bool first = true;
-    auto draw = [&](TH1* hist) {
-        if (!hist) return;
-        hist->Draw(first ? "hist" : "histsame");
-        first = false;
-    };
-
-    if (includeSignal) {
-        draw(hists.currentSignal);
-        draw(hists.ubooneSignal);
-        draw(hists.nuESignal);
-        draw(hists.currentSignalFuzzy);
-        draw(hists.ubooneSignalFuzzy);
-        draw(hists.nuESignalFuzzy);
-    }
-
-    if (includeBNB) {
-        draw(hists.currentBNB);
-        draw(hists.ubooneBNB);
-        draw(hists.nuEBNB);
-        draw(hists.currentBNBFuzzy);
-        draw(hists.ubooneBNBFuzzy);
-        draw(hists.nuEBNBFuzzy);
-    }
-
-    if (includeCosmic) {
-        draw(hists.currentCosmic);
-        draw(hists.ubooneCosmic);
-        draw(hists.nuECosmic);
-    }
-
-    //--- Axes and stats
-    hists.currentSignal->SetStats(0);
-    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
-    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
-    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
-    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
-
-    //--- Legend positioning
-    double Lxmin = 0, Lxmax = 0, Lymin = 0, Lymax = 0;
-
-    if (legendLocation == "topRight") {
-        Lxmin = 0.67; Lymax = 0.863; Lxmax = 0.87; Lymin = 0.640;
-    }
-    else if (legendLocation == "topLeft") {
-        Lxmin = 0.13; Lymax = 0.863; Lxmax = 0.33; Lymin = 0.640;
-    }
-    else if (legendLocation == "bottomRight") {
-        Lxmin = 0.67; Lymax = 0.36; Lxmax = 0.87; Lymin = 0.137;
-    }
-    else if (legendLocation == "bottomLeft") {
-        Lxmin = 0.13; Lymax = 0.36; Lxmax = 0.33; Lymin = 0.137;
-    }
-
-    auto legend = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
-
-    if (includeSignal) {
-        legend->AddEntry(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
-        legend->AddEntry(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-        legend->AddEntry(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "f");
-        legend->AddEntry(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "f");
-        legend->AddEntry(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-        legend->AddEntry(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    }
-
-    if (includeBNB) {
-        legend->AddEntry(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "f");
-        legend->AddEntry(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-        legend->AddEntry(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "f");
-        legend->AddEntry(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "f");
-        legend->AddEntry(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-        legend->AddEntry(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    }
-
-    if (includeCosmic) {
-        legend->AddEntry(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "f");
-        legend->AddEntry(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-        legend->AddEntry(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "f");
-    }
-
-    legend->SetTextSize(0.01);
-    legend->SetMargin(0.12);
-    legend->Draw();
-
-    //--- Optional vertical line
-    if (drawLine) {
-        TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
-        line->SetLineColor(kGray+2);
-        line->SetLineStyle(2);
-        line->SetLineWidth(2);
-        line->Draw("same");
-
-        double ymaxValLine = maxYValue * 0.95;
-        TLatex* latex = new TLatex((*linePos == 0 ? 1.022 - 0.2 : 1.022 + 0.2),
-                                   ymaxValLine, "2m_{e}");
-        latex->SetTextSize(0.035);
-        latex->SetTextAlign(11);
-        latex->Draw("same");
-    }
-
-    hists.canvas->SaveAs(filename);
-}
-*/
-
-void styleDrawAll(histGroup_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
                   const char* filename, const std::string& legendLocation,
                   int* drawLine = nullptr, int* linePos = nullptr,
@@ -570,7 +372,211 @@ void styleDrawAll(histGroup_struct hists,
 
     hists.canvas->SaveAs(filename);
 }
+*/
 
+void styleDrawAll(histGroup_struct hists,
+                  double ymin, double ymax, double xmin, double xmax,
+                  const char* filename, const std::string& legendLocation,
+                  int* drawLine = nullptr, int* linePos = nullptr,
+                  bool includeSignal = true, bool includeSignalFuzzy = true,
+                  bool includeBNB = true, bool includeBNBFuzzy = true,
+                  bool includeCosmic = true,
+                  bool includeDLUboone = true, bool includeDLNuE = true,
+                  bool includeBDT = true,
+                  bool useLogScale = false) // <-- new parameter
+{
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    //--- optionally enable log scale
+    if (useLogScale)
+        hists.canvas->SetLogy(1);
+    else
+        hists.canvas->SetLogy(0);
+
+    //--- helper: list of all hists
+    std::vector<TH1F*> allHists = {
+        hists.currentSignal, hists.ubooneSignal, hists.nuESignal,
+        hists.currentSignalFuzzy, hists.ubooneSignalFuzzy, hists.nuESignalFuzzy,
+        hists.currentBNB, hists.ubooneBNB, hists.nuEBNB,
+        hists.currentBNBFuzzy, hists.ubooneBNBFuzzy, hists.nuEBNBFuzzy,
+        hists.currentCosmic, hists.ubooneCosmic, hists.nuECosmic
+    };
+
+    //--- zero-bin fix if using log scale
+    if (useLogScale) {
+        for (auto* hist : allHists) {
+            if (!hist) continue;
+            int nBins = hist->GetNbinsX();
+            for (int i = 1; i <= nBins; ++i) {
+                if (hist->GetBinContent(i) <= 0)
+                    hist->SetBinContent(i, 1e-6);
+            }
+        }
+    }
+
+    //--- Disable stats
+    for (auto* hist : allHists)
+        if (hist) hist->SetStats(0);
+
+    //--- Style setup
+    hists.currentCosmic->SetLineWidth(2);  hists.currentCosmic->SetLineColor(kPink+9);
+    hists.ubooneCosmic->SetLineWidth(2);   hists.ubooneCosmic->SetLineColor(kPink+1);
+    hists.nuECosmic->SetLineWidth(2);      hists.nuECosmic->SetLineColor(kPink-2);
+
+    hists.currentSignal->SetLineWidth(2);  hists.currentSignal->SetLineColor(kBlue+1);
+    hists.ubooneSignal->SetLineWidth(2);   hists.ubooneSignal->SetLineColor(kBlue-7);
+    hists.nuESignal->SetLineWidth(2);      hists.nuESignal->SetLineColor(kAzure+5);
+
+    hists.currentSignalFuzzy->SetLineWidth(2);  hists.currentSignalFuzzy->SetLineColor(kGreen+3);
+    hists.ubooneSignalFuzzy->SetLineWidth(2);   hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
+    hists.nuESignalFuzzy->SetLineWidth(2);      hists.nuESignalFuzzy->SetLineColor(kGreen-7);
+
+    hists.currentBNB->SetLineWidth(2);  hists.currentBNB->SetLineColor(kOrange+7);
+    hists.ubooneBNB->SetLineWidth(2);   hists.ubooneBNB->SetLineColor(kOrange+6);
+    hists.nuEBNB->SetLineWidth(2);      hists.nuEBNB->SetLineColor(kOrange-5);
+
+    hists.currentBNBFuzzy->SetLineWidth(2);  hists.currentBNBFuzzy->SetLineColor(kViolet+1);
+    hists.ubooneBNBFuzzy->SetLineWidth(2);   hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
+    hists.nuEBNBFuzzy->SetLineWidth(2);      hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
+
+    //--- Axis ranges
+    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    //--- Dynamic Y range
+    double maxYValue = 0.0;
+    for (auto* hist : allHists)
+        if (hist && hist->GetMaximum() > maxYValue)
+            maxYValue = hist->GetMaximum();
+
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+    double yminVal = useLogScale ? 1e-6 : 0;
+    if((ymin == 999) && (ymax == 999)){
+        double ymaxVal = useLogScale ? (maxYValue * 100.0) : (maxYValue * 1.1);
+        std::cout << "setting yaxis to " << yminVal << ", " << ymaxVal << std::endl;
+        for (auto* hist : allHists)
+            if (hist) hist->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    //--- Drawing block
+    bool first = true;
+    auto draw = [&](TH1* hist){ if (hist) { hist->Draw(first ? "hist" : "histsame"); first = false; } };
+
+    // Helper to decide if a given variant should be drawn
+    auto variantAllowed = [&](const std::string& name) {
+        bool isBDT = name.find("current") != std::string::npos;
+        bool isDLUboone = name.find("uboone") != std::string::npos;
+        bool isDLNuE = name.find("nuE") != std::string::npos;
+
+        if (!includeBDT && isBDT) return false;
+        if (!includeDLUboone && isDLUboone) return false;
+        if (!includeDLNuE && isDLNuE) return false;
+        return true;
+    };
+
+    //--- Draw selected histograms
+    if (includeSignal) {
+        if (variantAllowed("currentSignal")) draw(hists.currentSignal);
+        if (variantAllowed("ubooneSignal")) draw(hists.ubooneSignal);
+        if (variantAllowed("nuESignal")) draw(hists.nuESignal);
+    }
+    if (includeSignalFuzzy) {
+        if (variantAllowed("currentSignalFuzzy")) draw(hists.currentSignalFuzzy);
+        if (variantAllowed("ubooneSignalFuzzy")) draw(hists.ubooneSignalFuzzy);
+        if (variantAllowed("nuESignalFuzzy")) draw(hists.nuESignalFuzzy);
+    }
+    if (includeBNB) {
+        if (variantAllowed("currentBNB")) draw(hists.currentBNB);
+        if (variantAllowed("ubooneBNB")) draw(hists.ubooneBNB);
+        if (variantAllowed("nuEBNB")) draw(hists.nuEBNB);
+    }
+    if (includeBNBFuzzy) {
+        if (variantAllowed("currentBNBFuzzy")) draw(hists.currentBNBFuzzy);
+        if (variantAllowed("ubooneBNBFuzzy")) draw(hists.ubooneBNBFuzzy);
+        if (variantAllowed("nuEBNBFuzzy")) draw(hists.nuEBNBFuzzy);
+    }
+    if (includeCosmic) {
+        if (variantAllowed("currentCosmic")) draw(hists.currentCosmic);
+        if (variantAllowed("ubooneCosmic")) draw(hists.ubooneCosmic);
+        if (variantAllowed("nuECosmic")) draw(hists.nuECosmic);
+    }
+
+    //--- Axes and ticks
+    hists.currentSignal->SetStats(0);
+    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
+    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
+    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
+    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
+
+    //--- Legend setup
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    std::vector<std::pair<TH1*, std::string>> legendEntries;
+
+    auto addLegendIf = [&](TH1* hist, const std::string& label, const std::string& name){
+        if (hist && variantAllowed(name)) legendEntries.emplace_back(hist, label);
+    };
+
+    if (includeSignal) {
+        addLegendIf(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "currentSignal");
+        addLegendIf(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneSignal");
+        addLegendIf(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "nuESignal");
+    }
+    if (includeSignalFuzzy) {
+        addLegendIf(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "currentSignalFuzzy");
+        addLegendIf(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneSignalFuzzy");
+        addLegendIf(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "nuESignalFuzzy");
+    }
+    if (includeBNB) {
+        addLegendIf(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "currentBNB");
+        addLegendIf(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneBNB");
+        addLegendIf(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "nuEBNB");
+    }
+    if (includeBNBFuzzy) {
+        addLegendIf(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "currentBNBFuzzy");
+        addLegendIf(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneBNBFuzzy");
+        addLegendIf(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "nuEBNBFuzzy");
+    }
+    if (includeCosmic) {
+        addLegendIf(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "currentCosmic");
+        addLegendIf(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneCosmic");
+        addLegendIf(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "nuECosmic");
+    }
+
+    int nEntries = legendEntries.size();
+    double height = std::max(0.025 * nEntries, 0.03);
+
+    if(legendLocation == "topRight"){ Lxmin=0.62; Lymax=0.863; Lxmax=0.87; Lymin=Lymax - height; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.38; Lymin=Lymax - height; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.62; Lymin=0.137; Lxmax=0.87; Lymax=Lymin + height; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymin=0.137; Lxmax=0.38; Lymax=Lymin + height; }
+
+    auto legend = new TLegend(Lxmin, Lymin, Lxmax, Lymax);
+    for (auto& [hist, label] : legendEntries)
+        legend->AddEntry(hist, label.c_str(), "f");
+
+    legend->SetTextSize(0.015);
+    legend->SetMargin(0.12);
+    legend->Draw();
+
+    //--- Optional vertical line
+    if(drawLine){
+        TLine* line = new TLine(1.022, yminVal, 1.022, maxYValue);
+        line->SetLineColor(kGray+2);
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->Draw("same");
+
+        double ymaxValLine = maxYValue * (useLogScale ? 0.5 : 0.95);
+        TLatex* latex = new TLatex((*linePos == 0 ? 1.022 - 0.2 : 1.022 + 0.2), ymaxValLine, "2m_{e}");
+        latex->SetTextSize(0.035); 
+        latex->SetTextAlign(11);
+        latex->Draw("same");
+    }
+
+    hists.canvas->SaveAs(filename);
+}
 
 void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
     hists.canvas->cd();
@@ -2044,56 +2050,56 @@ void nuEBackgroundSignalWeighted_macro(){
 
     styleDrawAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right, true, true, false, false, false, true, false, false);
     
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 
-    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 
-    styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
-    styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, false);
-    styleDrawAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, true, false, false);
-    styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, false);
-    styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
-    styleDrawAll(ETrue, 999, 999, 999, 999, (base_path + "ETrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
-    styleDrawAll(ETrueDist, 999, 999, 999, 999, (base_path + "ETrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
-    styleDrawAll(ThetaTrue, 999, 999, 999, 999, (base_path + "ThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
-    styleDrawAll(ThetaTrueDist, 999, 999, 999, 999, (base_path + "ThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
+    styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true, false);
+    styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
+    styleDrawAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, false, false, false);
+    styleDrawAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, false, false);
+    styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, false, false);
+    styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, false);
+    styleDrawAll(ETrue, 999, 999, 999, 999, (base_path + "ETrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
+    styleDrawAll(ETrueDist, 999, 999, 999, 999, (base_path + "ETrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
+    styleDrawAll(ThetaTrue, 999, 999, 999, 999, (base_path + "ThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
+    styleDrawAll(ThetaTrueDist, 999, 999, 999, 999, (base_path + "ThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
 
-    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaXDist, 999, 999, 999, 999, (base_path + "deltaX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
-    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaYDist, 999, 999, 999, 999, (base_path + "deltaY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
-    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaZDist, 999, 999, 999, 999, (base_path + "deltaZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
-    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
 
     std::cout << "recoX" << std::endl;
-    styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
+    styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
     std::cout << "recoY" << std::endl;
-    styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
+    styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoYDist, 999, 999, 999, 999, (base_path + "recoY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
     std::cout << "recoZ" << std::endl;
-    styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
+    styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
 
-    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
+    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
 
-    styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 
     //Test
