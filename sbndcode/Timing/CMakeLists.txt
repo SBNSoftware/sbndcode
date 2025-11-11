@@ -1,9 +1,14 @@
-art_dictionary(DICTIONARY_LIBRARIES 
-lardataobj::RawData)
+art_make_library(
+                SOURCE  TimingUtils.cc
+                 LIBRARIES art::Persistency_Common
+                           messagefacility::MF_MessageLogger
+        )
+
+art_dictionary(DICTIONARY_LIBRARIES lardataobj::RawData)
 
 install_headers()
-# install_fhicl()
-# install_source()
+#install_fhicl()
+install_source()
 
 add_subdirectory(FrameShift)
 add_subdirectory(WaveformAlignment)

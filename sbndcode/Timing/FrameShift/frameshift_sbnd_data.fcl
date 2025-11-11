@@ -27,13 +27,13 @@ frameshift_data:
     OffbeamGateHlt: 27
 
     DebugDAQHeader: false
-    DebugTimingRef: false
     DebugPtb: false
     DebugTdc: false
     DebugFrame: false
     
     ShiftData2MC: 0
-    ShiftRWM2Gate: 1738
+    ShiftRWM2Gate: 1738 #ns
+    ShiftTDC2PTB: 257 #ns
 }
   
   

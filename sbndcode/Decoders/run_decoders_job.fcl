@@ -37,6 +37,7 @@
 #include "crt_decoder_sbnd.fcl"
 #include "crt_channel_map_service.fcl"
 
+#include "frameshift_sbnd_data.fcl"
 
 process_name: DECODE
 
@@ -61,6 +62,7 @@ physics:
       xarapucadecoder: @local::xarapucadecoder
       ptbdecoder: @local::SBNDPTBDecoderDefaults
       crtdecoder: @local::crt_decoder
+      frameshift: @local::frameshift_data
   }
 
   filters: 
@@ -72,8 +74,8 @@ physics:
 
   analyzers: {}
 
-  dropchoppy: [ daq, ntbdecoder, crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder, xarapucadecoder, filterchoppy ]
-  savechoppy: [ daq, ntbdecoder, crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder, xarapucadecoder, "!filterchoppy" ]
+  dropchoppy: [ daq, ntbdecoder, crtdecoder, ptbdecoder, tdcdecoder, frameshift, pmtdecoder, xarapucadecoder, filterchoppy ]
+  savechoppy: [ daq, ntbdecoder, crtdecoder, ptbdecoder, tdcdecoder, frameshift, pmtdecoder, xarapucadecoder, "!filterchoppy" ]
   trigger_paths: [ dropchoppy, savechoppy ]
 
   stream1: [ out1 ]
