@@ -25,6 +25,7 @@ namespace sbndDB {
     virtual int getBreakoutBox(unsigned int channelID) const = 0;
     virtual int getCAENDigitizer(unsigned int channelID) const = 0;
     virtual int getCAENDigitizerChannel(unsigned int channelID) const = 0;
+    virtual bool getOnPMT(unsigned int channelID) const = 0;
     virtual bool getReconstructChannel(unsigned int channelID) const = 0;
     virtual double getTotalTransitTime(unsigned int channelID) const = 0;
     virtual double getCosmicTimeCorrection(unsigned int channelID) const = 0;

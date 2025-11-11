@@ -50,6 +50,9 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         int getCAENDigitizerChannel( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).caenDigitizerChannel;
         };
+        bool getOnPMT(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).onPMT;
+        };
         bool getReconstructChannel(unsigned int channelID) const override {
             return getChannelCorrOrDefault(channelID).reconstructChannel;
         };
@@ -95,6 +98,7 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             size_t breakoutBox=0;
             size_t caenDigitizer=0;
             size_t caenDigitizerChannel=0;
+            bool onPMT=true;
             bool reconstructChannel=false;
             double totalTransitTime=0.;
             double cosmicTimeCorrection=0.;
@@ -107,7 +111,7 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             std::vector<double> ser={};
             };
             
-        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
+        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, true, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
         
