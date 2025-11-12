@@ -128,14 +128,20 @@ void styleDrawPur(purHist_struct hists,
     if((ymin != 999) && (ymax != 999)) hists.current->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) hists.current->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({
+    double maxYValue = 1;
+    maxYValue = std::max({
         hists.current->GetMaximum(), hists.uboone->GetMaximum(), hists.nuE->GetMaximum()
     });
+
+    std::cout << "Max values: hists.current = " << hists.current->GetMaximum() << ", hists.uboone = " << hists.uboone->GetMaximum() << ", hists.nuE = " << hists.nuE->GetMaximum() << std::endl;
+
+    std::cout << "maxYValue = " << maxYValue << std::endl;
 
     double yminVal = 0;
     if((ymin == 999) && (ymax == 999)){
         double ymaxVal = (maxYValue * 1.1);
         hists.current->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+        std::cout << "Set Y axis range to: " << yminVal << ", " << ymaxVal << std::endl;
     }
 
     hists.current->Draw("hist");
@@ -616,7 +622,7 @@ void styleDrawAll(histGroup_struct hists,
                   bool includeCosmic = true,
                   bool includeDLUboone = true, bool includeDLNuE = true,
                   bool includeBDT = true,
-                  bool useLogScale = false) // <-- new parameter
+                  bool useLogScale = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -980,6 +986,8 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     
     for(int i = 0; i <= numBins+1; ++i){
         printf("--------------------------\n");
+        if(i != 0 || i != numBins+1) std::cout << "Bin " << i << std::endl;
+        if(i == 0 || i == numBins+1) std::cout << "Under/Overflow bin" << std::endl;
         currentSignalSum += hists.currentSignal->GetBinContent(i);
         currentSignalFuzzySum += hists.currentSignalFuzzy->GetBinContent(i);
         ubooneSignalSum += hists.ubooneSignal->GetBinContent(i);
@@ -1135,26 +1143,54 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
         if(!std::isnan(uboonePurity)) purHists.uboone->SetBinContent(i, uboonePurity);
         if(!std::isnan(nuEPurity)) purHists.nuE->SetBinContent(i, nuEPurity);
         
-        if(!std::isnan(currentEffPur)) effPurHists.current->SetBinContent(i, currentEffPur);
-        if(!std::isnan(ubooneEffPur)) effPurHists.uboone->SetBinContent(i, ubooneEffPur);
-        if(!std::isnan(nuEEffPur)) effPurHists.nuE->SetBinContent(i, nuEEffPur);
+        if(!std::isnan(currentEffPur)){ effPurHists.current->SetBinContent(i, currentEffPur); std::cout << "Filled effPurHists.current with " << currentEffPur << std::endl;}
+        if(!std::isnan(ubooneEffPur)){ effPurHists.uboone->SetBinContent(i, ubooneEffPur); std::cout << "Filled effPurHists.uboone with " << ubooneEffPur << std::endl;}
+        if(!std::isnan(nuEEffPur)){ effPurHists.nuE->SetBinContent(i, nuEEffPur); std::cout << "Filled effPurHists.nuE with " << nuEEffPur << std::endl;}
 
     }
-   
+  
+    effHists.current->SetMaximum(-1111);
+    effHists.uboone->SetMaximum(-1111);
+    effHists.nuE->SetMaximum(-1111);
+    purHists.current->SetMaximum(-1111);
+    purHists.uboone->SetMaximum(-1111);
+    purHists.nuE->SetMaximum(-1111);
+    effPurHists.current->SetMaximum(-1111);
+    effPurHists.uboone->SetMaximum(-1111);
+    effPurHists.nuE->SetMaximum(-1111);
+
     std::string filenameEff = std::string(filename) + "_eff.pdf";
     std::string filenameRej = std::string(filename) + "_rej.pdf";
     std::string filenamePur = std::string(filename) + "_pur.pdf";
     std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, false, false);
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, true, true);
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false);
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true);
     styleDrawPur(purHists, 999, 999, 999, 999, filenamePur.c_str(), legendLocation, drawLine, linePos);
     styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos);
 }
 
+void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
+    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TwoDHistCanvas->SetTickx();
+    TwoDHistCanvas->SetTicky();
+
+    hist->SetTitle(title);
+    hist->Draw("COLZ");
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+       
+    TwoDHistCanvas->SaveAs(filename);
+    TwoDHistCanvas->Clear();
+}
+
+
 void nuEBackgroundSignalWeighted_macro(){
 
-    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutputSignalMerged.root");
-    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
+    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
 
     if(!file){
@@ -1222,6 +1258,14 @@ void nuEBackgroundSignalWeighted_macro(){
     double cosmicSpillsSumUboone = 0;
     double cosmicSpillsSumNuE = 0;
 
+    double POTSignalNuE_notMissing = 0;
+    double POTSignalUboone_notMissing = 0;
+    double POTSignalBDT_notMissing = 0;
+    
+    double POTBNBNuE_notMissing = 0;
+    double POTBNBUboone_notMissing = 0;
+    double POTBNBBDT_notMissing = 0;
+    
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
@@ -1230,6 +1274,7 @@ void nuEBackgroundSignalWeighted_macro(){
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
 
         std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
+
 
         if(subRunSignal == 1){
             if(subRunDLCurrent == 2 && seenSubRunsSignalCurrent.find(key) == seenSubRunsSignalCurrent.end()){
@@ -1242,6 +1287,10 @@ void nuEBackgroundSignalWeighted_macro(){
                 totalPOTSignalNuE += subRunPOT;
                 seenSubRunsSignalNuE.insert(key);
             }
+            if(subRunDLCurrent == 2) POTSignalNuE_notMissing += subRunPOT;
+            if(subRunDLCurrent == 0) POTSignalUboone_notMissing += subRunPOT;
+            if(subRunDLCurrent == 5) POTSignalBDT_notMissing += subRunPOT;
+                
         } else if(subRunSignal == 2){
             if(subRunDLCurrent == 2 && seenSubRunsBNBCurrent.find(key) == seenSubRunsBNBCurrent.end()){
                 totalPOTBNBCurrent += subRunPOT;
@@ -1253,6 +1302,10 @@ void nuEBackgroundSignalWeighted_macro(){
                 totalPOTBNBNuE += subRunPOT;
                 seenSubRunsBNBNuE.insert(key);
             }
+            if(subRunDLCurrent == 2) POTBNBNuE_notMissing += subRunPOT;
+            if(subRunDLCurrent == 0) POTBNBUboone_notMissing += subRunPOT;
+            if(subRunDLCurrent == 5) POTBNBBDT_notMissing += subRunPOT;
+
         } else if(subRunSignal == 3){
             if(subRunDLCurrent == 2 && seenSubRunsCosmicsCurrent.find(key) == seenSubRunsCosmicsCurrent.end()){
                 totalPOTCosmicsCurrent += subRunPOT;
@@ -1287,8 +1340,10 @@ void nuEBackgroundSignalWeighted_macro(){
     weights.cosmicsNuE = totalPOTSignalCurrent/cosmicsPOTNuE;
 
     std::cout << "BNB POT Current = " << totalPOTBNBCurrent << ", Uboone = " << totalPOTBNBUboone << ", Nu+E = " << totalPOTBNBNuE << std::endl;
+    std::cout << "ALL BNB POT Current = " << POTBNBBDT_notMissing << ", Uboone = " << POTBNBUboone_notMissing << ", Nu+E = " << POTBNBNuE_notMissing << std::endl;
     std::cout << "" << std::endl;
     std::cout << "Signal POT Current = " << totalPOTSignalCurrent << ", Uboone = " << totalPOTSignalUboone << ", Nu+E = " << totalPOTSignalNuE << std::endl;
+    std::cout << "ALL Signal POT Current = " << POTSignalBDT_notMissing << ", Uboone = " << POTSignalUboone_notMissing << ", Nu+E = " << POTSignalNuE_notMissing << std::endl;
     std::cout << "" << std::endl;
     std::cout << "Spills Cosmics POT Current = " << cosmicsPOTCurrent << ", Uboone = " << cosmicsPOTUboone << ", Nu+E = " << cosmicsPOTNuE << std::endl;  
     printf("Weights:\nCurrent: Signal = %f, BNB = %f, Cosmics = %f\nUboone: Signal = %f, BNB = %f, Cosmics = %f\nNu+E: Signal = %f, BNB = %f, Cosmics = %f\n", weights.signalCurrent, weights.BNBCurrent, weights.cosmicsCurrent, weights.signalUboone, weights.BNBUboone, weights.cosmicsUboone, weights.signalNuE, weights.BNBNuE, weights.cosmicsNuE);
@@ -1455,8 +1510,19 @@ void nuEBackgroundSignalWeighted_macro(){
     auto recoZ = createHistGroup("recoZ", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 250, 0, 510);
     auto recoZDist = createHistGroup("recoZDist", "Z Coordinate of Reco Neutrino (Not Weighted)", "z_{Reco} (cm)", 250, 0, 510);
 
+    double xMin = -201.3; double xMax = 201.3;
+    double yMin = -203.8; double yMax = 203.8;
+    double zMin = 0; double zMax = 509.4;
+
+    TH2D *xCoordAngleDifferenceBDT_low = new TH2D("xCoordAngleDifferenceBDT_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDT_low = new TH2D("yCoordAngleDifferenceBDT_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDT_low = new TH2D("zCoordAngleDifferenceBDT_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceBDT_high = new TH2D("xCoordAngleDifferenceBDT_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDT_high = new TH2D("yCoordAngleDifferenceBDT_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDT_high = new TH2D("zCoordAngleDifferenceBDT_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
+
     for(Long64_t e = 0; e < numEntries; ++e){
-        printf("=============================================================================\n");
+        //printf("=============================================================================\n");
         tree->GetEntry(e);
        
         double recoilElectron_energy = -999999;
@@ -1498,10 +1564,10 @@ void nuEBackgroundSignalWeighted_macro(){
         for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
             if(reco_sliceID->at(slice) != -999999){
                 // There is a reco slice in the event
-                printf("__________________________ NEW SLICE __________________________\n");
-                std::cout << "reco_sliceID->size() = " << reco_sliceID->size() << ", reco_sliceCompleteness->size() = " << reco_sliceCompleteness->size() << ", reco_slicePurity = " << reco_slicePurity->size() << ", reco_sliceScore = " << reco_sliceScore->size() << ", reco_sliceCategory = " << reco_sliceCategory->size() << ", reco_sliceInteraction = " << reco_sliceInteraction->size() << ", reco_sliceTrueVX = " << reco_sliceTrueVX->size() << ", reco_sliceTrueVY = " << reco_sliceTrueVY->size() << ", reco_sliceTrueVZ = " << reco_sliceTrueVZ->size() << std::endl;
-                printf("Slice ID = %f, Category = %f, Interaction = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", reco_sliceID->at(slice), reco_sliceCategory->at(slice), reco_sliceInteraction->at(slice), reco_sliceCompleteness->at(slice), reco_slicePurity->at(slice), reco_sliceScore->at(slice));
-                if(reco_sliceCategory->at(slice) != 0) printf("True Neutrino Vertex = (%f, %f, %f)\n", reco_sliceTrueVX->at(slice), reco_sliceTrueVY->at(slice), reco_sliceTrueVZ->at(slice));
+                //printf("__________________________ NEW SLICE __________________________\n");
+                //std::cout << "reco_sliceID->size() = " << reco_sliceID->size() << ", reco_sliceCompleteness->size() = " << reco_sliceCompleteness->size() << ", reco_slicePurity = " << reco_slicePurity->size() << ", reco_sliceScore = " << reco_sliceScore->size() << ", reco_sliceCategory = " << reco_sliceCategory->size() << ", reco_sliceInteraction = " << reco_sliceInteraction->size() << ", reco_sliceTrueVX = " << reco_sliceTrueVX->size() << ", reco_sliceTrueVY = " << reco_sliceTrueVY->size() << ", reco_sliceTrueVZ = " << reco_sliceTrueVZ->size() << std::endl;
+                //printf("Slice ID = %f, Category = %f, Interaction = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", reco_sliceID->at(slice), reco_sliceCategory->at(slice), reco_sliceInteraction->at(slice), reco_sliceCompleteness->at(slice), reco_slicePurity->at(slice), reco_sliceScore->at(slice));
+                //if(reco_sliceCategory->at(slice) != 0) printf("True Neutrino Vertex = (%f, %f, %f)\n", reco_sliceTrueVX->at(slice), reco_sliceTrueVY->at(slice), reco_sliceTrueVZ->at(slice));
         
                 // Loop through all the reco neutrinos in the event          
                 int PFPcounter = 0;
@@ -1522,7 +1588,7 @@ void nuEBackgroundSignalWeighted_macro(){
                     if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                         // This PFP is in the slice
                         numPFPsSlice++;
-                        printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
+                        //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
                         
                         summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                         if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
@@ -1538,9 +1604,9 @@ void nuEBackgroundSignalWeighted_macro(){
                     }
                 } 
 
-                printf("PFP with highest energy (%f) has ID %f and Theta = %f\n", highestEnergy_energy, highestEnergy_PFPID, highestEnergy_theta);
-                printf("Summed energy of all PFPs in slice = %f\n", summedEnergy);
-                std::cout << "Number of PFPs in the slice = " << numPFPsSlice << std::endl;
+                //printf("PFP with highest energy (%f) has ID %f and Theta = %f\n", highestEnergy_energy, highestEnergy_PFPID, highestEnergy_theta);
+                //printf("Summed energy of all PFPs in slice = %f\n", summedEnergy);
+                //std::cout << "Number of PFPs in the slice = " << numPFPsSlice << std::endl;
 
                 double angleDifference = -999999;
                 if((highestEnergy_DX != -999999) && (recoilElectron_DX != -999999)){
@@ -1561,7 +1627,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         recoVX = reco_neutrinoVX->at(recoNeut);
                         recoVY = reco_neutrinoVY->at(recoNeut);
                         recoVZ = reco_neutrinoVZ->at(recoNeut);
-                        printf("Reco Neutrino in Slice: ID = %f, PDG = %f, Vertex = (%f, %f, %f)\n", reco_neutrinoID->at(recoNeut), reco_neutrinoPDG->at(recoNeut), reco_neutrinoVX->at(recoNeut), reco_neutrinoVY->at(recoNeut), reco_neutrinoVZ->at(recoNeut));
+                        //printf("Reco Neutrino in Slice: ID = %f, PDG = %f, Vertex = (%f, %f, %f)\n", reco_neutrinoID->at(recoNeut), reco_neutrinoPDG->at(recoNeut), reco_neutrinoVX->at(recoNeut), reco_neutrinoVY->at(recoNeut), reco_neutrinoVZ->at(recoNeut));
                     }
                 }
                 
@@ -1667,7 +1733,7 @@ void nuEBackgroundSignalWeighted_macro(){
 
                 } else if(reco_sliceCategory->at(slice) == 1){
                     // This is a signal slice
-                    if(DLCurrent == 2){
+                    if(DLCurrent == 2 && signal == 1){
                         sliceCompleteness.currentSignal->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.currentSignal->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.currentSignal->Fill(reco_sliceScore->at(slice), weight);
@@ -1680,6 +1746,8 @@ void nuEBackgroundSignalWeighted_macro(){
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
+                            std::cout << "WEIGHT CHECK, should be 1 here - " << weight << std::endl;
+                            if(weight != 1){ std::cout << "signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl; std::cout << "Slice Category = " << reco_sliceCategory->at(slice) << ", Slice Interaction = " << reco_sliceInteraction->at(slice) << std::endl;}
                             ERecoSumThetaReco.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoSumThetaRecoDist.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -1701,6 +1769,17 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.currentSignal->Fill(recoilElectron_energy);
                             ThetaTrue.currentSignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.currentSignal->Fill(recoilElectron_angle);
+                        
+                            if(recoVX != -999999){
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-20) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
+                            }
                         }
                         
                         if(recoVX != -999999){ 
@@ -1721,7 +1800,7 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignal->Fill(recoVZ, weight);
                             recoZDist.currentSignal->Fill(recoVZ);
                         }
-                    } else if(DLCurrent == 0){
+                    } else if(DLCurrent == 0 && signal == 1){
                         sliceCompleteness.ubooneSignal->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneSignal->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.ubooneSignal->Fill(reco_sliceScore->at(slice), weight);
@@ -1776,7 +1855,7 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZDist.ubooneSignal->Fill(recoVZ);
                         }
 
-                    } else if(DLCurrent == 5){
+                    } else if(DLCurrent == 5  && signal == 1){
                         sliceCompleteness.nuESignal->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuESignal->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.nuESignal->Fill(reco_sliceScore->at(slice), weight);
@@ -1833,7 +1912,7 @@ void nuEBackgroundSignalWeighted_macro(){
                     }
                 } else if(reco_sliceCategory->at(slice) == 2){
                     // This is a fuzzy signal slice
-                    if(DLCurrent == 2){
+                    if(DLCurrent == 2 && signal == 1){
                         sliceCompleteness.currentSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.currentSignalFuzzy->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.currentSignalFuzzy->Fill(reco_sliceScore->at(slice), weight);
@@ -1867,6 +1946,17 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.currentSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.currentSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.currentSignalFuzzy->Fill(recoilElectron_angle);
+                            
+                            if(recoVX != -999999){
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-20) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
+                            }
                         }
                             
                         if(recoVX != -999999){ 
@@ -1887,7 +1977,7 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.currentSignalFuzzy->Fill(recoVZ);
                         }
-                    } else if(DLCurrent == 0){
+                    } else if(DLCurrent == 0 && signal == 1){
                         sliceCompleteness.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneSignalFuzzy->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.ubooneSignalFuzzy->Fill(reco_sliceScore->at(slice), weight);
@@ -1941,7 +2031,7 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.ubooneSignalFuzzy->Fill(recoVZ);
                         }
-                    } else if(DLCurrent == 5){
+                    } else if(DLCurrent == 5 && signal == 1){
                         sliceCompleteness.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuESignalFuzzy->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore.nuESignalFuzzy->Fill(reco_sliceScore->at(slice), weight);
@@ -2254,7 +2344,7 @@ void nuEBackgroundSignalWeighted_macro(){
                 }
 
                 // aaaaa
-                printf("_______________________________________________________________\n");
+                //printf("_______________________________________________________________\n");
             }
         
         }
@@ -2305,13 +2395,13 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
 
-    std::cout << "recoX" << std::endl;
+    //std::cout << "recoX" << std::endl;
     styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    std::cout << "recoY" << std::endl;
+    //std::cout << "recoY" << std::endl;
     styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoYDist, 999, 999, 999, 999, (base_path + "recoY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    std::cout << "recoZ" << std::endl;
+    //std::cout << "recoZ" << std::endl;
     styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
 
@@ -2324,8 +2414,7 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 
     //Test
-    efficiency(ERecoSumThetaRecoDist, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
-    
+    efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
     //efficiency(trueETheta2, 0, 1, 999, 999, (base_path + "trueETheta2").c_str(), "bottomRight", &drawLine, &right, 1);
     
     //efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
@@ -2339,4 +2428,7 @@ void nuEBackgroundSignalWeighted_macro(){
     //efficiency(ETrueThetaReco, 0, 1, 999, 999, (base_path + "ETrueThetaReco").c_str(), "topRight", nullptr, &right, 1);
     //efficiency(ERecoSumThetaTrue, 0, 1, 999, 999, (base_path + "ERecoSumThetaTrue").c_str(), "topRight", nullptr, &right, 1);
     //efficiency(ERecoHighestThetaTrue, 0, 1, 999, 999, (base_path + "ERecoHighestThetaTrue").c_str(), "topRight", nullptr, &right, 1);
+
+    TwoDHistDraw(xCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(xCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
 }
