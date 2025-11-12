@@ -675,8 +675,41 @@ void styleDrawAll(histGroup_struct hists,
     hists.ubooneBNBFuzzy->SetLineWidth(2);   hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
     hists.nuEBNBFuzzy->SetLineWidth(2);      hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
 
-    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
-    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+    if((ymin != 999) && (ymax != 999)){
+        hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.ubooneSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.nuESignal->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.currentSignalFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.ubooneSignalFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.nuESignalFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.currentBNB->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.ubooneBNB->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.nuEBNB->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.currentBNBFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.ubooneBNBFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.nuEBNBFuzzy->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.currentCosmic->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.ubooneCosmic->GetYaxis()->SetRangeUser(ymin, ymax);
+        hists.nuECosmic->GetYaxis()->SetRangeUser(ymin, ymax);
+        
+    }
+    if((xmin != 999) && (xmax != 999)){
+        hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuESignal->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentSignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneSignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuESignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentBNB->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneBNB->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuEBNB->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuEBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentCosmic->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneCosmic->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuECosmic->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
     double maxYValue = 0.0;
     for (auto* hist : allHists)
