@@ -39,6 +39,8 @@ cet_build_plugin(pmtArtdaqFragmentProducer art::module SOURCE pmtArtdaqFragmentP
 cet_build_plugin(pmtSoftwareTriggerProducer art::module SOURCE pmtSoftwareTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(pmtTriggerProducer art::module SOURCE pmtTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(PMTMetricProducer art::module SOURCE PMTMetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(PMTMCMetricProducer art::module SOURCE PMTMCMetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+
 
 install_headers()
 install_fhicl()
