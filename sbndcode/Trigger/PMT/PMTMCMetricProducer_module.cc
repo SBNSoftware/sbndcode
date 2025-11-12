@@ -149,6 +149,7 @@ void sbnd::trigger::PMTMCMetricProducer::produce(art::Event& e)
   trig_metrics.prelimPE = 0;
   trig_metrics.peakPE = _flash_peakpe; 
   trig_metrics.peaktime = _flash_peaktime; 
+  trig_metrics.trig_ts = 0;
   trig_metrics_v->push_back(trig_metrics);
 
   e.put(std::move(trig_metrics_v));
