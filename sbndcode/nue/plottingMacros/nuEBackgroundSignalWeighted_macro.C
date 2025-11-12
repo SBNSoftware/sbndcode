@@ -691,21 +691,21 @@ void styleDrawAll(histGroup_struct hists,
         hists.currentCosmic->GetYaxis()->SetRangeUser(ymin, ymax);
         hists.ubooneCosmic->GetYaxis()->SetRangeUser(ymin, ymax);
         hists.nuECosmic->GetYaxis()->SetRangeUser(ymin, ymax);
-        
     }
+    
     if((xmin != 999) && (xmax != 999)){
         hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.ubooneSignal->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.nuESignal->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.currentSignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.ubooneSignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.nuESignalFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentSignalFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneSignalFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuESignalFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.currentBNB->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.ubooneBNB->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.nuEBNB->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.currentBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.ubooneBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
-        hists.nuEBNBFuzzx->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.currentBNBFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.ubooneBNBFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
+        hists.nuEBNBFuzzy->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.currentCosmic->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.ubooneCosmic->GetXaxis()->SetRangeUser(xmin, xmax);
         hists.nuECosmic->GetXaxis()->SetRangeUser(xmin, xmax);
