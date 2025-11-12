@@ -123,14 +123,18 @@ private:
   //Frame Shift
   uint64_t _frame_crtt1; //ns
   uint16_t _timing_type_crtt1;
+  uint16_t _timing_channel_crtt1;
   uint64_t _frame_gate; //ns
   uint16_t _timing_type_gate;
+  uint16_t _timing_channel_gate;
   uint64_t _frame_etrig; //ns
   uint16_t _timing_type_etrig;
+  uint16_t _timing_channel_etrig;
 
   //Value to apply at downstream modules depending on which stream
   uint64_t _frame_default;
   uint16_t _timing_type_default;
+  uint16_t _timing_channel_default;
 
   //Value to shift Data to MC -- so that data agree with MC [ns]
   //TODO: Derive this value and verify if it is consistent across pmt/crt
@@ -583,120 +587,155 @@ void sbnd::FrameShift::produce(art::Event& e)
     if(_tdc_crtt1_ts != 0){
       _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
       _timing_type_crtt1 = 0; //SPECTDC
+      _timing_channel_crtt1 = 0;
     }
     else if(_hlt_crtt1_ts !=0) {
       _frame_crtt1 = _hlt_crtt1_ts;
       _timing_type_crtt1 = 1; //PTB HLT
+      _timing_channel_crtt1 = _hlt_crtt1;
     }
     else{
       _frame_crtt1 = 0;
       _timing_type_crtt1 = 2;
+      _timing_channel_crtt1 = std::numeric_limits<uint16_t>::max();
     }
 
     //Frame Beam Gate
     if(_tdc_rwm_ts != 0){
       _frame_gate = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
       _timing_type_gate = 0; //SPECTDC
+      _timing_channel_gate = 2;
     }
     else if(_hlt_gate_ts != 0){
       _frame_gate = _hlt_gate_ts;
       _timing_type_gate = 1; //PTB HLT
+      _timing_channel_gate = _hlt_gate;
     }else{
       _frame_gate = 0;
       _timing_type_gate = 2;
+      _timing_channel_gate = std::numeric_limits<uint16_t>::max();
     }
 
     //Frame ETRIG
     if(_tdc_etrig_ts != 0){
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
+      _timing_channel_etrig = 4;
     }
     else if(_hlt_etrig_ts !=0){
       _frame_etrig = _hlt_etrig_ts;
       _timing_type_etrig = 1; //PTB HLT
+      _timing_channel_etrig = _hlt_etrig;
     }
     else {
       _frame_etrig = 0;
       _timing_type_etrig = 2;
+      _timing_channel_etrig = std::numeric_limits<uint16_t>::max();
     }
 
     //Pick default stream -- beam gate
     _frame_default = _frame_gate;
     _timing_type_default = _timing_type_gate;
+    _timing_channel_default = _timing_channel_gate;
   }
   else if (_isOffbeam){
 
     //Frame CRT T1
-    if(_hlt_crtt1_ts != 0) {
+    if(_tdc_crtt1_ts != 0){
+      _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
+      _timing_type_crtt1 = 0; //SPECTDC
+      _timing_channel_crtt1 = 0;
+    }
+    else if(_hlt_crtt1_ts !=0) {
       _frame_crtt1 = _hlt_crtt1_ts;
       _timing_type_crtt1 = 1; //PTB HLT
+      _timing_channel_crtt1 = _hlt_crtt1;
     }
-    else {
+    else{
       _frame_crtt1 = 0;
       _timing_type_crtt1 = 2;
+      _timing_channel_crtt1 = std::numeric_limits<uint16_t>::max();
     }
 
     //Frame Gate
     if(_hlt_gate_ts != 0) {
       _frame_gate = _hlt_gate_ts; // TODO: + fShiftData2MC;
       _timing_type_gate = 1; //PTB HLT
+      _timing_channel_gate = _hlt_gate;
     }
     else {
       _frame_gate = 0;
       _timing_type_gate = 2;
+      _timing_channel_gate = std::numeric_limits<uint16_t>::max();
     }
 
     //Frame ETRIG
     if(_tdc_etrig_ts != 0) {
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
+      _timing_channel_etrig = 4;
     }
     else if(_hlt_etrig_ts !=0) {
       _frame_etrig = _hlt_etrig_ts;
       _timing_type_etrig = 1; //PTB HLT
+      _timing_channel_etrig = _hlt_etrig;
     }
     else {
       _frame_etrig = 0;
       _timing_type_etrig = 2;
+      _timing_channel_etrig = std::numeric_limits<uint16_t>::max();
     }
 
     //Pick default stream
     _frame_default = _frame_gate;
     _timing_type_default = _timing_type_gate;
+    _timing_channel_default = _timing_channel_gate;
   }
   else if (_isXmuon){
     //Frame ETRIG
     if(_tdc_etrig_ts != 0) {
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
+      _timing_channel_etrig = 4;
     }
     else if(_hlt_etrig_ts !=0) {
       _frame_etrig = _hlt_etrig_ts;
       _timing_type_etrig = 1; //PTB HLT
+      _timing_channel_etrig = _hlt_etrig;
     }
     else {
       _frame_etrig = 0;
       _timing_type_etrig = 2;
+      _timing_channel_etrig = std::numeric_limits<uint16_t>::max();
     }
 
     //Pick default stream -- beam gate
     _frame_default = _frame_etrig;
     _timing_type_default = _timing_type_etrig;
+    _timing_channel_etrig = _timing_channel_etrig;
   }
 
   if (fDebugFrame){
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "Frame Shift Results:" << std::endl;
-    std::cout << "Frame CRT T1 : (s) = " << _frame_crtt1/uint64_t(1e9) 
+    std::cout << "Frame CRT T1 type " << _timing_type_crtt1
+                      <<", channel " << _timing_channel_crtt1
+                      << ": (s) = " << _frame_crtt1/uint64_t(1e9) 
                       << ", (ns) = " << _frame_crtt1%uint64_t(1e9) 
                       << std::endl;
-    std::cout << "Frame Beam Gate : (s) = " << _frame_gate/uint64_t(1e9) 
+    std::cout << "Frame Beam Gate  type " << _timing_type_gate
+                      <<", channel " << _timing_channel_gate
+                      << ": (s) = " << _frame_gate/uint64_t(1e9) 
                       << ", (ns) = " << _frame_gate%uint64_t(1e9) 
                       << std::endl;
-    std::cout << "Frame ETRIG : (s) = " << _frame_etrig/uint64_t(1e9) 
+    std::cout << "Frame ETRIG type " << _timing_type_etrig
+                      <<", channel " << _timing_channel_etrig
+                      << ": (s) = " << _frame_etrig/uint64_t(1e9) 
                       << ", (ns) = " << _frame_etrig%uint64_t(1e9) 
                       << std::endl;
-    std::cout << "Default Frame : (s) = " << _frame_default/uint64_t(1e9) 
+    std::cout << "Default Frame type " << _timing_type_default
+                      <<", channel " << _timing_channel_default
+                      << " : (s) = " << _frame_default/uint64_t(1e9) 
                       << ", (ns) = " << _frame_default%uint64_t(1e9) 
                       << std::endl;
     std::cout << "--------------------------------------" << std::endl;
@@ -704,10 +743,10 @@ void sbnd::FrameShift::produce(art::Event& e)
   
 
   //Put product in event
-  std::unique_ptr< sbnd::timing::FrameShiftInfo > newFrameShiftInfo(new sbnd::timing::FrameShiftInfo(_frame_crtt1, _timing_type_crtt1,
-                                                                                      _frame_gate, _timing_type_gate,
-                                                                                      _frame_etrig, _timing_type_etrig,
-                                                                                      _frame_default, _timing_type_default));
+  std::unique_ptr< sbnd::timing::FrameShiftInfo > newFrameShiftInfo(new sbnd::timing::FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
+                                                                                      _frame_gate, _timing_type_gate, _timing_channel_gate,
+                                                                                      _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
+                                                                                      _frame_default, _timing_type_default, _timing_channel_default));
 
   std::unique_ptr< sbnd::timing::TimingInfo > newTimingInfo(new sbnd::timing::TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts, _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
 
@@ -753,12 +792,19 @@ void sbnd::FrameShift::beginJob()
   //Frame Shift
   fTree->Branch("frame_crtt1", &_frame_crtt1);
   fTree->Branch("timing_type_crtt1", &_timing_type_crtt1);
+  fTree->Branch("timing_channel_crtt1", &_timing_channel_crtt1);
+
   fTree->Branch("frame_gate", &_frame_gate);
   fTree->Branch("timing_type_gate", &_timing_type_gate);
+  fTree->Branch("timing_channel_gate", &_timing_channel_gate);
+
   fTree->Branch("frame_etrig", &_frame_etrig);  
   fTree->Branch("timing_type_etrig", &_timing_type_etrig);
+  fTree->Branch("timing_channel_etrig", &_timing_channel_etrig);
+
   fTree->Branch("frame_default", &_frame_default);
   fTree->Branch("timing_type_default", &_timing_type_default);
+  fTree->Branch("timing_channel_default", &_timing_channel_default);
 }
 
 void sbnd::FrameShift::ResetEventVars()
@@ -791,21 +837,28 @@ void sbnd::FrameShift::ResetEventVars()
   _isOffbeam = false;
   _isXmuon = false;  
 
-  _hlt_etrig = -1;
+  _hlt_etrig = std::numeric_limits<int>::max();
   _hlt_etrig_ts = 0;
-  _hlt_gate = -1;
+  _hlt_gate = std::numeric_limits<int>::max();
   _hlt_gate_ts = 0;
-  _hlt_crtt1= -1;
+  _hlt_crtt1= std::numeric_limits<int>::max();
   _hlt_crtt1_ts = 0;
   
   _frame_crtt1 = 0;
-  _timing_type_crtt1 = 99;
+  _timing_type_crtt1 = std::numeric_limits<uint16_t>::max();
+  _timing_channel_crtt1 = std::numeric_limits<uint16_t>::max();
+  
   _frame_gate = 0;
-  _timing_type_gate = 99;
+  _timing_type_gate = std::numeric_limits<uint16_t>::max();
+  _timing_channel_gate = std::numeric_limits<uint16_t>::max();
+  
   _frame_etrig = 0;
-  _timing_type_etrig = 99;
+  _timing_type_etrig = std::numeric_limits<uint16_t>::max();
+  _timing_channel_etrig = std::numeric_limits<uint16_t>::max();
+
   _frame_default = 0;
-  _timing_type_default = 99;
+  _timing_type_default = std::numeric_limits<uint16_t>::max();
+  _timing_channel_default = std::numeric_limits<uint16_t>::max();
 }
 
 
