@@ -33,7 +33,8 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            ROOT::Gdml
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
-                           sbndcode_BlipUtils
+                           #sbndcode_BlipUtils
+			   sbndobj_BlipDataTypes
                            sbndcode_BlipRecoAlg
 )
 
