@@ -123,6 +123,7 @@ namespace opdet {
     }
     if(fParams.SimulateNonLinearity){
       fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams); 
+      fPMTNonLinearityPtr->ConfigureNonLinearity();
     }
 
     // infer pulse polarity from SER peak sign
