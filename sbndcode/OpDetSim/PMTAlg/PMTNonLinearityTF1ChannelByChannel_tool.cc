@@ -19,7 +19,8 @@
 #include "TF1.h"
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
-
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 namespace opdet {
   class PMTNonLinearityTF1ChannelByChannel;
@@ -37,11 +38,6 @@ public:
     fhicl::Atom<std::string> attenuationForm {
       Name("AttenuationForm"),
       Comment("Non linearity functional form")
-    };
-    
-    fhicl::Sequence<fhicl::Sequence<double>> attenuationFormParams {
-      Name("AttenuationFormParams"),
-      Comment("Parameters for non linearity functional form")
     };
 
     fhicl::Atom<unsigned int> attenuationPreTime {
@@ -62,9 +58,10 @@ public:
   double NObservedPE(int opch, size_t bin, std::vector<unsigned int> & pe_vector) override;
 
 private:
+
+  void ConfigureChannelByChannelTF1s();
   //Configuration parameters
   std::string fAttenuationForm;
-  std::vector<std::vector<double>> fAttenuationFormParams;
   unsigned int fAttenuationPreTime;
   std::vector<unsigned int> fNonLinearRange;
   geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
@@ -78,21 +75,27 @@ private:
   std::vector<int> fPESaturationValue_V;
   int fPESaturationValue;
 
+  //PMTCalibrationDatabase service
+  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
 };
 
 
 opdet::PMTNonLinearityTF1ChannelByChannel::PMTNonLinearityTF1ChannelByChannel(art::ToolConfigTable<Config> const& config)
   : fAttenuationForm { config().attenuationForm() }
-  , fAttenuationFormParams { config().attenuationFormParams() }
   , fAttenuationPreTime { config().attenuationPreTime() }
   , fNonLinearRange { config().nonLinearRange() }
 {
+  fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+}
+
+
+void opdet::PMTNonLinearityTF1ChannelByChannel::ConfigureChannelByChannelTF1s(){
+
   //Initialize TF1 for each channel with channel-dependent parameters
   for(size_t opch=0; opch<fWireReadout.NOpChannels(); opch++){
     fNonLinearTF1Map[opch] = std::make_unique<TF1>(("NonLinearTF1_"+std::to_string(opch)).c_str(), fAttenuationForm.c_str());
-    for(size_t k=0; k<fAttenuationFormParams[opch].size(); k++){
-      fNonLinearTF1Map[opch]->SetParameter(k, fAttenuationFormParams[opch][k]);
-    }
+    fNonLinearTF1Map[opch]->SetParameter(0, fPMTCalibrationDatabaseService->getNonLineatiryPESat(opch));
+    fNonLinearTF1Map[opch]->SetParameter(1, fPMTCalibrationDatabaseService->getNonLineatiryAlpha(opch));
   }
 
   // Initialize attenuation vector
@@ -109,6 +112,7 @@ opdet::PMTNonLinearityTF1ChannelByChannel::PMTNonLinearityTF1ChannelByChannel(ar
     fPESaturationValue_V[opch] = std::round(fNonLinearTF1Map[opch]->Eval(fNonLinearRange[1]));
   }
 }
+
 
 double opdet::PMTNonLinearityTF1ChannelByChannel::NObservedPE(int opch, size_t bin, std::vector<unsigned int> & pe_vector){
   size_t start_bin = bin-fAttenuationPreTime;
