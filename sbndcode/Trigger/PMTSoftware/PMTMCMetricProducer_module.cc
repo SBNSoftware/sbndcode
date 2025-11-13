@@ -5,6 +5,10 @@
 //
 // Generated at Mon Nov 10 11:37:29 2025 by Lynn Tung using cetskelgen
 // from cetlib version 3.18.02.
+// An MC version of the PMTMetricProducer (PMT Software Trigger).
+// Creates a 10 us "flash" by summing waveforms around the beam spill. 
+// Input: raw::OpDetWaveforms from optical simualtion 
+// Output:: std::vector<sbnd::trigger::pmtSoftwareTrigger>>
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
@@ -17,9 +21,9 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "lardataobj/RawData/OpDetWaveform.h"
-#include "larcore/Geometry/Geometry.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
+#include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 
 #include <algorithm>
