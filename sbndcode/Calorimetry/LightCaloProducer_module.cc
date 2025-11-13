@@ -31,17 +31,13 @@
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "lardataobj/AnalysisBase/T0.h"
-#include "lardataobj/Simulation/SimPhotons.h"
+
+// LArSoft MC includes 
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
-#include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
-#include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/sim.h"
 
 #include "larcore/CoreUtils/ServiceUtil.h"
