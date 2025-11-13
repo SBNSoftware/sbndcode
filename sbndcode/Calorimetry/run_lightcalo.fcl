@@ -32,7 +32,7 @@ outputs:
     out1:
     {
         module_type: RootOutput
-        # fileName: "lightcalo-art.root"
+        fileName: "lightcalo-art.root"
         dataTier: "reconstructed"
         compressionLevel:1
         SelectEvents: ["reco"]
@@ -64,3 +64,6 @@ physics:
     # ie analyzers and output streams.  these all run simultaneously
     end_paths: [stream1]
 }
+
+physics.producers.lightcalo.Verbose: true
+physics.producers.lightcalo.TruthValidation: true
