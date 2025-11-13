@@ -38,6 +38,9 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RecoBase/OpFlash.h"
+#include "lardataobj/RecoBase/Shower.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
@@ -174,6 +177,15 @@ private:
   double _true_charge; // true electron count from all energy depositions 
   double _true_energy; // true deposited energy 
 
+  std::vector<double> _visibility;
+
+  double _sp_max_x;
+  double _sp_min_x; 
+  double _sp_max_y;
+  double _sp_min_y;  
+  double _sp_max_z;
+  double _sp_min_z; 
+
   double _median_gamma; // median of all reconstructed light estimates 
   double _mean_gamma;   // mean of all reconstructed light estimates
 
@@ -181,6 +193,13 @@ private:
   double _max_charge;  // charge from the plane with the highest amount of charge
   double _comp_charge; // charge from the plane with the highest number of hits, "highest completeness"
   double _coll_charge; // charge from collection plane only 
+
+  double _sp_charge;
+  double _trk_charge; 
+  double _shw_charge;
+
+  double _trk_sp_charge; 
+  double _shw_sp_charge;
 
   double _slice_L; // reconstructed photon count 
   double _slice_Q; // reconstructed electron count 
@@ -255,12 +274,26 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
   _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
 
+  _tree2->Branch("visibility",   "std::vector<double>", &_visibility);
+  _tree2->Branch("sp_max_x",      &_sp_max_x,     "sp_x_max/D");
+  _tree2->Branch("sp_min_x",      &_sp_min_x,     "sp_x_min/D");
+  _tree2->Branch("sp_max_y",      &_sp_max_y,     "sp_y_max/D");
+  _tree2->Branch("sp_min_y",      &_sp_min_y,     "sp_y_min/D");
+  _tree2->Branch("sp_max_z",      &_sp_max_z,     "sp_z_max/D");
+  _tree2->Branch("sp_min_z",      &_sp_min_z,     "sp_z_min/D");
+
   _tree2->Branch("median_gamma",  &_median_gamma, "median_gamma/D");
   _tree2->Branch("mean_gamma",    &_mean_gamma,   "mean_gamma/D");
   _tree2->Branch("mean_charge",   &_mean_charge,  "mean_charge/D");
   _tree2->Branch("max_charge",    &_max_charge,   "max_charge/D");
   _tree2->Branch("comp_charge",   &_comp_charge,  "comp_charge/D");
   _tree2->Branch("coll_charge",   &_coll_charge,  "coll_charge/D");
+
+  _tree2->Branch("sp_charge",     &_sp_charge,    "sp_charge/D");
+  _tree2->Branch("trk_charge",    &_trk_charge,   "trk_charge/D");
+  _tree2->Branch("shw_charge",    &_shw_charge,   "shw_charge/D");
+  _tree2->Branch("trk_sp_charge", &_trk_sp_charge,"trk_sp_charge/D");
+  _tree2->Branch("shw_sp_charge", &_shw_sp_charge,"shw_sp_charge/D");
 
   _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
   _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
@@ -307,6 +340,20 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     return;
   }
 
+  ::art::Handle<std::vector<recob::Shower>> shower_h;
+  e.getByLabel("pandoraShowerSBN", shower_h);
+  if(!shower_h.isValid() || shower_h->empty()) {
+    std::cout << "don't have good Showers!" << std::endl;
+    return;
+  }
+
+  ::art::Handle<std::vector<recob::Track>> track_h;
+  e.getByLabel("pandoraTrack", track_h);
+  if(!track_h.isValid() || track_h->empty()) {
+    std::cout << "don't have good Tracks!" << std::endl;
+    return;
+  }
+
   auto const & flash0_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[0]);
   auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[1]);
   if (!_use_arapucas && _verbose)
@@ -319,6 +366,11 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   art::FindManyP<recob::PFParticle> slice_to_pfp (slice_h, e, _slice_producer);
   art::FindManyP<recob::Hit>        slice_to_hit (slice_h, e, _slice_producer);
   art::FindManyP<recob::SpacePoint> pfp_to_spacepoint(pfp_h, e, _slice_producer);
+  art::FindManyP<recob::Shower>     pfp_to_shower    (pfp_h, e, "pandoraShowerSBN");
+  art::FindManyP<recob::Track>      pfp_to_track  (pfp_h, e, "pandoraTrack");
+  art::FindManyP<recob::Hit>        shower_to_hit (shower_h, e, "pandoraShowerSBN");
+  art::FindManyP<recob::Hit>        track_to_hit  (track_h, e, "pandoraTrack");
+
   art::FindManyP<recob::Hit> spacepoint_to_hit(spacepoint_h, e, _slice_producer);
 
   std::vector<art::Ptr<recob::Slice>> match_slices_v; 
@@ -564,7 +616,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     std::vector<int>    plane_hits{0,0,0};
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
-      auto drift_time = (hit->PeakTime() - 500)*0.5; // assuming TPC beam readout starts at 500 ticks, conversion = 0.5 us/tick  
+      auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
       double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
       auto hit_plane = hit->View();
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/_cal_area_const.at(hit_plane));
@@ -581,31 +633,84 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
     _slice_Q = _comp_charge;
 
-    double sps_Q = 0;
+    _sp_charge = 0;
+    _shw_sp_charge = 0;
+    _trk_sp_charge = 0;
+
+    _trk_charge = 0;
+    _shw_charge = 0;
+
+    _sp_max_x = -1e9; _sp_max_y = -1e9; _sp_max_z = -1e9;
+    _sp_min_x =  1e9; _sp_min_y =  1e9; _sp_min_z =  1e9;
 
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
       auto pfp = pfp_v[n_pfp];
       if (pfp->IsPrimary()) _pfpid = pfp->Self();
+      auto pfpistrack  = ::lar_pandora::LArPandoraHelper::IsTrack(pfp);
+      auto pfpisshower = ::lar_pandora::LArPandoraHelper::IsShower(pfp);
+
+      if (pfpistrack){
+        std::vector<art::Ptr<recob::Track>> trk_v = pfp_to_track.at(pfp.key());
+        for (size_t n_trk=0; n_trk < trk_v.size(); n_trk++){
+          auto trk = trk_v[n_trk];
+          std::vector<art::Ptr<recob::Hit>> hit_v = track_to_hit.at(trk.key());
+          for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
+            auto hit = hit_v[n_hit];
+            if (hit->View() !=bestHits) continue;
+            auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
+            double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
+            double charge = (1/_cal_area_const.at(bestPlane))*atten_correction*hit->Integral();
+            _trk_charge += charge; 
+          }
+        }
+      }
+      if (pfpisshower){
+        std::vector<art::Ptr<recob::Shower>> shw_v = pfp_to_shower.at(pfp.key());
+        for (size_t n_shw=0; n_shw < shw_v.size(); n_shw++){
+          auto shw = shw_v[n_shw];
+          std::vector<art::Ptr<recob::Hit>> hit_v = shower_to_hit.at(shw.key());
+          for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
+            auto hit = hit_v[n_hit];
+            if (hit->View() !=bestHits) continue;
+            auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
+            double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
+            double charge = (1/_cal_area_const.at(bestPlane))*atten_correction*hit->Integral();
+            _shw_charge += charge; 
+          }
+        }
+      }
       std::vector<art::Ptr<recob::SpacePoint>> sp_v = pfp_to_spacepoint.at(pfp.key());
       for (size_t n_sp=0; n_sp < sp_v.size(); n_sp++){
         auto sp = sp_v[n_sp];
         std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hit.at(sp.key());
         for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
           auto hit = hit_v[n_hit];
-          if (hit->View() !=bestPlane) continue;
+          //
+          if (hit->View() !=bestHits) continue;
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
-          geo::TPCGeo const& tpcGeo = geom->TPC({0, 0});
-          double drift_time = (2.0*tpcGeo.HalfWidth() - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
+          // geo::TPCGeo const& tpcGeo = geom->TPC({0, 0});
+          // double drift_time1 = (abs(tpcGeo.MaxX()) - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
+          auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
           double charge = (1/_cal_area_const.at(bestPlane))*atten_correction*hit->Integral();
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
 
-          sps_Q += charge;
+          _sp_charge += charge;
+          if (pfpistrack) _trk_sp_charge +=charge;
+          if (pfpisshower) _shw_sp_charge +=charge;
+
+          if (xyz.X() > _sp_max_x) _sp_max_x = xyz.X();
+          if (xyz.X() < _sp_min_x) _sp_min_x = xyz.X();
+          if (xyz.Y() > _sp_max_y) _sp_max_y = xyz.Y();
+          if (xyz.Y() < _sp_min_y) _sp_min_y = xyz.Y();
+          if (xyz.Z() > _sp_max_z) _sp_max_z = xyz.Z();
+          if (xyz.Z() < _sp_min_z) _sp_min_z = xyz.Z();
+
         }
       } // end spacepoint loop 
     } // end pfp loop
@@ -648,6 +753,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       total_pe.at(_opdet_mask.at(imask)) = 0;
     }
 
+    _visibility.resize(_nchan,0);
     // calculate the photon estimates for every entry in total_pe
     CalcLight(total_pe, dir_visibility_map, ref_visibility_map, total_gamma);
     
@@ -657,6 +763,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _rec_gamma = total_gamma;
 
     // calculate final light estimate   
+    // ! TODO: final light estimate should be weighted average 
+    // ! where the weights are 1/poisson_err 
     _median_gamma = CalcMedian(total_gamma);
     _mean_gamma   = CalcMean(total_gamma);
     
@@ -768,6 +876,7 @@ std::vector<std::vector<double>> sbnd::LightCaloAna::CalcVisibility(std::vector<
   for (size_t i=0; i<xyz_v.size(); i++){
     geo::Point_t const xyz = xyz_v[i];
     auto charge = charge_v[i];
+    if (charge <=0) continue;
 
     if (xyz.X() < 0) sum_charge0+= charge;
     else sum_charge1 += charge; 
@@ -806,6 +915,7 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
     auto vuv_eff = _opdet_vuv_eff.at(ch);
     auto vis_eff = _opdet_vis_eff.at(ch);
     auto tot_visibility = vuv_eff*dir_visibility[ch] + vis_eff*ref_visibility[ch];
+    _visibility.at(ch) = tot_visibility;
     if((pe == 0) || std::isinf(1/tot_visibility))
       continue;
     // deposited light is inverse of visibility * PE count 
