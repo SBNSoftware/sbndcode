@@ -79,7 +79,9 @@ opdet::PMTNonLinearityTF1::PMTNonLinearityTF1(art::ToolConfigTable<Config> const
   , fAttenuationFormParams { config().attenuationFormParams() }
   , fAttenuationPreTime { config().attenuationPreTime() }
   , fNonLinearRange { config().nonLinearRange() }
-{
+{}
+
+void opdet::PMTNonLinearityTF1::ConfigureNonLinearity(){
   fNonLinearTF1 = new TF1("NonLinearTF1", fAttenuationForm.c_str());
   for(size_t k=0; k<fAttenuationFormParams.size(); k++){
     fNonLinearTF1->SetParameter(k, fAttenuationFormParams[k]);
