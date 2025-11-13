@@ -56,10 +56,9 @@ public:
 
   //Returns rescaled #pe after non linearity
   double NObservedPE(int opch, size_t bin, std::vector<unsigned int> & pe_vector) override;
-
+  void ConfigureNonLinearity() override;
+  
 private:
-
-  void ConfigureChannelByChannelTF1s();
   //Configuration parameters
   std::string fAttenuationForm;
   unsigned int fAttenuationPreTime;
@@ -89,7 +88,7 @@ opdet::PMTNonLinearityTF1ChannelByChannel::PMTNonLinearityTF1ChannelByChannel(ar
 }
 
 
-void opdet::PMTNonLinearityTF1ChannelByChannel::ConfigureChannelByChannelTF1s(){
+void opdet::PMTNonLinearityTF1ChannelByChannel::ConfigureNonLinearity(){
 
   //Initialize TF1 for each channel with channel-dependent parameters
   for(size_t opch=0; opch<fWireReadout.NOpChannels(); opch++){

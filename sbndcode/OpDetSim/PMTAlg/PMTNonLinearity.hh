@@ -18,6 +18,9 @@ class opdet::PMTNonLinearity {
 public:
   //Constructor
   virtual ~PMTNonLinearity() noexcept = default;
+  
+  //Configure non-linearity tool
+  virtual void ConfigureNonLinearity() = 0;
 
   //Returns rescaled number of PE
   virtual double NObservedPE(size_t bin, std::vector<unsigned int> & pe_vector){
