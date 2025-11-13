@@ -57,6 +57,7 @@ public:
 
   //Returns rescaled #pe after non linearity
   double NObservedPE(size_t bin, std::vector<unsigned int> & pe_vector) override;
+  void ConfigureNonLinearity() override;
 
 private:
   //Configuration parameters
@@ -66,7 +67,7 @@ private:
   std::vector<unsigned int> fNonLinearRange;
 
   //TF1 for non linearity function
-  TF1 *fNonLinearTF1;
+  std::unique_ptr<TF1> fNonLinearTF1;
 
   // Vector to store non linearity attenuation values
   std::vector<double> fPEAttenuation_V;
@@ -82,7 +83,7 @@ opdet::PMTNonLinearityTF1::PMTNonLinearityTF1(art::ToolConfigTable<Config> const
 {}
 
 void opdet::PMTNonLinearityTF1::ConfigureNonLinearity(){
-  fNonLinearTF1 = new TF1("NonLinearTF1", fAttenuationForm.c_str());
+  fNonLinearTF1 = std::make_unique<TF1>("NonLinearTF1", fAttenuationForm.c_str());
   for(size_t k=0; k<fAttenuationFormParams.size(); k++){
     fNonLinearTF1->SetParameter(k, fAttenuationFormParams[k]);
   }
