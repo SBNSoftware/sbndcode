@@ -2,6 +2,7 @@ set (MODULE_LIBRARIES
                 larsim::Utils
                 larsim::PhotonPropagation
                 larsim::PhotonPropagation_PhotonVisibilityService_service
+                larsim::OpticalPath
                 larsim::LegacyLArG4
                 larcorealg::GeoAlgo
                 larcorealg::Geometry
@@ -26,7 +27,6 @@ set (MODULE_LIBRARIES
                 art::Utilities canvas::canvas
                 messagefacility::MF_MessageLogger
                 sbnobj::Common_Reco
-                
                 fhiclcpp::fhiclcpp
                 ROOT::Geom
                 ROOT::XMLIO

@@ -1,4 +1,5 @@
 #include "opticalsimparameterisations_sbnd.fcl"
+#include "sbndopticalpath_tool.fcl"
 
 BEGIN_PROLOG
 mccaloana:

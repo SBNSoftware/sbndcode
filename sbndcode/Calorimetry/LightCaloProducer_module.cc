@@ -13,6 +13,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Utilities/make_tool.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -36,7 +37,6 @@
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
-
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "nusimdata/SimulationBase/GTruth.h"
@@ -48,6 +48,7 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
+#include "larsim/PhotonPropagation/OpticalPathTools/OpticalPath.h"
 #include "larsim/Simulation/LArG4Parameters.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -148,6 +149,7 @@ private:
   std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
+  std::shared_ptr<phot::OpticalPath> _optical_path_tool;
 
   opdet::sbndPDMapAlg _opdetmap; //map for photon detector types
   unsigned int _nchan = _opdetmap.size();
@@ -195,7 +197,8 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 {
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+  _optical_path_tool = std::shared_ptr<phot::OpticalPath>(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool")));
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, _optical_path_tool, true, false);
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
