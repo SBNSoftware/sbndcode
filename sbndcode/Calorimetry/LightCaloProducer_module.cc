@@ -58,6 +58,7 @@
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/Common/Reco/LightCaloInfo.h"
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
+#include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
 // ROOT includes
 #include "TFile.h"
@@ -67,6 +68,9 @@
 #include <numeric>
 #include <memory>
 #include <algorithm> // sort 
+#include <cmath>
+#include <functional>
+#include <map>
 
 namespace sbnd {
   class LightCaloProducer;
@@ -90,6 +94,16 @@ public:
 
 private:
 
+  template <typename MatchT, typename CheckFunc>
+  void collect_matches(const art::Handle<std::vector<MatchT>> &handle,
+                       const std::vector<art::Ptr<MatchT>> &fm_v,
+                       const std::string &label,
+                       art::Event &e,
+                       std::vector<art::Ptr<recob::Slice>> &match_slices_v,
+                       std::vector<art::Ptr<recob::OpFlash>> &match_op0,
+                       std::vector<art::Ptr<recob::OpFlash>> &match_op1,
+                       CheckFunc check);
+
   // Returns visibility vector for all opdets given charge/position information 
   std::vector<std::vector<double>> CalcVisibility(std::vector<geo::Point_t> xyz_v, 
                                                   std::vector<double> charge_v);
@@ -105,6 +119,7 @@ private:
 
   // Returns the mean of the light vector 
   double CalcMean(std::vector<double> total_light);
+  double CalcMean(std::vector<double> total_light, std::vector<double> total_err);
 
   // Performs truth validation, saves info to TTree 
   void TruthValidation(art::Event& e, art::ServiceHandle<cheat::ParticleInventoryService> piserv, double flash_time);
@@ -114,14 +129,17 @@ private:
   std::vector<std::string> _opflash_ara_producer_v;
   std::string _slice_producer;
   std::string _opt0_producer;
+  std::string _bcfm_producer;
+
   bool _use_arapucas;
   bool _use_opt0;
+  bool _use_bcfm;
   float _nuscore_cut; 
   float _fopt0score_cut;
   bool _verbose;
 
-  float _fopt0_flash_min;
-  float _fopt0_flash_max;
+  float _fopflash_min;
+  float _fopflash_max;
   float _fopt0_frac_diff_cut;
 
   float _pmt_ara_offset; 
@@ -202,14 +220,16 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
   _slice_producer = p.get<std::string>("SliceProducer");
   _opt0_producer  = p.get<std::string>("OpT0FinderProducer");
+  _bcfm_producer  = p.get<std::string>("BCFMProducer");
   _use_arapucas = p.get<bool>("UseArapucas");
   _use_opt0     = p.get<bool>("UseOpT0Finder");
+  _use_bcfm     = p.get<bool>("UseBCFM");
   _nuscore_cut = p.get<float>("nuScoreCut");
   _fopt0score_cut = p.get<float>("opt0ScoreCut");
   _verbose = p.get<bool>("Verbose");
 
-  _fopt0_flash_min = p.get<float>("OpT0FlashMin");
-  _fopt0_flash_max = p.get<float>("OpT0FlashMax");
+  _fopflash_min = p.get<float>("OpFlashMin");
+  _fopflash_max = p.get<float>("OpFlashMax");
   _fopt0_frac_diff_cut = p.get<float>("OpT0FractionalCut");
 
   _pmt_ara_offset  = p.get<float>("PMTARAFlashOffset");
@@ -282,98 +302,54 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   art::FindManyP<recob::PFParticle> slice_to_pfp (slice_h, e, _slice_producer);
   art::FindManyP<recob::Hit>        slice_to_hit (slice_h, e, _slice_producer);
   art::FindManyP<recob::SpacePoint> pfp_to_spacepoint(pfp_h, e, _slice_producer);
-  art::FindManyP<recob::Hit> spacepoint_to_hit(spacepoint_h, e, _slice_producer);
+  art::FindManyP<recob::Hit>        spacepoint_to_hit(spacepoint_h, e, _slice_producer);
 
   std::vector<art::Ptr<recob::Slice>> match_slices_v; 
   std::vector<art::Ptr<recob::OpFlash>> match_op0; 
   std::vector<art::Ptr<recob::OpFlash>> match_op1; 
 
-  if (_use_opt0){
-    ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
-    e.getByLabel(_opt0_producer, opt0_h);
-    if(!opt0_h.isValid() || opt0_h->empty()) {
-      std::cout << "don't have good OpT0Finder matches!" << std::endl;
-      return;
-    }
-    std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
-    art::fill_ptr_vector(opt0_v, opt0_h);
+  std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
 
-    std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
-    art::FindManyP<recob::Slice> opt0_to_slice(opt0_h, e, _opt0_producer);
-    art::FindManyP<recob::OpFlash> opt0_to_flash(opt0_h, e, _opt0_producer);
-
-    for (size_t n_opt0=0; n_opt0 < opt0_v.size(); n_opt0++){
-      auto opt0 = opt0_v[n_opt0];
-      std::vector<art::Ptr<recob::Slice>> slice_v = opt0_to_slice.at(opt0.key());
-      std::vector<art::Ptr<recob::OpFlash>> flash_v = opt0_to_flash.at(opt0.key());
-      
-      assert(slice_v.size() == 1);
-      assert(flash_v.size() == 1);
-
-      auto slice = slice_v.front();
-      auto flash = flash_v.front();
-
-      auto opt0_score = opt0->score;
-      auto opt0_time = opt0->time; 
-      auto opt0_measPE = opt0->measPE;
-      auto opt0_hypoPE = opt0->hypoPE;
-      auto opt0_frac_diff = std::abs((opt0_hypoPE - opt0_measPE)/opt0_measPE);
-
-      if (opt0_time < _fopt0_flash_min || opt0_time > _fopt0_flash_max) continue;
-      if (opt0_score < _fopt0score_cut) continue;
-      if (opt0_frac_diff > _fopt0_frac_diff_cut) continue;
-
-      // check that slice is not already in the map 
-      auto it = match_slice_opflash_map.find(slice);
-      if (it == match_slice_opflash_map.end()){
-        std::vector<art::Ptr<recob::OpFlash>> flash_v;
-        flash_v.push_back(flash);
-        match_slice_opflash_map.insert(std::pair<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>>(slice, flash_v));
-      }
-      else{
-        it->second.push_back(flash);
-      }
-    }
-
-    for (auto it = match_slice_opflash_map.begin(); it != match_slice_opflash_map.end(); ++it){
-      auto slice = it->first;
-      auto flash_v = it->second;
-      if (flash_v.size() > 2){
-        std::cout << "more than one opflash matched to this slice!" << std::endl;
-        continue;
-      }
-      bool found_opflash0 = false; 
-      bool found_opflash1 = false;
-
-      for (size_t n_flash=0; n_flash < flash_v.size(); n_flash++){
-        auto flash = flash_v[n_flash];
-        if (flash->XCenter() > 0){
-          found_opflash1 = true;
-          match_op1.push_back(flash);
-        }
-        else if (flash->XCenter() < 0){
-          found_opflash0 = true;
-          match_op0.push_back(flash);
-        }
-      } // end opflash loop
-      if (found_opflash0 == false && found_opflash1 == false){
-        std::cout << "no opflashes matched to this slice" << std::endl;
-        continue;
-      }
-      else if (found_opflash0 || found_opflash1){
-        match_slices_v.push_back(slice);
-        art::Ptr<recob::OpFlash> nullOpFlash;
-        if (found_opflash0==false) {
-          match_op0.push_back(nullOpFlash);
-        }
-        else if (found_opflash1==false){
-          match_op1.push_back(nullOpFlash);
-        }
-
-      }
-    } // end opt0finder loop
+  // * get flash matched objects
+  ::art::Handle<std::vector<sbn::TPCPMTBarycenterMatch>> bcfm_h;
+  e.getByLabel(_bcfm_producer, bcfm_h);
+  if(!bcfm_h.isValid() || bcfm_h->empty()) {
+    std::cout << "don't have good barycenter matches!" << std::endl;
+    return;
   }
-  //  else {}
+  std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>> bcfm_v;
+  art::fill_ptr_vector(bcfm_v, bcfm_h);
+
+  ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
+  e.getByLabel(_opt0_producer, opt0_h);
+  if(!opt0_h.isValid() || opt0_h->empty()) {
+    std::cout << "don't have good OpT0Finder matches!" << std::endl;
+    return;
+  }
+  std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
+  art::fill_ptr_vector(opt0_v, opt0_h);
+
+  // use templated member helper to fill match vectors
+  if (_use_bcfm) {
+    collect_matches(bcfm_h, bcfm_v, _bcfm_producer, e, match_slices_v, match_op0, match_op1,
+                    [this](art::Ptr<sbn::TPCPMTBarycenterMatch> bcfm) {
+                      if (bcfm->flashTime > _fopflash_max || bcfm->flashTime < _fopflash_min) return false;
+                      if (bcfm->score < 0.02) return false;
+                      return true;
+                    });
+  }
+  else {
+    collect_matches(opt0_h, opt0_v, _opt0_producer, e, match_slices_v, match_op0, match_op1,
+                    [this](art::Ptr<sbn::OpT0Finder> opt0){
+                      auto opt0_measPE = opt0->measPE;
+                      auto opt0_hypoPE = opt0->hypoPE;
+                      auto opt0_frac_diff = std::abs((opt0_hypoPE - opt0_measPE)/opt0_measPE);
+                      if (opt0->time < _fopflash_min ||  opt0->time > _fopflash_max) return false;
+                      if (opt0->score < _fopt0score_cut) return false;
+                      if (opt0_frac_diff > _fopt0_frac_diff_cut) return false;
+                      return true;
+                    });
+  }
   std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
   std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
   if (_use_arapucas){
@@ -499,6 +475,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     auto ref_visibility_map = visibility_maps[1];
 
     std::vector<double> total_pe(_nchan,0.); 
+    std::vector<double> total_err(_nchan,0.);
     std::vector<double> total_gamma(_nchan, 0.);
 
     // combining flash PE information from separate TPCs into a single vector 
@@ -531,6 +508,11 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       total_pe.at(_opdet_mask.at(imask)) = 0;
     }
 
+    // error is proportional to the amount of light
+    // that actually reached the optical detector 
+    for (size_t ich=0; ich<total_pe.size(); ich++)
+      total_err.at(ich) = std::sqrt(total_pe.at(ich));
+
     _visibility.resize(_nchan,0);
     // calculate the photon estimates for every entry in total_pe
     CalcLight(total_pe, dir_visibility_map, ref_visibility_map, total_gamma);
@@ -541,15 +523,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     _rec_gamma = total_gamma;
 
     // calculate final light estimate   
-    // ! TODO: final light estimate should be weighted average 
-    // ! where the weights are 1/poisson_err 
-    _median_gamma = CalcMedian(total_gamma);
-    _mean_gamma   = CalcMean(total_gamma);
-    
-    if (_median_gamma!=0 && !std::isnan(_median_gamma))
-      _slice_L = _median_gamma;
-    else
-      _slice_L = _mean_gamma;
+    _mean_gamma   = CalcMean(total_gamma,total_err);
+    _slice_L = _mean_gamma;
     
     _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV   
 
@@ -596,6 +571,82 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
 
 
 // define functions 
+template <typename MatchT, typename CheckFunc>
+void sbnd::LightCaloProducer::collect_matches(const art::Handle<std::vector<MatchT>> &handle,
+                                              const std::vector<art::Ptr<MatchT>> &fm_v,
+                                              const std::string &label,
+                                              art::Event &e,
+                                              std::vector<art::Ptr<recob::Slice>> &match_slices_v,
+                                              std::vector<art::Ptr<recob::OpFlash>> &match_op0,
+                                              std::vector<art::Ptr<recob::OpFlash>> &match_op1,
+                                              CheckFunc check)
+{
+  std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
+  art::FindManyP<recob::Slice> fm_to_slice(handle, e, label);
+  art::FindManyP<recob::OpFlash> fm_to_flash(handle, e, label);
+
+  for (size_t n_fm = 0; n_fm < fm_v.size(); ++n_fm) {
+    auto fm = fm_v[n_fm];
+    if (!check(fm)) continue;
+
+    std::vector<art::Ptr<recob::Slice>> slice_v = fm_to_slice.at(fm.key());
+    std::vector<art::Ptr<recob::OpFlash>> flash_v = fm_to_flash.at(fm.key());
+
+    assert(slice_v.size() == 1);
+    assert(flash_v.size() == 1);
+
+    auto slice = slice_v.front();
+    auto flash = flash_v.front();
+
+    auto it = match_slice_opflash_map.find(slice);
+    if (it == match_slice_opflash_map.end()){
+      std::vector<art::Ptr<recob::OpFlash>> fv;
+      fv.push_back(flash);
+      match_slice_opflash_map.insert(std::pair<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>>(slice, fv));
+    }
+    else{
+      it->second.push_back(flash);
+    }
+  }
+
+  for (auto it = match_slice_opflash_map.begin(); it != match_slice_opflash_map.end(); ++it){
+    auto slice = it->first;
+    auto flash_v = it->second;
+    if (flash_v.size() > 2){
+      std::cout << "more than two opflash matched to this slice!" << std::endl;
+      continue;
+    }
+    bool found_opflash0 = false;
+    bool found_opflash1 = false;
+
+    for (size_t n_flash=0; n_flash < flash_v.size(); n_flash++){
+      auto flash = flash_v[n_flash];
+      if (flash->XCenter() > 0){
+        found_opflash1 = true;
+        match_op1.push_back(flash);
+      }
+      else if (flash->XCenter() < 0){
+        found_opflash0 = true;
+        match_op0.push_back(flash);
+      }
+    } // end opflash loop
+    if (found_opflash0 == false && found_opflash1 == false){
+      std::cout << "no opflashes matched to this slice" << std::endl;
+      continue;
+    }
+    else if (found_opflash0 || found_opflash1){
+      match_slices_v.push_back(slice);
+      art::Ptr<recob::OpFlash> nullOpFlash;
+      if (found_opflash0==false) {
+        match_op0.push_back(nullOpFlash);
+      }
+      else if (found_opflash1==false){
+        match_op1.push_back(nullOpFlash);
+      }
+    }
+  }
+}
+
 
 std::vector<std::vector<double>> sbnd::LightCaloProducer::CalcVisibility(std::vector<geo::Point_t> xyz_v,
                                                                     std::vector<double> charge_v){
@@ -666,53 +717,49 @@ double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
     if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
   }
   double median_gamma=0; 
+
   for (int tpc=0; tpc < 2; tpc++){
-    double median = 0;
-    auto gamma_v = (tpc==0)? tpc0_gamma:tpc1_gamma;
-    std::vector<int> idx(gamma_v.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    std::sort(idx.begin(), idx.end(),
-            [&](int A, int B) -> bool {
-                  return gamma_v[A] < gamma_v[B];
-              });
-    // count number of zero entries
-    int zero_counter = 0;
-    for (size_t i=0; i < gamma_v.size(); i++){
-      if (gamma_v.at(i) <= 0) zero_counter++;
-    }
-    int med_idx=0;
-    if (zero_counter != int(gamma_v.size())){
-      med_idx = idx.at(int((gamma_v.size()-zero_counter))/2 + zero_counter); 
-      median = gamma_v.at(med_idx);
-    }
+    // make a copy to avoid changing in-place 
+    std::vector<double> gamma_v = ((tpc==0)? std::vector<double>(tpc0_gamma) : std::vector<double>(tpc1_gamma));
+    const auto median_it = gamma_v.begin() + gamma_v.size() / 2;
+    std::nth_element(gamma_v.begin(), median_it , gamma_v.end());
+    auto median = *median_it;
     median_gamma+=median;
   }
   return median_gamma;
 }
 
-double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
-  std::vector<double> tpc0_gamma; 
-  std::vector<double> tpc1_gamma;
-  for (size_t i=0; i<total_gamma.size(); i++){
-    if (i%2==0) tpc0_gamma.push_back(total_gamma[i]);
-    if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
-  }
-  double mean_gamma=0;
-  for (int tpc=0; tpc < 2; tpc++){
-    auto gamma_v = (tpc==0)? tpc0_gamma:tpc1_gamma;
-
-    double counter=0;
-    double sum=0;
-    for (size_t i=0; i< gamma_v.size(); i++){
-      auto gamma = gamma_v[i];
-      if (gamma>0){
-        counter+=1.0;
-        sum+=gamma;
+double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::vector<double> total_err){
+  // calculates a weighted average, loops over per tpc and then per channel
+  double total_mean=0;
+  for (size_t i=0; i<2; i++){
+    double wgt_num = 0;
+    double wgt_denom = 0;
+    for (size_t ich=0; i<total_gamma.size(); i++){
+      if ((ich%2==i) && (total_gamma[i]>0) ){
+        wgt_num   += total_gamma[i]*(1./total_err[i]);
+        wgt_denom += (1./total_err[i]);
       }
     }
-    if (sum!=0) mean_gamma+= sum/counter;
+    total_mean += wgt_num/wgt_denom;
   }
-  return mean_gamma;
+  return total_mean; 
+}
+
+double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
+  double total_mean=0;
+  for (size_t i=0; i<2; i++){
+    double wgt_num = 0;
+    double wgt_denom = 0;
+    for (size_t ich=0; i<total_gamma.size(); i++){
+      if ((ich%2==i) && (total_gamma[i]>0) ){
+        wgt_num   += total_gamma[i];
+        wgt_denom += 1;
+      }
+    }
+    total_mean += wgt_num/wgt_denom;
+  }
+  return total_mean; 
 }
 
 DEFINE_ART_MODULE(sbnd::LightCaloProducer)
