@@ -1,3 +1,4 @@
+#include "crtgeoservice_sbnd.fcl"
 #include "crtana_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 
@@ -12,6 +13,7 @@ services:
   DetectorClocksService:     @local::sbnd_detectorclocks
   LArPropertiesService:      @local::sbnd_properties
   DetectorPropertiesService: @local::sbnd_detproperties
+  CRTGeoService:             @local::crtgeoservice_sbnd
 }
 
 source:

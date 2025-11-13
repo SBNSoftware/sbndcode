@@ -1,4 +1,3 @@
-#include "crtgeoalg_sbnd.fcl"
 #include "pmtArtdaqFragmentProducer.fcl"
 #include "CRTArtdaqFragmentProducer.fcl"
 
@@ -22,8 +21,6 @@ ArtdaqFragmentProducer:
   FirstFEBMac5: @local::CRTArtdaqFragmentProducer.FirstFEBMac5  
 
   Verbose: true
-
-  CRTGeoAlg: @local::crtgeoalg_sbnd
 }
 
 END_PROLOG

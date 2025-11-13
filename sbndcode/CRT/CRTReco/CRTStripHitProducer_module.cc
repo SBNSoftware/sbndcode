@@ -25,7 +25,7 @@
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 
@@ -56,11 +56,15 @@ public:
 
 private:
 
-  CRTGeoAlg             fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+
   std::string           fFEBDataModuleLabel;
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
+  bool                  fApplyTs0Window;
+  double                fTs0Min;
+  double                fTs0Max;
   bool                  fApplyTs1Window;
   double                fTs1Min;
   double                fTs1Max;
@@ -80,11 +84,13 @@ private:
 
 sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
+  , fTs0Min(p.get<double>("Ts0Min", 0))
+  , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
   , fTs1Min(p.get<double>("Ts1Min", 0))
   , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
@@ -206,7 +212,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   if(!(data->Flags() == 3 || (fAllowFlag1 && data->Flags() == 1)))
     return stripHits;
   
-  const CRTModuleGeo module = fCRTGeoAlg.GetModule(mac5 * 32);
+  const CRTModuleGeo module = fCRTGeoService->GetModule(mac5 * 32);
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
@@ -240,6 +246,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   if(fReferenceTs0)
     t0 -= ref_time_ns;
 
+  if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
+    return stripHits;
+
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
 
@@ -250,9 +259,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       // Calculate SiPM channel number
       const uint16_t channel = mac5 * 32 + adc_i;
 
-      const CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
-      const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
-      const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
+      const CRTStripGeo strip = fCRTGeoService->GetStrip(channel);
+      const CRTSiPMGeo sipm1  = fCRTGeoService->GetSiPM(channel);
+      const CRTSiPMGeo sipm2  = fCRTGeoService->GetSiPM(channel+1);
 
       if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
         continue;
