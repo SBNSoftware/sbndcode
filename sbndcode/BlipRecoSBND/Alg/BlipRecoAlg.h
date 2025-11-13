@@ -52,7 +52,8 @@
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 
 // Blip-specific utils
-#include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
+//#include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
+#include "sbnobj/SBND/Blip/BlipDataTypes.h"
 
 // ROOT stuff
 #include "TH1D.h"
