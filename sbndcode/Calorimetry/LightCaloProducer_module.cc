@@ -247,11 +247,44 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 
   geom = lar::providerFrom<geo::Geometry>();
 
-  // Call appropriate produces<>() functions here.
-  produces<std::vector<sbn::LightCalo>>();
-  produces<art::Assns<recob::Slice, sbn::LightCalo>>();
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
+  art::ServiceHandle<art::TFileService> fs;
+  _tree = fs->make<TTree>("slice_tree","");
+  _tree->Branch("run",             &_run,        "run/I");
+  _tree->Branch("subrun",          &_subrun,     "subrun/I");
+  _tree->Branch("event",           &_event,      "event/I");
+  _tree->Branch("match_type",      &_match_type, "match_type/I"); 
 
+  _tree2 = fs->make<TTree>("match_tree","");
+  _tree2->Branch("run",           &_run,          "run/I");
+  _tree2->Branch("subrun",        &_subrun,       "subrun/I");
+  _tree2->Branch("event",         &_event,        "event/I");
+  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
+  _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
+  _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
+
+  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+
+  _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
+  _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
+  _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
+
+  _tree2->Branch("visibility",   "std::vector<double>", &_visibility);
+
+  _tree2->Branch("median_gamma",  &_median_gamma, "median_gamma/D");
+  _tree2->Branch("mean_gamma",    &_mean_gamma,   "mean_gamma/D");
+  _tree2->Branch("mean_charge",   &_mean_charge,  "mean_charge/D");
+  _tree2->Branch("max_charge",    &_max_charge,   "max_charge/D");
+  _tree2->Branch("comp_charge",   &_comp_charge,  "comp_charge/D");
+
+  _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
+  _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
+  _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
+
+  // Call appropriate produces<>() functions here.
+  // produces<std::vector<sbn::LightCalo>>();
+  // produces<art::Assns<recob::Slice, sbn::LightCalo>>();
+  // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
 void sbnd::LightCaloProducer::produce(art::Event& e)
@@ -418,7 +451,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       _tree->Fill();
       return;
     }
-    
     auto slice = match_slices_v[n_slice];
     // sum charge information (without position info) for Q 
     // find which plane has the most integrated charge for this slice
@@ -521,7 +553,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     _opflash_time = flash_time;
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
-
     // calculate final light estimate   
     _mean_gamma   = CalcMean(total_gamma,total_err);
     _slice_L = _mean_gamma;
@@ -562,12 +593,14 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       _true_gamma = -9999; 
       _true_charge = -9999;
       _true_energy = -9999;
-    } 
+    }
     nsuccessful_matches++;
+    _tree2->Fill();
+
   } // end slice loop
   _match_type=nsuccessful_matches;
   _tree->Fill();
-} // end analyze
+} // end produce 
 
 
 // define functions 
