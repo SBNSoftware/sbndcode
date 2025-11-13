@@ -8,6 +8,7 @@ lightcaloana:
 
     VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
     VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    OpticalPathTool:  @local::SBNDOpticalPath
 
     OpFlashProducers:    ["opflashtpc0", "opflashtpc1"]
     OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]

@@ -8,6 +8,7 @@ lightcalo:
 
     VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
     VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    OpticalPathTool:  @local::SBNDOpticalPath
 
     OpFlashProducers:    ["opflashtpc0", "opflashtpc1"]
     OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
@@ -40,8 +41,8 @@ lightcalo:
     ScintPreScale:       0.039 # Scintillation Pre-Scale factor in simulation (set in ionandscint)
     
     # parameters for truth validation 
-    TruthValidation:     false # can only set to true if the reco2 files have SimEnergyDeposits
-    SimEnergyProducer:   "ionandscint" # only looking at energy deposits in the AV 
+    TruthValidation:     true # can only set to true if the reco2 files have SimEnergyDeposits
+    SimEnergyProducer:   "ionandscint:priorSCE" # only looking at energy deposits in the AV 
     TruthNeutrino:       true # if validating anything other than simb::kBeamNeutrino, set to false 
 }
 END_PROLOG
