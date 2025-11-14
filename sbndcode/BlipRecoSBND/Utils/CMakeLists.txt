@@ -38,6 +38,7 @@ cet_make_library(
                 ROOT::Gdml
                 sbndcode_CRTUtils
                 sbnobj::Common_CRT
+		sbndobj_BlipDataTypes
                 #sbndcode_CosmicIdUtils
 )
 

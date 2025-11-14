@@ -126,9 +126,9 @@ physics:
 # change tools in sbn to have 2D TPC sim/sp input
 physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
-physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+#physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
 # uncomment below line for to use DNN ROI SP for CNNID scores
-#physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
+physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
 
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
@@ -136,6 +136,7 @@ physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.cafmaker.BlipTag: "blipreco"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false

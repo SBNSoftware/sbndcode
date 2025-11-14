@@ -15,6 +15,7 @@ physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching
 physics.producers.cafmaker.CVNLabel: "cvnSCE"
 physics.producers.cafmaker.CorrectedOpFlashLabel: "lightpropagationcorrectionSCE"
 physics.producers.cnnid.WireLabel: "sptpc2d:dnnsp"
+physics.producers.cafmaker.BlipTag: "blipreco"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
@@ -35,7 +36,7 @@ physics.producers.pandoraShowerCosmicDist.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerCosmicDist.ShowerLabel:  "pandoraSCEShowerSBN"
 physics.producers.pandoraShowerRazzle.PFPLabel: "pandoraSCE"
 physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
-
+physics.producers.pandoraShowerRazzle.SimChannelLabel: "sptpc2d:dnnsp"
 physics.producers.pandoraRazzled: @local::razzled_sbnd_sce
 
 physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
@@ -53,6 +54,8 @@ physics.producers.pandoraTrackDazzle.PFPLabel: "pandoraSCE"
 physics.producers.pandoraTrackDazzle.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackDazzle.CaloLabel: "pandoraSCECaloData"
 physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPidData"
+physics.producers.pandoraTrackDazzle.SimChannelLabel: "sptpc2d:dnnsp"
+
 
 physics.producers.fmatchSCE: @local::transfer_flashmatch_sce_sbnd
 physics.producers.fmatchopSCE: @local::transfer_flashmatch_sce_sbnd
