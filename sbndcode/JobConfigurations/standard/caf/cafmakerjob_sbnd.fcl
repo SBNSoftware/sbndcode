@@ -152,6 +152,10 @@ physics.producers.cafmaker.OpFlashLabel: "opflash"
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
+# calo hit residual range cut for tracks in non-clear-cosmic slices
+physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
+physics.producers.cafmaker.TrackHitFillRREndCut: 1000
+
 # Include 3D barycenter flahs matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
