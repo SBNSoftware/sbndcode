@@ -1,0 +1,15 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:    g4_noSCE_preDefinedSeed_sbnd.fcl
+# Purpose: Propagation of generated particle through matter (Geant4 simulation) without SCE.
+
+#include "g4_noSCE_sbnd.fcl"
+
+services.NuRandomService.policy: "preDefinedSeed"
+services.NuRandomService.baseSeed: 1234
+services.NuRandomService.largeant: 1234
+services.NuRandomService.ionandscint.ISCalcAlg: 1234
+services.NuRandomService.ionandscintout.ISCalcAlg: 1234
+services.NuRandomService.pdfastsim.photon: 1234
+services.NuRandomService.pdfastsimout.photon: 1234
+services.NuRandomService.pdfastsim.scinttime: 1234
+services.NuRandomService.pdfastsimout.scinttime: 1234
