@@ -35,7 +35,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            sbndcode_CRTUtils
                            sbnobj::Common_CRT
                            #sbndcode_CosmicIdUtils
-			   #sbndcode_BlipUtils
+			   sbndcode_BlipUtils
 			   sbndobj_BlipDataTypes
 )
 

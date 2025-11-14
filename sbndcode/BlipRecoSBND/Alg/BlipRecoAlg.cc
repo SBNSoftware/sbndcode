@@ -12,7 +12,7 @@ namespace blip {
     
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-    art::ServiceHandle<geo::WireReadoutGeom> wireReadoutGeom;
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
     kLArDensity           = detProp.Density();
     kNominalEfield        = detProp.Efield();
     kDriftVelocity        = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
