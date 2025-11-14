@@ -93,9 +93,6 @@ sbnd::calo::NormalizeDriftSQLite::RunInfo sbnd::calo::NormalizeDriftSQLite::GetR
 
   RunInfo thisrun;
 
-  // Iterate over the rows
-  // Should be 4: one for each TPC
-
   double this_tau_E, this_tau_W;
   fDB.GetNamedChannelData(0, "etau_sce_spatial_east", this_tau_E);
   fDB.GetNamedChannelData(0, "etau_sce_spatial_west", this_tau_W);
