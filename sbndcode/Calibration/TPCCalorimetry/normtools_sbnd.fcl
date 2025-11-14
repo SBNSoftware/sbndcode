@@ -1,4 +1,13 @@
+#include "calibration_database_GlobalTags_sbnd.fcl"
+
 BEGIN_PROLOG
+
+driftnorm_sql: {
+  tool_type: NormalizeDriftSQLite
+  DBFileName: tpc_elifetime
+  DBTag: @local::SBND_Calibration_GlobalTags.tpc_elifetime_data
+  Verbose: false
+}
 
 yznorm_hist_data: {
   tool_type: NormalizeYZ
@@ -13,7 +22,7 @@ yznorm_hist_mc: {
 }
 
 # list of normalization tools - by far only YZ correction is implemented
-sbnd_calonormtoolsdata: [@local::yznorm_hist_data]
+sbnd_calonormtoolsdata: [@local::driftnorm_sql, @local::yznorm_hist_data]
 sbnd_calonormtoolsmc: [@local::yznorm_hist_mc]
 
 END_PROLOG

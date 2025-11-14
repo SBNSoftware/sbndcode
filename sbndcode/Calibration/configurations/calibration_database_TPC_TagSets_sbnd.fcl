@@ -1,0 +1,13 @@
+# File:    calibration_database_TPC_TagSets_sbnd.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+## First one for 2025 Fall, only with etau tag
+TPC_CalibrationTags_Nov2025: {
+
+  tpc_elifetime_data: "v1r1"
+
+}
+
+END_PROLOG
