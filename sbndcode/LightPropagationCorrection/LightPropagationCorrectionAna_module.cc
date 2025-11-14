@@ -53,9 +53,9 @@ private:
   TTree* fTree; ///< The TTree for storing event information
 
   double fOpFlashT0;
-  double fUpstreamTime_lightonly;
-  double fUpstreamTime_tpczcorr;
-  double fUpstreamTime_propcorr_tpczcorr;
+  double fNuToFLight;
+  double fNuToFCharge;
+  double fOpFlashT0Corrected;
 
   unsigned int _eventID;
   unsigned int _runID;
@@ -73,9 +73,9 @@ LightPropagationCorrectionAna::LightPropagationCorrectionAna(fhicl::ParameterSet
 void LightPropagationCorrectionAna::analyze(art::Event const& e)
 {
   fOpFlashT0=-99999.;
-  fUpstreamTime_lightonly=-99999.;
-  fUpstreamTime_tpczcorr=-99999.;
-  fUpstreamTime_propcorr_tpczcorr=-99999.;
+  fNuToFLight=-99999.;
+  fNuToFCharge=-99999.;
+  fOpFlashT0Corrected=-99999.;
 
   _eventID = -1;
   _runID = -1;
@@ -118,14 +118,14 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
     
     std::cout << " Corrected flash time is " << correctedopflash->OpFlashT0 << std::endl;
     std::cout << " Associated with slice id " << slice_v[0]->ID() << std::endl;
-    //std::cout << "Corrected flash time light only  " << correctedopflash->UpstreamTime_lightonly << std::endl;
-    //std::cout << "Corrected flash time tpc z corr " << correctedopflash->UpstreamTime_tpczcorr << std::endl;
-    //std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->UpstreamTime_propcorr_tpczcorr << std::endl;
+    std::cout << "Corrected flash time light only  " << correctedopflash->NuToFLight << std::endl;
+    std::cout << "Corrected flash time tpc z corr " << correctedopflash->NuToFCharge << std::endl;
+    std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->OpFlashT0Corrected << std::endl;
 
     fOpFlashT0 = correctedopflash->OpFlashT0;
-    //fUpstreamTime_lightonly = correctedopflash->UpstreamTime_lightonly;
-    //fUpstreamTime_tpczcorr = correctedopflash->UpstreamTime_tpczcorr;
-    //fUpstreamTime_propcorr_tpczcorr = correctedopflash->UpstreamTime_propcorr_tpczcorr;
+    fNuToFLight = correctedopflash->NuToFLight;
+    fNuToFCharge = correctedopflash->NuToFCharge;
+    fOpFlashT0Corrected = correctedopflash->OpFlashT0Corrected;
     fTree->Fill();
   }
 }
@@ -141,9 +141,9 @@ void LightPropagationCorrectionAna::beginJob()
   fTree->Branch("subrunID", &_subrunID, "subrunID/i");
 
   fTree->Branch("fOpFlashT0", &fOpFlashT0, "OpFlashT0/d");
-  fTree->Branch("fUpstreamTime_lightonly", &fUpstreamTime_lightonly, "UpstreamTime_lightonly/d");
-  fTree->Branch("fUpstreamTime_tpczcorr", &fUpstreamTime_tpczcorr, "UpstreamTime_tpczcorr/d");
-  fTree->Branch("fUpstreamTime_propcorr_tpczcorr", &fUpstreamTime_propcorr_tpczcorr, "UpstreamTime_propcorr_tpczcorr/d");
+  fTree->Branch("fNuToFLight", &fNuToFLight, "NuToFLight/d");
+  fTree->Branch("fNuToFCharge", &fNuToFCharge, "NuToFCharge/d");
+  fTree->Branch("fOpFlashT0Corrected", &fOpFlashT0Corrected, "OpFlashT0Corrected/d");
 
 }
 

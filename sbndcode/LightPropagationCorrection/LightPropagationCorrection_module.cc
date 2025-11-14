@@ -74,6 +74,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fEvent = e.id().event();
     fRun = e.id().run();
     fSubrun = e.id().subRun();
+    _flashgeo->InitializeFlashGeoAlgo();
 
     std::unique_ptr< std::vector<sbn::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbn::CorrectedOpFlashTiming>);
     art::PtrMaker<sbn::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e};
@@ -128,9 +129,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         ResetSliceInfo();
         // --- Get the slice
         auto & slice = sliceVect[ix];
-
-        // --- Get the slice nu score and check whether we want to correct for it
-
         // Now I need to get all the hits associated to this flash and get the timing for all of them
         // Get the slices PFPs
         double _sliceMaxNuScore = -9999.;
@@ -150,11 +148,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 fRecoVx= xyz_vertex.X();
                 fRecoVy= xyz_vertex.Y();
                 fRecoVz= xyz_vertex.Z();
-            }            
-            // If correct light propagation time
-
-
-            // Get the SP associated to the PFP and then get the hits associated to the SP. ---> Hits associated to the PFP
+            }
             //Get the spacepoints associated to the PFParticle
             std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
             //Get the SP Hit assns    
@@ -170,7 +164,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                     fSpacePointY.push_back(SP->position().Y());
                     fSpacePointZ.push_back(SP->position().Z());
                     fSpacePointIntegral.push_back(SPHit.at(0)->Integral());
-
                     //Fill Bayrcenter Position
                     if(SP->position().X() < 0){
                         fChargeWeightX[0] += SP->position().X() * SPHit.at(0)->Integral();
@@ -299,11 +292,9 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             newFlashTime = flasht0;
             sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
             correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
-            //correctedOpFlashTiming.UpstreamTime_lightonly = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000;
-            //correctedOpFlashTiming.UpstreamTime_tpczcorr = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            //correctedOpFlashTiming.UpstreamTime_propcorr_tpczcorr = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            //correctedOpFlashTiming.FMScore = _fFMScore;
-            //correctedOpFlashTiming.SliceNuScore = _sliceMaxNuScore;
+            correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
