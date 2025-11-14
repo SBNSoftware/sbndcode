@@ -1,0 +1,41 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:   reco2_noSCE_sbnd.fcl
+
+#include "standard_reco2_sbnd.fcl"
+
+services.SpaceCharge.EnableCalSpatialSCE: false
+services.SpaceCharge.EnableSimSpatialSCE: false
+services.SpaceCharge.EnableSimEfieldSCE: false
+services.SpaceCharge.EnableCalEfieldSCE: false
+services.SpaceCharge.is2DdriftSimHack: false
+
+physics.reco2: [  
+    rns
+    , pandora
+    , pandoraTrack
+    , pandoraShower
+    , pandoraShowerSBN
+    , pandoraCalo
+    , pandoraPid
+    , crtclustering
+    , crtspacepoints
+    , crttracks
+    , crtspacepointmatching
+    , crttrackmatching
+    , fmatch
+    , fmatchop
+    , fmatchara
+    , fmatchopara
+    , caloskimCalorimetry
+    , opt0finder
+]
+
+physics.analyzers: {
+    caloskim: @local::caloskim_nodigits_goldentracks
+    pmtskim:  @local::pmtskim_sbnd
+}
+
+physics.ana: [
+    caloskim
+    , pmtskim
+]

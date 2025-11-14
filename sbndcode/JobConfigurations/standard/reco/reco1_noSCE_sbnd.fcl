@@ -1,0 +1,10 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:   reco1_noSCE_sbnd.fcl
+
+#include "standard_reco1_sbnd.fcl"
+
+services.SpaceCharge.EnableCalSpatialSCE: false
+services.SpaceCharge.EnableSimSpatialSCE: false
+services.SpaceCharge.EnableSimEfieldSCE: false
+services.SpaceCharge.EnableCalEfieldSCE: false
+services.SpaceCharge.is2DdriftSimHack: false

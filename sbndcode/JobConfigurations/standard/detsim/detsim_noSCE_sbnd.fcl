@@ -1,0 +1,11 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:    detsim_noSCE_sbnd.fcl
+# Purpose: Purpose: Simulates readout response to induced and collected charge without SCE.
+
+#include "standard_detsim_sbnd.fcl"
+
+services.SpaceCharge.EnableCalSpatialSCE: false
+services.SpaceCharge.EnableSimSpatialSCE: false
+services.SpaceCharge.EnableSimEfieldSCE: false
+services.SpaceCharge.EnableCalEfieldSCE: false
+services.SpaceCharge.is2DdriftSimHack: false
