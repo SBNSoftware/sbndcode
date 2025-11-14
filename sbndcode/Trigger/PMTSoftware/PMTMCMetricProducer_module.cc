@@ -69,12 +69,6 @@ private:
   std::vector <int> fChannelsToIgnore;
   std::vector<uint32_t> sumWvfms(const std::vector<uint32_t>& v1, const std::vector<int16_t>& v2);
   float    estimateBaseline(std::vector<uint32_t> wvfm);
-
-  TTree* tree; 
-  int _run, _subrun, _event;
-  float  _flash_peakpe;
-  float  _flash_peaktime;
-  int _npmts; 
 };
 
 
@@ -86,15 +80,6 @@ sbnd::trigger::PMTMCMetricProducer::PMTMCMetricProducer(fhicl::ParameterSet cons
   OpDetWaveformsLabel = p.get< std::string >("OpDetWaveformsLabel","opdaq");
   fStartTime = p.get<float>("StartTime",-1);
   fChannelsToIgnore = p.get<std::vector<int>>("ChannelsToIgnore",{});
-
-  art::ServiceHandle<art::TFileService> fs;
-  tree = fs->make<TTree>("tree","metrictree");
-  tree->Branch("run",&_run,"run/I");
-  tree->Branch("subrun",&_subrun,"subrun/I");
-  tree->Branch("event",&_event,"event/I");
-  tree->Branch("flash_peakpe",&_flash_peakpe,"flash_peakpe/F");
-  tree->Branch("flash_peaktime",&_flash_peaktime,"flash_peaktime/F");
-  tree->Branch("npmts",&_npmts, "npmts/I");
 
   // Call appropriate produces<>() functions here.
   produces< std::vector<sbnd::trigger::pmtSoftwareTrigger>>(); 
@@ -115,7 +100,7 @@ void sbnd::trigger::PMTMCMetricProducer::produce(art::Event& e)
     return;
   }
 
-  // hardcoded to match match data version
+  // hardcoded to match match data! 
   size_t flash_len=5000;
   std::vector<uint32_t> flash(flash_len, 0);
 
@@ -142,23 +127,20 @@ void sbnd::trigger::PMTMCMetricProducer::produce(art::Event& e)
   }
 
   auto flash_baseline = estimateBaseline(flash);
-  auto flash_peak_it = std::min_element(flash.begin(),flash.end());
-  _flash_peakpe   = (flash_baseline-(*flash_peak_it))/12.5;
-  _flash_peaktime = ((flash_peak_it-flash.begin()))*ticks_to_us + readout_start; 
-  _npmts = counter;
+  auto flash_peak_it  = std::min_element(flash.begin(),flash.end());
+  auto flash_peakpe   = (flash_baseline-(*flash_peak_it))/12.5;
+  auto flash_peaktime = ((flash_peak_it-flash.begin()))*ticks_to_us + readout_start; 
 
   trig_metrics.foundBeamTrigger = true;
-  trig_metrics.nAboveThreshold = _npmts;
+  trig_metrics.nAboveThreshold = counter;
   trig_metrics.promptPE = 0; 
   trig_metrics.prelimPE = 0;
-  trig_metrics.peakPE = _flash_peakpe; 
-  trig_metrics.peaktime = _flash_peaktime; 
+  trig_metrics.peakPE = flash_peakpe; 
+  trig_metrics.peaktime = flash_peaktime; 
   trig_metrics.trig_ts = 0;
   trig_metrics_v->push_back(trig_metrics);
 
   e.put(std::move(trig_metrics_v));
-
-  tree->Fill();
 }
 
 
@@ -168,8 +150,8 @@ std::vector<uint32_t> sbnd::trigger::PMTMCMetricProducer::sumWvfms(const std::ve
   size_t result_len = (v1.size() > v2.size()) ? v1.size() : v2.size();
   std::vector<uint32_t>  result(result_len,0);
   for (size_t i = 0; i < result_len; i++){
-    auto value1 = (i < v1.size()) ? v1[i] : 1e5;
-    auto value2 = (i < v2.size()) ? v2[i] : 1e5;
+    auto value1 = (i < v1.size()) ? v1[i] : 2e4;
+    auto value2 = (i < v2.size()) ? v2[i] : 2e4;
     result.at(i) = value1 + uint32_t(value2);
   }
   return result;
