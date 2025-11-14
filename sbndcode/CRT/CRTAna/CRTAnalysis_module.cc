@@ -63,6 +63,8 @@ public:
   // Required functions.
   void analyze(art::Event const& e) override;
 
+  void beginRun(art::Run const& r) override;
+
   void AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>> &PTBVec);
 
   void AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &TDCVec);
@@ -95,8 +97,10 @@ public:
 
 private:
 
-  art::ServiceHandle<CRTGeoService> fCRTGeoService;
-  TPCGeoAlg fTPCGeoAlg;
+  art::ServiceHandle<CRTGeoService>              fCRTGeoService;
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
+
+  TPCGeoAlg         fTPCGeoAlg;
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
@@ -640,37 +644,39 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
       fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
     }
+}
 
+void sbnd::crt::CRTAnalysis::beginRun(art::Run const& r)
+{
   if(fDebug)
     {
-      for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
-        {
-          std::cout << "Tagger:  " << tagger.name << '\n'
-                    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-                    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-                    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-        }
+      std::cout << "\n==================================="
+                << "\nTaggers!"
+                << "\n===================================";
 
-      std::cout << std::endl;
+      for (auto const &[name, tagger] : fCRTGeoService->GetTaggers())
+        std::cout << std::endl << tagger;
 
-      for(auto const &[name, module] : fCRTGeoService->GetModules())
-        {
-          std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
-          if(module.minos)
-            std::cout << "MINOS module" << std::endl;
-          std::cout << "X - Min: " << module.minX << " Max: " << module.maxX << " Diff: " << module.maxX - module.minX << '\n' 
-                    << "Y - Min: " << module.minY << " Max: " << module.maxY << " Diff: " << module.maxY - module.minY << '\n' 
-                    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << " Diff: " << module.maxZ - module.minZ << '\n' 
-                    << "Orientation: " << module.orientation << '\n' << std::endl;
-        }
+      std::cout << "\n==================================="
+                << "\nModules!"
+                << "\n===================================";
 
-      std::cout << std::endl;
+      for (auto const &[name, module] : fCRTGeoService->GetModules())
+        std::cout << std::endl << module;
 
-      for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
-        {
-          std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
-                    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
-        }
+      std::cout << "\n==================================="
+                << "\nStrips!"
+                << "\n===================================";
+
+      for (auto const &[name, strip] : fCRTGeoService->GetStrips())
+        std::cout << std::endl << strip;
+
+      std::cout << "\n==================================="
+                << "\nSiPMs!"
+                << "\n===================================";
+
+      for (auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
+        std::cout << std::endl << sipm;
     }
 }
 
@@ -1269,20 +1275,12 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       for(unsigned ii = 0; ii < _cl_nhits[i]; ++ii)
         {
           const auto striphit = striphits[ii];
-          _cl_channel_set[i][ii] = striphit->Channel();
-          _cl_adc_set[i][2*ii]   = striphit->ADC1();
-          _cl_adc_set[i][2*ii+1] = striphit->ADC2();
-          _cl_sh_ts0_set[i][ii]  = striphit->Ts0();
-          _cl_sh_ts1_set[i][ii]  = striphit->Ts1();
-
-          if(fDataMode)
-            {
-              art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-              SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
-              _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
-            }
-          else
-            _cl_sh_feb_mac5_set[i][ii] = striphit->Channel() / 32;
+          _cl_channel_set[i][ii]     = striphit->Channel();
+          _cl_adc_set[i][2*ii]       = striphit->ADC1();
+          _cl_adc_set[i][2*ii+1]     = striphit->ADC2();
+          _cl_sh_ts0_set[i][ii]      = striphit->Ts0();
+          _cl_sh_ts1_set[i][ii]      = striphit->Ts1();
+          _cl_sh_feb_mac5_set[i][ii] = fCRTChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
 
           /*
            * The below segment reimplements the CorrectTime() method

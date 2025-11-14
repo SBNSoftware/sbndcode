@@ -1,14 +1,14 @@
 #include "crt_decoder_sbnd.fcl"
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_channel_map_service_sbnd.fcl"
 
 process_name: CRTDecoder
 
 services:
 {
   @table::sbnd_services
-  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTChannelMapService: @local::crt_channel_map_sbnd
 }
 
 source:

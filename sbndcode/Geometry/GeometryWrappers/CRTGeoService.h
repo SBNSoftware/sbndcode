@@ -19,6 +19,7 @@
 #include "canvas/Persistency/Common/PtrVector.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art/Framework/Services/Registry/ActivityRegistry.h"
 
 // LArSoft
 #include "larcore/Geometry/Geometry.h"
@@ -39,8 +40,9 @@
 // sbndcode
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
-#include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
+#include "sbndcode/Calibration/CRTDatabaseInterface/CRTCalibrationDatabase.h"
+#include "sbndcode/Calibration/CRTDatabaseInterface/ICRTCalibrationDatabaseService.h"
 
 namespace sbnd::crt {
 
@@ -68,6 +70,21 @@ namespace sbnd::crt {
     CRTChannelStatus status;
     double           gain;
   };
+
+  std::ostream& operator<<(std::ostream& os, const CRTSiPMGeo& geo) {
+    os << "CRTSiPMGeo {\n"
+       << "\tstripName: " << geo.stripName << "\n"
+       << "\tchannel: " << geo.channel << "\n"
+       << "\tx: " << geo.x << "\n"
+       << "\ty: " << geo.y << "\n"
+       << "\tz: " << geo.z << "\n"
+       << "\tnull: " << (geo.null ? "true" : "false") << "\n"
+       << "\tpedestal: " << geo.pedestal << "\n"
+       << "\tgain: " << geo.gain << "\n"
+       << "\tstatus: " << geo.status << "\n"
+       << "}";
+    return os;
+  }
 
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
@@ -120,6 +137,26 @@ namespace sbnd::crt {
     uint16_t    adsID;
     bool        null;
   };
+
+  std::ostream& operator<<(std::ostream& os, const CRTStripGeo& s)
+  {
+    os << "CRTStripGeo {\n"
+       << "\tname: " << s.name << "\n"
+       << "\tmoduleName: " << s.moduleName << "\n"
+       << "\tchannel0: " << s.channel0 << "\n"
+       << "\tchannel1: " << s.channel1 << "\n"
+       << "\tminX: " << s.minX << "\n"
+       << "\tmaxX: " << s.maxX << "\n"
+       << "\tminY: " << s.minY << "\n"
+       << "\tmaxY: " << s.maxY << "\n"
+       << "\tminZ: " << s.minZ << "\n"
+       << "\tmaxZ: " << s.maxZ << "\n"
+       << "\twidth: " << s.width << "\n"
+       << "\tadsID: " << s.adsID << "\n"
+       << "\tnull: " << (s.null ? "true" : "false") << "\n"
+       << "}";
+    return os;
+  }
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
@@ -208,6 +245,29 @@ namespace sbnd::crt {
     bool          null;
   };
 
+  std::ostream& operator<<(std::ostream& os, const CRTModuleGeo& m)
+  {
+    os << "CRTModuleGeo {\n"
+       << "\tname: " << m.name << "\n"
+       << "\ttaggerName: " << m.taggerName << "\n"
+       << "\tminX: " << m.minX << "\n"
+       << "\tmaxX: " << m.maxX << "\n"
+       << "\tminY: " << m.minY << "\n"
+       << "\tmaxY: " << m.maxY << "\n"
+       << "\tminZ: " << m.minZ << "\n"
+       << "\tmaxZ: " << m.maxZ << "\n"
+       << "\torientation: " << m.orientation << "\n"
+       << "\ttop: " << (m.top ? "true" : "false") << "\n"
+       << "\tadID: " << m.adID << "\n"
+       << "\tt0DelayCorrection: " << m.t0DelayCorrection << "\n"
+       << "\tt1DelayCorrection: " << m.t1DelayCorrection << "\n"
+       << "\tinvertedOrdering: " << (m.invertedOrdering ? "true" : "false") << "\n"
+       << "\tminos: " << (m.minos ? "true" : "false") << "\n"
+       << "\tnull: " << (m.null ? "true" : "false") << "\n"
+       << "}";
+    return os;
+  }
+
   // CRT tagger geometry struct contains dimensions and daughter modules
   struct CRTTaggerGeo{
     CRTTaggerGeo(const TGeoNode *taggerNode, const TGeoNode *detNode)
@@ -253,6 +313,20 @@ namespace sbnd::crt {
     bool        null;
   };
 
+  std::ostream& operator<<(std::ostream& os, const CRTTaggerGeo& t)
+  {
+    os << "CRTTaggerGeo {\n"
+       << "\tname: " << t.name << "\n"
+       << "\tminX: " << t.minX << "\n"
+       << "\tmaxX: " << t.maxX << "\n"
+       << "\tminY: " << t.minY << "\n"
+       << "\tmaxY: " << t.maxY << "\n"
+       << "\tminZ: " << t.minZ << "\n"
+       << "\tmaxZ: " << t.maxZ << "\n"
+       << "\tnull: " << (t.null ? "true" : "false") << "\n"
+       << "}";
+    return os;
+  }
 
   class CRTGeoService {
   public:
@@ -268,9 +342,11 @@ namespace sbnd::crt {
       };
     };
 
-    CRTGeoService(fhicl::ParameterSet const& pset);
+    CRTGeoService(fhicl::ParameterSet const& pset, art::ActivityRegistry& reg);
 
     ~CRTGeoService();
+
+    void preBeginRun(art::Run const& run);
 
     std::vector<double> CRTLimits() const;
 
@@ -361,8 +437,10 @@ namespace sbnd::crt {
     std::map<std::string, CRTStripGeo>  fStrips;
     std::map<uint16_t, CRTSiPMGeo>      fSiPMs;
 
-    geo::GeometryCore const       *fGeometryService;
-    const geo::AuxDetGeometryCore *fAuxDetGeoCore;
+    geo::GeometryCore const                        *fGeometryService;
+    const geo::AuxDetGeometryCore                  *fAuxDetGeoCore;
+    sbndDB::CRTCalibrationDatabase const           *fCRTCalibrationDatabaseService;
+    art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
     double fDefaultGain;
     bool   fMC;
