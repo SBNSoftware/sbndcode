@@ -28,6 +28,8 @@ cet_build_plugin(MetricFilter   art::module SOURCE MetricFilter_module.cc   LIBR
 cet_build_plugin(PMTMetricProducer art::module SOURCE PMTMetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(PMTMCMetricProducer art::module SOURCE PMTMCMetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
+add_subdirectory(metric_fcls)
+
 install_headers()
 install_fhicl()
 install_source()
