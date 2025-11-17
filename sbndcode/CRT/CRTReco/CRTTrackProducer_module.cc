@@ -238,7 +238,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
                       const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
 
-                      const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
+                      const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
  
                       geo::Point_t fitStart, fitMid, fitEnd;
                       double gof;
@@ -264,7 +264,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
           const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
 
-          const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
+          const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
           const CRTTrack track(start, end, t0, et0, t1, et1, pe, tof, used_taggers);
           const std::set<unsigned> used_spacepoints = {i, ii};
