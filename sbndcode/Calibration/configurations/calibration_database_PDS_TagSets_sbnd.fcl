@@ -5,6 +5,9 @@
 
 BEGIN_PROLOG
 
+# Run ranges
+## r1: SBND Full Run 1 with light trigger, run number 18250-18618
+
 # For SBND 2025 Fall production
 PDS_CalibrationTags_Nov2025: {
   PMTCalibrationDatabaseTag:    "v1r1"

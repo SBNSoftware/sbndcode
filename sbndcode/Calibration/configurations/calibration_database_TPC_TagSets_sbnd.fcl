@@ -3,6 +3,9 @@
 
 BEGIN_PROLOG
 
+# Run ranges
+## r1: SBND Full Run 1 with light trigger, run number 18250-18618
+
 ## First one for 2025 Fall, only with etau tag
 TPC_CalibrationTags_Nov2025: {
 
