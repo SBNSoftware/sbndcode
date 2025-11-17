@@ -17,6 +17,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <TMath.h>
+#include <fstream>
 
 typedef struct{
     TCanvas * canvas;
@@ -109,6 +110,7 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
+/*
 void styleDrawPur(purHist_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
                   const char* filename, const std::string& legendLocation,
@@ -172,6 +174,109 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
 }
+*/
+
+void styleDrawPur(purHist_struct hists,
+                  double ymin, double ymax, double xmin, double xmax,
+                  const char* filename, const std::string& legendLocation,
+                  int* drawLine = nullptr, int* linePos = nullptr,
+                  bool writeMaxValues = false) // <-- New toggle
+{
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    hists.current->SetLineWidth(2);
+    hists.current->SetLineColor(TColor::GetColor("#e42536"));
+    hists.uboone->SetLineWidth(2);
+    hists.uboone->SetLineColor(TColor::GetColor("#5790fc"));
+    hists.nuE->SetLineWidth(2);
+    hists.nuE->SetLineColor(TColor::GetColor("#f89c20"));
+
+    if((ymin != 999) && (ymax != 999))
+        hists.current->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999))
+        hists.current->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    double maxYValue = std::max({
+        hists.current->GetMaximum(),
+        hists.uboone->GetMaximum(),
+        hists.nuE->GetMaximum()
+    });
+
+    std::cout << "Max values: hists.current = " << hists.current->GetMaximum()
+              << ", hists.uboone = " << hists.uboone->GetMaximum()
+              << ", hists.nuE = " << hists.nuE->GetMaximum() << std::endl;
+
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+
+    double yminVal = 0;
+    if((ymin == 999) && (ymax == 999)){
+        double ymaxVal = (maxYValue * 1.1);
+        hists.current->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+        std::cout << "Set Y axis range to: " << yminVal << ", " << ymaxVal << std::endl;
+    }
+
+    hists.current->Draw("hist");
+    hists.uboone->Draw("histsame");
+    hists.nuE->Draw("histsame");
+
+    hists.current->SetStats(0);
+    hists.current->GetXaxis()->SetTickLength(0.04);
+    hists.current->GetYaxis()->SetTickLength(0.03);
+    hists.current->GetXaxis()->SetTickSize(0.02);
+    hists.current->GetYaxis()->SetTickSize(0.02);
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    legend->AddEntry(hists.current, "Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuE, "Pandora Deep Learning: SBND Nu+E Tune", "f");
+
+    legend->SetTextSize(0.01);
+    legend->SetMargin(0.12);
+    legend->Draw();
+
+    hists.canvas->SaveAs(filename);
+
+    if (writeMaxValues) {
+        std::ofstream outfile("purity_max_values.txt", std::ios::app); // append mode
+        if (outfile.is_open()) {
+            outfile << "================" << std::endl;
+            outfile << filename << std::endl;
+
+            int binCurrMax = hists.current->GetMaximumBin();
+            double currMaxVal = hists.current->GetBinContent(binCurrMax);
+            double currBinX = hists.current->GetXaxis()->GetBinCenter(binCurrMax);
+            outfile << "BDT: EffxPur Max Value = " << currMaxVal
+                    << ", Bin Value = " << currBinX << std::endl;
+
+            int binUbooneMax = hists.uboone->GetMaximumBin();
+            double ubooneMaxVal = hists.uboone->GetBinContent(binUbooneMax);
+            double ubooneBinX = hists.uboone->GetXaxis()->GetBinCenter(binUbooneMax);
+            outfile << "DL Uboone Train: EffxPur Max Value = " << ubooneMaxVal
+                    << ", Bin Value = " << ubooneBinX << std::endl;
+
+            // nuE
+            int binNuEMax = hists.nuE->GetMaximumBin();
+            double nuEMaxVal = hists.nuE->GetBinContent(binNuEMax);
+            double nuEBinX = hists.nuE->GetXaxis()->GetBinCenter(binNuEMax);
+            outfile << "DL Nu+E Train: EffxPur Max Value = " << nuEMaxVal
+                    << ", Bin Value = " << nuEBinX << std::endl;
+
+            outfile << "================" << std::endl << std::endl;
+            outfile.close();
+        } else {
+            std::cerr << "Error: could not open purity_max_values.txt for writing." << std::endl;
+        }
+    }
+}
+
 
 /*
 void styleDrawAll(histGroup_struct hists,
@@ -500,7 +605,7 @@ void styleDrawBackSig(histGroup_struct hists,
         if (useLogScale) {
             for (int i = 1; i <= combo->GetNbinsX(); ++i)
                 if (combo->GetBinContent(i) <= 0)
-                    combo->SetBinContent(i, 1e-6);
+                    combo->SetBinContent(i, 1e-1);
         }
 
         return combo;
@@ -588,16 +693,16 @@ void styleDrawBackSig(histGroup_struct hists,
     auto legend = new TLegend(Lxmin, Lymin, Lxmax, Lymax);
 
     if (includeCurrent) {
-        legend->AddEntry(currentSignalCombo, "Signal, Pandora BDT SBND (without Refinement)", "l");
-        legend->AddEntry(currentBackgroundCombo, "Background, Pandora BDT SBND (without Refinement)", "l");
+        legend->AddEntry(currentSignalCombo, "Signal, Pandora BDT SBND (without Refinement)", "f");
+        legend->AddEntry(currentBackgroundCombo, "Background, Pandora BDT SBND (without Refinement)", "f");
     }
     if (includeUboone) {
-        legend->AddEntry(ubooneSignalCombo, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "l");
-        legend->AddEntry(ubooneBackgroundCombo, "Background, Pandora Deep Learning: #muBooNE/BNB Tune", "l");
+        legend->AddEntry(ubooneSignalCombo, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+        legend->AddEntry(ubooneBackgroundCombo, "Background, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     }
     if (includeNuE) {
-        legend->AddEntry(nuESignalCombo, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "l");
-        legend->AddEntry(nuEBackgroundCombo, "Background, Pandora Deep Learning: SBND Nu+E Tune", "l");
+        legend->AddEntry(nuESignalCombo, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "f");
+        legend->AddEntry(nuEBackgroundCombo, "Background, Pandora Deep Learning: SBND Nu+E Tune", "f");
     }
 
     legend->SetTextSize(0.015);
@@ -886,7 +991,7 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
 
     effHists.currentCosmic = (TH1F*) hists.currentCosmic->Clone("eff_currentCosmic");
     effHists.currentCosmic->Reset();
-    effHists.currentCosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentCosmic->GetYaxis()->SetTitle("Rejection");
     effHists.currentCosmic->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
     
     effHists.currentSignal = (TH1F*) hists.currentSignal->Clone("eff_currentSignal");
@@ -901,17 +1006,17 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     
     effHists.currentBNB = (TH1F*) hists.currentBNB->Clone("eff_currentBNB");
     effHists.currentBNB->Reset();
-    effHists.currentBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentBNB->GetYaxis()->SetTitle("Rejection");
     effHists.currentBNB->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
 
     effHists.currentBNBFuzzy = (TH1F*) hists.currentBNBFuzzy->Clone("eff_currentBNBFuzzy");
     effHists.currentBNBFuzzy->Reset();
-    effHists.currentBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.currentBNBFuzzy->GetYaxis()->SetTitle("Rejection");
     effHists.currentBNBFuzzy->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
 
     effHists.ubooneCosmic = (TH1F*) hists.ubooneCosmic->Clone("eff_ubooneCosmic");
     effHists.ubooneCosmic->Reset();
-    effHists.ubooneCosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneCosmic->GetYaxis()->SetTitle("Rejection");
     effHists.ubooneCosmic->GetXaxis()->SetTitle(hists.ubooneCosmic->GetXaxis()->GetTitle());
     
     effHists.ubooneSignal = (TH1F*) hists.ubooneSignal->Clone("eff_ubooneSignal");
@@ -926,17 +1031,17 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     
     effHists.ubooneBNB = (TH1F*) hists.ubooneBNB->Clone("eff_ubooneBNB");
     effHists.ubooneBNB->Reset();
-    effHists.ubooneBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneBNB->GetYaxis()->SetTitle("Rejection");
     effHists.ubooneBNB->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
 
     effHists.ubooneBNBFuzzy = (TH1F*) hists.ubooneBNBFuzzy->Clone("eff_ubooneBNBFuzzy");
     effHists.ubooneBNBFuzzy->Reset();
-    effHists.ubooneBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.ubooneBNBFuzzy->GetYaxis()->SetTitle("Rejection");
     effHists.ubooneBNBFuzzy->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
 
     effHists.nuECosmic = (TH1F*) hists.nuECosmic->Clone("eff_nuECosmic");
     effHists.nuECosmic->Reset();
-    effHists.nuECosmic->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuECosmic->GetYaxis()->SetTitle("Rejection");
     effHists.nuECosmic->GetXaxis()->SetTitle(hists.nuECosmic->GetXaxis()->GetTitle());
     
     effHists.nuESignal = (TH1F*) hists.nuESignal->Clone("eff_nuESignal");
@@ -951,12 +1056,12 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     
     effHists.nuEBNB = (TH1F*) hists.nuEBNB->Clone("eff_nuEBNB");
     effHists.nuEBNB->Reset();
-    effHists.nuEBNB->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuEBNB->GetYaxis()->SetTitle("Rejection");
     effHists.nuEBNB->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
 
     effHists.nuEBNBFuzzy = (TH1F*) hists.nuEBNBFuzzy->Clone("eff_nuEBNBFuzzy");
     effHists.nuEBNBFuzzy->Reset();
-    effHists.nuEBNBFuzzy->GetYaxis()->SetTitle("Efficiency");
+    effHists.nuEBNBFuzzy->GetYaxis()->SetTitle("Rejection");
     effHists.nuEBNBFuzzy->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
 
     int numBins = hists.currentSignal->GetNbinsX();
@@ -1197,9 +1302,10 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false);
     styleDrawAll(effHists, 0, 1, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true);
     styleDrawPur(purHists, 999, 999, 999, 999, filenamePur.c_str(), legendLocation, drawLine, linePos);
-    styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos);
+    styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos, true);
 }
 
+/*
 void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "Graph Draw Options", 200, 10, 600, 400);
     TwoDHistCanvas->SetTickx();
@@ -1216,9 +1322,60 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     TwoDHistCanvas->SaveAs(filename);
     TwoDHistCanvas->Clear();
 }
+*/
+
+void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
+    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "2D Histogram", 200, 10, 800, 600);
+    TwoDHistCanvas->SetTickx();
+    TwoDHistCanvas->SetTicky();
+
+    hist->SetTitle(title);
+    hist->Draw("COLZ");
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+
+    TwoDHistCanvas->SaveAs(filename);
+
+    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "");
+
+    TCanvas* ProfileCanvas = new TCanvas("profile_canvas", "TProfile from TH2D", 300, 50, 800, 600);
+    ProfileCanvas->SetTickx();
+    ProfileCanvas->SetTicky();
+
+    profX->SetTitle(Form("ProfileX of %s", title));
+    profX->SetLineColor(kBlack);
+    profX->SetLineWidth(2);
+    profX->SetMarkerStyle(20);
+    profX->SetMarkerSize(0.8);
+    profX->SetMarkerColor(kBlack);
+    profX->Draw("E1"); // E1 = draw with error bars
+
+    profX->GetXaxis()->SetTickLength(0.04);
+    profX->GetYaxis()->SetTickLength(0.03);
+    profX->GetXaxis()->SetTickSize(0.02);
+    profX->GetYaxis()->SetTickSize(0.02);
+    profX->SetStats(0);
+
+    std::string profileFilename = std::string(filename);
+    size_t dotPos = profileFilename.find_last_of(".");
+    if (dotPos != std::string::npos)
+        profileFilename.insert(dotPos, "_profile");
+    else
+        profileFilename += "_profile.df"; // default
+
+    ProfileCanvas->SaveAs(profileFilename.c_str());
+
+    TwoDHistCanvas->Clear();
+    ProfileCanvas->Clear();
+}
 
 
 void nuEBackgroundSignalWeighted_macro(){
+    std::ofstream clearFile("purity_max_values.txt", std::ios::trunc);
+    clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
@@ -1296,11 +1453,13 @@ void nuEBackgroundSignalWeighted_macro(){
     double POTBNBNuE_notMissing = 0;
     double POTBNBUboone_notMissing = 0;
     double POTBNBBDT_notMissing = 0;
+        
+    double counteraaaaaa = 0;
     
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
-        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents;
+        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents; counteraaaaaa++;
         if(subRunSignal == 3 && subRunDLCurrent == 0) cosmicSpillsSumUboone += subRunNumGenEvents;
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
 
@@ -1355,20 +1514,21 @@ void nuEBackgroundSignalWeighted_macro(){
     double cosmicsPOTUboone = cosmicSpillsSumUboone * 5e12;
     double cosmicsPOTNuE = cosmicSpillsSumNuE * 5e12;
 
+    printf("Cosmic Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", cosmicSpillsSumCurrent, cosmicSpillsSumUboone, cosmicSpillsSumNuE);
     std::cout << "cosmicsPOTCurrent = " << cosmicsPOTCurrent << ", " << cosmicsPOTUboone << ", " << cosmicsPOTNuE << std::endl;
 
     weights_struct weights;
-    weights.signalCurrent = totalPOTSignalCurrent/totalPOTSignalCurrent;
-    weights.BNBCurrent = totalPOTSignalCurrent/totalPOTBNBCurrent;
-    weights.cosmicsCurrent = totalPOTSignalCurrent/cosmicsPOTCurrent;
+    weights.signalCurrent = POTSignalBDT_notMissing/POTSignalBDT_notMissing;
+    weights.BNBCurrent = POTSignalBDT_notMissing/POTBNBBDT_notMissing;
+    weights.cosmicsCurrent = POTSignalBDT_notMissing/cosmicsPOTCurrent;
     
-    weights.signalUboone = totalPOTSignalCurrent/totalPOTSignalUboone;
-    weights.BNBUboone = totalPOTSignalCurrent/totalPOTBNBUboone;
-    weights.cosmicsUboone = totalPOTSignalCurrent/cosmicsPOTUboone;
+    weights.signalUboone = POTSignalBDT_notMissing/POTSignalUboone_notMissing;
+    weights.BNBUboone = POTSignalBDT_notMissing/POTBNBUboone_notMissing;
+    weights.cosmicsUboone = POTSignalBDT_notMissing/cosmicsPOTUboone;
     
-    weights.signalNuE = totalPOTSignalCurrent/totalPOTSignalNuE;
-    weights.BNBNuE = totalPOTSignalCurrent/totalPOTBNBNuE;
-    weights.cosmicsNuE = totalPOTSignalCurrent/cosmicsPOTNuE;
+    weights.signalNuE = POTSignalBDT_notMissing/POTSignalNuE_notMissing;
+    weights.BNBNuE = POTSignalBDT_notMissing/POTBNBNuE_notMissing;
+    weights.cosmicsNuE = POTSignalBDT_notMissing/cosmicsPOTNuE;
 
     std::cout << "BNB POT Current = " << totalPOTBNBCurrent << ", Uboone = " << totalPOTBNBUboone << ", Nu+E = " << totalPOTBNBNuE << std::endl;
     std::cout << "ALL BNB POT Current = " << POTBNBBDT_notMissing << ", Uboone = " << POTBNBUboone_notMissing << ", Nu+E = " << POTBNBNuE_notMissing << std::endl;
@@ -1565,11 +1725,52 @@ void nuEBackgroundSignalWeighted_macro(){
     TH2D *xCoordAngleDifferenceBDT_high = new TH2D("xCoordAngleDifferenceBDT_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
     TH2D *yCoordAngleDifferenceBDT_high = new TH2D("yCoordAngleDifferenceBDT_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceBDT_high = new TH2D("zCoordAngleDifferenceBDT_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
+    
+    TH2D *xCoordAngleDifferenceDLUboone_low = new TH2D("xCoordAngleDifferenceDLUboone_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUboone_low = new TH2D("yCoordAngleDifferenceDLUboone_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLUboone_low = new TH2D("zCoordAngleDifferenceDLUboone_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLUboone_high = new TH2D("xCoordAngleDifferenceDLUboone_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUboone_high = new TH2D("yCoordAngleDifferenceDLUboone_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLUboone_high = new TH2D("zCoordAngleDifferenceDLUboone_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
+    
+    TH2D *xCoordAngleDifferenceDLNuE_low = new TH2D("xCoordAngleDifferenceDLNuE_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_low = new TH2D("yCoordAngleDifferenceDLNuE_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLNuE_low = new TH2D("zCoordAngleDifferenceDLNuE_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLNuE_high = new TH2D("xCoordAngleDifferenceDLNuE_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_high = new TH2D("yCoordAngleDifferenceDLNuE_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLNuE_high = new TH2D("zCoordAngleDifferenceDLNuE_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
+    
+    TH2D *xCoordAngleDifferenceBDT = new TH2D("xCoordAngleDifferenceBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDT = new TH2D("yCoordAngleDifferenceBDT", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDT = new TH2D("zCoordAngleDifferenceBDT", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
+    
+    TH2D *xCoordAngleDifferenceDLUboone = new TH2D("xCoordAngleDifferenceDLUboone", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUboone = new TH2D("yCoordAngleDifferenceDLUboone", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLUboone = new TH2D("zCoordAngleDifferenceDLUboone", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
+    
+    TH2D *xCoordAngleDifferenceDLNuE = new TH2D("xCoordAngleDifferenceDLNuE", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE = new TH2D("yCoordAngleDifferenceDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLNuE = new TH2D("zCoordAngleDifferenceDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
+
+    double numEvents_BDTCosmic = 0;
+    double numEvents_BDTBNB = 0;
+    double numEvents_BDTNuE = 0;
+    
+    double numEvents_DLNuECosmic = 0;
+    double numEvents_DLNuEBNB = 0;
+    double numEvents_DLNuENuE = 0;
 
     for(Long64_t e = 0; e < numEntries; ++e){
         //printf("=============================================================================\n");
         tree->GetEntry(e);
-       
+
+        if(DLCurrent == 2 && signal == 3) numEvents_BDTCosmic++;
+        else if(DLCurrent == 2 && signal == 2) numEvents_BDTBNB++;
+        else if(DLCurrent == 2 && signal == 1) numEvents_BDTNuE++;
+        else if(DLCurrent == 5 && signal == 3) numEvents_DLNuECosmic++;
+        else if(DLCurrent == 5 && signal == 2) numEvents_DLNuEBNB++;
+        else if(DLCurrent == 5 && signal == 1) numEvents_DLNuENuE++;
+
         double recoilElectron_energy = -999999;
         double recoilElectron_angle = -999999;
         double recoilElectron_DX = -999999;
@@ -1698,29 +1899,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentCosmic->Fill(recoVZ, weight);
                             recoZDist.currentCosmic->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.currentCosmic->Fill(recoVX, weight);
                                 recoXDist_low.currentCosmic->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.currentCosmic->Fill(recoVX, weight);
                                 recoXDist_high.currentCosmic->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.currentCosmic->Fill(recoVY, weight);
                                 recoYDist_low.currentCosmic->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.currentCosmic->Fill(recoVY, weight);
                                 recoYDist_high.currentCosmic->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.currentCosmic->Fill(recoVZ, weight);
                                 recoZDist_low.currentCosmic->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.currentCosmic->Fill(recoVZ, weight);
                                 recoZDist_high.currentCosmic->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1754,29 +1955,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneCosmic->Fill(recoVZ, weight);
                             recoZDist.ubooneCosmic->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.ubooneCosmic->Fill(recoVX, weight);
                                 recoXDist_low.ubooneCosmic->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.ubooneCosmic->Fill(recoVX, weight);
                                 recoXDist_high.ubooneCosmic->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.ubooneCosmic->Fill(recoVY, weight);
                                 recoYDist_low.ubooneCosmic->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.ubooneCosmic->Fill(recoVY, weight);
                                 recoYDist_high.ubooneCosmic->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.ubooneCosmic->Fill(recoVZ, weight);
                                 recoZDist_low.ubooneCosmic->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.ubooneCosmic->Fill(recoVZ, weight);
                                 recoZDist_high.ubooneCosmic->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1810,29 +2011,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuECosmic->Fill(recoVZ, weight);
                             recoZDist.nuECosmic->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.nuECosmic->Fill(recoVX, weight);
                                 recoXDist_low.nuECosmic->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.nuECosmic->Fill(recoVX, weight);
                                 recoXDist_high.nuECosmic->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.nuECosmic->Fill(recoVY, weight);
                                 recoYDist_low.nuECosmic->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.nuECosmic->Fill(recoVY, weight);
                                 recoYDist_high.nuECosmic->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.nuECosmic->Fill(recoVZ, weight);
                                 recoZDist_low.nuECosmic->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.nuECosmic->Fill(recoVZ, weight);
                                 recoZDist_high.nuECosmic->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1888,6 +2089,11 @@ void nuEBackgroundSignalWeighted_macro(){
                             ThetaTrueDist.currentSignal->Fill(recoilElectron_angle);
                         
                             if(recoVX != -999999){
+                                
+                                xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceBDT->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceBDT->Fill(recoVZ, angleDifference);
+                                
                                 if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
                                 else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
                             
@@ -1895,7 +2101,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                 else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
                                 
                                 if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-20) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
                             }                        
                         }
                         
@@ -1917,29 +2123,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignal->Fill(recoVZ, weight);
                             recoZDist.currentSignal->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.currentSignal->Fill(recoVX, weight);
                                 recoXDist_low.currentSignal->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.currentSignal->Fill(recoVX, weight);
                                 recoXDist_high.currentSignal->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.currentSignal->Fill(recoVY, weight);
                                 recoYDist_low.currentSignal->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.currentSignal->Fill(recoVY, weight);
                                 recoYDist_high.currentSignal->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.currentSignal->Fill(recoVZ, weight);
                                 recoZDist_low.currentSignal->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.currentSignal->Fill(recoVZ, weight);
                                 recoZDist_high.currentSignal->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                     } else if(DLCurrent == 0 && signal == 1){
@@ -1976,6 +2182,22 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.ubooneSignal->Fill(recoilElectron_energy);
                             ThetaTrue.ubooneSignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.ubooneSignal->Fill(recoilElectron_angle);
+                            
+                            if(recoVX != -999999){
+                                
+                                xCoordAngleDifferenceDLUboone->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceDLUboone->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceDLUboone->Fill(recoVZ, angleDifference);
+                                
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference); 
+                            }                        
                         }
                         
                         if(recoVX != -999999){
@@ -1996,29 +2218,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneSignal->Fill(recoVZ, weight);
                             recoZDist.ubooneSignal->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.ubooneSignal->Fill(recoVX, weight);
                                 recoXDist_low.ubooneSignal->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.ubooneSignal->Fill(recoVX, weight);
                                 recoXDist_high.ubooneSignal->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.ubooneSignal->Fill(recoVY, weight);
                                 recoYDist_low.ubooneSignal->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.ubooneSignal->Fill(recoVY, weight);
                                 recoYDist_high.ubooneSignal->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.ubooneSignal->Fill(recoVZ, weight);
                                 recoZDist_low.ubooneSignal->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.ubooneSignal->Fill(recoVZ, weight);
                                 recoZDist_high.ubooneSignal->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                     } else if(DLCurrent == 5  && signal == 1){
@@ -2055,6 +2277,22 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.nuESignal->Fill(recoilElectron_energy);
                             ThetaTrue.nuESignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.nuESignal->Fill(recoilElectron_angle);
+                            
+                            if(recoVX != -999999){
+                
+                                xCoordAngleDifferenceDLNuE->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceDLNuE->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceDLNuE->Fill(recoVZ, angleDifference);
+
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
+                            }                        
                         }
                             
                         if(recoVX != -999999){ 
@@ -2075,29 +2313,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuESignal->Fill(recoVZ, weight);
                             recoZDist.nuESignal->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.nuESignal->Fill(recoVX, weight);
                                 recoXDist_low.nuESignal->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.nuESignal->Fill(recoVX, weight);
                                 recoXDist_high.nuESignal->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.nuESignal->Fill(recoVY, weight);
                                 recoYDist_low.nuESignal->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.nuESignal->Fill(recoVY, weight);
                                 recoYDist_high.nuESignal->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.nuESignal->Fill(recoVZ, weight);
                                 recoZDist_low.nuESignal->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.nuESignal->Fill(recoVZ, weight);
                                 recoZDist_high.nuESignal->Fill(recoVZ);
-                            }
+                            //}
                         }
                     }
                 } else if(reco_sliceCategory->at(slice) == 2){
@@ -2138,6 +2376,11 @@ void nuEBackgroundSignalWeighted_macro(){
                             ThetaTrueDist.currentSignalFuzzy->Fill(recoilElectron_angle);
                             
                             if(recoVX != -999999){
+                                
+                                xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceBDT->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceBDT->Fill(recoVZ, angleDifference);
+                                
                                 if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
                                 else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
                             
@@ -2145,7 +2388,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                 else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
                                 
                                 if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-20) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
                             }
                         }
                             
@@ -2167,29 +2410,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.currentSignalFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.currentSignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.currentSignalFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.currentSignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.currentSignalFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.currentSignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.currentSignalFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.currentSignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.currentSignalFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.currentSignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.currentSignalFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.currentSignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.currentSignalFuzzy->Fill(recoVZ);
-                            }
+                            //}
                         }
                     } else if(DLCurrent == 0 && signal == 1){
                         sliceCompleteness.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2225,6 +2468,22 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.ubooneSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.ubooneSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.ubooneSignalFuzzy->Fill(recoilElectron_angle);
+                        
+                            if(recoVX != -999999){
+                                
+                                xCoordAngleDifferenceDLUboone->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceDLUboone->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceDLUboone->Fill(recoVZ, angleDifference);
+                                
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference); 
+                            }                        
                         }
                             
                         if(recoVX != -999999){ 
@@ -2245,29 +2504,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.ubooneSignalFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.ubooneSignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.ubooneSignalFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.ubooneSignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.ubooneSignalFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.ubooneSignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.ubooneSignalFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.ubooneSignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.ubooneSignalFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.ubooneSignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.ubooneSignalFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.ubooneSignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.ubooneSignalFuzzy->Fill(recoVZ);
-                            }
+                            //}
                         }
                     } else if(DLCurrent == 5 && signal == 1){
                         sliceCompleteness.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2303,6 +2562,22 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.nuESignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.nuESignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.nuESignalFuzzy->Fill(recoilElectron_angle);
+                            
+                            if(recoVX != -999999){
+                                
+                                xCoordAngleDifferenceDLNuE->Fill(recoVX, angleDifference);
+                                yCoordAngleDifferenceDLNuE->Fill(recoVY, angleDifference);
+                                zCoordAngleDifferenceDLNuE->Fill(recoVZ, angleDifference);
+                                
+                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
+                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
+                            
+                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
+                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
+                                
+                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
+                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
+                            }                        
                         }
                             
                         if(recoVX != -999999){ 
@@ -2323,29 +2598,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuESignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.nuESignalFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.nuESignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.nuESignalFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.nuESignalFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.nuESignalFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.nuESignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.nuESignalFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.nuESignalFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.nuESignalFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.nuESignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.nuESignalFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.nuESignalFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.nuESignalFuzzy->Fill(recoVZ);
-                            }
+                            //}
                       
                         }
                     }
@@ -2392,29 +2667,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentBNB->Fill(recoVZ, weight);
                             recoZDist.currentBNB->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.currentBNB->Fill(recoVX, weight);
                                 recoXDist_low.currentBNB->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.currentBNB->Fill(recoVX, weight);
                                 recoXDist_high.currentBNB->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.currentBNB->Fill(recoVY, weight);
                                 recoYDist_low.currentBNB->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.currentBNB->Fill(recoVY, weight);
                                 recoYDist_high.currentBNB->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.currentBNB->Fill(recoVZ, weight);
                                 recoZDist_low.currentBNB->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.currentBNB->Fill(recoVZ, weight);
                                 recoZDist_high.currentBNB->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                     } else if(DLCurrent == 0){
@@ -2458,29 +2733,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneBNB->Fill(recoVZ, weight);
                             recoZDist.ubooneBNB->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.ubooneBNB->Fill(recoVX, weight);
                                 recoXDist_low.ubooneBNB->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.ubooneBNB->Fill(recoVX, weight);
                                 recoXDist_high.ubooneBNB->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.ubooneBNB->Fill(recoVY, weight);
                                 recoYDist_low.ubooneBNB->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.ubooneBNB->Fill(recoVY, weight);
                                 recoYDist_high.ubooneBNB->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.ubooneBNB->Fill(recoVZ, weight);
                                 recoZDist_low.ubooneBNB->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.ubooneBNB->Fill(recoVZ, weight);
                                 recoZDist_high.ubooneBNB->Fill(recoVZ);
-                            }
+                            //}
                         }
 
                     } else if(DLCurrent == 5){
@@ -2524,29 +2799,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuEBNB->Fill(recoVZ, weight);
                             recoZDist.nuEBNB->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.nuEBNB->Fill(recoVX, weight);
                                 recoXDist_low.nuEBNB->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.nuEBNB->Fill(recoVX, weight);
                                 recoXDist_high.nuEBNB->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.nuEBNB->Fill(recoVY, weight);
                                 recoYDist_low.nuEBNB->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.nuEBNB->Fill(recoVY, weight);
                                 recoYDist_high.nuEBNB->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.nuEBNB->Fill(recoVZ, weight);
                                 recoZDist_low.nuEBNB->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.nuEBNB->Fill(recoVZ, weight);
                                 recoZDist_high.nuEBNB->Fill(recoVZ);
-                            }
+                            //}
                         }
                     }
                 } else if(reco_sliceCategory->at(slice) == 4){
@@ -2592,29 +2867,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.currentBNBFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.currentBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.currentBNBFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.currentBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.currentBNBFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.currentBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.currentBNBFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.currentBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.currentBNBFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.currentBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.currentBNBFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.currentBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.currentBNBFuzzy->Fill(recoVZ);
-                            }
+                            //}
                         }
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2657,29 +2932,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.ubooneBNBFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.ubooneBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.ubooneBNBFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.ubooneBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.ubooneBNBFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.ubooneBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.ubooneBNBFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.ubooneBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.ubooneBNBFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.ubooneBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.ubooneBNBFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.ubooneBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.ubooneBNBFuzzy->Fill(recoVZ);
-                            }
+                            //}
                         }
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2722,29 +2997,29 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuEBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.nuEBNBFuzzy->Fill(recoVZ);
                             
-                            if(recoVX >= xMin && recoVX <= xMin+20){
+                            //if(recoVX >= xMin && recoVX <= xMin+20){
                                 recoX_low.nuEBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_low.nuEBNBFuzzy->Fill(recoVX);
-                            } else if(recoVX <= xMax && recoVX >= xMax-20){
+                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
                                 recoX_high.nuEBNBFuzzy->Fill(recoVX, weight);
                                 recoXDist_high.nuEBNBFuzzy->Fill(recoVX);
-                            }
+                            //}
                                 
-                            if(recoVY >= yMin && recoVY <= yMin+20){
+                            //if(recoVY >= yMin && recoVY <= yMin+20){
                                 recoY_low.nuEBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_low.nuEBNBFuzzy->Fill(recoVY);
-                            } else if(recoVY <= yMax && recoVY >= yMax-20){
+                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
                                 recoY_high.nuEBNBFuzzy->Fill(recoVY, weight);
                                 recoYDist_high.nuEBNBFuzzy->Fill(recoVY);
-                            }
+                            //}
                                 
-                            if(recoVZ >= zMin && recoVZ <= zMin+20){
+                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
                                 recoZ_low.nuEBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_low.nuEBNBFuzzy->Fill(recoVZ);
-                            } else if(recoVZ <= zMax && recoVZ >= zMax-20){
+                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
                                 recoZ_high.nuEBNBFuzzy->Fill(recoVZ, weight);
                                 recoZDist_high.nuEBNBFuzzy->Fill(recoVZ);
-                            }
+                            //}
                         }
                     }
                 }
@@ -2767,23 +3042,23 @@ void nuEBackgroundSignalWeighted_macro(){
     
     styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
     styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
 
     styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true, false);
     styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
@@ -2798,52 +3073,78 @@ void nuEBackgroundSignalWeighted_macro(){
 
     styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaXDist, 999, 999, 999, 999, (base_path + "deltaX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawAll(deltaXDist, 0, 32000, 999, 999, (base_path + "deltaX_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
+    styleDrawAll(deltaXDist, 0, 35000, 999, 999, (base_path + "deltaX_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
+    styleDrawAll(deltaXDist, 0, 9000, 999, 999, (base_path + "deltaX_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
+    styleDrawAll(deltaXDist, 0, 4000, 999, 999, (base_path + "deltaX_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
+    styleDrawBackSig(deltaX, 999, 999, 999, 999, (base_path + "deltaX_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaYDist, 999, 999, 999, 999, (base_path + "deltaY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawBackSig(deltaY, 999, 999, 999, 999, (base_path + "deltaY_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(deltaYDist, 0, 19000, 999, 999, (base_path + "deltaY_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
+    styleDrawAll(deltaYDist, 0, 37000, 999, 999, (base_path + "deltaY_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
+    styleDrawAll(deltaYDist, 0, 8000, 999, 999, (base_path + "deltaY_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
+    styleDrawAll(deltaYDist, 0, 4000, 999, 999, (base_path + "deltaY_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaZDist, 999, 999, 999, 999, (base_path + "deltaZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawBackSig(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(deltaZDist, 0, 20000, 999, 999, (base_path + "deltaZ_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
+    styleDrawAll(deltaZDist, 0, 36000, 999, 999, (base_path + "deltaZ_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
+    styleDrawAll(deltaZDist, 0, 9000, 999, 999, (base_path + "deltaZ_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
+    styleDrawAll(deltaZDist, 0, 4000, 999, 999, (base_path + "deltaZ_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
     styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false);
+    styleDrawBackSig(deltaR, 999, 999, 999, 999, (base_path + "deltaR_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(deltaRDist, 0, 25000, 999, 999, (base_path + "deltaR_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
+    styleDrawAll(deltaRDist, 0, 69000, 999, 999, (base_path + "deltaR_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
+    styleDrawAll(deltaRDist, 0, 13000, 999, 999, (base_path + "deltaR_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
+    styleDrawAll(deltaRDist, 0, 5000, 999, 999, (base_path + "deltaR_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
 
     styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoX, 999, 999, 999, 999, (base_path + "recoX_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoX, 999, 999, 999, 999, (base_path + "recoX_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    efficiency(recoX, 0, 1, 999, 999, (base_path + "recoX_right").c_str(), "bottomLeft", nullptr, &right, -1);
+    efficiency(recoX, 0, 1, 999, 999, (base_path + "recoX_left").c_str(), "topLeft", nullptr, &right, 1);
     styleDrawAll(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist_low, 999, 999, 999, 999, (base_path + "recoX_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist_high, 999, 999, 999, 999, (base_path + "recoX_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
     
     styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoYDist, 999, 999, 999, 999, (base_path + "recoY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoY, 999, 999, 999, 999, (base_path + "recoY_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoY, 999, 999, 999, 999, (base_path + "recoY_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    efficiency(recoY, 0, 1, 999, 999, (base_path + "recoY_right").c_str(), "bottomLeft", nullptr, &right, -1);
+    efficiency(recoY, 0, 1, 999, 999, (base_path + "recoY_left").c_str(), "topLeft", nullptr, &right, 1);
     styleDrawAll(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoYDist_low, 999, 999, 999, 999, (base_path + "recoY_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoYDist_high, 999, 999, 999, 999, (base_path + "recoY_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
     
     styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoZ, 999, 999, 999, 999, (base_path + "recoZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoZ, 999, 999, 999, 999, (base_path + "recoZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    efficiency(recoZ, 0, 1, 999, 999, (base_path + "recoZ_right").c_str(), "bottomLeft", nullptr, &right, -1);
+    efficiency(recoZ, 0, 1, 999, 999, (base_path + "recoZ_left").c_str(), "topLeft", nullptr, &right, 1);
     styleDrawAll(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoZDist_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoZDist_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
-    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
 
     styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false);
 
     styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, false);
+    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
 
     //Test
     //efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
@@ -2853,20 +3154,62 @@ void nuEBackgroundSignalWeighted_macro(){
     efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1);
 
-    efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "topRight", nullptr, &right, 1);
-    efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "topRight", nullptr, &right, 1);
+    efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1);
+    efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "bottomRight", nullptr, &right, 1);
 
     efficiency(pfpCompleteness, 0, 1, 999, 999, (base_path + "pfpCompleteness").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(pfpPurity, 0, 1, 999, 999, (base_path + "pfpPurity").c_str(), "bottomLeft", nullptr, &right, -1);
 
-    efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(recoZ_low, 0, 1, 999, 999, (base_path + "recoZ_low").c_str(), "topRight", nullptr, &right, -1);
+    efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "bottomLeft", nullptr, &right, -1);
+    efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "bottomRight", nullptr, &right, -1);
+    efficiency(recoZ_low, 0, 1, 999, 999, (base_path + "recoZ_low").c_str(), "bottomRight", nullptr, &right, -1);
     
-    efficiency(recoX_high, 0, 1, 999, 999, (base_path + "recoX_high").c_str(), "topLeft", nullptr, &right, 1);
-    efficiency(recoY_high, 0, 1, 999, 999, (base_path + "recoY_high").c_str(), "topLeft", nullptr, &right, 1);
+    efficiency(recoX_high, 0, 1, 999, 999, (base_path + "recoX_high").c_str(), "bottomRight", nullptr, &right, 1);
+    efficiency(recoY_high, 0, 1, 999, 999, (base_path + "recoY_high").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(recoZ_high, 0, 1, 999, 999, (base_path + "recoZ_high").c_str(), "bottomRight", nullptr, &right, 1);
 
     TwoDHistDraw(xCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(xCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_y_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_z_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_z_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifferenceDLUboone_low, (base_path + "angleDiffPosition_x_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(xCoordAngleDifferenceDLUboone_high, (base_path + "angleDiffPosition_x_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLUboone_low, (base_path + "angleDiffPosition_y_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLUboone_high, (base_path + "angleDiffPosition_y_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLUboone_low, (base_path + "angleDiffPosition_z_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLUboone_high, (base_path + "angleDiffPosition_z_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifferenceDLNuE_low, (base_path + "angleDiffPosition_x_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(xCoordAngleDifferenceDLNuE_high, (base_path + "angleDiffPosition_x_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLNuE_low, (base_path + "angleDiffPosition_y_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLNuE_high, (base_path + "angleDiffPosition_y_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLNuE_low, (base_path + "angleDiffPosition_z_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLNuE_high, (base_path + "angleDiffPosition_z_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifferenceBDT, (base_path + "angleDiffPosition_x_BDT.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDT, (base_path + "angleDiffPosition_y_BDT.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDT, (base_path + "angleDiffPosition_z_BDT.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifferenceDLUboone, (base_path + "angleDiffPosition_x_DLUboone.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLUboone, (base_path + "angleDiffPosition_y_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLUboone, (base_path + "angleDiffPosition_z_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_x_DLNuE.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_y_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_z_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, numEvents_BDTBNB, numEvents_BDTNuE);
+    printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
+    printf("Weighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", (numEvents_BDTCosmic * weights.cosmicsCurrent), (numEvents_BDTBNB * weights.BNBCurrent), (numEvents_BDTNuE * weights.signalCurrent));
+    printf("Weighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", (numEvents_DLNuECosmic * weights.cosmicsNuE), (numEvents_DLNuEBNB * weights.BNBNuE), (numEvents_DLNuENuE * weights.signalNuE));
+    double totalEvent_BDT = ((numEvents_BDTCosmic * weights.cosmicsCurrent) + (numEvents_BDTBNB * weights.BNBCurrent) + (numEvents_BDTNuE * weights.signalCurrent));
+    double cosmicPerc_BDT = ((100 * numEvents_BDTCosmic * weights.cosmicsCurrent)/totalEvent_BDT);
+    double BNBPerc_BDT = ((100 * numEvents_BDTBNB * weights.BNBCurrent)/totalEvent_BDT);
+    double NuEPerc_BDT = ((100 * numEvents_BDTNuE * weights.signalCurrent)/totalEvent_BDT);
+    printf("Event Rates:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPerc_BDT, BNBPerc_BDT, NuEPerc_BDT);
+
+    std::cout << "counter = " << counteraaaaaa << std::endl;
 }
