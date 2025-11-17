@@ -22,10 +22,16 @@
 typedef struct{
     TCanvas* canvas;
     TH1F* baseHist;
-    TH1F* currentSignal;
-    TH1F* nuESignal;
-    TH1F* currentSignalCosmics;
-    TH1F* nuESignalCosmics;
+    TH1F* currentSignal_signal;
+    TH1F* nuESignal_signal;
+    TH1F* currentSignal_signalfuzzy;
+    TH1F* nuESignal_signalfuzzy;
+    TH1F* currentSignalCosmics_signal;
+    TH1F* nuESignalCosmics_signal;
+    TH1F* currentSignalCosmics_signalfuzzy;
+    TH1F* nuESignalCosmics_signalfuzzy;
+    TH1F* currentSignalCosmics_cosmic;
+    TH1F* nuESignalCosmics_cosmic;
 } histGroup_struct;
 
 struct weights_struct{
@@ -44,10 +50,16 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     return {
         canvas,
         base,
-        (TH1F*) base->Clone((baseName + "_currentSignal").c_str()),
-        (TH1F*) base->Clone((baseName + "_nuESignal").c_str()),
-        (TH1F*) base->Clone((baseName + "_currentSignalCosmics").c_str()),
-        (TH1F*) base->Clone((baseName + "_nuESignalCosmics").c_str()),
+        (TH1F*) base->Clone((baseName + "_currentSignal_signal").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuESignal_signal").c_str()),
+        (TH1F*) base->Clone((baseName + "_currentSignal_signalfuzzy").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuESignal_signalfuzzy").c_str()),
+        (TH1F*) base->Clone((baseName + "_currentSignalCosmics_signal").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuESignalCosmics_signal").c_str()),
+        (TH1F*) base->Clone((baseName + "_currentSignalCosmics_signalfuzzy").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuESignalCosmics_signalfuzzy").c_str()),
+        (TH1F*) base->Clone((baseName + "_currentSignalCosmics_cosmic").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuESignalCosmics_cosmic").c_str()),
     };
 }
 
@@ -255,6 +267,16 @@ void nuESignalContaminationWeighted_macro(){
 
     Long64_t numEntries = tree->GetEntries();
 
+    auto trueETheta2 = createHistGroup("trueETheta2", "E_{true}#theta_{true}^{2}", "E_{true}#theta_{true}^{2} (MeV rad^{2})", 32, 0, 4.088);
+
+    auto sliceCompleteness = createHistGroup("sliceCompleteness", "Slice Completeness", "Completeness", 102, 0, 1.02);
+    auto sliceCompletenessDist = createHistGroup("sliceCompletenessDist", "Slice Completeness (Not Weighted)", "Completeness", 102, 0, 1.02);
+    auto slicePurity = createHistGroup("slicePurity", "Slice Purity", "Purity", 102, 0, 1.02);
+    auto slicePurityDist = createHistGroup("slicePurityDist", "Slice Purity (Not Weighted)", "Purity", 102, 0, 1.02);
+    auto sliceNumPFPs = createHistGroup("sliceNumPFPs", "Number of PFPs in the Slice", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPFPsDist = createHistGroup("sliceNumPFPsDist", "Number of PFPs in the Slice (Not Weighted)", "Number of PFPs", 20, 0, 20); 
+
+
     double numEvents_signalBDT = 0;
     double numEvents_signalDLNuE = 0;
     double numEvents_signalCosmicsBDT = 0;
@@ -288,6 +310,109 @@ void nuESignalContaminationWeighted_macro(){
                 else if(signal == 0 && DLCurrent == 5) trueETheta2.nuESignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalNuE); 
                 else if(signal == 1 && DLCurrent == 2) trueETheta2.currentSignalCosmics->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsCurrent); 
                 else if(signal == 1 && DLCurrent == 5) trueETheta2.nuESignalCosmics->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsNuE); 
+            }
+        }
+
+        double weight = 0;
+        if(signal == 0 && DLCurrent == 2) weight = weights.signalCurrent;
+        else if(signal == 0 && DLCurrent == 5) weight = weights.signalNuE;
+        else if(signal == 1 && DLCurrent == 2) weight = weights.signalCosmicsCurrent;
+        else if(signal == 1 && DLCurrent == 5) weight = weights.signalCosmicsNuE;
+
+        // Looking at the reco slices
+        if(reco_sliceID->size() == 0) continue;
+        for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
+            if(reco_sliceID->at(slice) != -999999){
+                // There is a reco slice in the event
+                //printf("__________________________ NEW SLICE __________________________\n");
+                //std::cout << "reco_sliceID->size() = " << reco_sliceID->size() << ", reco_sliceCompleteness->size() = " << reco_sliceCompleteness->size() << ", reco_slicePurity = " << reco_slicePurity->size() << ", reco_sliceScore = " << reco_sliceScore->size() << ", reco_sliceCategory = " << reco_sliceCategory->size() << ", reco_sliceInteraction = " << reco_sliceInteraction->size() << ", reco_sliceTrueVX = " << reco_sliceTrueVX->size() << ", reco_sliceTrueVY = " << reco_sliceTrueVY->size() << ", reco_sliceTrueVZ = " << reco_sliceTrueVZ->size() << std::endl;
+                //printf("Slice ID = %f, Category = %f, Interaction = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", reco_sliceID->at(slice), reco_sliceCategory->at(slice), reco_sliceInteraction->at(slice), reco_sliceCompleteness->at(slice), reco_slicePurity->at(slice), reco_sliceScore->at(slice));
+                //if(reco_sliceCategory->at(slice) != 0) printf("True Neutrino Vertex = (%f, %f, %f)\n", reco_sliceTrueVX->at(slice), reco_sliceTrueVY->at(slice), reco_sliceTrueVZ->at(slice));
+        
+                // Loop through all the reco neutrinos in the event          
+                int PFPcounter = 0;
+                int numPFPsSlice = 0;
+
+                double summedEnergy = 0;
+                double highestEnergy_PFPID = -999999;
+                double highestEnergy_energy = -999999;
+                double highestEnergy_theta = -999999;
+                double highestEnergy_DX = -999999;
+                double highestEnergy_DY = -999999;
+                double highestEnergy_DZ = -999999;
+                double highestEnergy_completeness = -999999;
+                double highestEnergy_purity = -999999;
+                
+                // Loop through all the PFPs in the event
+                for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                    PFPcounter++;
+                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                        // This PFP is in the slice
+                        numPFPsSlice++;
+                        //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
+                        
+                        summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
+                        if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
+                            highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
+                            highestEnergy_theta = reco_particleTheta->at(pfp);
+                            highestEnergy_PFPID = reco_particleID->at(pfp);
+                            highestEnergy_DX = reco_particleDX->at(pfp);
+                            highestEnergy_DY = reco_particleDY->at(pfp);
+                            highestEnergy_DZ = reco_particleDZ->at(pfp);
+                            highestEnergy_completeness = reco_particleCompleteness->at(pfp);
+                            highestEnergy_purity = reco_particlePurity->at(pfp);
+                        }
+                    }
+                }
+
+                double angleDifference = -999999;
+                if((highestEnergy_DX != -999999) && (recoilElectron_DX != -999999)){
+                    double aDOTb = ((highestEnergy_DX * recoilElectron_DX) + (highestEnergy_DY * recoilElectron_DY) + (highestEnergy_DZ * recoilElectron_DZ));
+                    double aMagnitude = std::sqrt((highestEnergy_DX * highestEnergy_DX) + (highestEnergy_DY * highestEnergy_DY) + (highestEnergy_DZ * highestEnergy_DZ));
+                    double bMagnitude = std::sqrt((recoilElectron_DX * recoilElectron_DX) + (recoilElectron_DY * recoilElectron_DY) + (recoilElectron_DZ * recoilElectron_DZ));
+                    double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
+                    angleDifference = (TMath::ACos(cosAngle) * TMath::RadToDeg());
+                }
+
+                double recoVX = -999999;
+                double recoVY = -999999;
+                double recoVZ = -999999;
+
+                for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                    if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                        // Reco neutrino is in the slice
+                        recoVX = reco_neutrinoVX->at(recoNeut);
+                        recoVY = reco_neutrinoVY->at(recoNeut);
+                        recoVZ = reco_neutrinoVZ->at(recoNeut);
+                        //printf("Reco Neutrino in Slice: ID = %f, PDG = %f, Vertex = (%f, %f, %f)\n", reco_neutrinoID->at(recoNeut), reco_neutrinoPDG->at(recoNeut), reco_neutrinoVX->at(recoNeut), reco_neutrinoVY->at(recoNeut), reco_neutrinoVZ->at(recoNeut));
+                    }
+                }
+
+                if(reco_sliceCategory->at(slice) == 0){
+                    // This is a cosmic slice
+                    if(signal == 1 && DLCurrent == 2)
+                        sliceCompleteness.currentSignalCosmics->Fill(reco_sliceCompleteness->at(slice), weight); 
+                    } else if(signal == 1 && DLCurrent == 5){
+                        sliceCompleteness.nuESignalCosmics->Fill(reco_sliceCompleteness->at(slice), weight);
+                    } else if(signal == 0 && DLCurrent == 2){
+                        sliceCompleteness.currentSignal->Fill(reco_sliceCompleteness->at(slice), weight);
+                    } else if(signal == 0 && DLCurrent == 5){
+                        sliceCompleteness.nuESignal->Fill(reco_sliceCompleteness->at(slice), weight);
+                    } 
+                } else if(reco_sliceCategory->at(slice) == 1){
+                    // This is a signal slice
+                    if(signal == 1 && DLCurrent == 2){
+                    } else if(signal == 1 && DLCurrent == 5){
+                    } else if(signal == 0 && DLCurrent == 2){
+                    } else if(signal == 0 && DLCurrent == 5){
+                    } 
+                } else if(reco_sliceCategory->at(slice) == 2){
+                    if(signal == 1 && DLCurrent == 2){
+                    } else if(signal == 1 && DLCurrent == 5){
+                    } else if(signal == 0 && DLCurrent == 2){
+                    } else if(signal == 0 && DLCurrent == 5){
+                    } 
+                } 
             }
         }
     }
