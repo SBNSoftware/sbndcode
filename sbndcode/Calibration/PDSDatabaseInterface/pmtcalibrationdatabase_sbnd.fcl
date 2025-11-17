@@ -6,7 +6,7 @@ sbnd_pmtcalibrationdatabaseservice : {
   service_provider: "PMTCalibrationDatabaseService" 
     CorrectionTags: {
       PMTCalibrationDatabaseTag: @local::SBND_Calibration_GlobalTags.PMTCalibrationDatabaseTag
-      DatabaseTimeStamp: 1757601071000000000
+      DatabaseTimeStamp: @local::SBND_Calibration_GlobalTags.DatabaseTimeStamp
       TableName: "pds_calibration"
       SERLength: 550
     }
