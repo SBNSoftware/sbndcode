@@ -18,6 +18,7 @@ set(
                     art_root_io::TFileService_service
 		                artdaq_core::artdaq-core_Data
                     artdaq_core::artdaq-core_Utilities
+                    sbnobj::SBND_Trigger
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
