@@ -62,6 +62,7 @@ private:
   std::string OpDetWaveformsLabel;
   opdet::sbndPDMapAlg fPDSMap;
   float fStartTime;
+  float fADCtoPE;
 
   float us_to_ticks = 500.;
   float ticks_to_us = 1./us_to_ticks;
@@ -80,6 +81,7 @@ sbnd::trigger::PMTMCMetricProducer::PMTMCMetricProducer(fhicl::ParameterSet cons
   OpDetWaveformsLabel = p.get< std::string >("OpDetWaveformsLabel");
   fStartTime = p.get<float>("StartTime");
   fChannelsToIgnore = p.get<std::vector<int>>("ChannelsToIgnore",{});
+  fADCtoPE          = p.get<float>("ADCtoPE");
 
   // Call appropriate produces<>() functions here.
   produces< std::vector<sbnd::trigger::pmtSoftwareTrigger>>(); 
@@ -128,7 +130,7 @@ void sbnd::trigger::PMTMCMetricProducer::produce(art::Event& e)
 
   auto flash_baseline = estimateBaseline(flash);
   auto flash_peak_it  = std::min_element(flash.begin(),flash.end());
-  auto flash_peakpe   = (flash_baseline-(*flash_peak_it))/12.5;
+  auto flash_peakpe   = (flash_baseline-(*flash_peak_it))/fADCtoPE;
   auto flash_peaktime = ((flash_peak_it-flash.begin()))*ticks_to_us + readout_start; 
 
   trig_metrics.foundBeamTrigger = true;
