@@ -76,9 +76,9 @@ sbnd::trigger::PMTMCMetricProducer::PMTMCMetricProducer(fhicl::ParameterSet cons
   : EDProducer{p}  // ,
   // More initializers here.
 {
-  fPDTypes = p.get<std::vector<std::string>>("PDTypes",{"pmt_coated", "pmt_uncoated"});
-  OpDetWaveformsLabel = p.get< std::string >("OpDetWaveformsLabel","opdaq");
-  fStartTime = p.get<float>("StartTime",-1);
+  fPDTypes = p.get<std::vector<std::string>>("PDTypes");
+  OpDetWaveformsLabel = p.get< std::string >("OpDetWaveformsLabel");
+  fStartTime = p.get<float>("StartTime");
   fChannelsToIgnore = p.get<std::vector<int>>("ChannelsToIgnore",{});
 
   // Call appropriate produces<>() functions here.
@@ -111,7 +111,7 @@ void sbnd::trigger::PMTMCMetricProducer::produce(art::Event& e)
   for(auto const& wvf : (*wvfHandle)) {
     int  wvf_ch = wvf.ChannelNumber();
     auto wvf_ts = wvf.TimeStamp();
-    auto wvf_end = wvf_ts+wvf.Waveform().size()*2e-3;
+    auto wvf_end = wvf_ts+wvf.Waveform().size()*ticks_to_us;
   
     if (wvf_end < readout_start || wvf_ts > readout_end ) continue; 
     if (std::find(fChannelsToIgnore.begin(), fChannelsToIgnore.end(), wvf_ch) != fChannelsToIgnore.end() ) continue;
