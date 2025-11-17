@@ -1477,9 +1477,9 @@ void nuEBackgroundSignalWeighted_macro(){
                 totalPOTSignalNuE += subRunPOT;
                 seenSubRunsSignalNuE.insert(key);
             }
-            if(subRunDLCurrent == 2) POTSignalNuE_notMissing += subRunPOT;
+            if(subRunDLCurrent == 2) POTSignalBDT_notMissing += subRunPOT;
             if(subRunDLCurrent == 0) POTSignalUboone_notMissing += subRunPOT;
-            if(subRunDLCurrent == 5) POTSignalBDT_notMissing += subRunPOT;
+            if(subRunDLCurrent == 5) POTSignalNuE_notMissing += subRunPOT;
                 
         } else if(subRunSignal == 2){
             if(subRunDLCurrent == 2 && seenSubRunsBNBCurrent.find(key) == seenSubRunsBNBCurrent.end()){
@@ -1492,9 +1492,9 @@ void nuEBackgroundSignalWeighted_macro(){
                 totalPOTBNBNuE += subRunPOT;
                 seenSubRunsBNBNuE.insert(key);
             }
-            if(subRunDLCurrent == 2) POTBNBNuE_notMissing += subRunPOT;
+            if(subRunDLCurrent == 2) POTBNBBDT_notMissing += subRunPOT;
             if(subRunDLCurrent == 0) POTBNBUboone_notMissing += subRunPOT;
-            if(subRunDLCurrent == 5) POTBNBBDT_notMissing += subRunPOT;
+            if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
 
         } else if(subRunSignal == 3){
             if(subRunDLCurrent == 2 && seenSubRunsCosmicsCurrent.find(key) == seenSubRunsCosmicsCurrent.end()){
