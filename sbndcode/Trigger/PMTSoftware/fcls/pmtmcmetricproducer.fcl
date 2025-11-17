@@ -5,6 +5,7 @@ pmtmcmetricproducer: {
     PDTypes: ["pmt_coated","pmt_uncoated"]
     OpDetWaveformsLabel: "opdaq"
     StartTime: -1
+    ADCtoPE: 12.5 # don't change this without good reason, needs to be kept consistent with DAQ version
     #ChannelsToIgnore: [39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302]
 }
 END_PROLOG
