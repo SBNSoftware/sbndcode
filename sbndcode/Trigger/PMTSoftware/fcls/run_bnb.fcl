@@ -22,7 +22,7 @@ physics:
 {
 
  producers:{
-    pmtmetricbnb : @local::pmtmetricproducer
+    pmtmetricbnblight : @local::pmtmetricproducer
  }
 
  filters:{
@@ -31,7 +31,7 @@ physics:
  analyzers:{ 
  }
 
- reco: [pmtmetricbnb]
+ reco: [pmtmetricbnblight]
 
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out ]
@@ -43,4 +43,4 @@ physics:
  end_paths:     [ stream1]  
 }
 
-physics.producers.pmtmetricbnb.StreamType: 2
+physics.producers.pmtmetricbnblight.StreamType: 2
