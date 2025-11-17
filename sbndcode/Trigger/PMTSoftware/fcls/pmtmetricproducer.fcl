@@ -1,10 +1,11 @@
 BEGIN_PROLOG
-
+# config are identical to the DAQ version EXCEPT for the instance label! 
 pmtmetricproducer: {
         module_type: "PMTMetricProducer" 
         is_persistable: true 
         IncludeExtensions: true 
         Verbose: 1
         StreamType: 1
+        MetricInstanceLabel: "offline"
 }
 END_PROLOG
