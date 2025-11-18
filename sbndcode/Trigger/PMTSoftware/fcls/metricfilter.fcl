@@ -6,7 +6,7 @@ metricfilter_sbnd:
  metric_module_labels: ["pmtmetricproducer",
                         "pmtmetricbnb",
                         "pmtmetricoffbeam",
-                        "pmtmetriccrossingmuon"];
+                        "pmtmetriccrossingmuon"]
  time_max: 3
  pe_thresh: 30
 }
