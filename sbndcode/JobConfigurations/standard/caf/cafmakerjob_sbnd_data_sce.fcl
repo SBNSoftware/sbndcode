@@ -15,6 +15,7 @@ physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatchingSCE"
 physics.producers.cafmaker.CVNLabel: "cvnSCE"
 physics.producers.cafmaker.CorrectedOpFlashLabel: "lightpropagationcorrectionSCE"
+physics.producers.cnnid.WireLabel: "sptpc2d:dnnsp"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"

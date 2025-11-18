@@ -19,6 +19,7 @@ physics.producers.cafmaker.CVNLabel: "cvnSCE"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
+physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
 
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
