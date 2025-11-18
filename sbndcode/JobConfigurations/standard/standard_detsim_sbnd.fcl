@@ -67,7 +67,7 @@ physics:
     simtpc2d:    @local::sbnd_wcls_simsp_bothrois
     crtsim:      @local::sbnd_crtsim
     opdaq:       @local::sbnd_opdetdigitizer
-    pmtmetricmc: @local::sbnd_sbnd_pmtmcmetricproducer
+    pmtmetricmc: @local::sbnd_pmtmcmetricproducer
   }
 
   #define the producer and filter modules for this path, order matters,
