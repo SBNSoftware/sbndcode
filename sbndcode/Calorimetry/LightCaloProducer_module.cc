@@ -169,16 +169,6 @@ private:
 
   TTree* _tree;
   int _run, _subrun, _event;
-  int _match_type;
-  // match_type key: 
-  /// -1: no slices passed both the nuscore and flash match score cut (in the entire event)
-  /// -2: no opflashes times found in coincidence with simpleflash time (in the entire event)
-  /// -3: no opflashes in coincidence with simpleflash (for this slice)
-  /// -4: opflashes are below the noise threshold (for this slice)
-  /// 1: successful match 
-
-  TTree* _tree2;
-  int _nmatch=0; // number of matches in an event 
   int _pfpid; // ID of the matched slice 
   double _opflash_time; // time of matched opflash 
 
@@ -191,21 +181,10 @@ private:
 
   std::vector<double> _visibility;
 
-  double _median_gamma; // median of all reconstructed light estimates 
-  double _mean_gamma;   // mean of all reconstructed light estimates
-
-  double _mean_charge; // avg charge from all three planes 
-  double _max_charge;  // charge from the plane with the highest amount of charge
-  double _comp_charge; // charge from the plane with the highest number of hits, "highest completeness"
-
   double _slice_L; // reconstructed photon count 
   double _slice_Q; // reconstructed electron count 
   double _slice_E; // reconstructed deposited energy 
 
-  std::vector<double> _charge = std::vector<double>(3); // reconstructed electron count per plane 
-  std::vector<double> _light_med = std::vector<double>(3);  // median reconstructed photon count per plane
-  std::vector<double> _light_avg = std::vector<double>(3);  // average reconstructed photon count per plane
-  std::vector<double> _energy = std::vector<double>(3);
 };
 
 
@@ -250,38 +229,24 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   geom = lar::providerFrom<geo::Geometry>();
 
   art::ServiceHandle<art::TFileService> fs;
-  _tree = fs->make<TTree>("slice_tree","");
-  _tree->Branch("run",             &_run,        "run/I");
-  _tree->Branch("subrun",          &_subrun,     "subrun/I");
-  _tree->Branch("event",           &_event,      "event/I");
-  _tree->Branch("match_type",      &_match_type, "match_type/I"); 
+  _tree = fs->make<TTree>("lightcalo","");
+  _tree->Branch("run",           &_run,          "run/I");
+  _tree->Branch("subrun",        &_subrun,       "subrun/I");
+  _tree->Branch("event",         &_event,        "event/I");
+  _tree->Branch("pfpid",         &_pfpid,        "pfpid/I");
+  _tree->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
 
-  _tree2 = fs->make<TTree>("match_tree","");
-  _tree2->Branch("run",           &_run,          "run/I");
-  _tree2->Branch("subrun",        &_subrun,       "subrun/I");
-  _tree2->Branch("event",         &_event,        "event/I");
-  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
-  _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
-  _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
+  _tree->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+  _tree->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+  _tree->Branch("visibility",   "std::vector<double>", &_visibility);
 
-  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
-  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+  _tree->Branch("slice_L",       &_slice_L,      "slice_L/D");
+  _tree->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
+  _tree->Branch("slice_E",       &_slice_E,      "slice_E/D");
 
-  _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
-  _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
-  _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
-
-  _tree2->Branch("visibility",   "std::vector<double>", &_visibility);
-
-  _tree2->Branch("median_gamma",  &_median_gamma, "median_gamma/D");
-  _tree2->Branch("mean_gamma",    &_mean_gamma,   "mean_gamma/D");
-  _tree2->Branch("mean_charge",   &_mean_charge,  "mean_charge/D");
-  _tree2->Branch("max_charge",    &_max_charge,   "max_charge/D");
-  _tree2->Branch("comp_charge",   &_comp_charge,  "comp_charge/D");
-
-  _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
-  _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
-  _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
+  _tree->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
+  _tree->Branch("true_charge",   &_true_charge,  "true_charge/D");
+  _tree->Branch("true_energy",   &_true_energy,  "true_energy/D");
 
   // Call appropriate produces<>() functions here.
   produces<std::vector<sbn::LightCalo>>();
@@ -427,7 +392,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
   int nsuccessful_matches=0;
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
     // initialize tree2 variables 
-    _nmatch++;
     _pfpid = -1; 
 
     _slice_Q = 0; // total amount of charge
@@ -472,8 +436,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     }
     else if  (opflash0.isNull() &&  opflash1.isNull()){
       std::cout << "No usable opflashes (none above threshold)." << std::endl;
-      _match_type = -3;
-      _tree->Fill();
       return;
     }
     auto slice = match_slices_v[n_slice];
@@ -494,11 +456,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
     uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
 
-    _mean_charge = (plane_charge[0] + plane_charge[1] + plane_charge[2])/3; 
-    _max_charge  = plane_charge.at(bestPlane);
-    _comp_charge  = plane_charge.at(bestHits);
-
-    _slice_Q = _comp_charge;
+    _slice_Q = plane_charge.at(bestHits);
 
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
@@ -582,10 +540,15 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
 
-    // calculate final light estimate   
-    _mean_gamma   = CalcMean(total_gamma,total_err);
-    _slice_L = _mean_gamma;
-    _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV   
+    // calculate final light estimate     
+    _slice_L  = CalcMean(total_gamma,total_err);
+    _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV  
+
+    if (_verbose){
+      std::cout << "charge: " << _slice_Q << std::endl;
+      std::cout << "light:  " << _slice_L << std::endl;
+      std::cout << "energy: " << _slice_E << std::endl;
+    }
 
     sbn::LightCalo lightcalo(_slice_Q,_slice_L,_slice_E,bestHits,plane_charge);
     lightcalo_v->push_back(lightcalo);
@@ -604,36 +567,28 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
       
       if (!energyDeps_h.isValid() || energyDeps_h->empty())
         std::cout << "Don't have good SimEnergyDeposits!" << std::endl;
-      else 
+      else{ 
         art::fill_ptr_vector(energyDeps, energyDeps_h);
-        
-      for (size_t n_dep=0; n_dep < energyDeps.size(); n_dep++){
-        auto energyDep = energyDeps[n_dep];
-        const auto trackID = energyDep->TrackID();
-        const double time = energyDep->Time() * 1e-3; // us 
+        for (size_t n_dep=0; n_dep < energyDeps.size(); n_dep++){
+          auto energyDep = energyDeps[n_dep];
+          const auto trackID = energyDep->TrackID();
+          const double time = energyDep->Time() * 1e-3; // us 
 
-        art::Ptr<simb::MCTruth> mctruth = piserv->TrackIdToMCTruth_P(trackID);
+          art::Ptr<simb::MCTruth> mctruth = piserv->TrackIdToMCTruth_P(trackID);
 
-        if ((_truth_neutrino && mctruth->Origin()==simb::kBeamNeutrino ) || 
-            (!_truth_neutrino && abs(time-flash_time) < 1)){
-          // note: we divide by the prescale because NumPhotons() stored in simulation has the scint prescale applied 
-          _true_gamma  += energyDep->NumPhotons()/_scint_prescale;
-          _true_charge += energyDep->NumElectrons(); 
-          _true_energy += energyDep->Energy(); 
-        }       
+          if ((_truth_neutrino && mctruth->Origin()==simb::kBeamNeutrino ) || 
+              (!_truth_neutrino && abs(time-flash_time) < 1)){
+            // note: we divide by the prescale because NumPhotons() stored in simulation has the scint prescale applied 
+            _true_gamma  += energyDep->NumPhotons()/_scint_prescale;
+            _true_charge += energyDep->NumElectrons(); 
+            _true_energy += energyDep->Energy(); 
+          }       
+        }
       }
     }
-    else{
-      _true_gamma = -9999; 
-      _true_charge = -9999;
-      _true_energy = -9999;
-    }
     nsuccessful_matches++;
-    _tree2->Fill();
-
+    _tree->Fill();
   } // end slice loop
-  _match_type=nsuccessful_matches;
-  _tree->Fill();
 } // end produce 
 
 
@@ -780,6 +735,7 @@ double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
   std::vector<double> tpc1_gamma;
   // split into two TPCs 
   for (size_t i=0; i<total_gamma.size(); i++){
+    if (total_gamma[i] <=0) continue;
     if (i%2==0) tpc0_gamma.push_back(total_gamma[i]);
     if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
   }
@@ -799,33 +755,29 @@ double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
 double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::vector<double> total_err){
   // calculates a weighted average, loops over per tpc and then per channel
   double total_mean=0;
-  for (size_t i=0; i<2; i++){
-    double wgt_num = 0;
-    double wgt_denom = 0;
-    for (size_t ich=0; i<total_gamma.size(); i++){
-      if ((ich%2==i) && (total_gamma[i]>0) ){
-        wgt_num   += total_gamma[i]*(1./total_err[i]);
-        wgt_denom += (1./total_err[i]);
-      }
-    }
-    total_mean += wgt_num/wgt_denom;
+  double wgt_num = 0;
+  double wgt_denom = 0;
+
+  for (size_t ich=0; ich<total_gamma.size(); ich++){
+    if (total_gamma[ich]<=0) continue;
+    wgt_num   += total_gamma[ich]*(1./total_err[ich]);
+    wgt_denom += (1./total_err[ich]);
   }
+  if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   return total_mean; 
 }
 
 double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
   double total_mean=0;
-  for (size_t i=0; i<2; i++){
-    double wgt_num = 0;
-    double wgt_denom = 0;
-    for (size_t ich=0; i<total_gamma.size(); i++){
-      if ((ich%2==i) && (total_gamma[i]>0) ){
-        wgt_num   += total_gamma[i];
-        wgt_denom += 1;
-      }
-    }
-    total_mean += wgt_num/wgt_denom;
+  double wgt_num = 0;
+  double wgt_denom = 0;
+
+  for (size_t ich=0; ich<total_gamma.size(); ich++){
+    if (total_gamma[ich]<=0) continue;
+    wgt_num   += total_gamma[ich];
+    wgt_denom += 1.;
   }
+  if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   return total_mean; 
 }
 
