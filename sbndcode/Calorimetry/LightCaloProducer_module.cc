@@ -731,24 +731,17 @@ void sbnd::LightCaloProducer::CalcLight(std::vector<double> flash_pe_v,
 }
 
 double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
-  std::vector<double> tpc0_gamma; 
-  std::vector<double> tpc1_gamma;
-  // split into two TPCs 
+  std::vector<double> gamma_nonzero; 
   for (size_t i=0; i<total_gamma.size(); i++){
     if (total_gamma[i] <=0) continue;
-    if (i%2==0) tpc0_gamma.push_back(total_gamma[i]);
-    if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
+    gamma_nonzero.push_back(total_gamma[i]);
   }
   double median_gamma=0; 
+  const auto median_it = gamma_nonzero.begin() + gamma_nonzero.size() / 2;
+  std::nth_element(gamma_nonzero.begin(), median_it , gamma_nonzero.end());
+  auto median = *median_it;
+  median_gamma+=median;
 
-  for (int tpc=0; tpc < 2; tpc++){
-    // make a copy to avoid changing in-place 
-    std::vector<double> gamma_v = ((tpc==0)? std::vector<double>(tpc0_gamma) : std::vector<double>(tpc1_gamma));
-    const auto median_it = gamma_v.begin() + gamma_v.size() / 2;
-    std::nth_element(gamma_v.begin(), median_it , gamma_v.end());
-    auto median = *median_it;
-    median_gamma+=median;
-  }
   return median_gamma;
 }
 
