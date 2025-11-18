@@ -1204,16 +1204,16 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
             ubooneBNBFuzzyRejVal = (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal);
             nuEBNBFuzzyRejVal = (nuEBNBFuzzySum/nuEBNBFuzzyTotal);
 
-            keptSignalCurrent = ((currentSignalTotal - currentSignalSum) + (currentSignalFuzzyTotal - currentSignalFuzzySum)); 
-            keptBackgroundCurrent = ((currentBNBTotal - currentBNBSum) + (currentBNBFuzzyTotal - currentBNBFuzzySum) + (currentCosmicTotal - currentCosmicSum));
-            keptSignalUboone = ((ubooneSignalTotal - ubooneSignalSum) + (ubooneSignalFuzzyTotal - ubooneSignalFuzzySum)); 
-            keptBackgroundUboone = ((ubooneBNBTotal - ubooneBNBSum) + (ubooneBNBFuzzyTotal - ubooneBNBFuzzySum) + (ubooneCosmicTotal - ubooneCosmicSum));
-            keptSignalNuE = ((nuESignalTotal - nuESignalSum) + (nuESignalFuzzyTotal - nuESignalFuzzySum)); 
-            keptBackgroundNuE = ((nuEBNBTotal - nuEBNBSum) + (nuEBNBFuzzyTotal - nuEBNBFuzzySum) + (nuECosmicTotal - nuECosmicSum));
+            keptSignalCurrent = (currentSignalTotal - currentSignalSum); 
+            keptBackgroundCurrent = ((currentBNBTotal - currentBNBSum) + (currentBNBFuzzyTotal - currentBNBFuzzySum) + (currentCosmicTotal - currentCosmicSum) + (currentSignalFuzzyTotal - currentSignalFuzzySum));
+            keptSignalUboone = (ubooneSignalTotal - ubooneSignalSum); 
+            keptBackgroundUboone = ((ubooneBNBTotal - ubooneBNBSum) + (ubooneBNBFuzzyTotal - ubooneBNBFuzzySum) + (ubooneCosmicTotal - ubooneCosmicSum) + (ubooneSignalFuzzyTotal - ubooneSignalFuzzySum));
+            keptSignalNuE = (nuESignalTotal - nuESignalSum); 
+            keptBackgroundNuE = ((nuEBNBTotal - nuEBNBSum) + (nuEBNBFuzzyTotal - nuEBNBFuzzySum) + (nuECosmicTotal - nuECosmicSum) + (nuESignalFuzzyTotal - nuESignalFuzzySum));
 
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal + currentSignalFuzzyTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal + ubooneSignalFuzzyTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal + nuESignalFuzzyTotal));
+            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
+            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
+            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
 
         } else if(efficiencyWay == 1){
             // efficiencyWay == 1 includes everything to the left of the cut
@@ -1234,16 +1234,16 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
             ubooneBNBFuzzyRejVal = (1 - (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal));
             nuEBNBFuzzyRejVal = (1 - (nuEBNBFuzzySum/nuEBNBFuzzyTotal));
         
-            keptSignalCurrent = (currentSignalSum + currentSignalFuzzySum);
-            keptBackgroundCurrent = (currentCosmicSum + currentBNBSum + currentBNBFuzzySum);  
-            keptSignalUboone = (ubooneSignalSum + ubooneSignalFuzzySum);
-            keptBackgroundUboone = (ubooneCosmicSum + ubooneBNBSum + ubooneBNBFuzzySum);  
-            keptSignalNuE = (nuESignalSum + nuESignalFuzzySum);
-            keptBackgroundNuE = (nuECosmicSum + nuEBNBSum + nuEBNBFuzzySum);  
+            keptSignalCurrent = (currentSignalSum);
+            keptBackgroundCurrent = (currentCosmicSum + currentBNBSum + currentBNBFuzzySum + currentSignalFuzzySum);  
+            keptSignalUboone = (ubooneSignalSum);
+            keptBackgroundUboone = (ubooneCosmicSum + ubooneBNBSum + ubooneBNBFuzzySum + ubooneSignalFuzzySum);  
+            keptSignalNuE = (nuESignalSum);
+            keptBackgroundNuE = (nuECosmicSum + nuEBNBSum + nuEBNBFuzzySum + nuESignalFuzzySum);  
             
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal + currentSignalFuzzyTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal + ubooneSignalFuzzyTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal + nuESignalFuzzyTotal));
+            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
+            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
+            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
         }
 
         currentPurity = (keptSignalCurrent / (keptSignalCurrent + keptBackgroundCurrent));
