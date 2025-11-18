@@ -66,7 +66,6 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
 void styleDrawAll(histGroup_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
                   const char* filename, const std::string& legendLocation,
-                  int* drawLine = nullptr, int* linePos = nullptr,
                   bool includeSignal = true, bool includeSignalFuzzy = true,
                   bool includeCosmic = true, bool includeBDT = true, bool includeDLNuE = true){
     
@@ -83,20 +82,20 @@ void styleDrawAll(histGroup_struct hists,
     for (auto* hist : allHists)
         if (hist) hist->SetStats(0);
 
-    hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor();
-    hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.hists.currentSignal_signalfuzzy->SetLineColor();
+    hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor(kPink+9);
+    hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.currentSignal_signalfuzzy->SetLineColor(kPink+1);
     
-    hists.nuESignal_signal->SetLineWidth(2);                    hists.nuESignal_signal->SetLineColor();
-    hists.nuESignal_signalfuzzy->SetLineWidth(2);               hists.nuESignal_signalfuzzy->SetLineColor();
+    hists.nuESignal_signal->SetLineWidth(2);                    hists.nuESignal_signal->SetLineColor(kBlue+1);
+    hists.nuESignal_signalfuzzy->SetLineWidth(2);               hists.nuESignal_signalfuzzy->SetLineColor(kBlue-7);
 
-    hists.currentSignalCosmics_signal->SetLineWidth(2);         hists.currentSignalCosmics_signal->SetLineColor();
-    hists.currentSignalCosmics_signalfuzzy->SetLineWidth(2);    hists.currentSignalCosmics_signalfuzzy->SetLineColor();
+    hists.currentSignalCosmics_signal->SetLineWidth(2);         hists.currentSignalCosmics_signal->SetLineColor(kGreen+3);
+    hists.currentSignalCosmics_signalfuzzy->SetLineWidth(2);    hists.currentSignalCosmics_signalfuzzy->SetLineColor(kGreen+1);
 
-    hists.nuESignalCosmics_signal->SetLineWidth(2);             hists.nuESignalCosmics_signal->SetLineColor();
-    hists.nuESignalCosmics_signalfuzzy->SetLineWidth(2);        hists.nuESignalCosmics_signalfuzzy->SetLineColor();
+    hists.nuESignalCosmics_signal->SetLineWidth(2);             hists.nuESignalCosmics_signal->SetLineColor(kOrange+7);
+    hists.nuESignalCosmics_signalfuzzy->SetLineWidth(2);        hists.nuESignalCosmics_signalfuzzy->SetLineColor(kOrange+6);
 
-    hists.currentSignalCosmics_cosmic->SetLineWidth(2);         hists.currentSignalCosmics_cosmic->SetLineColor();
-    hists.nuESignalCosmics_cosmic->SetLineWidth(2);             hists.nuESignalCosmics_cosmic->SetLineColor();
+    hists.currentSignalCosmics_cosmic->SetLineWidth(2);         hists.currentSignalCosmics_cosmic->SetLineColor(kViolet+1);
+    hists.nuESignalCosmics_cosmic->SetLineWidth(2);             hists.nuESignalCosmics_cosmic->SetLineColor(kViolet-7);
 
     if((ymin != 999) && (ymax != 999)){
         for(auto* hist : allHists)
@@ -114,7 +113,7 @@ void styleDrawAll(histGroup_struct hists,
             maxYValue = hist->GetMaximum();
 
     std::cout << "maxYValue = " << maxYValue << std::endl;
-    double yminValue = 0;
+    double yminVal = 0;
     if((ymin == 999) && (ymax == 999)){
         double ymaxVal = maxYValue * 1.1;
         std::cout << "setting yaxis to " << yminVal << ", " << ymaxVal << std::endl;
@@ -198,8 +197,8 @@ void styleDrawAll(histGroup_struct hists,
 
 void nuESignalContaminationWeighted_macro(){
    
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_Nu+E_WithWithoutCosmics.root");
+    std::string base_path = "/nashome/c/coackley/nuESignalWithWithoutCosmics/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -259,7 +258,7 @@ void nuESignalContaminationWeighted_macro(){
         std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
 
         if(subRunSignal == 1){
-            if(subRunDLCurrent == 2 && seenSubRunsSignaliCosmicsCurrent.find(key) == seenSubRunsSignalCosmicsCurrent.end()){
+            if(subRunDLCurrent == 2 && seenSubRunsSignalCosmicsCurrent.find(key) == seenSubRunsSignalCosmicsCurrent.end()){
                 totalPOTSignalCosmicsCurrent += subRunPOT;
                 seenSubRunsSignalCosmicsCurrent.insert(key);             
             } else if(subRunDLCurrent == 5 && seenSubRunsSignalCosmicsNuE.find(key) == seenSubRunsSignalCosmicsNuE.end()){
@@ -759,4 +758,15 @@ void nuESignalContaminationWeighted_macro(){
             }
         }
     }
+
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted.pdf").c_str(), "topRight", true, true, true, true, true);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist.pdf").c_str(), "topRight", true, true, true, true, true);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted.pdf").c_str(), "topLeft", true, true, true, true, true);
+    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist.pdf").c_str(), "topLeft", true, true, true, true, true);
 }
