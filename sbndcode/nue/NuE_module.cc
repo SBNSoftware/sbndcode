@@ -103,7 +103,8 @@ public:
   double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
   double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
   void PFPs(art::Event const& e);
-  
+  int GetNumGenEvents(const art::Event &e); 
+ 
   // Selected optional functions.
   void beginJob() override;
   void endJob() override;
@@ -333,6 +334,8 @@ void sbnd::NuE::analyze(art::Event const& e)
     runID = e.id().run();
     subRunID = e.id().subRun();
 
+    numGenEvents = GetNumGenEvents(e);
+
     std::cout << "" << std::endl;
     std::cout << "========================================================================================================" << std::endl; 
     std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << ", DL/Current: " << DLCurrent << std::endl;
@@ -341,6 +344,22 @@ void sbnd::NuE::analyze(art::Event const& e)
     PFPs(e);
 
     NuETree->Fill();
+}
+
+int sbnd::NuE::GetNumGenEvents(const art::Event &e){
+    int nGenEvents = 0;
+    for(const art::ProcessConfiguration &process: e.processHistory()){
+        std::optional<fhicl::ParameterSet> genConfig = e.getProcessParameterSet(process.processName());
+        if (genConfig && genConfig->has_key("source") && genConfig->has_key("source.maxEvents") && genConfig->has_key("source.module_type") ) {
+            int maxEvents = genConfig->get<int>("source.maxEvents");
+            std::string moduleType = genConfig->get<std::string>("source.module_type");
+            if (moduleType == "EmptyEvent") {
+                nGenEvents += maxEvents;
+            }
+        }
+    }
+    printf("Num Gen Events = %i\n", nGenEvents);
+    return nGenEvents;
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
