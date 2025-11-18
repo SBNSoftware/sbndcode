@@ -63,6 +63,139 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };
 }
 
+void styleDrawAll(histGroup_struct hists,
+                  double ymin, double ymax, double xmin, double xmax,
+                  const char* filename, const std::string& legendLocation,
+                  int* drawLine = nullptr, int* linePos = nullptr,
+                  bool includeSignal = true, bool includeSignalFuzzy = true,
+                  bool includeCosmic = true, bool includeBDT = true, bool includeDLNuE = true){
+    
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    std::vector<TH1F*> allHists = {
+        hists.currentSignal_signal, hists.nuESignal_signal, hists.currentSignal_signalfuzzy, hists.nuESignal_signalfuzzy, 
+        hists.currentSignalCosmics_signal, hists.nuESignalCosmics_signal, hists.currentSignalCosmics_signalfuzzy, hists.nuESignalCosmics_signalfuzzy,
+        hists.currentSignalCosmics_cosmic, hists.nuESignalCosmics_cosmic
+    };
+
+    for (auto* hist : allHists)
+        if (hist) hist->SetStats(0);
+
+    hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor();
+    hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.hists.currentSignal_signalfuzzy->SetLineColor();
+    
+    hists.nuESignal_signal->SetLineWidth(2);                    hists.nuESignal_signal->SetLineColor();
+    hists.nuESignal_signalfuzzy->SetLineWidth(2);               hists.nuESignal_signalfuzzy->SetLineColor();
+
+    hists.currentSignalCosmics_signal->SetLineWidth(2);         hists.currentSignalCosmics_signal->SetLineColor();
+    hists.currentSignalCosmics_signalfuzzy->SetLineWidth(2);    hists.currentSignalCosmics_signalfuzzy->SetLineColor();
+
+    hists.nuESignalCosmics_signal->SetLineWidth(2);             hists.nuESignalCosmics_signal->SetLineColor();
+    hists.nuESignalCosmics_signalfuzzy->SetLineWidth(2);        hists.nuESignalCosmics_signalfuzzy->SetLineColor();
+
+    hists.currentSignalCosmics_cosmic->SetLineWidth(2);         hists.currentSignalCosmics_cosmic->SetLineColor();
+    hists.nuESignalCosmics_cosmic->SetLineWidth(2);             hists.nuESignalCosmics_cosmic->SetLineColor();
+
+    if((ymin != 999) && (ymax != 999)){
+        for(auto* hist : allHists)
+            if(hist) hist->GetYaxis()->SetRangeUser(ymin, ymax);
+    }
+
+    if((xmin != 999) && (xmax != 999)){
+        for(auto* hist : allHists)
+            if(hist) hist->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
+
+    double maxYValue = 0.0;
+    for(auto* hist : allHists)
+        if(hist && hist->GetMaximum() > maxYValue)
+            maxYValue = hist->GetMaximum();
+
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+    double yminValue = 0;
+    if((ymin == 999) && (ymax == 999)){
+        double ymaxVal = maxYValue * 1.1;
+        std::cout << "setting yaxis to " << yminVal << ", " << ymaxVal << std::endl;
+        for(auto* hist : allHists)
+            if(hist) hist->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    bool first = true;
+    auto draw = [&](TH1* hist){ if (hist) { hist->Draw(first ? "hist" : "histsame"); first = false; } };
+
+    // Decide whether a histogram name is allowed by the boolean flags
+    auto variantAllowed = [&](const std::string& name) {
+        bool isSignal        = name.size() >= 7  && name.rfind("_signal") == name.size() - 7;
+        bool isSignalFuzzy   = name.size() >= 12 && name.rfind("_signalfuzzy") == name.size() - 12;
+        bool isCosmic        = name.size() >= 7  && name.rfind("_cosmic") == name.size() - 7;
+
+        bool isBDT  = name.find("current") == 0;   // starts with current
+        bool isDLNuE = name.find("nuE") == 0;      // starts with nuE
+
+        if (!includeSignal        && isSignal)        return false;
+        if (!includeSignalFuzzy   && isSignalFuzzy)   return false;
+        if (!includeCosmic        && isCosmic)        return false;
+        if (!includeBDT           && isBDT)           return false;
+        if (!includeDLNuE         && isDLNuE)         return false;
+
+        return true;
+    };
+
+    if(variantAllowed("currentSignal_signal")) draw(hists.currentSignal_signal);
+    if(variantAllowed("nuESignal_signal")) draw(hists.nuESignal_signal);
+    if(variantAllowed("currentSignal_signalfuzzy")) draw(hists.currentSignal_signalfuzzy);
+    if(variantAllowed("nuESignal_signalfuzzy")) draw(hists.nuESignal_signalfuzzy);
+    if(variantAllowed("currentSignalCosmics_signal")) draw(hists.currentSignalCosmics_signal);
+    if(variantAllowed("nuESignalCosmics_signal")) draw(hists.nuESignalCosmics_signal);
+    if(variantAllowed("currentSignalCosmics_signalfuzzy")) draw(hists.currentSignalCosmics_signalfuzzy);
+    if(variantAllowed("nuESignalCosmics_signalfuzzy")) draw(hists.nuESignalCosmics_signalfuzzy);
+    if(variantAllowed("currentSignalCosmics_cosmic")) draw(hists.currentSignalCosmics_cosmic);
+    if(variantAllowed("nuESignalCosmics_cosmic")) draw(hists.nuESignalCosmics_cosmic);
+
+    for(auto* hist : allHists){
+        if(hist){
+            hist->SetStats(0);
+            hist->GetXaxis()->SetTickLength(0.04);
+            hist->GetYaxis()->SetTickLength(0.03);
+            hist->GetXaxis()->SetTickSize(0.02);
+            hist->GetYaxis()->SetTickSize(0.02);
+        }
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    std::vector<std::pair<TH1*, std::string>> legendEntries;
+
+    auto addLegendIf = [&](TH1* hist, const std::string& label, const std::string& name){
+        if (hist && variantAllowed(name)) legendEntries.emplace_back(hist, label);
+    }; 
+
+    addLegendIf(hists.currentSignal_signal, "Signal, Without Cosmics, BDT Vertexing", "currentSignal_signal");
+    addLegendIf(hists.nuESignal_signal, "Signal, Without Cosmics, DL Nu+E Vertexing", "nuESignal_signal");
+    addLegendIf(hists.currentSignal_signalfuzzy, "Signal Fuzzy, Without Cosmics, BDT Vertexing", "currentSignal_signalfuzzy");
+    addLegendIf(hists.nuESignal_signalfuzzy, "Signal Fuzzy, Without Cosmics, DL Nu+E Vertexing", "nuESignal_signalfuzzy");
+    addLegendIf(hists.currentSignalCosmics_signal, "Signal, With Cosmics, BDT Vertexing", "currentSignalCosmics_signal");
+    addLegendIf(hists.nuESignalCosmics_signal, "Signal, With Cosmics, DL Nu+E Vertexing", "nuESignalCosmics_signal");
+    addLegendIf(hists.currentSignalCosmics_signalfuzzy, "Signal Fuzzy, With Cosmics, BDT Vertexing", "currentSignalCosmics_signalfuzzy");
+    addLegendIf(hists.nuESignalCosmics_signalfuzzy, "Signal Fuzzy, With Cosmics, DL Nu+E Vertexing", "nuESignalCosmics_signalfuzzy");
+    addLegendIf(hists.currentSignalCosmics_cosmic, "Cosmic, With Cosmics, BDT Vertexing", "currentSignalCosmics_cosmic");
+    addLegendIf(hists.nuESignalCosmics_cosmic, "Cosmic, With Cosmics, DL Nu+E Vertexing", "nuESignalCosmics_cosmic");
+
+    int nEntries = legendEntries.size();
+    double height = std::max(0.025 * nEntries, 0.03);
+    
+    auto legend = new TLegend(Lxmin, Lymin, Lxmax, Lymax);
+    for (auto& [hist, label] : legendEntries)
+        legend->AddEntry(hist, label.c_str(), "f");
+
+    legend->SetTextSize(0.015);
+    legend->SetMargin(0.12);
+    legend->Draw();
+
+    hists.canvas->SaveAs(filename);
+}
+
 void nuESignalContaminationWeighted_macro(){
    
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
@@ -275,7 +408,10 @@ void nuESignalContaminationWeighted_macro(){
     auto slicePurityDist = createHistGroup("slicePurityDist", "Slice Purity (Not Weighted)", "Purity", 102, 0, 1.02);
     auto sliceNumPFPs = createHistGroup("sliceNumPFPs", "Number of PFPs in the Slice", "Number of PFPs", 20, 0, 20);
     auto sliceNumPFPsDist = createHistGroup("sliceNumPFPsDist", "Number of PFPs in the Slice (Not Weighted)", "Number of PFPs", 20, 0, 20); 
-
+    auto trackscoreHighestEnergyPFP = createHistGroup("trackscoreHighestEnergyPFP", "Trackscore of the PFP in the Slice with the Highest Energy", "Trackscore", 50, -5, 5);
+    auto trackscoreHighestEnergyPFPDist = createHistGroup("trackscoreHighestEnergyPFPDist", "Trackscore of the PFP in the Slice with the Highest Energy (Not Weighted)", "Trackscore", 50, -5, 5);
+    auto trackscoreAllPFPs = createHistGroup("trackscoreAllPFPs", "Trackscore of All PFPs in the Slice", "Trackscore", 50, -5, 5);
+    auto trackscoreAllPFPsDist = createHistGroup("trackscoreAllPFPsDist", "Trackscore of All PFPs in the Slice (Not Weighted)", "Trackscore", 50, -5, 5);
 
     double numEvents_signalBDT = 0;
     double numEvents_signalDLNuE = 0;
@@ -306,10 +442,10 @@ void nuESignalContaminationWeighted_macro(){
                 recoilElectron_DY = truth_recoilElectronDY->at(i); 
                 recoilElectron_DZ = truth_recoilElectronDZ->at(i); 
                 // There is a true recoil electron in the event
-                if(signal == 0 && DLCurrent == 2) trueETheta2.currentSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCurrent); 
-                else if(signal == 0 && DLCurrent == 5) trueETheta2.nuESignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalNuE); 
-                else if(signal == 1 && DLCurrent == 2) trueETheta2.currentSignalCosmics->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsCurrent); 
-                else if(signal == 1 && DLCurrent == 5) trueETheta2.nuESignalCosmics->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsNuE); 
+                if(signal == 0 && DLCurrent == 2) trueETheta2.currentSignal_signal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCurrent); 
+                else if(signal == 0 && DLCurrent == 5) trueETheta2.nuESignal_signal->Fill(truth_recoilElectronETheta2->at(i), weights.signalNuE); 
+                else if(signal == 1 && DLCurrent == 2) trueETheta2.currentSignalCosmics_signal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsCurrent); 
+                else if(signal == 1 && DLCurrent == 5) trueETheta2.nuESignalCosmics_signal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCosmicsNuE); 
             }
         }
 
@@ -342,7 +478,8 @@ void nuESignalContaminationWeighted_macro(){
                 double highestEnergy_DZ = -999999;
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
-                
+                double highestEnergy_trackscore = -999999;
+
                 // Loop through all the PFPs in the event
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
@@ -361,6 +498,7 @@ void nuESignalContaminationWeighted_macro(){
                             highestEnergy_DZ = reco_particleDZ->at(pfp);
                             highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                             highestEnergy_purity = reco_particlePurity->at(pfp);
+                            highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
                         }
                     }
                 }
@@ -391,26 +529,231 @@ void nuESignalContaminationWeighted_macro(){
                 if(reco_sliceCategory->at(slice) == 0){
                     // This is a cosmic slice
                     if(signal == 1 && DLCurrent == 2)
-                        sliceCompleteness.currentSignalCosmics->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompleteness.currentSignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.currentSignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_cosmic->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_cosmic->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.currentSignalCosmics_cosmic->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.currentSignalCosmics_cosmic->Fill(numPFPsSlice);   
+
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        
+                        }
                     } else if(signal == 1 && DLCurrent == 5){
-                        sliceCompleteness.nuESignalCosmics->Fill(reco_sliceCompleteness->at(slice), weight);
-                    } else if(signal == 0 && DLCurrent == 2){
-                        sliceCompleteness.currentSignal->Fill(reco_sliceCompleteness->at(slice), weight);
-                    } else if(signal == 0 && DLCurrent == 5){
-                        sliceCompleteness.nuESignal->Fill(reco_sliceCompleteness->at(slice), weight);
+                        sliceCompleteness.nuESignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice), weight);
+                        sliceCompletenessDist.nuESignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice));
+                        slicePurity.nuESignalCosmics_cosmic->Fill(reco_slicePurity->at(slice), weight);
+                        slicePurityDist.nuESignalCosmics_cosmic->Fill(reco_slicePurity->at(slice));
+                        sliceNumPFPs.nuESignalCosmics_cosmic->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.nuESignalCosmics_cosmic->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 1){
                     // This is a signal slice
                     if(signal == 1 && DLCurrent == 2){
+                        sliceCompleteness.currentSignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.currentSignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.currentSignalCosmics_signal->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.currentSignalCosmics_signal->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.currentSignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.currentSignalCosmics_signal->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 1 && DLCurrent == 5){
+                        sliceCompleteness.nuESignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.nuESignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.nuESignalCosmics_signal->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.nuESignalCosmics_signal->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.nuESignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.nuESignalCosmics_signal->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 0 && DLCurrent == 2){
+                        sliceCompleteness.currentSignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.currentSignal_signal->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.currentSignal_signal->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.currentSignal_signal->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.currentSignal_signal->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.currentSignal_signal->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 0 && DLCurrent == 5){
+                        sliceCompleteness.nuESignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.nuESignal_signal->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.nuESignal_signal->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.nuESignal_signal->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.nuESignal_signal->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.nuESignal_signal->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 2){
                     if(signal == 1 && DLCurrent == 2){
+                        sliceCompleteness.currentSignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.currentSignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignalCosmics_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignalCosmics_signalfuzzy->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.currentSignalCosmics_signalfuzzy->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.currentSignalCosmics_signalfuzzy->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.currentSignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 1 && DLCurrent == 5){
+                        sliceCompleteness.nuESignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.nuESignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.nuESignalCosmics_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.nuESignalCosmics_signalfuzzy->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.nuESignalCosmics_signalfuzzy->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.nuESignalCosmics_signalfuzzy->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 0 && DLCurrent == 2){
+                        sliceCompleteness.currentSignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.currentSignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.currentSignal_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.currentSignal_signalfuzzy->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.currentSignal_signalfuzzy->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.currentSignal_signalfuzzy->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } else if(signal == 0 && DLCurrent == 5){
+                        sliceCompleteness.nuESignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
+                        sliceCompletenessDist.nuESignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
+                        slicePurity.nuESignal_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
+                        slicePurityDist.nuESignal_signalfuzzy->Fill(reco_slicePurity->at(slice)); 
+                        sliceNumPFPs.nuESignal_signalfuzzy->Fill(numPFPsSlice, weight);    
+                        sliceNumPFPsDist.nuESignal_signalfuzzy->Fill(numPFPsSlice);    
+                        
+                        if(highestEnergy_PFPID != -999999){
+                            trackscoreHighestEnergyPFP.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            trackscoreHighestEnergyPFPDist.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore);
+                        
+                            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
+                                    else{
+                                        trackscoreAllPFPs.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        trackscoreAllPFPsDist.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                    }
+                                }
+                            }
+                        }
                     } 
                 } 
             }
