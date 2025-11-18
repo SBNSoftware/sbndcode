@@ -12,6 +12,8 @@ lightcalo:
 
     OpFlashProducers:    ["opflashtpc0", "opflashtpc1"]
     OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+    PDTypes: ["pmt_coated"] # "pmt_uncoated", "xarapuca_vuv", "xarapuca_vis"
+
     SliceProducer:       "pandora"
     OpT0FinderProducer:  "opt0finder"
     BCFMProducer:        "tpcpmtbarycentermatching"

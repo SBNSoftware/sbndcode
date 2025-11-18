@@ -90,15 +90,20 @@ public:
 
 private:
 
+  void CalculateCalorimetry(art::Event& e, 
+                            std::unique_ptr< std::vector<sbn::LightCalo> >& lightcalo_v, 
+                            std::unique_ptr< art::Assns<recob::Slice, sbn::LightCalo> >& slice_assn_v,
+                            std::unique_ptr< art::Assns<recob::OpFlash, sbn::LightCalo> >& flash_assn_v);
+
   template <typename MatchT, typename CheckFunc>
-  void collect_matches(const art::Handle<std::vector<MatchT>> &handle,
-                       const std::vector<art::Ptr<MatchT>> &fm_v,
-                       const std::string &label,
-                       art::Event &e,
-                       std::vector<art::Ptr<recob::Slice>> &match_slices_v,
-                       std::vector<art::Ptr<recob::OpFlash>> &match_op0,
-                       std::vector<art::Ptr<recob::OpFlash>> &match_op1,
-                       CheckFunc check);
+  void CollectMatches(const art::Handle<std::vector<MatchT>> &handle,
+                      const std::vector<art::Ptr<MatchT>> &fm_v,
+                      const std::string &label,
+                      art::Event &e,
+                      std::vector<art::Ptr<recob::Slice>> &match_slices_v,
+                      std::vector<art::Ptr<recob::OpFlash>> &match_op0,
+                      std::vector<art::Ptr<recob::OpFlash>> &match_op1,
+                      CheckFunc check);
 
   // Returns visibility vector for all opdets given charge/position information 
   std::vector<std::vector<double>> CalcVisibility(std::vector<geo::Point_t> xyz_v, 
@@ -123,6 +128,7 @@ private:
   // fcl parameters 
   std::vector<std::string> _opflash_producer_v;
   std::vector<std::string> _opflash_ara_producer_v;
+  std::vector<std::string> _pd_types; 
   std::string _slice_producer;
   std::string _opt0_producer;
   std::string _bcfm_producer;
@@ -214,10 +220,10 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
+  _pd_types = p.get<std::vector<std::string>>("PDTypes"); 
   _slice_producer = p.get<std::string>("SliceProducer");
   _opt0_producer  = p.get<std::string>("OpT0FinderProducer");
   _bcfm_producer  = p.get<std::string>("BCFMProducer");
-  _use_arapucas = p.get<bool>("UseArapucas");
   _use_opt0     = p.get<bool>("UseOpT0Finder");
   _use_bcfm     = p.get<bool>("UseBCFM");
   _nuscore_cut = p.get<float>("nuScoreCut");
@@ -278,12 +284,31 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
 
   // Call appropriate produces<>() functions here.
-  // produces<std::vector<sbn::LightCalo>>();
-  // produces<art::Assns<recob::Slice, sbn::LightCalo>>();
+  produces<std::vector<sbn::LightCalo>>();
+  produces<art::Assns<recob::Slice,   sbn::LightCalo>>();
+  produces<art::Assns<recob::OpFlash, sbn::LightCalo>>();
+
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
 void sbnd::LightCaloProducer::produce(art::Event& e)
+{
+
+  std::unique_ptr<std::vector<sbn::LightCalo>> lightcalo_v (new std::vector<sbn::LightCalo>);
+  std::unique_ptr< art::Assns<recob::Slice, sbn::LightCalo>> slice_assn_v (new art::Assns<recob::Slice, sbn::LightCalo>);
+  std::unique_ptr< art::Assns<recob::OpFlash, sbn::LightCalo>> flash_assn_v (new art::Assns<recob::OpFlash, sbn::LightCalo>);
+
+  CalculateCalorimetry(e, lightcalo_v, slice_assn_v, flash_assn_v);
+
+  e.put(std::move(lightcalo_v));
+  e.put(std::move(slice_assn_v));
+  e.put(std::move(flash_assn_v));
+}
+
+void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e, 
+                                                   std::unique_ptr<std::vector<sbn::LightCalo>>& lightcalo_v,
+                                                   std::unique_ptr< art::Assns<recob::Slice, sbn::LightCalo>>& slice_assn_v,
+                                                   std::unique_ptr< art::Assns<recob::OpFlash, sbn::LightCalo>>& flash_assn_v)
 {
   // services 
   auto const clock_data = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
@@ -295,7 +320,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
-  std::cout << "run: " << _run <<  ", subrun: " << _subrun  << ", event: " <<  _event << std::endl;
 
   // get slices 
   ::art::Handle<std::vector<recob::Slice>> slice_h;
@@ -321,8 +345,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
 
   auto const & flash0_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[0]);
   auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[1]);
-  if (!_use_arapucas && _verbose)
-    std::cout << "Using PMT OpFlash only..." << std::endl;  
   if( (!flash0_h.isValid() || flash0_h->empty()) && (!flash1_h.isValid() || flash1_h->empty())) {
     std::cout << "don't have good PMT flashes from producer " << _opflash_producer_v[0] << " or "  << _opflash_producer_v[1] << std::endl;
     return;
@@ -360,7 +382,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
 
   // use templated member helper to fill match vectors
   if (_use_bcfm) {
-    collect_matches(bcfm_h, bcfm_v, _bcfm_producer, e, match_slices_v, match_op0, match_op1,
+    CollectMatches(bcfm_h, bcfm_v, _bcfm_producer, e, match_slices_v, match_op0, match_op1,
                     [this](art::Ptr<sbn::TPCPMTBarycenterMatch> bcfm) {
                       if (bcfm->flashTime > _fopflash_max || bcfm->flashTime < _fopflash_min) return false;
                       if (bcfm->score < 0.02) return false;
@@ -368,7 +390,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
                     });
   }
   else {
-    collect_matches(opt0_h, opt0_v, _opt0_producer, e, match_slices_v, match_op0, match_op1,
+    CollectMatches(opt0_h, opt0_v, _opt0_producer, e, match_slices_v, match_op0, match_op1,
                     [this](art::Ptr<sbn::OpT0Finder> opt0){
                       auto opt0_measPE = opt0->measPE;
                       auto opt0_hypoPE = opt0->hypoPE;
@@ -379,6 +401,14 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
                       return true;
                     });
   }
+
+  if (std::find(_pd_types.begin(), _pd_types.end(), "xarapuca_vuv") != _pd_types.end() || 
+      std::find(_pd_types.begin(), _pd_types.end(), "xarapuca_vis") != _pd_types.end()){
+        _use_arapucas = true; 
+      }
+      else
+      _use_arapucas =false; 
+
   std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
   std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
   if (_use_arapucas){
@@ -527,7 +557,10 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
             }     
           }
         } // end of arapuca if 
-        for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
+        for (size_t ich=0; ich<flash_pe_v.size(); ich++){
+          if (std::find(_pd_types.begin(), _pd_types.end(), _opdetmap.pdType(ich) ) == _pd_types.end() ) continue;
+          total_pe[ich] += flash_pe_v[ich];
+        }
       }
     } // end of TPC loop 
 
@@ -549,11 +582,17 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     _opflash_time = flash_time;
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
+
     // calculate final light estimate   
     _mean_gamma   = CalcMean(total_gamma,total_err);
     _slice_L = _mean_gamma;
-    
     _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV   
+
+    sbn::LightCalo lightcalo(_slice_Q,_slice_L,_slice_E,bestHits,plane_charge);
+    lightcalo_v->push_back(lightcalo);
+    util::CreateAssn(*this, e, *lightcalo_v, slice,    *slice_assn_v);
+    util::CreateAssn(*this, e, *lightcalo_v, opflash0, *flash_assn_v);
+    util::CreateAssn(*this, e, *lightcalo_v, opflash1, *flash_assn_v);
 
     _true_gamma = 0; 
     _true_charge = 0;
@@ -601,14 +640,14 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
 
 // define functions 
 template <typename MatchT, typename CheckFunc>
-void sbnd::LightCaloProducer::collect_matches(const art::Handle<std::vector<MatchT>> &handle,
-                                              const std::vector<art::Ptr<MatchT>> &fm_v,
-                                              const std::string &label,
-                                              art::Event &e,
-                                              std::vector<art::Ptr<recob::Slice>> &match_slices_v,
-                                              std::vector<art::Ptr<recob::OpFlash>> &match_op0,
-                                              std::vector<art::Ptr<recob::OpFlash>> &match_op1,
-                                              CheckFunc check)
+void sbnd::LightCaloProducer::CollectMatches(const art::Handle<std::vector<MatchT>> &handle,
+                                             const std::vector<art::Ptr<MatchT>> &fm_v,
+                                             const std::string &label,
+                                             art::Event &e,
+                                             std::vector<art::Ptr<recob::Slice>> &match_slices_v,
+                                             std::vector<art::Ptr<recob::OpFlash>> &match_op0,
+                                             std::vector<art::Ptr<recob::OpFlash>> &match_op1,
+                                             CheckFunc check)
 {
   std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
   art::FindManyP<recob::Slice> fm_to_slice(handle, e, label);
