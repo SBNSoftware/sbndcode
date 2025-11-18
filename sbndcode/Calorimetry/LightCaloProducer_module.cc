@@ -361,27 +361,17 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
 
   std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
 
-  // * get flash matched objects
-  ::art::Handle<std::vector<sbn::TPCPMTBarycenterMatch>> bcfm_h;
-  e.getByLabel(_bcfm_producer, bcfm_h);
-  if(!bcfm_h.isValid() || bcfm_h->empty()) {
-    std::cout << "don't have good barycenter matches!" << std::endl;
-    return;
-  }
-  std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>> bcfm_v;
-  art::fill_ptr_vector(bcfm_v, bcfm_h);
-
-  ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
-  e.getByLabel(_opt0_producer, opt0_h);
-  if(!opt0_h.isValid() || opt0_h->empty()) {
-    std::cout << "don't have good OpT0Finder matches!" << std::endl;
-    return;
-  }
-  std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
-  art::fill_ptr_vector(opt0_v, opt0_h);
-
   // use templated member helper to fill match vectors
   if (_use_bcfm) {
+    ::art::Handle<std::vector<sbn::TPCPMTBarycenterMatch>> bcfm_h;
+    e.getByLabel(_bcfm_producer, bcfm_h);
+    if(!bcfm_h.isValid() || bcfm_h->empty()) {
+      std::cout << "don't have good barycenter matches!" << std::endl;
+      return;
+    }
+    std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>> bcfm_v;
+    art::fill_ptr_vector(bcfm_v, bcfm_h);
+
     CollectMatches(bcfm_h, bcfm_v, _bcfm_producer, e, match_slices_v, match_op0, match_op1,
                     [this](art::Ptr<sbn::TPCPMTBarycenterMatch> bcfm) {
                       if (bcfm->flashTime > _fopflash_max || bcfm->flashTime < _fopflash_min) return false;
@@ -390,6 +380,15 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
                     });
   }
   else {
+    ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
+    e.getByLabel(_opt0_producer, opt0_h);
+    if(!opt0_h.isValid() || opt0_h->empty()) {
+      std::cout << "don't have good OpT0Finder matches!" << std::endl;
+      return;
+    }
+    std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
+    art::fill_ptr_vector(opt0_v, opt0_h);
+
     CollectMatches(opt0_h, opt0_v, _opt0_producer, e, match_slices_v, match_op0, match_op1,
                     [this](art::Ptr<sbn::OpT0Finder> opt0){
                       auto opt0_measPE = opt0->measPE;
@@ -407,7 +406,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
         _use_arapucas = true; 
       }
       else
-      _use_arapucas =false; 
+      _use_arapucas = false; 
 
   std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
   std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
