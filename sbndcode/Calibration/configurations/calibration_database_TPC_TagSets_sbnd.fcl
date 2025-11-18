@@ -9,7 +9,7 @@ BEGIN_PROLOG
 ## First one for 2025 Fall, only with etau tag
 TPC_CalibrationTags_Nov2025: {
 
-  tpc_elifetime_data: "v1r1"
+  tpc_elifetime_data: "v2r1"
 
 }
 

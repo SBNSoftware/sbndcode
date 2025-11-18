@@ -5,6 +5,7 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art/Persistency/Common/PtrMaker.h"
 #include "art/Utilities/ToolMacros.h"
+#include "cetlib_except/exception.h"
 #include "cetlib/cpu_timer.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -110,7 +111,10 @@ sbnd::calo::NormalizeDriftSQLite::RunInfo sbnd::calo::NormalizeDriftSQLite::GetR
 double sbnd::calo::NormalizeDriftSQLite::Normalize(double dQdx, const art::Event &e, 
     const recob::Hit &hit, const geo::Point_t &location, const geo::Vector_t &direction, double t0) {
 
-  assert(fClockData);
+  if (!fClockData) {
+    std::cout << "Error: fClockData is not valid" << std::endl;
+    throw cet::exception("fClockData is not valid");
+  }
 
   // Get the info
   RunInfo runelifetime = GetRunInfo(e.id().runID().run());
@@ -127,7 +131,8 @@ double sbnd::calo::NormalizeDriftSQLite::Normalize(double dQdx, const art::Event
   if (cryo == 0 && tpc == 1) thiselifetime = runelifetime.tau_W;
 
   // Get the hit time
-  double thit = hit.PeakTime()/2000. - 0.2 - t0;
+  double thit = fClockData->TPCTick2TrigTime(hit.PeakTime()) - t0;
+  thit = thit * 1.e-3;
 
   if (fVerbose) std::cout << "NormalizeDriftSQLite Tool -- Norm factor: " << exp(thit / thiselifetime) << " at TPC: " << tpc << " Cryo: " << cryo << " Time: " << thit << " Track T0: " << t0 << ", x: " << location.X() << std::endl;
 
@@ -135,8 +140,11 @@ double sbnd::calo::NormalizeDriftSQLite::Normalize(double dQdx, const art::Event
   if (thiselifetime > 0) {
     dQdx = dQdx*exp(thit / thiselifetime);
   }
-  // TODO: what to do if no lifetime is found? throw an exception??
-  else {}
+  // Throw exception if thiselifetime is not updated to non-zero value
+  else {
+    std::cout << "sbnd::calo::NormalizeDriftSQLite::Normalize electron lifetime is not found for run " << e.id().runID().run() << std::endl;
+    throw cet::exception("Electron lifetime is not found");
+  }
 
   return dQdx;
 }
