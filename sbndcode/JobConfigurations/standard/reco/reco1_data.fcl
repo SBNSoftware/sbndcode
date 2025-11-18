@@ -1,3 +1,4 @@
+#include "drops_reco1.fcl"
 #include "wcsp_data_sbnd.fcl"
 #include "opdeconvolution_sbnd_data.fcl"
 #include "sbnd_ophitfinder_deco_data.fcl"
@@ -19,7 +20,7 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    sptpc2d:   @local::sbnd_wcls_sp_data
+    sptpc2d:   @local::sbnd_wcls_sp_data_bothrois
     crtstrips: @local::crtstriphitproducer_data_sbnd
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
@@ -31,10 +32,11 @@ physics.producers:
     opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_data
 }
 
-physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips, 
+physics.reco1: [sptpc2d, gaushit, specialblipgaushit, numberofhitsfilter, cluster3d, crtstrips, 
     crtclustering, crtspacepoints, crttracks, wfalign, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
 
-physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
+physics.producers.specialblipgaushit.CalDataModuleLabel: "sptpc2d:gauss"
