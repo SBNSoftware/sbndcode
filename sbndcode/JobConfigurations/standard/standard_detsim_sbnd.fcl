@@ -63,11 +63,10 @@ physics:
 
   producers:
   {
-    rns:         { module_type: "RandomNumberSaver" }
-    simtpc2d:    @local::sbnd_wcls_simsp
-    crtsim:      @local::sbnd_crtsim
-    opdaq:       @local::sbnd_opdetdigitizer
-    pmtmetricmc: @local::pmtmcmetricproducer
+    rns:       { module_type: "RandomNumberSaver" }
+    simtpc2d:  @local::sbnd_wcls_simsp_bothrois
+    crtsim:    @local::sbnd_crtsim
+    opdaq:     @local::sbnd_opdetdigitizer
   }
 
   #define the producer and filter modules for this path, order matters,
@@ -95,4 +94,4 @@ outputs:
                     ]
   }
 }
-physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: false
+physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: true
