@@ -1,6 +1,6 @@
 BEGIN_PROLOG
 
-pmtmcmetricproducer: {
+sbnd_pmtmcmetricproducer: {
     module_type: "PMTMCMetricProducer"
     PDTypes: ["pmt_coated","pmt_uncoated"]
     OpDetWaveformsLabel: "opdaq"
