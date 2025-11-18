@@ -180,7 +180,7 @@ void styleDrawPur(purHist_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
                   const char* filename, const std::string& legendLocation,
                   int* drawLine = nullptr, int* linePos = nullptr,
-                  bool writeMaxValues = false) // <-- New toggle
+                  bool writeMaxValues = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -245,7 +245,7 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
     if (writeMaxValues) {
-        std::ofstream outfile("purity_max_values.txt", std::ios::app); // append mode
+        std::ofstream outfile("purity_max_values.txt", std::ios::app);
         if (outfile.is_open()) {
             outfile << "================" << std::endl;
             outfile << filename << std::endl;
@@ -277,306 +277,6 @@ void styleDrawPur(purHist_struct hists,
     }
 }
 
-
-/*
-void styleDrawAll(histGroup_struct hists,
-                  double ymin, double ymax, double xmin, double xmax,
-                  const char* filename, const std::string& legendLocation,
-                  int* drawLine = nullptr, int* linePos = nullptr,
-                  bool includeSignal = true, bool includeSignalFuzzy = true,
-                  bool includeBNB = true, bool includeBNBFuzzy = true,
-                  bool includeCosmic = true,
-                  bool includeDLUboone = true, bool includeDLNuE = true,
-                  bool includeBDT = true)
-{
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-
-    hists.currentSignal->SetStats(0);
-    hists.ubooneSignal->SetStats(0);
-    hists.nuESignal->SetStats(0);
-    hists.currentSignalFuzzy->SetStats(0);
-    hists.ubooneSignalFuzzy->SetStats(0);
-    hists.nuESignalFuzzy->SetStats(0);
-    hists.currentBNB->SetStats(0);
-    hists.ubooneBNB->SetStats(0);
-    hists.nuEBNB->SetStats(0);
-    hists.currentBNBFuzzy->SetStats(0);
-    hists.ubooneBNBFuzzy->SetStats(0);
-    hists.nuEBNBFuzzy->SetStats(0);
-    hists.currentCosmic->SetStats(0);
-    hists.ubooneCosmic->SetStats(0);
-    hists.nuECosmic->SetStats(0);
-
-    //--- Style setup
-    hists.currentCosmic->SetLineWidth(2);  hists.currentCosmic->SetLineColor(kPink+9);
-    hists.ubooneCosmic->SetLineWidth(2);   hists.ubooneCosmic->SetLineColor(kPink+1);
-    hists.nuECosmic->SetLineWidth(2);      hists.nuECosmic->SetLineColor(kPink-2);
-
-    hists.currentSignal->SetLineWidth(2);  hists.currentSignal->SetLineColor(kBlue+1);
-    hists.ubooneSignal->SetLineWidth(2);   hists.ubooneSignal->SetLineColor(kBlue-7);
-    hists.nuESignal->SetLineWidth(2);      hists.nuESignal->SetLineColor(kAzure+5);
-
-    hists.currentSignalFuzzy->SetLineWidth(2);  hists.currentSignalFuzzy->SetLineColor(kGreen+3);
-    hists.ubooneSignalFuzzy->SetLineWidth(2);   hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
-    hists.nuESignalFuzzy->SetLineWidth(2);      hists.nuESignalFuzzy->SetLineColor(kGreen-7);
-    
-    hists.currentBNB->SetLineWidth(2);  hists.currentBNB->SetLineColor(kOrange+7);
-    hists.ubooneBNB->SetLineWidth(2);   hists.ubooneBNB->SetLineColor(kOrange+6);
-    hists.nuEBNB->SetLineWidth(2);      hists.nuEBNB->SetLineColor(kOrange-5);
-    
-    hists.currentBNBFuzzy->SetLineWidth(2);  hists.currentBNBFuzzy->SetLineColor(kViolet+1);
-    hists.ubooneBNBFuzzy->SetLineWidth(2);   hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
-    hists.nuEBNBFuzzy->SetLineWidth(2);      hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
-
-    //--- Axis ranges
-    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
-    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
-
-    //--- Dynamic Y range
-    double maxYValue = std::max({
-        hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum(),
-        hists.currentCosmic->GetMaximum(), hists.ubooneCosmic->GetMaximum(), hists.nuECosmic->GetMaximum(),
-        hists.currentSignalFuzzy->GetMaximum(), hists.ubooneSignalFuzzy->GetMaximum(), hists.nuESignalFuzzy->GetMaximum(),
-        hists.currentBNB->GetMaximum(), hists.ubooneBNB->GetMaximum(), hists.nuEBNB->GetMaximum(),
-        hists.currentBNBFuzzy->GetMaximum(), hists.ubooneBNBFuzzy->GetMaximum(), hists.nuEBNBFuzzy->GetMaximum()
-    });
-
-    std::cout << "maxYValue = " << maxYValue << std::endl;
-    double yminVal = 0;
-    if((ymin == 999) && (ymax == 999)){
-        double ymaxVal = (maxYValue * 1.1);
-        std::cout << "setting yaxis to " << yminVal << ", " << ymaxVal << std::endl;
-        hists.currentCosmic->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.ubooneCosmic->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.nuECosmic->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.ubooneSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.nuESignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.currentSignalFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.ubooneSignalFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.nuESignalFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.currentBNB->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.ubooneBNB->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.nuEBNB->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.currentBNBFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.ubooneBNBFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-        hists.nuEBNBFuzzy->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
-    }
-
-    //--- Drawing block
-    bool first = true;
-    auto draw = [&](TH1* hist){ if (hist) { hist->Draw(first ? "hist" : "histsame"); first = false; } };
-
-    // Helper to decide if a given variant should be drawn
-    auto variantAllowed = [&](const std::string& name) {
-        bool isBDT = name.find("current") != std::string::npos;
-        bool isDLUboone = name.find("uboone") != std::string::npos;
-        bool isDLNuE = name.find("nuE") != std::string::npos;
-
-        if (!includeBDT && isBDT) return false;
-        if (!includeDLUboone && isDLUboone) return false;
-        if (!includeDLNuE && isDLNuE) return false;
-        return true;
-    };
-
-    //--- Draw selected histograms
-    if (includeSignal) {
-        if (variantAllowed("currentSignal")) draw(hists.currentSignal);
-        if (variantAllowed("ubooneSignal")) draw(hists.ubooneSignal);
-        if (variantAllowed("nuESignal")) draw(hists.nuESignal);
-    }
-    if (includeSignalFuzzy) {
-        if (variantAllowed("currentSignalFuzzy")) draw(hists.currentSignalFuzzy);
-        if (variantAllowed("ubooneSignalFuzzy")) draw(hists.ubooneSignalFuzzy);
-        if (variantAllowed("nuESignalFuzzy")) draw(hists.nuESignalFuzzy);
-    }
-    if (includeBNB) {
-        if (variantAllowed("currentBNB")) draw(hists.currentBNB);
-        if (variantAllowed("ubooneBNB")) draw(hists.ubooneBNB);
-        if (variantAllowed("nuEBNB")) draw(hists.nuEBNB);
-    }
-    if (includeBNBFuzzy) {
-        if (variantAllowed("currentBNBFuzzy")) draw(hists.currentBNBFuzzy);
-        if (variantAllowed("ubooneBNBFuzzy")) draw(hists.ubooneBNBFuzzy);
-        if (variantAllowed("nuEBNBFuzzy")) draw(hists.nuEBNBFuzzy);
-    }
-    if (includeCosmic) {
-        if (variantAllowed("currentCosmic")) draw(hists.currentCosmic);
-        if (variantAllowed("ubooneCosmic")) draw(hists.ubooneCosmic);
-        if (variantAllowed("nuECosmic")) draw(hists.nuECosmic);
-    }
-
-    //--- Axes and stats
-    hists.currentSignal->SetStats(0);
-    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
-    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
-    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
-    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
-
-    //--- Legend setup
-    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
-    std::vector<std::pair<TH1*, std::string>> legendEntries;
-
-    auto addLegendIf = [&](TH1* hist, const std::string& label, const std::string& name){
-        if (hist && variantAllowed(name)) legendEntries.emplace_back(hist, label);
-    };
-
-    if (includeSignal) {
-        addLegendIf(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "currentSignal");
-        addLegendIf(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneSignal");
-        addLegendIf(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "nuESignal");
-    }
-    if (includeSignalFuzzy) {
-        addLegendIf(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "currentSignalFuzzy");
-        addLegendIf(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneSignalFuzzy");
-        addLegendIf(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "nuESignalFuzzy");
-    }
-    if (includeBNB) {
-        addLegendIf(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "currentBNB");
-        addLegendIf(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneBNB");
-        addLegendIf(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "nuEBNB");
-    }
-    if (includeBNBFuzzy) {
-        addLegendIf(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "currentBNBFuzzy");
-        addLegendIf(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneBNBFuzzy");
-        addLegendIf(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "nuEBNBFuzzy");
-    }
-    if (includeCosmic) {
-        addLegendIf(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "currentCosmic");
-        addLegendIf(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "ubooneCosmic");
-        addLegendIf(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "nuECosmic");
-    }
-
-    int nEntries = legendEntries.size();
-    double height = std::max(0.025 * nEntries, 0.03); // dynamic height per entry
-
-    // Adjust legend box position based on location and height
-    if(legendLocation == "topRight"){ Lxmin=0.62; Lymax=0.863; Lxmax=0.87; Lymin=Lymax - height; }
-    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.38; Lymin=Lymax - height; }
-    else if(legendLocation == "bottomRight"){ Lxmin=0.62; Lymin=0.137; Lxmax=0.87; Lymax=Lymin + height; }
-    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymin=0.137; Lxmax=0.38; Lymax=Lymin + height; }
-
-    auto legend = new TLegend(Lxmin, Lymin, Lxmax, Lymax);
-    for (auto& [hist, label] : legendEntries)
-        legend->AddEntry(hist, label.c_str(), "f");
-
-    legend->SetTextSize(0.015);
-    legend->SetMargin(0.12);
-    legend->Draw();
-
-    //--- Optional vertical line
-    if(drawLine){
-        TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
-        line->SetLineColor(kGray+2);
-        line->SetLineStyle(2);
-        line->SetLineWidth(2);
-        line->Draw("same");
-
-        double ymaxValLine = maxYValue*0.95;
-        TLatex* latex = new TLatex((*linePos == 0 ? 1.022 - 0.2 : 1.022 + 0.2), ymaxValLine, "2m_{e}");
-        latex->SetTextSize(0.035); 
-        latex->SetTextAlign(11);
-        latex->Draw("same");
-    }
-
-    hists.canvas->SaveAs(filename);
-}
-*/
-
-/*
-void styleDrawBackSig(histGroup_struct hists,
-                      double ymin, double ymax, double xmin, double xmax,
-                      const char* filename, const std::string& legendLocation,
-                      bool includeCurrent = true, bool includeUboone = true, bool includeNuE = true,
-                      bool useLogScale = false){
-
-    TH1F* backgroundCombi = (TH1F*) hists.currentCosmic->Clone("backgroundCombined");
-    backgroundCombi->Reset();
-    backgroundCombi->SetTitle(hists.currentCosmic->GetTitle());
-    backgroundCombi->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
-    backgroundCombi->GetYaxis()->SetTitle(hists.currentCosmic->GetYaxis()->GetTitle());
-    
-    TH1F* signalCombi = (TH1F*) hists.currentCosmic->Clone("signalCombined");
-    signalCombi->Reset();
-    signalCombi->SetTitle(hists.currentCosmic->GetTitle());
-    signalCombi->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
-    signalCombi->GetYaxis()->SetTitle(hists.currentCosmic->GetYaxis()->GetTitle());
-
-    backgroundCombi->Add(hists.currentCosmic);
-    backgroundCombi->Add(hists.currentBNB);
-    backgroundCombi->Add(hists.currentBNBFuzzy);
-
-    signalCombi->Add(hists.currentSignal);
-    signalCombi->Add(hists.currentSignalFuzzy);
-
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-
-    backgroundCombi->SetLineWidth(2);   backgroundCombi->SetLineColor(kOrange+7);
-    signalCombi->SetLineWidth(2);       signalCombi->SetLineColor(kBlue+1);
-
-    if((ymin != 999) && (ymax != 999)) backgroundCombi->GetYaxis()->SetRangeUser(ymin, ymax);
-    if((xmin != 999) && (xmax != 999)) signalCombi->GetXaxis()->SetRangeUser(xmin, xmax);
-
-    double maxYValue = std::max({backgroundCombi->GetMaximum(), signalCombi->GetMaximum()});
-
-    if(ymin == 999 && ymax == 999){
-        backgroundCombi->GetYaxis()->SetRangeUser(0, maxYValue);
-        signalCombi->GetYaxis()->SetRangeUser(0, maxYValue);
-    }
-
-    backgroundCombi->Draw("hist");
-    signalCombi->Draw("histsame");
-
-    backgroundCombi->SetStats(0);
-    backgroundCombi->GetXaxis()->SetTickLength(0.04);
-    backgroundCombi->GetYaxis()->SetTickLength(0.03);
-    backgroundCombi->GetXaxis()->SetTickSize(0.02);
-    backgroundCombi->GetYaxis()->SetTickSize(0.02);
-
-    double Lxmin = 0;
-    double Lymax = 0;
-    double Lxmax = 0;
-    double Lymin = 0;
-
-    if(legendLocation == "topRight"){
-        Lxmin = 0.48;
-        Lymax = 0.863;
-        Lxmax = 0.87;
-        Lymin = 0.640;
-    } else if(legendLocation == "topLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.863;
-        Lxmax = 0.52;
-        Lymin = 0.640;
-    } else if(legendLocation == "bottomRight"){
-        Lxmin = 0.48;
-        Lymax = 0.36;
-        Lxmax = 0.87;
-        Lymin = 0.137;
-    } else if(legendLocation == "bottomLeft"){
-        Lxmin = 0.13;
-        Lymax = 0.36;
-        Lxmax = 0.52;
-        Lymin = 0.137;
-    }
-
-    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    //auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
-    legend->AddEntry(backgroundCombi, "Background, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(signalCombi, "Signal, Pandora BDT SBND (without Refinement)", "f");
-    legend->SetTextSize(0.0225);
-    legend->SetMargin(0.13);
-    legend->Draw();
-
-    hists.canvas->SaveAs(filename);
-
-}
-*/
-
 void styleDrawBackSig(histGroup_struct hists,
                       double ymin, double ymax, double xmin, double xmax,
                       const char* filename, const std::string& legendLocation,
@@ -588,7 +288,6 @@ void styleDrawBackSig(histGroup_struct hists,
     hists.canvas->SetTicky();
     hists.canvas->SetLogy(useLogScale);
 
-    //--- Helper to combine histograms safely
     auto combine = [useLogScale](TH1F* a, TH1F* b, TH1F* c, const char* name) -> TH1F* {
         TH1F* combo = nullptr;
         if (a) combo = (TH1F*)a->Clone(name);
@@ -601,7 +300,6 @@ void styleDrawBackSig(histGroup_struct hists,
         if (b) combo->Add(b);
         if (c) combo->Add(c);
 
-        //--- Replace zeros if using log scale
         if (useLogScale) {
             for (int i = 1; i <= combo->GetNbinsX(); ++i)
                 if (combo->GetBinContent(i) <= 0)
@@ -611,7 +309,6 @@ void styleDrawBackSig(histGroup_struct hists,
         return combo;
     };
 
-    //--- Combine Signal+SignalFuzzy and Background (BNB+BNBFuzzy+Cosmic)
     TH1F* currentSignalCombo     = combine(hists.currentSignal, hists.currentSignalFuzzy, nullptr, "currentSignalCombo");
     TH1F* currentBackgroundCombo = combine(hists.currentBNB, hists.currentBNBFuzzy, hists.currentCosmic, "currentBackgroundCombo");
 
@@ -621,14 +318,12 @@ void styleDrawBackSig(histGroup_struct hists,
     TH1F* nuESignalCombo     = combine(hists.nuESignal, hists.nuESignalFuzzy, nullptr, "nuESignalCombo");
     TH1F* nuEBackgroundCombo = combine(hists.nuEBNB, hists.nuEBNBFuzzy, hists.nuECosmic, "nuEBackgroundCombo");
 
-    //--- Collect all for later operations
     std::vector<TH1F*> allHists = {
         currentSignalCombo, currentBackgroundCombo,
         ubooneSignalCombo, ubooneBackgroundCombo,
         nuESignalCombo, nuEBackgroundCombo
     };
 
-    //--- Compute y-axis range
     double maxYValue = 0.0;
     for (auto* hist : allHists)
         if (hist && hist->GetMaximum() > maxYValue)
@@ -642,13 +337,11 @@ void styleDrawBackSig(histGroup_struct hists,
     for (auto* hist : allHists)
         if (hist) hist->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
 
-    //--- Set x-axis ranges
     if (xmin != 999 && xmax != 999) {
         for (auto* hist : allHists)
             if (hist) hist->GetXaxis()->SetRangeUser(xmin, xmax);
     }
 
-    //--- Style setup
     if (currentSignalCombo)     { currentSignalCombo->SetLineWidth(2); currentSignalCombo->SetLineColor(kBlue+1); }
     if (ubooneSignalCombo)      { ubooneSignalCombo->SetLineWidth(2);  ubooneSignalCombo->SetLineColor(kBlue-7); }
     if (nuESignalCombo)         { nuESignalCombo->SetLineWidth(2);     nuESignalCombo->SetLineColor(kAzure+5); }
@@ -657,7 +350,6 @@ void styleDrawBackSig(histGroup_struct hists,
     if (ubooneBackgroundCombo)  { ubooneBackgroundCombo->SetLineWidth(2);  ubooneBackgroundCombo->SetLineColor(kOrange+6); }
     if (nuEBackgroundCombo)     { nuEBackgroundCombo->SetLineWidth(2);     nuEBackgroundCombo->SetLineColor(kOrange-5); }
 
-    //--- Draw histograms
     bool first = true;
     auto draw = [&](TH1* hist){ if (hist) { hist->Draw(first ? "hist" : "histsame"); first = false; } };
 
@@ -674,7 +366,6 @@ void styleDrawBackSig(histGroup_struct hists,
         draw(nuESignalCombo);
     }
 
-    //--- Axis formatting
     for (auto* hist : allHists) {
         if (!hist) continue;
         hist->GetXaxis()->SetTickLength(0.04);
@@ -683,7 +374,6 @@ void styleDrawBackSig(histGroup_struct hists,
         hist->GetYaxis()->SetTickSize(0.02);
     }
 
-    //--- Legend
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
     if(legendLocation == "topRight"){ Lxmin=0.62; Lymax=0.863; Lxmax=0.87; Lymin=0.863 - 0.12; }
     else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.38; Lymin=0.863 - 0.12; }
@@ -709,10 +399,8 @@ void styleDrawBackSig(histGroup_struct hists,
     legend->SetMargin(0.12);
     legend->Draw();
 
-    //--- Save canvas
     hists.canvas->SaveAs(filename);
 
-    //--- Cleanup
     for (auto* hist : allHists)
         delete hist;
 }
@@ -1305,25 +993,6 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos, true);
 }
 
-/*
-void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
-    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TwoDHistCanvas->SetTickx();
-    TwoDHistCanvas->SetTicky();
-
-    hist->SetTitle(title);
-    hist->Draw("COLZ");
-    hist->SetStats(0);
-    hist->GetXaxis()->SetTickLength(0.04);
-    hist->GetYaxis()->SetTickLength(0.03);
-    hist->GetXaxis()->SetTickSize(0.02);
-    hist->GetYaxis()->SetTickSize(0.02);
-       
-    TwoDHistCanvas->SaveAs(filename);
-    TwoDHistCanvas->Clear();
-}
-*/
-
 void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "2D Histogram", 200, 10, 800, 600);
     TwoDHistCanvas->SetTickx();
@@ -1351,7 +1020,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     profX->SetMarkerStyle(20);
     profX->SetMarkerSize(0.8);
     profX->SetMarkerColor(kBlack);
-    profX->Draw("E1"); // E1 = draw with error bars
+    profX->Draw("E1");
 
     profX->GetXaxis()->SetTickLength(0.04);
     profX->GetYaxis()->SetTickLength(0.03);
@@ -1364,7 +1033,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     if (dotPos != std::string::npos)
         profileFilename.insert(dotPos, "_profile");
     else
-        profileFilename += "_profile.df"; // default
+        profileFilename += "_profile.df"; 
 
     ProfileCanvas->SaveAs(profileFilename.c_str());
 
@@ -1787,7 +1456,7 @@ void nuEBackgroundSignalWeighted_macro(){
                 recoilElectron_DX = truth_recoilElectronDX->at(i); 
                 recoilElectron_DY = truth_recoilElectronDY->at(i); 
                 recoilElectron_DZ = truth_recoilElectronDZ->at(i); 
-                // There is a true recoil electron in the event
+                
                 if(signal == 1 && DLCurrent == 2) trueETheta2.currentSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCurrent); 
                 else if(signal == 1 && DLCurrent == 0) trueETheta2.ubooneSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalUboone); 
                 else if(signal == 1 && DLCurrent == 5) trueETheta2.nuESignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalNuE); 
