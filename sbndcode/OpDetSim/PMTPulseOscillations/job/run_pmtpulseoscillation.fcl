@@ -1,4 +1,5 @@
 #include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "sbnd_pmtpulseoscillation_config.fcl"
@@ -12,6 +13,7 @@ services:
   TFileService:              { fileName: "hist.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  NuRandomService:        @local::sbnd_seedservice
 }
 
 #source is now a root file
@@ -38,7 +40,7 @@ physics:
   producers:
   {
     # random number saver
-    rns:       { module_type: RandomNumberSaver }
+    rns:       { module_type: "RandomNumberSaver" }
     pmtpulseoscillation:     @local::sbnd_pmtpulseoscillation
   }
 
