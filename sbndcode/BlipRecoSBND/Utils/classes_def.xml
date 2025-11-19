@@ -3,6 +3,8 @@
 <class name="blip::Blip"/>
 <class name="std::vector<blip::Blip>"/>
 <class name="blip::HitClust"/>
+<class name="std::vector<blip::HitClust>"/>
+<class name="art::Wrapper<std::vector<blip::HitClust> >"/>
 <class name="blip::TrueBlip"/>
 <class name="std::map<int,TVector3>"/>
 <class name="art::Assns<blip::Blip,recob::Hit,void>"/>
