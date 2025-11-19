@@ -36,6 +36,7 @@
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/WireReadoutGeom.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
@@ -118,6 +119,7 @@ namespace blip {
     float   kDriftVelocity;
     float   kTickPeriod;
     int     kNumChannels;
+    int     fCaloPlane;
 
    private:
     
@@ -173,7 +175,7 @@ namespace blip {
     bool                fKeepAllClusts[kNplanes];
 
     // --- Calorimetry configs ---
-    int                 fCaloPlane;
+    //int                 fCaloPlane;
     float               fCalodEdx;
     float               fESTAR_p0;
     float     	      	fESTAR_p1;

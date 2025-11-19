@@ -3,8 +3,6 @@
 #include "opdeconvolution_sbnd_data.fcl"
 #include "sbnd_ophitfinder_deco_data.fcl"
 #include "sbnd_flashfinder_deco_data.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
 #include "wfalign_sbnd_data.fcl"
 #include "standard_reco1_sbnd.fcl"
 
@@ -12,9 +10,7 @@ services:
 {
     @table::services
     @table::sbnd_data_services
-    CRTChannelMapService: @local::crt_channel_map_standard
-    CRTCalibService:      @local::crt_calib_service
-    CRTGeoService:        @local::crtgeoservice_data_sbnd
+    @table::crt_services_data_sbnd
 }
 
 physics.producers:
