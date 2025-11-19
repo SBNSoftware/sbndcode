@@ -10,7 +10,7 @@ BEGIN_PROLOG
 
 # For SBND 2025 Fall production
 PDS_CalibrationTags_Nov2025: {
-  PMTCalibrationDatabaseTag:    "v1r2"
+  PMTCalibrationDatabaseTag:    "v2r1"
   DatabaseTimeStamp: 1763157679000000000
 }
 
