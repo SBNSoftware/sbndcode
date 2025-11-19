@@ -1,17 +1,18 @@
 cet_enable_asserts()
 
 set(    LIB_LIBRARIES
-      art::Framework_Services_Registry
-      messagefacility::MF_MessageLogger
-      lardata::Utilities
-        larevt::CalibrationDBI_IOVData
-        larevt::CalibrationDBI_Providers
+  sbnobj::SBND_CRT
+  art::Framework_Services_Registry
+  messagefacility::MF_MessageLogger
+  lardata::Utilities
+  larevt::CalibrationDBI_IOVData
+  larevt::CalibrationDBI_Providers
 )
 set(    SERVICE_LIBRARIES
-      sbnobj::SBND_CRT
-      sbndcode_Calibration_CRTDatabaseInterface
-      larcore::Geometry_Geometry_service
-      lardata::DetectorClocksService
+  sbnobj::SBND_CRT
+  sbndcode_Calibration_CRTDatabaseInterface
+  larcore::Geometry_Geometry_service
+  lardata::DetectorClocksService
 )
 
 file(GLOB lib_srcs *.cxx)
