@@ -235,7 +235,7 @@ void styleDrawPur(purHist_struct hists,
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     legend->AddEntry(hists.current, "Pandora BDT SBND (without Refinement)", "f");
-    legend->AddEntry(hists.uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    //legend->AddEntry(hists.uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(hists.nuE, "Pandora Deep Learning: SBND Nu+E Tune", "f");
 
     legend->SetTextSize(0.01);
@@ -245,7 +245,7 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
     if (writeMaxValues) {
-        std::ofstream outfile("purity_max_values.txt", std::ios::app);
+        std::ofstream outfile("purity_max_values_afterFVCuts.txt", std::ios::app);
         if (outfile.is_open()) {
             outfile << "================" << std::endl;
             outfile << filename << std::endl;
