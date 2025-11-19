@@ -1,0 +1,13 @@
+#include "prodMeVPrtl_llp_sbnd.fcl"
+
+###----------Set mass of LLP [GeV]----------###
+llpM: 0.200
+physics.producers.generator.Flux.M: @local::llpM
+physics.producers.generator.RayTrace.ReferencePrtlMass: @local::llpM
+physics.producers.generator.Decay.ReferenceHNLMass: @local::llpM
+
+###-----------Verbose--------------###
+#include "set_MeVPrtl_Verbose.fcl" 
+                                                                      
+###----------Set geometry ----------###
+#include "set_MeVPrtl_GeoTPC.fcl"

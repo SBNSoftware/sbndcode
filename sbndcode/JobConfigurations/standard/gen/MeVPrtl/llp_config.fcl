@@ -1,0 +1,71 @@
+#include "bnb_kaon_sbnd.fcl"
+BEGIN_PROLOG
+
+llpM: 0.265
+
+#FLUX CONFIGS
+kaon2llp: {
+  tool_type: Kaon2LLPFlux
+  M: @local::llpM # GeV/c^2
+  Target2Absorber: 5000 #cm decay horn length
+  MaxImportanceWeight: 1 #BNB gsimple flat weight at 1
+
+  Beam2DetectorRotation: @local::sbnd_bnb_beam2detector_rotation
+  BeamOrigin: @local::sbnd_bnb_beam_origin
+
+  // timing config
+  # Bunch sigma taken from 
+  # https://beamdocs.fnal.gov/AD/DocDB/0050/005000/001/bunchLength_1st_draft.pdf
+  # Bunch spacing taken from
+  # https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
+  GlobalTimeOffset: 0
+  Verbose: false
+}
+
+# RAY TRACE CONFIGS
+mcraytrace: @local::rethrow_ray_trace_box
+mcraytrace.ReferencePrtlMass: @local::llpM # GeV
+mcraytrace.ReferenceScndPDG: 13 # muon
+mcraytrace.NThrows: 250 
+
+wgtraytrace: @local::weighted_ray_trace_box
+wgtraytrace.ReferencePrtlMass: @local::llpM # GeV
+wgtraytrace.ReferenceScndPDG: 13 # muon
+
+mxdraytrace: @local::mixedweight_ray_trace_box
+mxdraytrace.ReferencePrtlMass: @local::llpM # GeV
+mxdraytrace.ReferenceScndPDG: 13 # muon
+
+
+#DECAY CONFIGS
+decay_llp: {
+  tool_type: LLPMakeDecay
+  Decays: ["nu_pi0"]
+  Majorana: true
+  DecayIsThreeBodyAnisotropic: false
+  ReferenceUE4: 0
+  ReferenceUT4: 0
+  ReferenceUM4: 0
+  ReferenceLLPMass: @local::llpM
+  ReferenceRayLength: 7.549834e2 # sqrt(57) = 7.549834 = diagonal length of detector
+  ReferenceRayDistance: 110e2 #110m = distance from beam target to detector
+  ReferenceLLPEnergyFromKaonEnergy: @local::kaon_energy
+  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0", "nu_mu_e"]
+  Verbose: false
+}
+
+#FULL GEN CONFIGS
+llp_gen: {
+  module_type: MeVPrtlGen
+  Deweight: false
+  Produce: true
+  AnaOutput: true
+  Verbose: false
+  MesonGen: @local::bnb_kaon
+  Flux: @local::kaon2llp
+  RayTrace: @local::mxdraytrace
+  Decay: @local::decay_llp
+}
+
+END_PROLOG
