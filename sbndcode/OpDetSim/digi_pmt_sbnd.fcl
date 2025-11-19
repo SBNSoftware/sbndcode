@@ -15,8 +15,8 @@ sbnd_digipmt_alg:
   PMTChargeToADC:        -25.97     #charge to adc factor
 
   # Parameters for test bench SER simulation
-  PMTSinglePEmodel:        true     #false for ideal PMT response, true for test bench measured response
-  PMTDataFile:             "OpDetSim/digi_pmt_sbnd_v2int0.root"  # located in sbnd_data
+  PMTSinglePEmodel: "data"
+  PMTDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"  # located in sbnd_data
   
   # Time delays
   TTS:                   2.4        #Transit Time Spread in ns
@@ -27,6 +27,10 @@ sbnd_digipmt_alg:
   PMTBaseline:           14745      #in ADC
   PMTBaselineRMS:        2.6        #in ADC
   
+  #Sample noise from data
+  UseDataNoise: true
+  OpDetNoiseFile: "PMTNoiseTemplate.root"
+
   # Dark counts
   PMTDarkNoiseRate:      1000.0     #in Hz
   
@@ -41,11 +45,11 @@ sbnd_digipmt_alg:
 
   # Simulate gain fluctuations
   # (comment-out to skip gain fluctuations simulation)
-  GainFluctuationsParams: @local::FirstDynodeGainFluctuations
+  GainFluctuationsParams: @local::GaussianGainFluctuations
   
   # Simulate PMT non linear response
   # (comment-out to skip non linearities simulation)
-  NonLinearityParams: @local::PMTNonLinearityTF1
+  NonLinearityParams: @local::PMTNonLinearityTF1ChannelByChannel
 
   HDOpticalWaveformParamsPMT: @local::IncludeHDOpticalWaveforms_PMT
 }
