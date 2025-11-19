@@ -2,9 +2,9 @@
 #
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "opdeconvolution_sbnd.fcl"
-#include "sbnd_ophitfinder_deco.fcl"
-#include "sbnd_flashfinder_deco.fcl"
+#include "opdeconvolution_sbnd_data.fcl"
+#include "sbnd_ophitfinder_deco_data.fcl"
+#include "sbnd_flashfinder_deco_data.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 #include "mlreco_sbnd.fcl"
 #include "cluster_sbnd.fcl"
