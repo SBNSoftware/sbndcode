@@ -47,36 +47,24 @@ namespace opdet {
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
     fSamplingPeriod = 1./fSampling;
-
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.PMTDataFile, fname);
     TFile* file = TFile::Open(fname.c_str(), "READ");
-
-    std::vector<std::vector<double>>* SinglePEVec_p;
-    std::vector<int>* fSinglePEChannels_p;
-    std::vector<double>* fPeakAmplitude_p;
-
-    file->GetObject("SERChannels", fSinglePEChannels_p);
-    file->GetObject("SinglePEVec", SinglePEVec_p);
-    file->GetObject("PeakAmplitude",  fPeakAmplitude_p);
-
-    fSinglePEWaveVector = *SinglePEVec_p;
-    fSinglePEChannels = *fSinglePEChannels_p;
-    fPeakAmplitude = *fPeakAmplitude_p;
 
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;
     file->GetObject("timeTPB", timeTPB_p);
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
-
-    // PMT calibration database service
+      
+      // PMT calibration database service
     fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
     fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
 
+    int NOpChannels = fWireReadout.NOpChannels();
     //Resize the SER vector to the number of channels
-    fSinglePEWave_HD.resize(320);
+    fSinglePEWave_HD.resize(NOpChannels);
     //shape of single pulse
     if (fParams.PMTSinglePEmodel=="testbench") {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
@@ -125,23 +113,19 @@ namespace opdet {
       fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams); 
       fPMTNonLinearityPtr->ConfigureNonLinearity();
     }
-
     // infer pulse polarity from SER peak sign
     double minADC_SinglePE = *min_element(fSinglePEWave.begin(), fSinglePEWave.end());
     double maxADC_SinglePE = *max_element(fSinglePEWave.begin(), fSinglePEWave.end());
     fPositivePolarity = std::abs(maxADC_SinglePE) > std::abs(minADC_SinglePE);
-  
  
     // get ADC saturation value
     // currently assumes all dynamic range for PE (no overshoot)
     fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
     file->Close();
-
     // Initialize noise file 
     std::string fname_noise;
     cet::search_path sp_noise("FW_SEARCH_PATH");
     if(fParams.UseDataNoise){
-      std::cout << " Trying to open file " << fParams.OpDetNoiseFile << std::endl;
       sp_noise.find_file(fParams.OpDetNoiseFile, fname_noise);
       noise_file = TFile::Open(fname_noise.c_str(), "READ");
     }
@@ -618,7 +602,7 @@ namespace opdet {
 
     // Agregar ruido al waveform
     for (size_t i = 0; i < wave.size(); i++) {
-        wave[i] += noise_wform[i] + fParams.PMTBaseline;
+        wave[i] += noise_wform[i];
     }
   }
 

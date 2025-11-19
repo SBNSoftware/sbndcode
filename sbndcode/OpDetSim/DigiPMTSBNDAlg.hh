@@ -37,6 +37,7 @@
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+#include "larcore/Geometry/WireReadout.h"
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
 #include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
@@ -186,11 +187,8 @@ namespace opdet {
     std::vector<std::vector<std::vector<double>>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
-    
-  
-    std::vector<std::vector<double>> fSinglePEWaveVector;
-    std::vector<int> fSinglePEChannels;
-    std::vector<double> fPeakAmplitude;
+
+    geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get(); 
 
     void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
