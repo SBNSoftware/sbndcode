@@ -723,7 +723,6 @@ namespace opdet {
     fBaseConfig.PMTCoatedVISEff_tpc1     = config.pmtcoatedVISEff_tpc1();
     fBaseConfig.PMTUncoatedEff_tpc1      = config.pmtuncoatedEff_tpc1();
     fBaseConfig.PMTSinglePEmodel         = config.PMTsinglePEmodel();
-    fBaseConfig.PositivePolarity         = config.PositivePolarity();
     fBaseConfig.PMTRiseTime              = config.pmtriseTime();
     fBaseConfig.PMTFallTime              = config.pmtfallTime();
     fBaseConfig.PMTMeanAmplitude         = config.pmtmeanAmplitude();
