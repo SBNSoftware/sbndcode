@@ -35,6 +35,7 @@
 
 #include <memory>
 
+
 namespace geo {
   using Point2D_t = ROOT::Math::PositionVector2D<ROOT::Math::Cartesian2D<double>,
                                                  ROOT::Math::GlobalCoordinateSystemTag>;
@@ -244,11 +245,8 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                       
                       BestFitLine(primarySpacePoint->Pos(), secondarySpacePoint->Pos(), tertiarySpacePoint->Pos(), primaryCluster->Tagger(), 
                                   secondaryCluster->Tagger(), tertiaryCluster->Tagger(), fitStart, fitMid, fitEnd, gof);
-		      const double _t0 = t0;
-		      const double _et0 = et0;
-		      const double _t1 = t1;
-		      const double _et1 = et1;
-                      const CRTTrack track({fitStart, fitMid, fitEnd}, _t0, _et0, _t1, _et1, pe, tof, used_taggers);
+
+                      const CRTTrack track({fitStart, fitMid, fitEnd}, t0, et0, t1, et1, pe, tof, used_taggers);
                       const std::set<unsigned> used_spacepoints = {i, ii, iii};
 
                       candidates.emplace_back(track, used_spacepoints);
@@ -267,6 +265,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
           const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
 
           const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
+
           const CRTTrack track(start, end, t0, et0, t1, et1, pe, tof, used_taggers);
           const std::set<unsigned> used_spacepoints = {i, ii};
 
