@@ -136,7 +136,6 @@ void opdet::PMTPulseOscillation::CreateOscillatedWaveform(const raw::OpDetWavefo
         double phase    = 2.0 * M_PI * fOscillationFrequency * delta_time;
         double new_value = static_cast<double>(newWaveform.Waveform()[i+fOscillationOffset]) + oscillation_amplitude * envelope * std::cos(phase+M_PI);
         // Add some dither to avoid quantization effects
-        std::cout <<  CLHEP::RandFlat::shoot(&fEngine,1.0) << std::endl;
         double dither = CLHEP::RandFlat::shoot(&fEngine,1.0) - 0.5;
         newWaveform.Waveform()[i+fOscillationOffset] = std::round(new_value + dither);
         if(envelope < 0.05) return;
