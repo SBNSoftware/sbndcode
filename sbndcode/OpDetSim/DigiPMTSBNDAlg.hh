@@ -334,11 +334,6 @@ namespace opdet {
         Comment("File containing timing emission distribution for TPB and single pe pulse from data")
       };
 
-      fhicl::Atom<bool> PositivePolarity {
-        Name("PositivePolarity"),
-        Comment("Polarity of the waveforms")
-      };
-
       fhicl::Atom<bool> UseDataNoise {
         Name("UseDataNoise"),
         Comment("Use data noise from file")
