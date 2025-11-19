@@ -34,6 +34,7 @@
 #include "wcsimsp_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
+#include "sbnd_pmtpulseoscillation_config.fcl"
 #include "rootoutput_sbnd.fcl"
 
 process_name: DetSim
@@ -66,10 +67,11 @@ physics:
     simtpc2d:  @local::sbnd_wcls_simsp
     crtsim:    @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
+    pmtpulseoscillation: @local::sbnd_pmtpulseoscillation
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate: [rns, simtpc2d, crtsim, opdaq]
+  simulate: [rns, simtpc2d, crtsim, opdaq, pmtpulseoscillation]
 
   #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
