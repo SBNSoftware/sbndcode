@@ -20,6 +20,7 @@
 #include "art_root_io/TFileService.h"
 
 #include "CLHEP/Random/RandFlat.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 
 #include <memory>
 
@@ -67,21 +68,16 @@ class opdet::PMTPulseOscillation : public art::EDProducer {
     opdet::sbndPDMapAlg pdsmap;
     std::vector<double> fOscillationFunctionParams;
     TF1 *fOscillationTF1;
-
-
-    CLHEP::HepRandomEngine* engine = nullptr; //!< Reference to art-managed random-number engine
-    CLHEP::RandFlat fFlatGen;
-
-    
+    CLHEP::HepRandomEngine& fEngine;
 };
 
 
 opdet::PMTPulseOscillation::PMTPulseOscillation(fhicl::ParameterSet const& p)
   : EDProducer{p},
-    fFlatGen(engine)  // ,
+    fEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+              createEngine(0, "HepJamesRandom", "pulseosc"), "HepJamesRandom", "pulseosc", p, "Seed"))
   // More initializers here.
 {
-  std::cout << " DB 1 " << std::endl;
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fInputLabel = p.get< std::string >("InputLabel");
@@ -128,34 +124,23 @@ void opdet::PMTPulseOscillation::produce(art::Event& e)
 
 void opdet::PMTPulseOscillation::CreateOscillatedWaveform(const raw::OpDetWaveform& oldWaveform, raw::OpDetWaveform& newWaveform)
 {
-    std::cout << " DB 2 " << std::endl;
     //Find the idx of the maximum (or minimum) point of the waveform
     int starting_ttick = std::distance(oldWaveform.begin(), std::min_element(oldWaveform.begin(), oldWaveform.end()));
     double baseline = accumulate( oldWaveform.begin(), oldWaveform.end(), 0.0) / oldWaveform.size();
     double pulse_max = abs(oldWaveform[starting_ttick]-baseline);
     if(pulse_max<fPulseOscillationThreshold) return;
     double oscillation_amplitude = fOscillationTF1->Eval(pulse_max);
-    std::cout << " DB 3 " << std::endl;
-
     for(size_t i=starting_ttick; i<oldWaveform.size()-fOscillationOffset; i++){
-        std::cout << " DB 4 " << std::endl;
         double delta_time = (static_cast<double>(i)-static_cast<double>(starting_ttick))*fSamplingPeriod;
         double envelope = std::exp(-delta_time / fOscillationDampingConstant);
-        std::cout << " DB 5 " << std::endl;
         double phase    = 2.0 * M_PI * fOscillationFrequency * delta_time;
-        std::cout << " DB 6 " << std::endl;
         double new_value = static_cast<double>(newWaveform.Waveform()[i+fOscillationOffset]) + oscillation_amplitude * envelope * std::cos(phase+M_PI);
-        std::cout << " DB 7 " << std::endl;
         // Add some dither to avoid quantization effects
-        std::cout << " throwing random number " << fFlatGen.fire(1.0) << std::endl;
-        std::cout << " DB 8 " << std::endl;
-        double dither = fFlatGen.fire(1.0) - 0.5;
-        std::cout << " DB 9 " << std::endl;
+        std::cout <<  CLHEP::RandFlat::shoot(&fEngine,1.0) << std::endl;
+        double dither = CLHEP::RandFlat::shoot(&fEngine,1.0) - 0.5;
         newWaveform.Waveform()[i+fOscillationOffset] = std::round(new_value + dither);
-        std::cout << " DB 10 " << std::endl;
         if(envelope < 0.05) return;
     }
-    std::cout << " DB 4 " << std::endl;
 }
 
 DEFINE_ART_MODULE(opdet::PMTPulseOscillation)
