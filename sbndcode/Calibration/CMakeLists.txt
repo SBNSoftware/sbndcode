@@ -1,3 +1,4 @@
+add_subdirectory(configurations)
 add_subdirectory(OpReco)
 add_subdirectory(CRT)
 add_subdirectory(DQM)
