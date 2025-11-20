@@ -1,7 +1,7 @@
 #include "crt_decoder_sbnd.fcl"
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_channel_map_service_sbnd.fcl"
 #include "SBNDPTBDecoderDefaults.fcl"
 #include "spectdc_decoder_sbnd.fcl"
 #include "pmtdecoder.fcl"
@@ -11,7 +11,7 @@ process_name: Decoders
 services:
 {
   @table::sbnd_services
-  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTChannelMapService: @local::crt_channel_map_sbnd
   TFileService :        { fileName: "decoder_hist.root" }
 }
 

@@ -117,9 +117,9 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
 
   for(unsigned i = 0; i < bern_frag_meta->hits_in_fragment(); ++i)
     {
-      SBND::CRTChannelMapService::ModuleInfo_t module = fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5());
+      bool mac5_is_valid = fCRTChannelMapService->MAC5IsValid(bern_frag_meta->MAC5());
 
-      if(!module.valid)
+      if(!mac5_is_valid)
         {
           mf::LogInfo("CRTDecoder") << "===========================================================\n"
                                     << "ERROR: Cannot find simulation module for MAC5: "
@@ -132,16 +132,19 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
           continue;
         }
 
+      const unsigned int offline_module_id = fCRTChannelMapService->GetOfflineModuleIDFromMAC5(bern_frag_meta->MAC5());
+      const bool invert                    = fCRTChannelMapService->GetInversionFromOfflineModuleID(offline_module_id);
+
       const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
       // Fill ADC Array. If channel order is swapped in the GDML
       // compared to reality then we fill the array in reverse.
       std::array<uint16_t, 32> adc_array;
-      unsigned ii = module.channel_order_swapped ? 31 : 0;
+      unsigned ii = invert ? 31 : 0;
       for(auto const &adc : bern_hit->adc)
         {
           adc_array[ii] = adc;
 
-          if(module.channel_order_swapped)
+          if(invert)
             --ii;
           else
             ++ii;
@@ -159,7 +162,7 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
       if(cable_length > 1000 || cable_length < 0)
         throw std::runtime_error("Why is the cable length: " + std::to_string(cable_length) + "?");
 
-      feb_datas.emplace_back(module.offline_module_id,
+      feb_datas.emplace_back(offline_module_id,
                              bern_hit->flags,
                              bern_hit->ts0,
                              bern_hit->ts1,

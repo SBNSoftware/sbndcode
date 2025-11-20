@@ -1,6 +1,6 @@
 add_subdirectory(configurations)
 add_subdirectory(OpReco)
-add_subdirectory(CRT)
 add_subdirectory(DQM)
 add_subdirectory(PDSDatabaseInterface)
 add_subdirectory(TPCCalorimetry)
+add_subdirectory(CRTDatabaseInterface)
