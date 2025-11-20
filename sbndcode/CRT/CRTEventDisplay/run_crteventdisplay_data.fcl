@@ -1,17 +1,13 @@
 #include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
-#include "crtgeoservice_sbnd.fcl"
 
 process_name: CRTEventDisplay
 
 services:
 {
   @table::sbnd_services
-  CRTGeoService:        @local::crtgeoservice_data_sbnd
-  CRTChannelMapService: @local::crt_channel_map_standard
-  CRTCalibService:      @local::crt_calib_service
+  @table::crt_services_data_sbnd
 }
 
 source:
@@ -24,7 +20,7 @@ physics:
 {
   analyzers:
   {
-    crtevd:   @local::crteventdisplay_sbnd_data
+    crtevd: @local::crteventdisplay_sbnd_data
   }
 
   ana: [ crtevd ]
