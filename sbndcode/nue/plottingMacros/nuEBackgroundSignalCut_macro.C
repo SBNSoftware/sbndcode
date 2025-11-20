@@ -218,7 +218,7 @@ void styleDrawPur(purHist_struct hists,
     }
 
     hists.current->Draw("hist");
-    //hists.uboone->Draw("histsame");
+    hists.uboone->Draw("histsame");
     hists.nuE->Draw("histsame");
 
     hists.current->SetStats(0);
@@ -235,7 +235,7 @@ void styleDrawPur(purHist_struct hists,
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     legend->AddEntry(hists.current, "Pandora BDT SBND (without Refinement)", "f");
-    //legend->AddEntry(hists.uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(hists.nuE, "Pandora Deep Learning: SBND Nu+E Tune", "f");
 
     legend->SetTextSize(0.01);
@@ -245,7 +245,7 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
     if (writeMaxValues) {
-        std::ofstream outfile("purity_max_values_afterFVCuts.txt", std::ios::app);
+        std::ofstream outfile("purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt", std::ios::app);
         if (outfile.is_open()) {
             outfile << "================" << std::endl;
             outfile << filename << std::endl;
@@ -272,7 +272,7 @@ void styleDrawPur(purHist_struct hists,
             outfile << "================" << std::endl << std::endl;
             outfile.close();
         } else {
-            std::cerr << "Error: could not open purity_max_values.txt for writing." << std::endl;
+            std::cerr << "Error: could not open purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt for writing." << std::endl;
         }
     }
 }
@@ -987,8 +987,8 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     std::string filenamePur = std::string(filename) + "_pur.pdf";
     std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
     
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false, false, true, true);
-    styleDrawAll(effHists, 0, 1, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true, false, true, true);
+    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false, true, true, true);
+    styleDrawAll(effHists, 0, 1, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true, true, true, true);
     styleDrawPur(purHists, 999, 999, 999, 999, filenamePur.c_str(), legendLocation, drawLine, linePos);
     styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos, true);
 }
@@ -1008,7 +1008,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
     TwoDHistCanvas->SaveAs(filename);
 
-    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "");
+    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "s");
 
     TCanvas* ProfileCanvas = new TCanvas("profile_canvas", "TProfile from TH2D", 300, 50, 800, 600);
     ProfileCanvas->SetTickx();
@@ -1043,12 +1043,12 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
 
 void nuEBackgroundSignalCut_macro(){
-    std::ofstream clearFile("purity_max_values.txt", std::ios::trunc);
+    std::ofstream clearFile("purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt", std::ios::trunc);
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsFVCuts/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsFVCuts+CRUMBS+PFPCut+EThetaCut/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1428,6 +1428,42 @@ void nuEBackgroundSignalCut_macro(){
     double numEvents_DLNuECosmic = 0;
     double numEvents_DLNuEBNB = 0;
     double numEvents_DLNuENuE = 0;
+                
+    double numSignal_beforeCut_BDT = 0;
+    double numSignalFuzzy_beforeCut_BDT = 0;
+    double numBNB_beforeCut_BDT = 0;
+    double numBNBFuzzy_beforeCut_BDT = 0;
+    double numCosmic_beforeCut_BDT = 0;
+                
+    double numSignal_afterCut_BDT = 0;
+    double numSignalFuzzy_afterCut_BDT = 0;
+    double numBNB_afterCut_BDT = 0;
+    double numBNBFuzzy_afterCut_BDT = 0;
+    double numCosmic_afterCut_BDT = 0;
+                
+    double numSignal_beforeCut_DLUboone = 0;
+    double numSignalFuzzy_beforeCut_DLUboone = 0;
+    double numBNB_beforeCut_DLUboone = 0;
+    double numBNBFuzzy_beforeCut_DLUboone = 0;
+    double numCosmic_beforeCut_DLUboone = 0;
+                
+    double numSignal_afterCut_DLUboone = 0;
+    double numSignalFuzzy_afterCut_DLUboone = 0;
+    double numBNB_afterCut_DLUboone = 0;
+    double numBNBFuzzy_afterCut_DLUboone = 0;
+    double numCosmic_afterCut_DLUboone = 0;
+
+    double numSignal_beforeCut_DLNuE = 0;
+    double numSignalFuzzy_beforeCut_DLNuE = 0;
+    double numBNB_beforeCut_DLNuE = 0;
+    double numBNBFuzzy_beforeCut_DLNuE = 0;
+    double numCosmic_beforeCut_DLNuE = 0;
+
+    double numSignal_afterCut_DLNuE = 0;
+    double numSignalFuzzy_afterCut_DLNuE = 0;
+    double numBNB_afterCut_DLNuE = 0;
+    double numBNBFuzzy_afterCut_DLNuE = 0;
+    double numCosmic_afterCut_DLNuE = 0;
 
     for(Long64_t e = 0; e < numEntries; ++e){
         //printf("=============================================================================\n");
@@ -1498,19 +1534,38 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
 
-                double FVCut_xLow_BDT = -200;
+                double FVCut_xLow_BDT = -199;
                 double FVCut_xHigh_BDT = 199;
-                double FVCut_yLow_BDT = -200;
-                double FVCut_yHigh_BDT = 182;
+                double FVCut_yLow_BDT = -199;
+                double FVCut_yHigh_BDT = 185;
                 double FVCut_zLow_BDT = 5;
-                double FVCut_zHigh_BDT = 491;
+                double FVCut_zHigh_BDT = 490;
 
-                double FVCut_xLow_DLNuE = -199;
+                double FVCut_xLow_DLNuE = -198;
                 double FVCut_xHigh_DLNuE = 199;
-                double FVCut_yLow_DLNuE = -196;
-                double FVCut_yHigh_DLNuE = -152;
-                double FVCut_zLow_DLNuE = 5.1;
-                double FVCut_zHigh_DLNuE = 491;
+                double FVCut_yLow_DLNuE = -198;
+                double FVCut_yHigh_DLNuE = 184;
+                double FVCut_zLow_DLNuE = 6;
+                double FVCut_zHigh_DLNuE = 490;
+
+                double FVCut_xLow_DLUboone = -197;
+                double FVCut_xHigh_DLUboone = 194;
+                double FVCut_yLow_DLUboone = -199;
+                double FVCut_yHigh_DLUboone = 184;
+                double FVCut_zLow_DLUboone = 10;
+                double FVCut_zHigh_DLUboone = 491;
+               
+                double crumbsScoreCut_BDT = -0.08;
+                double crumbsScoreCut_DLUboone = -0.08;
+                double crumbsScoreCut_DLNuE = 0.08;
+                
+                double numPFPsCut_BDT = 1;
+                double numPFPsCut_DLUboone = 1;
+                double numPFPsCut_DLNuE = 1;
+                
+                double EThetaCut_BDT = 3.32;
+                double EThetaCut_DLUboone = 3.32;
+                double EThetaCut_DLNuE = 3.32;
 
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
@@ -1561,15 +1616,116 @@ void nuEBackgroundSignalCut_macro(){
                 }
                 
                 if(DLCurrent == 2){
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_BDT++;
+                
                     if (!(recoVX < FVCut_xHigh_BDT && recoVX > FVCut_xLow_BDT && recoVY < FVCut_yHigh_BDT && recoVY > FVCut_yLow_BDT && recoVZ > FVCut_zLow_BDT && recoVZ < FVCut_zHigh_BDT)){ 
                         std::cout << "BDT: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
+
+                    if(reco_sliceScore->at(slice) < crumbsScoreCut_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(numPFPsSlice > numPFPsCut_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_BDT++;
+                
                 } else if(DLCurrent == 5){
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLNuE++;
+                
                     if (!(recoVX < FVCut_xHigh_DLNuE && recoVX > FVCut_xLow_DLNuE && recoVY < FVCut_yHigh_DLNuE && recoVY > FVCut_yLow_DLNuE && recoVZ > FVCut_zLow_DLNuE && recoVZ < FVCut_zHigh_DLNuE)){ 
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
+                    
+                    if(reco_sliceScore->at(slice) < crumbsScoreCut_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(numPFPsSlice > numPFPsCut_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLNuE++;
+                
+                } else if(DLCurrent == 0){
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLUboone++;
+                
+                    if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(reco_sliceScore->at(slice) < crumbsScoreCut_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(numPFPsSlice > numPFPsCut_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                        if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLUboone++;
+                
                 }
 
                 // Filling Histograms
@@ -2735,114 +2891,114 @@ void nuEBackgroundSignalCut_macro(){
 
     styleDrawAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right, true, true, false, false, false, false, true, true);
     
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
-    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
 
-    styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true, false);
-    styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ETrue, 999, 999, 999, 999, (base_path + "ETrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ETrueDist, 999, 999, 999, 999, (base_path + "ETrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ThetaTrue, 999, 999, 999, 999, (base_path + "ThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
-    styleDrawAll(ThetaTrueDist, 999, 999, 999, 999, (base_path + "ThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
+    styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
+    styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ETrue, 999, 999, 999, 999, (base_path + "ETrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ETrueDist, 999, 999, 999, 999, (base_path + "ETrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ThetaTrue, 999, 999, 999, 999, (base_path + "ThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(ThetaTrueDist, 999, 999, 999, 999, (base_path + "ThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
 
-    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true, true);
-    styleDrawAll(deltaXDist, 999, 999, 999, 999, (base_path + "deltaX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true);
+    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaXDist, 999, 999, 999, 999, (base_path + "deltaX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
     styleDrawAll(deltaXDist, 0, 32000, 999, 999, (base_path + "deltaX_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaXDist, 0, 35000, 999, 999, (base_path + "deltaX_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaXDist, 0, 9000, 999, 999, (base_path + "deltaX_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaXDist, 0, 4000, 999, 999, (base_path + "deltaX_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     styleDrawBackSig(deltaX, 999, 999, 999, 999, (base_path + "deltaX_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
 
-    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true, true);
-    styleDrawAll(deltaYDist, 999, 999, 999, 999, (base_path + "deltaY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true);
-    styleDrawBackSig(deltaY, 999, 999, 999, 999, (base_path + "deltaY_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaYDist, 999, 999, 999, 999, (base_path + "deltaY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
+    styleDrawBackSig(deltaY, 999, 999, 999, 999, (base_path + "deltaY_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(deltaYDist, 0, 19000, 999, 999, (base_path + "deltaY_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaYDist, 0, 37000, 999, 999, (base_path + "deltaY_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaYDist, 0, 8000, 999, 999, (base_path + "deltaY_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaYDist, 0, 4000, 999, 999, (base_path + "deltaY_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     
-    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true, true);
-    styleDrawAll(deltaZDist, 999, 999, 999, 999, (base_path + "deltaZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true);
-    styleDrawBackSig(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaZDist, 999, 999, 999, 999, (base_path + "deltaZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
+    styleDrawBackSig(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(deltaZDist, 0, 20000, 999, 999, (base_path + "deltaZ_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaZDist, 0, 36000, 999, 999, (base_path + "deltaZ_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaZDist, 0, 9000, 999, 999, (base_path + "deltaZ_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaZDist, 0, 4000, 999, 999, (base_path + "deltaZ_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     
-    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true, true);
-    styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, true);
-    styleDrawBackSig(deltaR, 999, 999, 999, 999, (base_path + "deltaR_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
+    styleDrawBackSig(deltaR, 999, 999, 999, 999, (base_path + "deltaR_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     styleDrawAll(deltaRDist, 0, 25000, 999, 999, (base_path + "deltaR_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaRDist, 0, 69000, 999, 999, (base_path + "deltaR_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaRDist, 0, 13000, 999, 999, (base_path + "deltaR_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaRDist, 0, 5000, 999, 999, (base_path + "deltaR_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
 
-    styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoX, 999, 999, 999, 999, (base_path + "recoX_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
+    styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoX, 999, 999, 999, 999, (base_path + "recoX_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     efficiency(recoX, 0, 1, 999, 999, (base_path + "recoX_right").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(recoX, 0, 1, 999, 999, (base_path + "recoX_left").c_str(), "topLeft", nullptr, &right, 1);
-    styleDrawAll(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoXDist_low, 999, 999, 999, 999, (base_path + "recoX_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoXDist_high, 999, 999, 999, 999, (base_path + "recoX_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, false, true, true);
+    styleDrawAll(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoXDist_low, 999, 999, 999, 999, (base_path + "recoX_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoXDist_high, 999, 999, 999, 999, (base_path + "recoX_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
     
-    styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoYDist, 999, 999, 999, 999, (base_path + "recoY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoY, 999, 999, 999, 999, (base_path + "recoY_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
+    styleDrawAll(recoY, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoYDist, 999, 999, 999, 999, (base_path + "recoY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoY, 999, 999, 999, 999, (base_path + "recoY_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
     efficiency(recoY, 0, 1, 999, 999, (base_path + "recoY_right").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(recoY, 0, 1, 999, 999, (base_path + "recoY_left").c_str(), "topLeft", nullptr, &right, 1);
-    styleDrawAll(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoYDist_low, 999, 999, 999, 999, (base_path + "recoY_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoYDist_high, 999, 999, 999, 999, (base_path + "recoY_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, false, true, true);
+    styleDrawAll(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoYDist_low, 999, 999, 999, 999, (base_path + "recoY_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoYDist_high, 999, 999, 999, 999, (base_path + "recoY_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
     
-    styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoZ, 999, 999, 999, 999, (base_path + "recoZ_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoZ, 999, 999, 999, 999, (base_path + "recoZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
     efficiency(recoZ, 0, 1, 999, 999, (base_path + "recoZ_right").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(recoZ, 0, 1, 999, 999, (base_path + "recoZ_left").c_str(), "topLeft", nullptr, &right, 1);
-    styleDrawAll(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoZDist_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(recoZDist_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, false, true, true);
+    styleDrawAll(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoZDist_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(recoZDist_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
 
-    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true, false);
-    styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, true);
+    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
+    styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
 
-    styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
-    styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true, true);
-    styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, true);
-    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, false, true, true);
+    styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
 
     //Test
     //efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
@@ -2910,4 +3066,21 @@ void nuEBackgroundSignalCut_macro(){
     printf("Event Rates:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPerc_BDT, BNBPerc_BDT, NuEPerc_BDT);
 
     std::cout << "counter = " << counteraaaaaa << std::endl;
+
+    printf("\n______ Number of Events Left After Cuts ______\nBDT\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_BDT, numSignal_afterCut_BDT, numSignalFuzzy_beforeCut_BDT, numSignalFuzzy_afterCut_BDT, numBNB_beforeCut_BDT, numBNB_afterCut_BDT, numBNBFuzzy_beforeCut_BDT, numBNBFuzzy_afterCut_BDT, numCosmic_beforeCut_BDT, numCosmic_afterCut_BDT);
+    printf("\nDL Uboone\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_DLUboone, numSignal_afterCut_DLUboone, numSignalFuzzy_beforeCut_DLUboone, numSignalFuzzy_afterCut_DLUboone, numBNB_beforeCut_DLUboone, numBNB_afterCut_DLUboone, numBNBFuzzy_beforeCut_DLUboone, numBNBFuzzy_afterCut_DLUboone, numCosmic_beforeCut_DLUboone, numCosmic_afterCut_DLUboone);
+    printf("\nDL Nu+E\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_DLNuE, numSignal_afterCut_DLNuE, numSignalFuzzy_beforeCut_DLNuE, numSignalFuzzy_afterCut_DLNuE, numBNB_beforeCut_DLNuE, numBNB_afterCut_DLNuE, numBNBFuzzy_beforeCut_DLNuE, numBNBFuzzy_afterCut_DLNuE, numCosmic_beforeCut_DLNuE, numCosmic_afterCut_DLNuE);
+
+    double signalEff_BDT = (numSignal_afterCut_BDT / numSignal_beforeCut_BDT);
+    double signalPur_BDT = (numSignal_afterCut_BDT / (numSignal_afterCut_BDT + numSignalFuzzy_afterCut_BDT + numBNB_afterCut_BDT + numBNBFuzzy_afterCut_BDT + numCosmic_afterCut_BDT));
+
+    double signalEff_DLUboone = (numSignal_afterCut_DLUboone / numSignal_beforeCut_DLUboone);
+    double signalPur_DLUboone = (numSignal_afterCut_DLUboone / (numSignal_afterCut_DLUboone + numSignalFuzzy_afterCut_DLUboone + numBNB_afterCut_DLUboone + numBNBFuzzy_afterCut_DLUboone + numCosmic_afterCut_DLUboone));
+
+    double signalEff_DLNuE = (numSignal_afterCut_DLNuE / numSignal_beforeCut_DLNuE);
+    double signalPur_DLNuE = (numSignal_afterCut_DLNuE / (numSignal_afterCut_DLNuE + numSignalFuzzy_afterCut_DLNuE + numBNB_afterCut_DLNuE + numBNBFuzzy_afterCut_DLNuE + numCosmic_afterCut_DLNuE));
+
+    printf("\nBDT: Signal Eff = %f, Signal Pur = %f\n", signalEff_BDT, signalPur_BDT);
+    printf("DLUboone: Signal Eff = %f, Signal Pur = %f\n", signalEff_DLUboone, signalPur_DLUboone);
+    printf("DLNuE: Signal Eff = %f, Signal Pur = %f\n", signalEff_DLNuE, signalPur_DLNuE);
 }
