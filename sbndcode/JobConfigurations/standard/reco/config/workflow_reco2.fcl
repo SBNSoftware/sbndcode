@@ -30,6 +30,8 @@ sbnd_reco2_producers:{
     ### pandora
     pandora:             @local::sbnd_pandora
     pandoraTrack:        @local::sbnd_pandoraTrackCreation
+    blipPandoraCopy:     @local::sbnd_pandora
+    blipPandoraTrackCopy:@local::sbnd_pandoraTrackCreation
     pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
     pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
     pandoraCalo:         @local::sbnd_gnewcalomc
@@ -96,6 +98,8 @@ sbnd_reco2_producer_sequence: [
     rns
     , pandora
     , pandoraTrack
+    , blipPandoraCopy
+    , blipPandoraTrackCopy
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
@@ -200,7 +204,8 @@ sbnd_reco2_producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandor
 sbnd_reco2_producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
 sbnd_reco2_producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
-
+sbnd_reco2_producers.blipPandoraCopy.HitFinderModuleLabel:          "specialblipgaushit"
+sbnd_reco2_producers.blipPandoraTrackCopy.PFParticleLabel: "blipPandoraCopy"
 sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
     crtana:   @local::crtana_sbnd

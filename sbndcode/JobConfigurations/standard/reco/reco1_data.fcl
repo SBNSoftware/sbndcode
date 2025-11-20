@@ -1,9 +1,8 @@
+#include "drops_reco1.fcl"
 #include "wcsp_data_sbnd.fcl"
 #include "opdeconvolution_sbnd_data.fcl"
 #include "sbnd_ophitfinder_deco_data.fcl"
 #include "sbnd_flashfinder_deco_data.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
 #include "wfalign_sbnd_data.fcl"
 #include "standard_reco1_sbnd.fcl"
 
@@ -11,15 +10,13 @@ services:
 {
     @table::services
     @table::sbnd_data_services
-    CRTChannelMapService: @local::crt_channel_map_standard
-    CRTCalibService:      @local::crt_calib_service
-    CRTGeoService:        @local::crtgeoservice_data_sbnd
+    @table::crt_services_data_sbnd
 }
 
 physics.producers:
 {
     @table::physics.producers
-    sptpc2d:   @local::sbnd_wcls_sp_data
+    sptpc2d:   @local::sbnd_wcls_sp_data_bothrois
     crtstrips: @local::crtstriphitproducer_data_sbnd
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
@@ -31,10 +28,11 @@ physics.producers:
     opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_data
 }
 
-physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips, 
+physics.reco1: [sptpc2d, gaushit, specialblipgaushit, numberofhitsfilter, cluster3d, crtstrips, 
     crtclustering, crtspacepoints, crttracks, wfalign, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
 
-physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
+physics.producers.specialblipgaushit.CalDataModuleLabel: "sptpc2d:gauss"
