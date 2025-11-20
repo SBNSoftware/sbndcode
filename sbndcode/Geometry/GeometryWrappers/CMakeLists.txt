@@ -19,7 +19,6 @@ cet_build_plugin(CRTGeoService art::service
   nusimdata::SimulationBase
   sbndcode::CRTUtils
   sbndcode::ChannelMaps_CRT_CRTChannelMapService_service
-  sbndcode::Calibration_CRT_CalibService_CRTCalibService_service
 )
 
 install_headers()
