@@ -3,8 +3,6 @@
 #include "opdeconvolution_sbnd.fcl"
 #include "sbnd_ophitfinder_deco.fcl"
 #include "sbnd_flashfinder_deco.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
 #include "wfalign_sbnd_data.fcl"
 #include "standard_reco1_sbnd.fcl"
 
