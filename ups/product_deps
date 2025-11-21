@@ -326,6 +326,7 @@ end_qualifier_list
 ####################################
 table_fragment_begin
     # currently, XML pandora files are installed in 'scripts':
+    pathPrepend(GDK2NUFLUXXML, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/G4BNB/v1.1.0/GNuMIFlux.xml)
     pathPrepend(FW_SEARCH_PATH, ${SBNDCODE_DIR}/scripts)
     pathPrepend(FW_SEARCH_PATH, ${SBND_DATA_DIR}/CalibrationDatabase)
     pathPrepend(FW_SEARCH_PATH, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash)
