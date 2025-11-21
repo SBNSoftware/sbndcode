@@ -12,8 +12,8 @@ MultiPartVertex : {
     MultiMax     : 7
     MultiMin     : 2
     GammaBetaRange : [0.0, 3.0]
-    Revert       : 0
-    UseBoost     : 0
+    Revert       : false
+    UseBoost     : false
     ParticleParameter: {
         PDGCode      : [   [-11,11,-13,13], [111], [211,-211],   [2212],  [22]]
         MinMulti     : [         0,         0,          0,        0,       0]
