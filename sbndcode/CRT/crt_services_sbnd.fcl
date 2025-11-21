@@ -1,0 +1,17 @@
+#include "crt_geo_service_sbnd.fcl"
+#include "crt_channel_map_service_sbnd.fcl"
+#include "crt_calibration_database_service_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crt_services_sbnd:
+{
+  CRTGeoService:          @local::crt_geo_service_sbnd
+  CRTChannelMapService:   @local::crt_channel_map_sbnd
+  CRTCalibrationDatabase: @local::crt_calibration_database_service_sbnd
+}
+
+crt_services_data_sbnd: @local::crt_services_sbnd
+crt_services_data_sbnd.CRTGeoService: @local::crt_geo_service_data_sbnd
+
+END_PROLOG
