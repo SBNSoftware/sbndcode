@@ -59,11 +59,9 @@ sbndaq::MetricFilter::MetricFilter(fhicl::ParameterSet const& p)
   // More initializers here.
 {
   fmetric_module_labels = p.get<std::vector<std::string>>("metric_module_labels",{"pmtmetricproducer",
-                                                                                 "pmtmetricbnbzero",
-                                                                                 "pmtmetricbnblight",
-                                                                                 "pmtmetricoffbeamzero",
-                                                                                 "pmtmetricoffbeamlight",
-                                                                                 "pmtmetriccrossingmuon"});
+                                                                                  "pmtmetricbnb",
+                                                                                  "pmtmetricoffbeam",
+                                                                                  "pmtmetriccrossingmuon"});
   fmetric_instance_name = p.get<std::string>("metric_instance_name","");
   ftime_min = p.get<float>("time_min",0);
   ftime_max = p.get<float>("time_max",3);
