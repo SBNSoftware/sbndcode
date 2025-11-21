@@ -1,0 +1,16 @@
+# File:    calibration_database_TPC_TagSets_sbnd.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+# Run ranges
+## r1: SBND Full Run 1 with light trigger, run number 18250-18618
+
+## First one for 2025 Fall, only with etau tag
+TPC_CalibrationTags_Nov2025: {
+
+  tpc_elifetime_data: "v2r1"
+
+}
+
+END_PROLOG

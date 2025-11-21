@@ -1,8 +1,12 @@
 #include "crtrecoproducers_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
 #include "run_muontrack.fcl"
 
-services.CRTGeoService: @local::crtgeoservice_sbnd
+services:
+{
+  @table::services
+  @table::crt_services_sbnd
+}
 
 physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
 physics.producers.crtspacepoints: @local::crtspacepointproducer_sbnd
