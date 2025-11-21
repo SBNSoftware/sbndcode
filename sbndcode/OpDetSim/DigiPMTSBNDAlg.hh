@@ -184,6 +184,8 @@ namespace opdet {
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
+    std::vector<double> fAverageDataSER; // single photon pulse vector
+    double fAverageDataSPEAmplitude;
     std::vector<std::vector<std::vector<double>>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;

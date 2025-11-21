@@ -61,10 +61,10 @@ namespace opdet {
       // PMT calibration database service
     fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
     fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
-
     int NOpChannels = fWireReadout.NOpChannels();
     //Resize the SER vector to the number of channels
     fSinglePEWave_HD.resize(NOpChannels);
+
     //shape of single pulse
     if (fParams.PMTSinglePEmodel=="testbench") {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
@@ -89,17 +89,51 @@ namespace opdet {
       Pulse1PE(fSinglePEWave);
     }
     else if (fParams.PMTSinglePEmodel=="data"){
-      // Read the SER from the calibration database (channel independent)
+      //Build the average data PMT waveform for channels with uncalibrated SER
+      int dataSERSize;
+      // Retrieve the data SER vector size from the first calibrated channel in the database
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        if(fPMTCalibrationDatabaseService->getReconstructChannel(i)){
+          dataSERSize = fPMTCalibrationDatabaseService->getSER(i).size();
+          break;
+        }
+      }
+      fAverageDataSER.resize(dataSERSize);
+      fAverageDataSPEAmplitude = 0;
+      int nChannelsWithDataSER = 0;
       for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
         if(!fPMTCalibrationDatabaseService->getReconstructChannel(i)) continue;
-        fSinglePEWave = fPMTCalibrationDatabaseService->getSER(i);
-        double SPEAmplitude =  fPMTCalibrationDatabaseService->getSPEAmplitude(i);
-        double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
-        double SinglePENormalization = std::abs(SPEAmplitude/SPEPeakValue);
-        std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
-        if(fSinglePEWave.size()==0) continue;
-        if(fSinglePEWave.size()>0) pulsesize = fSinglePEWave.size();
-        fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fSinglePEWave);
+        for (size_t j = 0; j < fAverageDataSER.size() && j < fPMTCalibrationDatabaseService->getSER(i).size(); ++j) { fAverageDataSER[j] += fPMTCalibrationDatabaseService->getSER(i)[j]; }
+        fAverageDataSPEAmplitude += fPMTCalibrationDatabaseService->getSPEAmplitude(i);
+        nChannelsWithDataSER++;
+      }
+      std::transform(fAverageDataSER.begin(), fAverageDataSER.end(), fAverageDataSER.begin(), [nChannelsWithDataSER](double val) {return val / nChannelsWithDataSER;});
+      double PeakValue = *std::max_element(fAverageDataSER.begin(), fAverageDataSER.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+      fAverageDataSPEAmplitude = fAverageDataSPEAmplitude / nChannelsWithDataSER;
+      // Normalise the average data SER to the average SPE amplitude
+      double AverageDataPENormalization = std::abs(fAverageDataSPEAmplitude/PeakValue);
+      std::transform(fAverageDataSER.begin(), fAverageDataSER.end(), fAverageDataSER.begin(), [AverageDataPENormalization](double val) {return val * AverageDataPENormalization;});
+      // Read the SER from the calibration database (channel independent)
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        if(!fPMTCalibrationDatabaseService->getOnPMT(i)){
+          // PMT is OFF
+          continue;
+        }
+        else if( fPMTCalibrationDatabaseService->getOnPMT(i) && !fPMTCalibrationDatabaseService->getReconstructChannel(i)){
+          // PMT is ON but does not have a calibrated SER. These are only relevant for trigger emulation, not used in downstream reconstruciton
+          fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fAverageDataSER);
+        }
+        else{
+          // PMT is ON and has a calibrated SER
+          fSinglePEWave = fPMTCalibrationDatabaseService->getSER(i);
+          double SPEAmplitude =  fPMTCalibrationDatabaseService->getSPEAmplitude(i);
+          double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+          double SinglePENormalization = std::abs(SPEAmplitude/SPEPeakValue);
+          std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
+          if(fSinglePEWave.size()==0) continue;
+          if(fSinglePEWave.size()>0) pulsesize = fSinglePEWave.size();
+          fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fSinglePEWave);
+        }
       }
     }
     else{
@@ -129,7 +163,6 @@ namespace opdet {
       sp_noise.find_file(fParams.OpDetNoiseFile, fname_noise);
       noise_file = TFile::Open(fname_noise.c_str(), "READ");
     }
-
   } // end constructor
 
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){
@@ -491,8 +524,8 @@ namespace opdet {
 
 
   void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, int ch, double npe)
-  {
-    if(!fPMTCalibrationDatabaseService->getReconstructChannel(ch)) return;
+  {    
+    if(!fPMTCalibrationDatabaseService->getOnPMT(ch)) return;
     // time bin HD (double precision)
     // used to gert the time-shifted SER
     double time_bin_hd = fSampling*time;
