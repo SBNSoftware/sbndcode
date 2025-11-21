@@ -29,7 +29,7 @@ sbnd_digipmt_alg:
   
   #Sample noise from data
   UseDataNoise: true
-  OpDetNoiseFile: "PMTNoiseTemplate.root"
+  OpDetNoiseFile: "OpDetReco/PMTNoiseTemplate.root"
 
   # Dark counts
   PMTDarkNoiseRate:      1000.0     #in Hz
