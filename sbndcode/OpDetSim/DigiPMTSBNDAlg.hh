@@ -324,7 +324,7 @@ namespace opdet {
 
       fhicl::Atom<std::string> PMTsinglePEmodel {
         Name("PMTSinglePEmodel"),
-        Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
+        Comment("Model used for single PE response of PMT. Accepted strings are \"testbench\", \"data\", and \"ideal\"")
       };
 
       fhicl::Atom<std::string> pmtDataFile {
