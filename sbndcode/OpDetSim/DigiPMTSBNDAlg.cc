@@ -620,7 +620,7 @@ namespace opdet {
     int waveBins = wave.size();
     int currentSize = 0;
 
-    // Llenar el vector de ruido hasta igualar la longitud del waveform
+    // Fill noise vector until it matches the waveform length
     while (currentSize < waveBins) {
         int noiseWformIdx = static_cast<int>(fEngine->flat() * keylist.size());
         TH1 *noiseHist = (TH1*)keylist[noiseWformIdx]->ReadObj();
@@ -633,7 +633,7 @@ namespace opdet {
         delete noiseHist;
     }
 
-    // Agregar ruido al waveform
+    // Add noise to the waveform
     for (size_t i = 0; i < wave.size(); i++) {
         wave[i] += noise_wform[i];
     }
