@@ -1,5 +1,6 @@
 
 set(TOOL_LIBRARIES
+  larevt::CalibrationDBI_Providers
   lardataobj::RecoBase
   larreco::Calorimetry
   larcorealg::Geometry
@@ -13,8 +14,10 @@ set(TOOL_LIBRARIES
   cetlib_except::cetlib_except
   ROOT::Core
   ROOT::Hist
+  wda::wda
 )
 
+cet_build_plugin(NormalizeDriftSQLite art::tool LIBRARIES ${TOOL_LIBRARIES})
 cet_build_plugin(NormalizeYZ art::tool LIBRARIES ${TOOL_LIBRARIES})
 
 install_headers()

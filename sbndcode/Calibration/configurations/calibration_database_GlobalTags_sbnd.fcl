@@ -1,0 +1,11 @@
+#include "calibration_database_TPC_TagSets_sbnd.fcl"
+#include "calibration_database_PDS_TagSets_sbnd.fcl"
+
+BEGIN_PROLOG
+
+SBND_Calibration_GlobalTags: {
+  @table::TPC_CalibrationTags_Nov2025
+  @table::PDS_CalibrationTags_Nov2025
+}
+
+END_PROLOG
