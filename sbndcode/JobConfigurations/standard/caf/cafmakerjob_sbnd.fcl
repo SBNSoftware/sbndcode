@@ -159,6 +159,9 @@ physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 # Include 3D barycenter flahs matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
+# Include MC version of PMT Software Trigger
+physics.producers.cafmaker.SBNDSoftwareTriggerLabel: "pmtmetricmc"
+
 # Overwrite weight_functions label:
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 physics.producers.geant4weight.weight_functions: @local::physics.producers.geant4weight.weight_functions_reint
