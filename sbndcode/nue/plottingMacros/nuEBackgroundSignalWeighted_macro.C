@@ -245,7 +245,7 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
     if (writeMaxValues) {
-        std::ofstream outfile("purity_max_values.txt", std::ios::app);
+        std::ofstream outfile("purity_max_values_beforeCuts.txt", std::ios::app);
         if (outfile.is_open()) {
             outfile << "================" << std::endl;
             outfile << filename << std::endl;
@@ -272,7 +272,7 @@ void styleDrawPur(purHist_struct hists,
             outfile << "================" << std::endl << std::endl;
             outfile.close();
         } else {
-            std::cerr << "Error: could not open purity_max_values.txt for writing." << std::endl;
+            std::cerr << "Error: could not open purity_max_values_beforeCuts.txt for writing." << std::endl;
         }
     }
 }
@@ -1008,7 +1008,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
     TwoDHistCanvas->SaveAs(filename);
 
-    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "");
+    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "s");
 
     TCanvas* ProfileCanvas = new TCanvas("profile_canvas", "TProfile from TH2D", 300, 50, 800, 600);
     ProfileCanvas->SetTickx();
@@ -1043,7 +1043,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
 
 void nuEBackgroundSignalWeighted_macro(){
-    std::ofstream clearFile("purity_max_values.txt", std::ios::trunc);
+    std::ofstream clearFile("purity_max_values_beforeCuts.txt", std::ios::trunc);
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");

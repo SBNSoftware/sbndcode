@@ -245,7 +245,7 @@ void styleDrawPur(purHist_struct hists,
     hists.canvas->SaveAs(filename);
 
     if (writeMaxValues) {
-        std::ofstream outfile("purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt", std::ios::app);
+        std::ofstream outfile("purity_max_values_withCuts_FV+CRUMBS+EThetaHighest.txt", std::ios::app);
         if (outfile.is_open()) {
             outfile << "================" << std::endl;
             outfile << filename << std::endl;
@@ -272,7 +272,7 @@ void styleDrawPur(purHist_struct hists,
             outfile << "================" << std::endl << std::endl;
             outfile.close();
         } else {
-            std::cerr << "Error: could not open purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt for writing." << std::endl;
+            std::cerr << "Error: could not open purity_max_values_withCuts_FV+CRUMBS+EThetaHighest.txt for writing." << std::endl;
         }
     }
 }
@@ -1043,12 +1043,12 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
 
 void nuEBackgroundSignalCut_macro(){
-    std::ofstream clearFile("purity_max_values_afterFVCuts+CRUMBS+numPFPs_ETheta.txt", std::ios::trunc);
+    std::ofstream clearFile("purity_max_values_withCuts_FV+CRUMBS+EThetaHighest.txt", std::ios::trunc);
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsFVCuts+CRUMBS+PFPCut+EThetaCut/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_FV+CRUMBS+EThetaHighest/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1563,9 +1563,13 @@ void nuEBackgroundSignalCut_macro(){
                 double numPFPsCut_DLUboone = 1;
                 double numPFPsCut_DLNuE = 1;
                 
-                double EThetaCut_BDT = 3.32;
-                double EThetaCut_DLUboone = 3.32;
-                double EThetaCut_DLNuE = 3.32;
+                double EThetaCut_highestPFP_BDT = 2.3;
+                double EThetaCut_highestPFP_DLUboone = 2.81;
+                double EThetaCut_highestPFP_DLNuE = 1.79;
+                
+                double EThetaCut_sum_BDT = 3.32;
+                double EThetaCut_sum_DLUboone = 3.32;
+                double EThetaCut_sum_DLNuE = 3.32;
 
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
@@ -1616,11 +1620,11 @@ void nuEBackgroundSignalCut_macro(){
                 }
                 
                 if(DLCurrent == 2){
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_beforeCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_beforeCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_BDT += weight;
                 
                     if (!(recoVX < FVCut_xHigh_BDT && recoVX > FVCut_xLow_BDT && recoVY < FVCut_yHigh_BDT && recoVY > FVCut_yLow_BDT && recoVZ > FVCut_zLow_BDT && recoVZ < FVCut_zHigh_BDT)){ 
                         std::cout << "BDT: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
@@ -1633,31 +1637,33 @@ void nuEBackgroundSignalCut_macro(){
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
-
+                   
+                    /* 
                     if(numPFPsSlice > numPFPsCut_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
+                    */
 
-                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_BDT){
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
 
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_BDT++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_BDT++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_afterCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_afterCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_BDT += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_BDT += weight;
                 
                 } else if(DLCurrent == 5){
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_beforeCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_beforeCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLNuE += weight;
                 
                     if (!(recoVX < FVCut_xHigh_DLNuE && recoVX > FVCut_xLow_DLNuE && recoVY < FVCut_yHigh_DLNuE && recoVY > FVCut_yLow_DLNuE && recoVZ > FVCut_zLow_DLNuE && recoVZ < FVCut_zHigh_DLNuE)){ 
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
@@ -1671,30 +1677,33 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    /*
                     if(numPFPsSlice > numPFPsCut_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
+                    */
                     
-                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_DLNuE){
+                    
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
 
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLNuE++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLNuE++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_afterCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_afterCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLNuE += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLNuE += weight;
                 
                 } else if(DLCurrent == 0){
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_beforeCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_beforeCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_beforeCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_beforeCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_beforeCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_beforeCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_beforeCut_DLUboone += weight;
                 
                     if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
@@ -1708,23 +1717,25 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    /*
                     if(numPFPsSlice > numPFPsCut_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
+                    */
                     
-                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_DLUboone){
+                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(reco_sliceCategory->at(slice) == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
 
-                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 1) numSignal_afterCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 2) numSignalFuzzy_afterCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLUboone++;
-                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLUboone++;
+                    if(reco_sliceCategory->at(slice) == 0) numCosmic_afterCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 1 && signal == 1) numSignal_afterCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 2 && signal == 1) numSignalFuzzy_afterCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 3) numBNB_afterCut_DLUboone += weight;
+                    if(reco_sliceCategory->at(slice) == 4) numBNBFuzzy_afterCut_DLUboone += weight;
                 
                 }
 
@@ -3067,9 +3078,14 @@ void nuEBackgroundSignalCut_macro(){
 
     std::cout << "counter = " << counteraaaaaa << std::endl;
 
-    printf("\n______ Number of Events Left After Cuts ______\nBDT\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_BDT, numSignal_afterCut_BDT, numSignalFuzzy_beforeCut_BDT, numSignalFuzzy_afterCut_BDT, numBNB_beforeCut_BDT, numBNB_afterCut_BDT, numBNBFuzzy_beforeCut_BDT, numBNBFuzzy_afterCut_BDT, numCosmic_beforeCut_BDT, numCosmic_afterCut_BDT);
-    printf("\nDL Uboone\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_DLUboone, numSignal_afterCut_DLUboone, numSignalFuzzy_beforeCut_DLUboone, numSignalFuzzy_afterCut_DLUboone, numBNB_beforeCut_DLUboone, numBNB_afterCut_DLUboone, numBNBFuzzy_beforeCut_DLUboone, numBNBFuzzy_afterCut_DLUboone, numCosmic_beforeCut_DLUboone, numCosmic_afterCut_DLUboone);
-    printf("\nDL Nu+E\nSignal: Before = %f, After = %f\nSignal Fuzzy: Before = %f, After = %f\nBNB: Before = %f, After = %f\nBNB Fuzzy: Before = %f, After = %f\nCosmics: Before = %f, After = %f\n", numSignal_beforeCut_DLNuE, numSignal_afterCut_DLNuE, numSignalFuzzy_beforeCut_DLNuE, numSignalFuzzy_afterCut_DLNuE, numBNB_beforeCut_DLNuE, numBNB_afterCut_DLNuE, numBNBFuzzy_beforeCut_DLNuE, numBNBFuzzy_afterCut_DLNuE, numCosmic_beforeCut_DLNuE, numCosmic_afterCut_DLNuE);
+    //printf("\n______ Number of Events Left After Cuts ______\nBDT\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_BDT, numSignal_afterCut_BDT, (100*numSignal_beforeCut_BDT/numSignal_afterCut_BDT), numSignalFuzzy_beforeCut_BDT, numSignalFuzzy_afterCut_BDT, (100*numSignalFuzzy_beforeCut_BDT/numSignalFuzzy_afterCut_BDT), numBNB_beforeCut_BDT, numBNB_afterCut_BDT, (100*numBNB_beforeCut_BDT/numBNB_afterCut_BDT), numBNBFuzzy_beforeCut_BDT, numBNBFuzzy_afterCut_BDT, (100*numBNBFuzzy_beforeCut_BDT/numBNBFuzzy_afterCut_BDT), numCosmic_beforeCut_BDT, numCosmic_afterCut_BDT, (100*numCosmic_beforeCut_BDT/numCosmic_afterCut_BDT));
+    //printf("\nDL Uboone\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_DLUboone, numSignal_afterCut_DLUboone, (100*numSignal_beforeCut_DLUboone/numSignal_afterCut_DLUboone), numSignalFuzzy_beforeCut_DLUboone, numSignalFuzzy_afterCut_DLUboone, (100*numSignalFuzzy_beforeCut_DLUboone/numSignalFuzzy_afterCut_DLUboone), numBNB_beforeCut_DLUboone, numBNB_afterCut_DLUboone, (100*numBNB_beforeCut_DLUboone/numBNB_afterCut_DLUboone), numBNBFuzzy_beforeCut_DLUboone, numBNBFuzzy_afterCut_DLUboone, (100*numBNBFuzzy_beforeCut_DLUboone/numBNBFuzzy_afterCut_DLUboone), numCosmic_beforeCut_DLUboone, numCosmic_afterCut_DLUboone, (100*numCosmic_beforeCut_DLUboone/numCosmic_afterCut_DLUboone));
+    //printf("\nDL Nu+E\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_DLNuE, numSignal_afterCut_DLNuE, (100*numSignal_beforeCut_DLNuE/numSignal_afterCut_DLNuE), numSignalFuzzy_beforeCut_DLNuE, numSignalFuzzy_afterCut_DLNuE, (100*numSignalFuzzy_beforeCut_DLNuE/numSignalFuzzy_afterCut_DLNuE), numBNB_beforeCut_DLNuE, numBNB_afterCut_DLNuE, (100*numBNB_beforeCut_DLNuE/numBNB_afterCut_DLNuE), numBNBFuzzy_beforeCut_DLNuE, numBNBFuzzy_afterCut_DLNuE, (100*numBNBFuzzy_beforeCut_DLNuE/numBNBFuzzy_afterCut_DLNuE), numCosmic_beforeCut_DLNuE, numCosmic_afterCut_DLNuE, (100*numCosmic_beforeCut_DLNuE/numCosmic_afterCut_DLNuE));
+
+    printf("\n______ Number of Events Left After Cuts ______\nBDT\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_BDT, numSignal_afterCut_BDT, (100 * numSignal_afterCut_BDT / numSignal_beforeCut_BDT), numSignalFuzzy_beforeCut_BDT, numSignalFuzzy_afterCut_BDT, (100 * numSignalFuzzy_afterCut_BDT / numSignalFuzzy_beforeCut_BDT), numBNB_beforeCut_BDT, numBNB_afterCut_BDT, (100 * numBNB_afterCut_BDT / numBNB_beforeCut_BDT), numBNBFuzzy_beforeCut_BDT, numBNBFuzzy_afterCut_BDT, (100 * numBNBFuzzy_afterCut_BDT / numBNBFuzzy_beforeCut_BDT), numCosmic_beforeCut_BDT, numCosmic_afterCut_BDT, (100 * numCosmic_afterCut_BDT / numCosmic_beforeCut_BDT));
+    printf("\nDL Uboone\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_DLUboone, numSignal_afterCut_DLUboone, (100 * numSignal_afterCut_DLUboone / numSignal_beforeCut_DLUboone), numSignalFuzzy_beforeCut_DLUboone, numSignalFuzzy_afterCut_DLUboone, (100 * numSignalFuzzy_afterCut_DLUboone / numSignalFuzzy_beforeCut_DLUboone), numBNB_beforeCut_DLUboone, numBNB_afterCut_DLUboone, (100 * numBNB_afterCut_DLUboone / numBNB_beforeCut_DLUboone), numBNBFuzzy_beforeCut_DLUboone, numBNBFuzzy_afterCut_DLUboone, (100 * numBNBFuzzy_afterCut_DLUboone / numBNBFuzzy_beforeCut_DLUboone), numCosmic_beforeCut_DLUboone, numCosmic_afterCut_DLUboone, (100 * numCosmic_afterCut_DLUboone / numCosmic_beforeCut_DLUboone));
+    printf("\nDL Nu+E\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_DLNuE, numSignal_afterCut_DLNuE, (100 * numSignal_afterCut_DLNuE / numSignal_beforeCut_DLNuE), numSignalFuzzy_beforeCut_DLNuE, numSignalFuzzy_afterCut_DLNuE, (100 * numSignalFuzzy_afterCut_DLNuE / numSignalFuzzy_beforeCut_DLNuE), numBNB_beforeCut_DLNuE, numBNB_afterCut_DLNuE, (100 * numBNB_afterCut_DLNuE / numBNB_beforeCut_DLNuE), numBNBFuzzy_beforeCut_DLNuE, numBNBFuzzy_afterCut_DLNuE, (100 * numBNBFuzzy_afterCut_DLNuE / numBNBFuzzy_beforeCut_DLNuE), numCosmic_beforeCut_DLNuE, numCosmic_afterCut_DLNuE, (100 * numCosmic_afterCut_DLNuE / numCosmic_beforeCut_DLNuE));
+
 
     double signalEff_BDT = (numSignal_afterCut_BDT / numSignal_beforeCut_BDT);
     double signalPur_BDT = (numSignal_afterCut_BDT / (numSignal_afterCut_BDT + numSignalFuzzy_afterCut_BDT + numBNB_afterCut_BDT + numBNBFuzzy_afterCut_BDT + numCosmic_afterCut_BDT));

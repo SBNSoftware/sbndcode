@@ -91,19 +91,19 @@ void styleDrawAll(histGroup_struct hists,
     for (auto* hist : allHists)
         if (hist) hist->SetStats(0);
 
-    hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor(kViolet+1);
-    hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.currentSignal_signalfuzzy->SetLineColor(kOrange+7);
+    hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor(TColor::GetColor("#964a8b"));
+    hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.currentSignal_signalfuzzy->SetLineColor(TColor::GetColor("#e42536"));
     
-    hists.nuESignal_signal->SetLineWidth(2);                    hists.nuESignal_signal->SetLineColor(kBlue+1);
-    hists.nuESignal_signalfuzzy->SetLineWidth(2);               hists.nuESignal_signalfuzzy->SetLineColor(kGreen+3);
+    hists.nuESignal_signal->SetLineWidth(2);                    hists.nuESignal_signal->SetLineColor(TColor::GetColor("#964a8b"));
+    hists.nuESignal_signalfuzzy->SetLineWidth(2);               hists.nuESignal_signalfuzzy->SetLineColor(TColor::GetColor("#e42536"));
 
-    hists.currentSignalCosmics_signal->SetLineWidth(2);         hists.currentSignalCosmics_signal->SetLineColor(kViolet+6);
-    hists.currentSignalCosmics_signalfuzzy->SetLineWidth(2);    hists.currentSignalCosmics_signalfuzzy->SetLineColor(kOrange+6);
+    hists.currentSignalCosmics_signal->SetLineWidth(2);         hists.currentSignalCosmics_signal->SetLineColor(TColor::GetColor("#f89c20"));
+    hists.currentSignalCosmics_signalfuzzy->SetLineWidth(2);    hists.currentSignalCosmics_signalfuzzy->SetLineColor(TColor::GetColor("#5790fc"));
 
-    hists.nuESignalCosmics_signal->SetLineWidth(2);             hists.nuESignalCosmics_signal->SetLineColor(kBlue-7);
-    hists.nuESignalCosmics_signalfuzzy->SetLineWidth(2);        hists.nuESignalCosmics_signalfuzzy->SetLineColor(kGreen+1);
+    hists.nuESignalCosmics_signal->SetLineWidth(2);             hists.nuESignalCosmics_signal->SetLineColor(TColor::GetColor("#f89c20"));
+    hists.nuESignalCosmics_signalfuzzy->SetLineWidth(2);        hists.nuESignalCosmics_signalfuzzy->SetLineColor(TColor::GetColor("#5790fc"));
 
-    hists.currentSignalCosmics_cosmic->SetLineWidth(2);         hists.currentSignalCosmics_cosmic->SetLineColor(kPink+9);
+    hists.currentSignalCosmics_cosmic->SetLineWidth(2);         hists.currentSignalCosmics_cosmic->SetLineColor(kRed);
     hists.nuESignalCosmics_cosmic->SetLineWidth(2);             hists.nuESignalCosmics_cosmic->SetLineColor(kRed);
 
     if((ymin != 999) && (ymax != 999)){
@@ -425,7 +425,12 @@ void nuESignalContaminationWeighted_macro(){
     auto trackscoreHighestEnergyPFPDist = createHistGroup("trackscoreHighestEnergyPFPDist", "Trackscore of the PFP in the Slice with the Highest Energy (Not Weighted)", "Trackscore", 20, 0, 1);
     auto trackscoreAllPFPs = createHistGroup("trackscoreAllPFPs", "Trackscore of All PFPs in the Slice", "Trackscore", 20, 0, 1);
     auto trackscoreAllPFPsDist = createHistGroup("trackscoreAllPFPsDist", "Trackscore of All PFPs in the Slice (Not Weighted)", "Trackscore", 20, 0, 1);
-    
+   
+    auto highestEnergyPFPPurity = createHistGroup("highestEnergyPFPPurity", "Purity of the Highest Energy PFP in the Slice", "Purity", 20, 0, 1);
+    auto highestEnergyPFPPurityDist = createHistGroup("highestEnergyPFPPurityDist", "Purity of the Highest Energy PFP in the Slice (Not Weighted)", "Purity", 20, 0, 1);
+    auto highestEnergyPFPCompleteness = createHistGroup("highestEnergyPFPCompleteness", "Completeness of the Highest Energy PFP in the Slice", "Completeness", 20, 0, 1);
+    auto highestEnergyPFPCompletenessDist = createHistGroup("highestEnergyPFPCompletenessDist", "Completeness of the Highest Energy PFP in the Slice (Not Weighted)", "Completeness", 20, 0, 1);
+
     auto deltaTheta = createHistGroup("deltaTheta", "Angle Between the True Electron and the Highest Energy PFP in the Slice", "#Delta#theta (degrees)", 90, 0, 180);
     auto deltaThetaDist = createHistGroup("deltaThetaDist", "Angle Between the True Electron and the Highest Energy PFP in the Slice (Not Weighted)", "#Delta#theta (degrees)", 90, 0, 180);
     auto ERecoSumThetaReco = createHistGroup("ERecoSumThetaReco", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -576,7 +581,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignalCosmics_cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
-                        
+                           
+                            highestEnergyPFPPurity.currentSignalCosmics_cosmic->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.currentSignalCosmics_cosmic->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.currentSignalCosmics_cosmic->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.currentSignalCosmics_cosmic->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -606,6 +615,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.nuESignalCosmics_cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.nuESignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.nuESignalCosmics_cosmic->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.nuESignalCosmics_cosmic->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.nuESignalCosmics_cosmic->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.nuESignalCosmics_cosmic->Fill(highestEnergy_completeness);  
                         }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 1){
@@ -638,6 +652,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignalCosmics_signal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.currentSignalCosmics_signal->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.currentSignalCosmics_signal->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.currentSignalCosmics_signal->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.currentSignalCosmics_signal->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -667,6 +686,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.nuESignalCosmics_signal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.nuESignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.nuESignalCosmics_signal->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.nuESignalCosmics_signal->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.nuESignalCosmics_signal->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.nuESignalCosmics_signal->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 0 && DLCurrent == 2){
                         sliceCompleteness.currentSignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -696,6 +720,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignal_signal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.currentSignal_signal->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.currentSignal_signal->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.currentSignal_signal->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.currentSignal_signal->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 0 && DLCurrent == 5){
                         sliceCompleteness.nuESignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -725,6 +754,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.nuESignal_signal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.nuESignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.nuESignal_signal->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.nuESignal_signal->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.nuESignal_signal->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.nuESignal_signal->Fill(highestEnergy_completeness);  
                         }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 2){
@@ -756,6 +790,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignalCosmics_signalfuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -785,6 +824,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.nuESignalCosmics_signalfuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.nuESignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 0 && DLCurrent == 2){
                         sliceCompleteness.currentSignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -814,6 +858,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignal_signalfuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.currentSignal_signalfuzzy->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.currentSignal_signalfuzzy->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.currentSignal_signalfuzzy->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.currentSignal_signalfuzzy->Fill(highestEnergy_completeness);  
                         }
                     } else if(signal == 0 && DLCurrent == 5){
                         sliceCompleteness.nuESignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -843,6 +892,11 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.nuESignal_signalfuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.nuESignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            highestEnergyPFPPurity.nuESignal_signalfuzzy->Fill(highestEnergy_purity, weight);  
+                            highestEnergyPFPPurityDist.nuESignal_signalfuzzy->Fill(highestEnergy_purity);  
+                            highestEnergyPFPCompleteness.nuESignal_signalfuzzy->Fill(highestEnergy_completeness, weight);  
+                            highestEnergyPFPCompletenessDist.nuESignal_signalfuzzy->Fill(highestEnergy_completeness);  
                         }
                     } 
                 } 
@@ -850,21 +904,51 @@ void nuESignalContaminationWeighted_macro(){
         }
     }
 
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted.pdf").c_str(), "topLeft", true, true, false, true, true);
-    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist.pdf").c_str(), "topLeft", true, true, false, true, true);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted.pdf").c_str(), "topLeft", true, true, false, true, true);
-    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist.pdf").c_str(), "topLeft", true, true, false, true, true);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted.pdf").c_str(), "topRight", true, true, false, true, true);
-    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist.pdf").c_str(), "topRight", true, true, false, true, true);
-    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted.pdf").c_str(), "topRight", true, true, false, true, true);
-    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist.pdf").c_str(), "topRight", true, true, false, true, true);
-    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted.pdf").c_str(), "topRight", true, true, false, true, true);
-    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist.pdf").c_str(), "topRight", true, true, false, true, true);
+    // BDT Vertexing
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
 
-    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_weighted.pdf").c_str(), "topRight", true, false, false, true, true);
-    styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_dist.pdf").c_str(), "topRight", true, false, false, true, true);
-    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_weighted.pdf").c_str(), "topRight", true, false, false, true, true);
-    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_dist.pdf").c_str(), "topRight", true, false, false, true, true);
-    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_weighted.pdf").c_str(), "topRight", true, false, false, true, true);
-    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_dist.pdf").c_str(), "topRight", true, false, false, true, true);
+    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    
+    styleDrawAll(highestEnergyPFPPurity, 999, 999, 999, 999, (base_path + "highestEnergyPFPPurity_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(highestEnergyPFPPurityDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPPurity_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(highestEnergyPFPCompleteness, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(highestEnergyPFPCompletenessDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+
+    // DL Nu+E Train Vertexing
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+
+    styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    
+    styleDrawAll(highestEnergyPFPPurity, 999, 999, 999, 999, (base_path + "highestEnergyPFPPurity_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(highestEnergyPFPPurityDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPPurity_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(highestEnergyPFPCompleteness, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(highestEnergyPFPCompletenessDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
 }
