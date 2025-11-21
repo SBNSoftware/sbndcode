@@ -152,6 +152,7 @@ physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
 physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 physics.producers.cafmaker.TrackCaloLabel: "pandoraCaloData"
 physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
+physics.producers.cafmaker.TrackLikePidLabel: "pandoraLikePidData"
 
 # Include 3D barycenter flahs matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
