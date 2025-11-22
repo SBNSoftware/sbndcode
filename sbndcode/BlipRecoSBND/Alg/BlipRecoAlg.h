@@ -40,7 +40,7 @@
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
-
+#include "larcore/Geometry/WireReadout.h"
 
 // Microboone includes
 //#include "ubevt/Database/TPCEnergyCalib/TPCEnergyCalibService.h"
@@ -54,6 +54,7 @@
 
 // Blip-specific utils
 #include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
+#include "sbnobj/SBND/Blip/BlipDataTypes.h"
 
 // ROOT stuff
 #include "TH1D.h"
