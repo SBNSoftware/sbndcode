@@ -2,7 +2,11 @@
 
 BEGIN_PROLOG
 
+
 ####OpFlash finder for PMT deconvolved waveforms#####
+
+
+###### PMT IDEAL MC ######
 ###TPC0
 SBNDDecoSimpleFlashTPC0: @local::SBNDSimpleFlashTPC0
 SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 200
@@ -22,8 +26,57 @@ SBNDDecoSimpleFlashTPC1.ReadoutDelay: 0.135 //cable time delay in us
 SBNDDecoSimpleFlashTPC1.CorrectLightPropagation: true
 
 
+###### PMT DATA ######
+###TPC0
+SBNDDecoSimpleFlashTPC0_data: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC0_data.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC0_data.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC0_data.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC0_data.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC0_data.CorrectLightPropagation: true
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2.root"
+
+#TPC1
+SBNDDecoSimpleFlashTPC1_data: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC1_data.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC1_data.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC1_data.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC1_data.UseT0Tool: true
+SBNDDecoSimpleFlashTPC1_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC1_data.CorrectLightPropagation: true
 
 
+###### PMT REALISTIC MC ######
+###TPC0
+SBNDDecoSimpleFlashTPC0_realisticMC: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0_realisticMC.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC0_realisticMC.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC0_realisticMC.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC0_realisticMC.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC0_realisticMC.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC0_realisticMC.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0_realisticMC.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC0_realisticMC.CorrectLightPropagation: true
+
+#TPC1
+SBNDDecoSimpleFlashTPC1_realisticMC: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC1_realisticMC.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC1_realisticMC.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC1_realisticMC.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC1_realisticMC.UseT0Tool: true
+SBNDDecoSimpleFlashTPC1_realisticMC.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC1_realisticMC.CorrectLightPropagation: true
+SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2.root"
+
+
+###### XA IDEAL MC ######
 
 ####OpFlash finder for XArapucas deconvolved waveforms#####
 ###TPC0
