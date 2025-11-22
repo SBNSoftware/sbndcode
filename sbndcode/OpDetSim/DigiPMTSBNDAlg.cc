@@ -17,6 +17,8 @@ namespace opdet {
     , fPMTCoatedVISEff_tpc1(fParams.PMTCoatedVISEff_tpc1 / fParams.larProp->ScintPreScale())
     , fPMTUncoatedEff_tpc1(fParams.PMTUncoatedEff_tpc1/ fParams.larProp->ScintPreScale())
       //  , fSinglePEmodel(fParams.SinglePEmodel)
+    , fUseDataNoise(fParams.UseDataNoise)
+    , fOpDetNoiseFile(fParams.OpDetNoiseFile)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
     , fPoissonQGen(*fEngine)
@@ -45,7 +47,6 @@ namespace opdet {
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
     fSamplingPeriod = 1./fSampling;
-
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.PMTDataFile, fname);
@@ -56,54 +57,117 @@ namespace opdet {
     file->GetObject("timeTPB", timeTPB_p);
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
+      
+      // PMT calibration database service
+    fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+    fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
+    int NOpChannels = fWireReadout.NOpChannels();
+    //Resize the SER vector to the number of channels
+    fSinglePEWave_HD.resize(NOpChannels);
 
     //shape of single pulse
-    if (fParams.PMTSinglePEmodel) {
+    if (fParams.PMTSinglePEmodel=="testbench") {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
       file->GetObject("SinglePEVec_HD", SinglePEVec_p);
       fSinglePEWave = *SinglePEVec_p;
-
       // Prepare HD waveforms
-      fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
-      fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
-
-      pulsesize = fSinglePEWave_HD[0].size();
+      // Create the same SER for all channels
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fSinglePEWave);
+      }
+      pulsesize = fSinglePEWave_HD[0][0].size();
       mf::LogDebug("DigiPMTSBNDAlg")<<"HD wvfs size: "<<pulsesize;
     }
-    else {
+    else if (fParams.PMTSinglePEmodel=="ideal"){
       mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
       //shape of single pulse
       sigma1 = fParams.PMTRiseTime / (std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
       sigma2 = fParams.PMTFallTime / (std::sqrt(2.0) * (std::sqrt(-std::log(0.1)) - std::sqrt(-std::log(0.9))));
-
       pulsesize = (int)((6 * sigma2 + fParams.TransitTime) * fSampling);
       fSinglePEWave.resize(pulsesize);
       Pulse1PE(fSinglePEWave);
+    }
+    else if (fParams.PMTSinglePEmodel=="data"){
+      //Build the average data PMT waveform for channels with uncalibrated SER
+      int dataSERSize;
+      // Retrieve the data SER vector size from the first calibrated channel in the database
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        if(fPMTCalibrationDatabaseService->getReconstructChannel(i)){
+          dataSERSize = fPMTCalibrationDatabaseService->getSER(i).size();
+          break;
+        }
+      }
+      fAverageDataSER.resize(dataSERSize);
+      fAverageDataSPEAmplitude = 0;
+      int nChannelsWithDataSER = 0;
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        if(!fPMTCalibrationDatabaseService->getReconstructChannel(i)) continue;
+        for (size_t j = 0; j < fAverageDataSER.size() && j < fPMTCalibrationDatabaseService->getSER(i).size(); ++j) { fAverageDataSER[j] += fPMTCalibrationDatabaseService->getSER(i)[j]; }
+        fAverageDataSPEAmplitude += fPMTCalibrationDatabaseService->getSPEAmplitude(i);
+        nChannelsWithDataSER++;
+      }
+      std::transform(fAverageDataSER.begin(), fAverageDataSER.end(), fAverageDataSER.begin(), [nChannelsWithDataSER](double val) {return val / nChannelsWithDataSER;});
+      double PeakValue = *std::max_element(fAverageDataSER.begin(), fAverageDataSER.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+      fAverageDataSPEAmplitude = fAverageDataSPEAmplitude / nChannelsWithDataSER;
+      // Normalise the average data SER to the average SPE amplitude
+      double AverageDataPENormalization = std::abs(fAverageDataSPEAmplitude/PeakValue);
+      std::transform(fAverageDataSER.begin(), fAverageDataSER.end(), fAverageDataSER.begin(), [AverageDataPENormalization](double val) {return val * AverageDataPENormalization;});
+      // Read the SER from the calibration database (channel independent)
+      for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
+        if(!fPMTCalibrationDatabaseService->getOnPMT(i)){
+          // PMT is OFF
+          continue;
+        }
+        else if( fPMTCalibrationDatabaseService->getOnPMT(i) && !fPMTCalibrationDatabaseService->getReconstructChannel(i)){
+          // PMT is ON but does not have a calibrated SER. These are only relevant for trigger emulation, not used in downstream reconstruciton
+          fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fAverageDataSER);
+        }
+        else{
+          // PMT is ON and has a calibrated SER
+          fSinglePEWave = fPMTCalibrationDatabaseService->getSER(i);
+          double SPEAmplitude =  fPMTCalibrationDatabaseService->getSPEAmplitude(i);
+          double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+          double SinglePENormalization = std::abs(SPEAmplitude/SPEPeakValue);
+          std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
+          if(fSinglePEWave.size()==0) continue;
+          if(fSinglePEWave.size()>0) pulsesize = fSinglePEWave.size();
+          fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD[i], fSinglePEWave);
+        }
+      }
+    }
+    else{
+      throw cet::exception("DigiPMTSBNDAlg") << "Wrong PMTSinglePEmodel configuration: " << fParams.PMTSinglePEmodel << std::endl;
     }
 
     if(fParams.MakeGainFluctuations){
       fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsParams);
     }
     if(fParams.SimulateNonLinearity){
-      fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams);
-    }  
-
+      fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams); 
+      fPMTNonLinearityPtr->ConfigureNonLinearity();
+    }
     // infer pulse polarity from SER peak sign
     double minADC_SinglePE = *min_element(fSinglePEWave.begin(), fSinglePEWave.end());
     double maxADC_SinglePE = *max_element(fSinglePEWave.begin(), fSinglePEWave.end());
-    fPositivePolarity = std::abs(maxADC_SinglePE) > std::abs(minADC_SinglePE); 
-    
+    fPositivePolarity = std::abs(maxADC_SinglePE) > std::abs(minADC_SinglePE);
+ 
     // get ADC saturation value
     // currently assumes all dynamic range for PE (no overshoot)
     fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
-
-
     file->Close();
+    // Initialize noise file 
+    std::string fname_noise;
+    cet::search_path sp_noise("FW_SEARCH_PATH");
+    if(fParams.UseDataNoise){
+      sp_noise.find_file(fParams.OpDetNoiseFile, fname_noise);
+      noise_file = TFile::Open(fname_noise.c_str(), "READ");
+    }
   } // end constructor
 
-
-  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){}
+  DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){
+    if(fParams.UseDataNoise) noise_file->Close();
+  }
 
 
   void DigiPMTSBNDAlg::ConstructWaveformUncoatedPMT(
@@ -186,7 +250,7 @@ namespace opdet {
         //photon time in ns (w.r.t. the waveform start time a.k.a t_min)
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
 
-        // store the pgoton time if it's within the readout window
+        // store the photon time if it's within the readout window
         if(tphoton > 0 && tphoton < nPE_v.size()) nPE_v[(size_t)tphoton]++;
       }
     }
@@ -194,16 +258,22 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(ch, t, nPE_v) );
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, ch, nPE_v[t]);
         }
       }
     }
 
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.UseDataNoise) AddDataNoise(wave, ch);
+    else
+    {
+      if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave, ch);
+    }  
+
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave, ch);
+
     CreateSaturation(wave);
   }
 
@@ -265,17 +335,22 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(ch, t, nPE_v) );
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, ch, nPE_v[t]);
         }
       }
     }
 
     //Adding noise and saturation
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.UseDataNoise) AddDataNoise(wave, ch);
+    else
+    {
+      if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave, ch);
+    }
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave, ch);
+
     CreateSaturation(wave);
   }
 
@@ -320,16 +395,21 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(ch, t, nPE_v) );
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, ch, nPE_v[t]);
         }
       }
     }
     
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.UseDataNoise) AddDataNoise(wave, ch);
+    else
+    {
+      if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave, ch);
+    }
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave, ch);
+
     CreateSaturation(wave);
   }
 
@@ -398,17 +478,22 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(ch, t, nPE_v) );
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, ch, nPE_v[t]);
         }
       }
     }
 
     //Adding noise and saturation
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
+    if(fParams.UseDataNoise) AddDataNoise(wave, ch);
+    else
+    {
+      if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave, ch);
+    }
+    if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave, ch);
+    
     CreateSaturation(wave);
   }
 
@@ -438,8 +523,9 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, double npe)
-  {
+  void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, int ch, double npe)
+  {    
+    if(!fPMTCalibrationDatabaseService->getOnPMT(ch)) return;
     // time bin HD (double precision)
     // used to gert the time-shifted SER
     double time_bin_hd = fSampling*time;
@@ -454,11 +540,11 @@ namespace opdet {
     // simulate gain fluctuations
     double npe_anode = npe;
     if(fParams.MakeGainFluctuations)
-      npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(npe, fEngine);
-
+      //npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(npe, fEngine);
+      npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(ch, npe, fEngine);
     // add SER to the waveform
     std::transform(min_it, max_it,
-                     fSinglePEWave_HD[wvf_shift].begin(), min_it,
+                     fSinglePEWave_HD[ch][wvf_shift].begin(), min_it,
                      [npe_anode](auto a, auto b) { return a+npe_anode*b; });
   }
 
@@ -474,7 +560,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave)
+  void DigiPMTSBNDAlg::AddLineNoise(std::vector<double>& wave, int ch)
   {
     // TODO: after running the profiler I can see that this is where
     // most cycles are being used.  Potentially some improvement could
@@ -495,7 +581,66 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddDarkNoise(std::vector<double>& wave)
+  void DigiPMTSBNDAlg::AddDataNoise(std::vector<double>& wave, int ch)
+  {
+    // Get the noise waveform from data
+    // Get all the noise waveforms that correspond to the channel we are using
+    // Select a random noise waveform
+    // Compare the length of the noise and the simulation waveform:
+    // if the simulation length is larger then choose another random noise waveform to fill up the missing items
+
+    if (!noise_file || noise_file->IsZombie()) {
+        throw cet::exception("DigiPMTSBNDAlg") << " PMT Noise file could not be opened " << std::endl;
+        return;
+    }
+
+    TList *keys = noise_file->GetListOfKeys();
+    if (!keys || keys->IsEmpty()) {
+        throw cet::exception("DigiPMTSBNDAlg") << " PMT Noise file is empty " << std::endl;
+        return;
+    }
+
+    std::string opChannelName = "opchannel_" + std::to_string(ch) + "_pmt";
+    std::vector<TKey*> keylist;
+    TIter nextkey(keys);
+    TKey *key;
+    while ((key = (TKey*)nextkey())) {
+        std::string channel_name = key->GetName();
+        if (channel_name.find(opChannelName) != std::string::npos) {
+            keylist.push_back(key);
+        }
+    }
+
+    if (keylist.empty()) {
+        throw cet::exception("DigiPMTSBNDAlg") << " PMT Noise file has no data for channel " << ch << std::endl;
+        return;
+    }
+
+    std::vector<double> noise_wform;
+    int waveBins = wave.size();
+    int currentSize = 0;
+
+    // Fill noise vector until it matches the waveform length
+    while (currentSize < waveBins) {
+        int noiseWformIdx = static_cast<int>(fEngine->flat() * keylist.size());
+        TH1 *noiseHist = (TH1*)keylist[noiseWformIdx]->ReadObj();
+
+        for (int i = 1; i <= noiseHist->GetNbinsX(); i++) {
+            noise_wform.push_back(noiseHist->GetBinContent(i));
+            currentSize += 1;
+            if (currentSize >= waveBins) break;
+        }
+        delete noiseHist;
+    }
+
+    // Add noise to the waveform
+    for (size_t i = 0; i < wave.size(); i++) {
+        wave[i] += noise_wform[i];
+    }
+  }
+
+
+  void DigiPMTSBNDAlg::AddDarkNoise(std::vector<double>& wave, int ch)
   {
     double timeBin;
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
@@ -503,7 +648,7 @@ namespace opdet {
     double darkNoiseTime = fExponentialGen.fire(mean);
     while(darkNoiseTime < wave.size()) {
       timeBin = std::round(darkNoiseTime);
-      if(timeBin < wave.size()) {AddSPE(fSamplingPeriod*timeBin, wave);}
+      if(timeBin < wave.size()) {AddSPE(fSamplingPeriod*timeBin, wave, ch);}
       // Find next time to add dark noise
       darkNoiseTime += fExponentialGen.fire(mean);
     }
@@ -540,7 +685,6 @@ namespace opdet {
     }
     return t_min;
   }
-
 
   // TODO: this function is not being used anywhere! ~icaza
   double DigiPMTSBNDAlg::FindMinimumTimeLite(
@@ -605,6 +749,8 @@ namespace opdet {
     fBaseConfig.TTS                      = config.tts();
     fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
+    fBaseConfig.UseDataNoise             = config.UseDataNoise();
+    fBaseConfig.OpDetNoiseFile           = config.OpDetNoiseFile();
     fBaseConfig.MakeGainFluctuations = config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
     fBaseConfig.SimulateNonLinearity = config.nonLinearityParams.get_if_present(fBaseConfig.NonLinearityParams);
     config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);

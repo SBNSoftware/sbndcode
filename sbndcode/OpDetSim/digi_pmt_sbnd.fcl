@@ -15,8 +15,8 @@ sbnd_digipmt_alg:
   PMTChargeToADC:        -25.97     #charge to adc factor
 
   # Parameters for test bench SER simulation
-  PMTSinglePEmodel:        true     #false for ideal PMT response, true for test bench measured response
-  PMTDataFile:             "OpDetSim/digi_pmt_sbnd_v2int0.root"  # located in sbnd_data
+  PMTSinglePEmodel: "data"
+  PMTDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"  # located in sbnd_data
   
   # Time delays
   TTS:                   2.4        #Transit Time Spread in ns
@@ -27,25 +27,29 @@ sbnd_digipmt_alg:
   PMTBaseline:           14745      #in ADC
   PMTBaselineRMS:        2.6        #in ADC
   
+  #Sample noise from data
+  UseDataNoise: true
+  OpDetNoiseFile: "OpDetReco/PMTNoiseTemplate.root"
+
   # Dark counts
   PMTDarkNoiseRate:      1000.0     #in Hz
   
   # Detection efficiencies
-  PMTCoatedVUVEff_tpc0:       0.035      #PMT coated detection efficiency for direct (VUV) light
-  PMTCoatedVISEff_tpc0:       0.03882      #PMT coated detection efficiency for reflected (VIS) light
-  PMTUncoatedEff_tpc0:        0.03758     #PMT uncoated detection efficiency
+  PMTCoatedVUVEff_tpc0:       0.0315      #PMT coated detection efficiency for direct (VUV) light
+  PMTCoatedVISEff_tpc0:       0.03493    #PMT coated detection efficiency for reflected (VIS) light
+  PMTUncoatedEff_tpc0:        0.03382   #PMT uncoated detection efficiency
 
-  PMTCoatedVUVEff_tpc1:       0.03      #PMT coated detection efficiency for direct (VUV) light
-  PMTCoatedVISEff_tpc1:       0.03882      #PMT coated detection efficiency for reflected (VIS) light
-  PMTUncoatedEff_tpc1:        0.03758      #PMT uncoated detection efficiency
+  PMTCoatedVUVEff_tpc1:       0.027      #PMT coated detection efficiency for direct (VUV) light
+  PMTCoatedVISEff_tpc1:       0.03493      #PMT coated detection efficiency for reflected (VIS) light
+  PMTUncoatedEff_tpc1:        0.03382      #PMT uncoated detection efficiency
 
   # Simulate gain fluctuations
   # (comment-out to skip gain fluctuations simulation)
-  GainFluctuationsParams: @local::FirstDynodeGainFluctuations
+  GainFluctuationsParams: @local::GaussianGainFluctuations
   
   # Simulate PMT non linear response
   # (comment-out to skip non linearities simulation)
-  NonLinearityParams: @local::PMTNonLinearityTF1
+  NonLinearityParams: @local::PMTNonLinearityTF1ChannelByChannel
 
   HDOpticalWaveformParamsPMT: @local::IncludeHDOpticalWaveforms_PMT
 }
