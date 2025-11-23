@@ -1,25 +1,34 @@
+#include "opticalsimparameterisations_sbnd.fcl"
+#include "digi_pmt_sbnd.fcl"
+#include "calorimetry_sbnd.fcl"
+
 BEGIN_PROLOG
 
 TPCPMTBarycenterMatchProducer:
 {
     OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
     PandoraLabel:     "pandora"
-    CollectionOnly:   true
+    CollectionOnly:   false
     Verbose:          false
     FillMatchTree:    false
     Do3DMatching:     true
+    DistanceCandidateFlashes: 100
+    VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+    VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    OpDetVUVEff: @local::sbnd_digipmt_alg.PMTCoatedVUVEff_tpc1
+    OpDetVISEff:  @local::sbnd_digipmt_alg.PMTUncoatedEff_tpc1
+    CalAreaConst: @local::sbnd_calorimetryalgdata.CalAreaConstants
+    LightChargeRatioBounds: [0.25, 3]
+    XError: 12 // cm
+    YError: 23 // cm
+    ZError: 23 // cm
+    AngleError: 27 // deg
+    FlashVetoWindow: [-5,5] // ns
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
-TPCPMTBarycenterMatchProducerSCE:
-{
-    OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
-    PandoraLabel:     "pandoraSCE"
-    CollectionOnly:   true
-    Verbose:          false
-    FillMatchTree:    false
-    Do3DMatching:     true
-    module_type: "TPCPMTBarycenterMatchProducer"
-}
+TPCPMTBarycenterMatchProducerSCE: @local::TPCPMTBarycenterMatchProducer 
+TPCPMTBarycenterMatchProducerSCE.PandoraLabel: "pandoraSCE"
+
 
 END_PROLOG
