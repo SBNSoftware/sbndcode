@@ -1,0 +1,60 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "messages_sbnd.fcl"
+
+#include "wiremod_sbnd.fcl"
+
+process_name: WireModifier
+
+services:
+{
+    TFileService: { fileName: "wiremod.root" }
+    @table::sbnd_basic_services
+    DetectorClocksService:     @local::sbnd_detectorclocks
+    LArPropertiesService:      @local::sbnd_properties
+    DetectorPropertiesService: @local::sbnd_detproperties
+    ParticleInventoryService: @local::standard_particleinventoryservice
+    BackTrackerService: @local::standard_backtrackerservice
+    message: @local::sbnd_message_services
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC:DetSim"
+
+source:
+{
+    module_type: RootInput
+}
+
+
+outputs:
+{
+    out1:
+    {
+        module_type: RootOutput
+        fileName: "wiremod_out.root"
+        outputCommands: [ 
+            "keep *_*_*_*",
+            "drop *recob::Wire*_simtpc2d_*_*",
+            "drop *recob::Wire*_gaushit_*_*",
+            "drop *recob::Hit*_gaushit_*_Reco1"
+        ]
+    }
+}
+
+
+physics:
+{
+    producers:
+    {
+        wiremod: @local::wiremod_sbnd
+    }
+
+    wiremod:       [ wiremod ]
+    trigger_paths: [ wiremod ]
+    
+    stream1: [ out1 ]
+    end_paths: [ stream1 ]
+}
+

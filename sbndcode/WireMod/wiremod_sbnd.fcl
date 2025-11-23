@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+wiremod_sbnd:
+{
+    HitLabel: "gaushit"
+    WireLabel: "simtpc2d:gauss:DetSim"
+    SimChannelLabel: "simtpc2d:simpleSC:DetSim"
+    MCPartAssnLabel: "gaushitTruthMatch"
+    WireAssnLabel: "gaushit"
+    SplineFileXTXW_Q: "/exp/sbnd/app/users/twester/analysis/wiremod_local/splines/splines_x_tpc_calib.root"
+    SplineFileXTXW_W: "/exp/sbnd/app/users/twester/analysis/wiremod_local/splines/splines_x_tpc_calib.root"
+    SplineFileYZ_Q: "/exp/sbnd/app/users/twester/analysis/wiremod_local/splines/splines_x_tpc_calib.root"
+    SplineFileYZ_W: "/exp/sbnd/app/users/twester/analysis/wiremod_local/splines/splines_x_tpc_calib.root"
+    MaxThetaXW: 75
+    module_type: "WireModifier"
+}
+
+END_PROLOG
