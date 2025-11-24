@@ -67,9 +67,9 @@ public:
   void GetTDCTimestamps(const art::Event &e);
   void GetPTBTimestamps(const art::Event &e);
   void FindETRIGs();
-  uint64_t DecideGlobalFrame();
-  void DefineTDCFrame(const uint64_t &global_frame_ts);
-  void DefinePTBFrame(const uint64_t &global_frame_ts);
+  uint64_t DecideGlobalEtrigTimestamp();
+  void DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts);
+  void DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts);
 
 private:
 
@@ -234,9 +234,9 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   GetPTBTimestamps(e);
   FindETRIGs();
 
-  uint64_t global_frame_ts = DecideGlobalFrame();
-  DefineTDCFrame(global_frame_ts);
-  DefinePTBFrame(global_frame_ts);
+  uint64_t global_etrig_ts = DecideGlobalEtrigTimestamp();
+  DecideRelevantTDCTimestamps(global_etrig_ts);
+  DecideRelevantPTBTimestamps(global_etrig_ts);
 
   //-----------------------Pick default frame-----------------------//
   // The follow picks which frame to apply at downstream stage and store it as frame_default, based on the stream
@@ -254,163 +254,107 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   //    + MC: t = 0 = first proton in spill
   //    + Data: t = 0 = abitrary. All subsystem electronics time is reference to the last PPS
     
-  if (_isBeam){
+  //Frame CRT T1
+  if(_isBeam || _isOffbeam)
+    {
+      if(_tdc_crtt1_ts != kInvalidTimestamp)
+	{
+	  _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
+	  _timing_type_crtt1    = kSPECTDCType;
+	  _timing_channel_crtt1 = 0;
+	}
+      else if(_hlt_crtt1_ts != kInvalidTimestamp)
+	{
+	  _frame_crtt1          = _hlt_crtt1_ts;
+	  _timing_type_crtt1    = kPTBHLTType;
+	  _timing_channel_crtt1 = _hlt_crtt1;
+	}
+      else
+	{
+	  _frame_crtt1          = 0;
+	  _timing_type_crtt1    = kNoShiftType;
+	  _timing_channel_crtt1 = kInvalidChannel;
+	}
 
-    //Frame CRT T1
-    if(_tdc_crtt1_ts != kInvalidTimestamp){
-      _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
-      _timing_type_crtt1 = 0; //SPECTDC
-      _timing_channel_crtt1 = 0;
-    }
-    else if(_hlt_crtt1_ts != kInvalidTimestamp) {
-      _frame_crtt1 = _hlt_crtt1_ts;
-      _timing_type_crtt1 = 1; //PTB HLT
-      _timing_channel_crtt1 = _hlt_crtt1;
-    }
-    else{
-      _frame_crtt1 = kInvalidTimestamp;
-      _timing_type_crtt1 = 2;
-      _timing_channel_crtt1 = kInvalidChannel;
-    }
-
-    //Frame Beam Gate
-    if(_tdc_rwm_ts != kInvalidTimestamp){
-      _frame_gate = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
-      _timing_type_gate = 0; //SPECTDC
-      _timing_channel_gate = 2;
-    }
-    else if(_hlt_gate_ts != kInvalidTimestamp){
-      _frame_gate = _hlt_gate_ts;
-      _timing_type_gate = 1; //PTB HLT
-      _timing_channel_gate = _hlt_gate;
-    }else{
-      _frame_gate = kInvalidTimestamp;
-      _timing_type_gate = 2;
-      _timing_channel_gate = kInvalidChannel;
+      //Frame Beam Gate
+      if(_isBeam && _tdc_rwm_ts != kInvalidTimestamp) // TODO: For Offbeam, I think HLT Gate is recorded in TDC as FTRIG and can be found
+	{
+	  _frame_gate          = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
+	  _timing_type_gate    = kSPECTDCType;
+	  _timing_channel_gate = 2;
+	}
+      else if(_hlt_gate_ts != kInvalidTimestamp)
+	{
+	  _frame_gate          = _hlt_gate_ts;
+	  _timing_type_gate    = kPTBHLTType;
+	  _timing_channel_gate = _hlt_gate;
+	}
+      else
+	{
+	  _frame_gate          = 0;
+	  _timing_type_gate    = kNoShiftType;
+	  _timing_channel_gate = kInvalidChannel;
+	}
     }
 
-    //Frame ETRIG
-    if(_tdc_etrig_ts != kInvalidTimestamp){
-      _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
-      _timing_type_etrig = 0; //SPECTDC
+  //Frame ETRIG
+  if(_tdc_etrig_ts != kInvalidTimestamp)
+    {
+      _frame_etrig          = _tdc_etrig_ts + fShiftTDC2PTB;
+      _timing_type_etrig    = kSPECTDCType;
       _timing_channel_etrig = 4;
     }
-    else if(_hlt_etrig_ts != kInvalidTimestamp){
-      _frame_etrig = _hlt_etrig_ts;
-      _timing_type_etrig = 1; //PTB HLT
+  else if(_hlt_etrig_ts != kInvalidTimestamp)
+    {
+      _frame_etrig          = _hlt_etrig_ts;
+      _timing_type_etrig    = kPTBHLTType;
       _timing_channel_etrig = _hlt_etrig;
     }
-    else {
-      _frame_etrig = kInvalidTimestamp;
-      _timing_type_etrig = 2;
+  else
+    {
+      _frame_etrig          = 0;
+      _timing_type_etrig    = kNoShiftType;
       _timing_channel_etrig = kInvalidChannel;
     }
 
-    //Pick default stream -- beam gate
-    _frame_default = _frame_gate;
-    _timing_type_default = _timing_type_gate;
-    _timing_channel_default = _timing_channel_gate;
-  }
-  else if (_isOffbeam){
-
-    //Frame CRT T1
-    if(_tdc_crtt1_ts != kInvalidTimestamp){
-      _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
-      _timing_type_crtt1 = 0; //SPECTDC
-      _timing_channel_crtt1 = 0;
+  if(_isBeam || _isOffbeam)
+    {
+      //Pick default stream -- beam gate
+      _frame_default          = _frame_gate;
+      _timing_type_default    = _timing_type_gate;
+      _timing_channel_default = _timing_channel_gate;
     }
-    else if(_hlt_crtt1_ts != kInvalidTimestamp) {
-      _frame_crtt1 = _hlt_crtt1_ts;
-      _timing_type_crtt1 = 1; //PTB HLT
-      _timing_channel_crtt1 = _hlt_crtt1;
-    }
-    else{
-      _frame_crtt1 = kInvalidTimestamp;
-      _timing_type_crtt1 = 2;
-      _timing_channel_crtt1 = kInvalidChannel;
+  else if (_isXmuon)
+    {
+      //Pick default stream -- ETRIG
+      _frame_default        = _frame_etrig;
+      _timing_type_default  = _timing_type_etrig;
+      _timing_channel_etrig = _timing_channel_etrig;
     }
 
-    //Frame Gate -- TODO: I think HLT Gate is recorded in TDC as FTRIG and can be found
-    if(_hlt_gate_ts != kInvalidTimestamp) {
-      _frame_gate = _hlt_gate_ts; // TODO: + fShiftData2MC;
-      _timing_type_gate = 1; //PTB HLT
-      _timing_channel_gate = _hlt_gate;
+  if (fDebugFrame)
+    {
+      std::cout << "--------------------------------------" << std::endl;
+      std::cout << "Frame Shift Results:" << std::endl;
+      std::cout << "Frame CRT T1 type " << _timing_type_crtt1 <<", channel " << _timing_channel_crtt1 << ": "
+		<< PrintFormatTimestamp(_frame_crtt1) << std::endl;
+      std::cout << "Frame Beam Gate  type " << _timing_type_gate <<", channel " << _timing_channel_gate << ": "
+		<< PrintFormatTimestamp(_frame_gate) << std::endl;
+      std::cout << "Frame ETRIG type " << _timing_type_etrig <<", channel " << _timing_channel_etrig << ": "
+		<< PrintFormatTimestamp(_frame_etrig) << std::endl;
+      std::cout << "Default Frame type " << _timing_type_default <<", channel " << _timing_channel_default << ": "
+		<< PrintFormatTimestamp(_frame_default) << std::endl;
+      std::cout << "--------------------------------------" << std::endl;
     }
-    else {
-      _frame_gate = kInvalidTimestamp;
-      _timing_type_gate = 2;
-      _timing_channel_gate = kInvalidChannel;
-    }
-
-    //Frame ETRIG
-    if(_tdc_etrig_ts != kInvalidTimestamp) {
-      _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
-      _timing_type_etrig = 0; //SPECTDC
-      _timing_channel_etrig = 4;
-    }
-    else if(_hlt_etrig_ts !=0) {
-      _frame_etrig = _hlt_etrig_ts;
-      _timing_type_etrig = 1; //PTB HLT
-      _timing_channel_etrig = _hlt_etrig;
-    }
-    else {
-      _frame_etrig = kInvalidTimestamp;
-      _timing_type_etrig = 2;
-      _timing_channel_etrig = kInvalidChannel;
-    }
-
-    //Pick default stream -- beam gate
-    _frame_default = _frame_gate;
-    _timing_type_default = _timing_type_gate;
-    _timing_channel_default = _timing_channel_gate;
-  }
-  else if (_isXmuon){
-
-    //Frame ETRIG
-    if(_tdc_etrig_ts != kInvalidTimestamp) {
-      _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
-      _timing_type_etrig = 0; //SPECTDC
-      _timing_channel_etrig = 4;
-    }
-    else if(_hlt_etrig_ts != kInvalidTimestamp) {
-      _frame_etrig = _hlt_etrig_ts;
-      _timing_type_etrig = 1; //PTB HLT
-      _timing_channel_etrig = _hlt_etrig;
-    }
-    else {
-      _frame_etrig = kInvalidTimestamp;
-      _timing_type_etrig = 2;
-      _timing_channel_etrig = kInvalidChannel;
-    }
-
-    //Pick default stream -- ETRIG
-    _frame_default = _frame_etrig;
-    _timing_type_default = _timing_type_etrig;
-    _timing_channel_etrig = _timing_channel_etrig;
-  }
-
-  if (fDebugFrame){
-    std::cout << "--------------------------------------" << std::endl;
-    std::cout << "Frame Shift Results:" << std::endl;
-    std::cout << "Frame CRT T1 type " << _timing_type_crtt1 <<", channel " << _timing_channel_crtt1 << ": "
-	      << PrintFormatTimestamp(_frame_crtt1) << std::endl;
-    std::cout << "Frame Beam Gate  type " << _timing_type_gate <<", channel " << _timing_channel_gate << ": "
-	      << PrintFormatTimestamp(_frame_gate) << std::endl;
-    std::cout << "Frame ETRIG type " << _timing_type_etrig <<", channel " << _timing_channel_etrig << ": "
-	      << PrintFormatTimestamp(_frame_etrig) << std::endl;
-    std::cout << "Default Frame type " << _timing_type_default <<", channel " << _timing_channel_default << ": "
-	      << PrintFormatTimestamp(_frame_default) << std::endl;
-    std::cout << "--------------------------------------" << std::endl;
-  }
-  
 
   //Put product in event
-  std::unique_ptr< FrameShiftInfo > newFrameShiftInfo(new FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
-                                                                                      _frame_gate, _timing_type_gate, _timing_channel_gate,
-                                                                                      _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
-                                                                                      _frame_default, _timing_type_default, _timing_channel_default));
+  std::unique_ptr<FrameShiftInfo> newFrameShiftInfo(new FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
+								       _frame_gate, _timing_type_gate, _timing_channel_gate,
+								       _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
+								       _frame_default, _timing_type_default, _timing_channel_default));
 
-  std::unique_ptr< TimingInfo > newTimingInfo(new TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts, _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
+  std::unique_ptr<TimingInfo> newTimingInfo(new TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts,
+							   _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
 
   e.put(std::move(newTimingInfo));
   e.put(std::move(newFrameShiftInfo));
@@ -622,18 +566,18 @@ void sbnd::timing::FrameShift::FindETRIGs()
     }
 }
 
-uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
+uint64_t sbnd::timing::FrameShift::DecideGlobalEtrigTimestamp()
 {
   //Decide which global frame to use as reference
   // Prioritise TDC ETRIG then PTB ETRIG then the raw header.
-  uint64_t global_frame_ts = kInvalidTimestamp;
+  uint64_t global_etrig_ts = kInvalidTimestamp;
 
   if (_tdc_etrig_ts != kInvalidTimestamp)
-    global_frame_ts = _tdc_etrig_ts;
+    global_etrig_ts = _tdc_etrig_ts;
   else if (_hlt_etrig_ts != kInvalidTimestamp)
-    global_frame_ts = _hlt_etrig_ts;
+    global_etrig_ts = _hlt_etrig_ts;
   else
-    global_frame_ts = _raw_ts;
+    global_etrig_ts = _raw_ts;
 
   if (fDebugFrame)
     {
@@ -645,25 +589,25 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
       else
 	std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
 
-      std::cout << "Global Frame Timestamp: " << PrintFormatTimestamp(global_frame_ts) << std::endl;
+      std::cout << "Global Frame Timestamp: " << PrintFormatTimestamp(global_etrig_ts) << std::endl;
     }
 
-  return global_frame_ts;
+  return global_etrig_ts;
 }
 
-void sbnd::timing::FrameShift::DefineTDCFrame(const uint64_t &global_frame_ts)
+void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts)
 {
   // ch0: CRT T1
   if (_tdc_ch0.size() != 0)
-    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame_ts);
+    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_etrig_ts);
 
   // ch1: BES
   if (_tdc_ch1.size() != 0)
-    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame_ts);
+    _tdc_bes_ts = FindClosest(_tdc_ch1, global_etrig_ts);
 
   // ch2: RWM
   if (_tdc_ch2.size() != 0)
-    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame_ts);
+    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_etrig_ts);
 
   if (fDebugTdc)
     {
@@ -676,7 +620,7 @@ void sbnd::timing::FrameShift::DefineTDCFrame(const uint64_t &global_frame_ts)
     }
 }
 
-void sbnd::timing::FrameShift::DefinePTBFrame(const uint64_t &global_frame_ts)
+void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts)
 {
   //Check which Gate/CRT T1 HLT to use based on ETRIG HLT
   //Order to check: Beam -> Offbeam -> Xmuon
