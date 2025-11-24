@@ -169,6 +169,8 @@ private:
   TTree *fTree;
   art::ServiceHandle<art::TFileService> tfs;
   int _run, _subrun, _event;
+
+  static constexpr uint64_t kSecondInNanoseconds = static_cast<uint64_t>(1e9);
 };
 
 
@@ -229,38 +231,38 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   GetPTBTimestamps(e);
   FindETRIGs();
 
-  uint64_t global_frame = DecideGlobalFrame();
+  uint64_t global_frame_ts = DecideGlobalFrame();
 
   //---------------------------TDC Frame-----------------------------//
   // ch0: CRT T1
   if (_tdc_ch0.size() != 0)
-    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame);
+    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame_ts);
 
   // ch1: BES
   if (_tdc_ch1.size() != 0)
-    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame);
+    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame_ts);
 
   // ch2: RWM
   if (_tdc_ch2.size() != 0)
-    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame);
+    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame_ts);
 
   if (fDebugTdc){
     std::cout << "----------------------------------------------------" << std::endl;
     std::cout << "TDC Channel 0 (CRTT1) Timestamp: " 
-                      << " (s) = " << _tdc_crtt1_ts/uint64_t(1e9)
-                      << ", (ns) = " << _tdc_crtt1_ts%uint64_t(1e9) 
+                      << " (s) = " << _tdc_crtt1_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _tdc_crtt1_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "TDC Channel 1 (BES) Timestamp: "
-                      << " (s) = " << _tdc_bes_ts/uint64_t(1e9)
-                      << ", (ns) = " << _tdc_bes_ts%uint64_t(1e9) 
+                      << " (s) = " << _tdc_bes_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _tdc_bes_ts%kSecondInNanoseconds
                       << std::endl;       
     std::cout << "TDC Channel 2 (RWM) Timestamp: "
-                      << " (s) = " << _tdc_rwm_ts/uint64_t(1e9)
-                      << ", (ns) = " << _tdc_rwm_ts%uint64_t(1e9) 
+                      << " (s) = " << _tdc_rwm_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _tdc_rwm_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "TDC Channel 4 (ETRIG) Timestamp: "
-                      << " (s) = " << _tdc_etrig_ts/uint64_t(1e9)
-                      << ", (ns) = " << _tdc_etrig_ts%uint64_t(1e9)
+                      << " (s) = " << _tdc_etrig_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _tdc_etrig_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "----------------------------------------------------" << std::endl;
   } 
@@ -318,18 +320,18 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
     if (_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl; 
     std::cout << "HLT ETRIG = " << _hlt_etrig
                       << ", Timestamp: "
-                      << " (s) = " << _hlt_etrig_ts/uint64_t(1e9)
-                      << ", (ns) = " << _hlt_etrig_ts%uint64_t(1e9) 
+                      << " (s) = " << _hlt_etrig_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _hlt_etrig_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "HLT Gate = " << _hlt_gate
                       << ", Timestamp: "
-                      << " (s) = " << _hlt_gate_ts/uint64_t(1e9)
-                      << ", (ns) = " << _hlt_gate_ts%uint64_t(1e9) 
+                      << " (s) = " << _hlt_gate_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _hlt_gate_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "HLT CRT T1 = " << _hlt_crtt1
                       << ", Timestamp: "
-                      << " (s) = " << _hlt_crtt1_ts/uint64_t(1e9)
-                      << ", (ns) = " << _hlt_crtt1_ts%uint64_t(1e9) 
+                      << " (s) = " << _hlt_crtt1_ts/kSecondInNanoseconds
+                      << ", (ns) = " << _hlt_crtt1_ts%kSecondInNanoseconds
                       << std::endl;
     std::cout << "----------------------------------------------------" << std::endl;
   }
@@ -490,23 +492,23 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
     std::cout << "Frame Shift Results:" << std::endl;
     std::cout << "Frame CRT T1 type " << _timing_type_crtt1
                       <<", channel " << _timing_channel_crtt1
-                      << ": (s) = " << _frame_crtt1/uint64_t(1e9) 
-                      << ", (ns) = " << _frame_crtt1%uint64_t(1e9) 
+                      << ": (s) = " << _frame_crtt1/kSecondInNanoseconds
+                      << ", (ns) = " << _frame_crtt1%kSecondInNanoseconds
                       << std::endl;
     std::cout << "Frame Beam Gate  type " << _timing_type_gate
                       <<", channel " << _timing_channel_gate
-                      << ": (s) = " << _frame_gate/uint64_t(1e9) 
-                      << ", (ns) = " << _frame_gate%uint64_t(1e9) 
+                      << ": (s) = " << _frame_gate/kSecondInNanoseconds
+                      << ", (ns) = " << _frame_gate%kSecondInNanoseconds
                       << std::endl;
     std::cout << "Frame ETRIG type " << _timing_type_etrig
                       <<", channel " << _timing_channel_etrig
-                      << ": (s) = " << _frame_etrig/uint64_t(1e9) 
-                      << ", (ns) = " << _frame_etrig%uint64_t(1e9) 
+                      << ": (s) = " << _frame_etrig/kSecondInNanoseconds
+                      << ", (ns) = " << _frame_etrig%kSecondInNanoseconds
                       << std::endl;
     std::cout << "Default Frame type " << _timing_type_default
                       <<", channel " << _timing_channel_default
-                      << " : (s) = " << _frame_default/uint64_t(1e9) 
-                      << ", (ns) = " << _frame_default%uint64_t(1e9) 
+                      << " : (s) = " << _frame_default/kSecondInNanoseconds
+                      << ", (ns) = " << _frame_default%kSecondInNanoseconds
                       << std::endl;
     std::cout << "--------------------------------------" << std::endl;
   }
@@ -563,8 +565,8 @@ void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
     {
       std::cout << "----------------------------------------------------" << std::endl;
       std::cout << "DAQ Header Timestamp: "
-		<< " (s) = " << _raw_ts/uint64_t(1e9)
-		<< ", (ns) = " << _raw_ts%uint64_t(1e9) 
+		<< " (s) = " << _raw_ts/kSecondInNanoseconds
+		<< ", (ns) = " << _raw_ts%kSecondInNanoseconds
 		<< std::endl;
     }
 }
@@ -682,8 +684,8 @@ void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
 	{
 	  std::cout << "----------------------------------------------------" << std::endl;
 	  std::cout << "HLT " << _ptb_hlt_trunmask[i] 
-		    << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
-		    << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
+		    << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/kSecondInNanoseconds
+		    << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%kSecondInNanoseconds
 		    << std::endl;
 	}
     }
@@ -732,14 +734,14 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
 {
   //Decide which global frame to use as reference
   // Prioritise TDC ETRIG then PTB ETRIG then the raw header.
-  uint64_t global_frame = kInvalidTimestamp;
+  uint64_t global_frame_ts = kInvalidTimestamp;
 
   if (_tdc_etrig_ts != kInvalidTimestamp)
-    global_frame = _tdc_etrig_ts;
+    global_frame_ts = _tdc_etrig_ts;
   else if (_hlt_etrig_ts != kInvalidTimestamp)
-    global_frame = _hlt_etrig_ts;
+    global_frame_ts = _hlt_etrig_ts;
   else
-    global_frame = _raw_ts;
+    global_frame_ts = _raw_ts;
 
   if (fDebugFrame)
     {
@@ -752,12 +754,12 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
 	std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
 
       std::cout << "Global Frame Timestamp: "
-		<< " (s) = " << global_frame/uint64_t(1e9)
-		<< ", (ns) = " << global_frame%uint64_t(1e9) 
+		<< " (s) = " << global_frame_ts/kSecondInNanoseconds
+		<< ", (ns) = " << global_frame_ts%kSecondInNanoseconds
 		<< std::endl;
     }
 
-  return global_frame;
+  return global_frame_ts;
 }
 
 void sbnd::timing::FrameShift::beginJob()
