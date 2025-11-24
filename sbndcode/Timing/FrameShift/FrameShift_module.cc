@@ -59,7 +59,15 @@ public:
   // Selected optional functions.
   void beginJob() override;
   void ResetEventVars();
-    
+
+  uint64_t FindClosest(const std::vector<uint64_t> &timestamps, const uint64_t &reference);
+
+  void GetRawTimestamp(const art::Event &e);
+  void GetTDCTimestamps(const art::Event &e);
+  void GetPTBTimestamps(const art::Event &e);
+  void FindETRIGs();
+  uint64_t DecideGlobalFrame();
+
 private:
 
   // Declare member data here.
@@ -207,7 +215,6 @@ sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
 
 void sbnd::timing::FrameShift::produce(art::Event& e)
 {
-
   ResetEventVars();
 
   _run    = e.id().run();
@@ -217,262 +224,25 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   if (fDebugTdc | fDebugPtb | fDebugFrame)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
-  //----------------------------DAQ Header-----------------------------//
-  art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
-  e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
+  GetRawTimestamp(e);
+  GetTDCTimestamps(e);
+  GetPTBTimestamps(e);
+  FindETRIGs();
 
-  if (!DAQHeaderHandle.isValid()){
-    throw cet::exception("FrameShift") << "No artdaq::detail::RawEventHeader found w/ tag " << fDAQHeaderModuleLabel << ". Check data quality!";
-  }
-  else{
-      artdaq::RawEvent rawHeaderEvent = artdaq::RawEvent(*DAQHeaderHandle);
-      _raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
-  }
-  if (fDebugDAQHeader){
-    std::cout << "----------------------------------------------------" << std::endl;
-    std::cout << "DAQ Header Timestamp: "
-                      << " (s) = " << _raw_ts/uint64_t(1e9)
-                      << ", (ns) = " << _raw_ts%uint64_t(1e9) 
-                      << std::endl;
-  }
-
-  //---------------------------TDC-----------------------------//
-  art::Handle<std::vector<DAQTimestamp>> tdcHandle;
-  e.getByLabel(fTdcDecodeLabel, tdcHandle);
-
-  if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-    mf::LogInfo("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
-    //throw cet::exception("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
-  }
-  else{
-    std::vector<DAQTimestamp> tdc_v(*tdcHandle);
-    for (size_t i=0; i<tdc_v.size(); i++){
-      auto tdc = tdc_v[i];
-      const uint32_t  ch = tdc.Channel();
-      const uint64_t  ts = tdc.Timestamp();
-      //Also TODO: Make use of picosecond timestamps
-      //const uint64_t  ts_ps = tdc.TimestampPs();
-
-      if (ch == 0) {
-        _tdc_ch0.push_back(ts);
-      }
-      else if (ch == 1) {
-        _tdc_ch1.push_back(ts);
-      }
-      else if (ch == 2) {
-        _tdc_ch2.push_back(ts);
-      }
-      else if (ch == 4) {
-        _tdc_ch4.push_back(ts);
-      }
-    }
-  }
-  tdcHandle.removeProduct();
-
-  //---------------------------PTB-----------------------------//
-  art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
-  std::vector<art::Ptr<raw::ptb::sbndptb>> ptb_v;
-  e.getByLabel(fPtbDecodeLabel, ptbHandle);
-  
-  if ((!ptbHandle.isValid() || ptbHandle->size() == 0)){
-      throw cet::exception("FrameShift") << "No raw::ptb::sbndptb found w/ tag " << fPtbDecodeLabel << ". Check data quality!";
-  }
-  else{
-    art::fill_ptr_vector(ptb_v, ptbHandle);
-    // HLT Words
-    unsigned nHLTs = 0;
-
-    for(auto const& ptb : ptb_v)
-      nHLTs += ptb->GetNHLTriggers();
-  
-    _ptb_hlt_trigger.resize(nHLTs);
-    _ptb_hlt_timestamp.resize(nHLTs);
-    _ptb_hlt_trunmask.resize(nHLTs);
-    _ptb_hlt_unmask_timestamp.resize(nHLTs);
-
-    unsigned hlt_i = 0; //For multiple upbits in trigger words for unmasking
-    unsigned h_i = 0; //For trigger with bitmask
-
-    for(auto const& ptb : ptb_v){
-      for(unsigned i = 0; i < ptb->GetNHLTriggers(); ++i){
-        _ptb_hlt_trigger[h_i] = ptb->GetHLTrigger(i).trigger_word;
-        _ptb_hlt_timestamp[h_i] = ptb->GetHLTrigger(i).timestamp * uint64_t(20); //Units can be found in the Decoder Module 
-        h_i++;
-  
-        int val = ptb->GetHLTrigger(i).trigger_word;
-        int upBit[32];
-    
-        for (int u=0; u<32; u++){ //setting default values for maximum of 32 bits
-          upBit[u]=-1;
-        }
-  
-        int numOfTrig =0;
-        for(int b=0; b<32;b++){
-          if ((val & 0x01) ==1){
-            upBit[numOfTrig] = b;
-            numOfTrig++;
-          }
-          val = val >> 1;
-        }
-    
-        if (numOfTrig ==1){
-          _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
-          _ptb_hlt_trunmask[hlt_i] = upBit[0];
-          hlt_i++;
-        }//End of if statement for single upbit
-        else if (numOfTrig > 1){
-          nHLTs += (numOfTrig -1);
-          _ptb_hlt_unmask_timestamp.resize(nHLTs);
-          _ptb_hlt_trunmask.resize(nHLTs);
-  
-          for (int mult =0; mult < numOfTrig; mult++){ 
-            _ptb_hlt_trunmask[hlt_i] = upBit[mult];
-            _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
-            hlt_i++;
-          } //End of loop over multiple upbits
-        } //End of else statement for multiple triggers
-      } //End of loop over nHLTriggers
-    } //End of loop over ptb in ptb_v
-  }
-  ptbHandle.removeProduct();
-
-  if (fDebugPtb){
-    for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
-      std::cout << "----------------------------------------------------" << std::endl;
-      std::cout << "HLT " << _ptb_hlt_trunmask[i] 
-                          << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
-                          << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
-                          <<std::endl;
-    }
-  }
-
-  //---------------------------Get ETRIG From TDC and PTB-----------------------------//
-
-  // TDC ch4: ETRIG
-  if (_tdc_ch4.size() == 0){
-    throw cet::exception("FrameShift") << "No TDC ETRIG timestamps found! Check data quality!";
-  }
-  else if (_tdc_ch4.size() == 1){
-    _tdc_etrig_ts = _tdc_ch4[0];
-  }
-  else if(_tdc_ch4.size() > 1){
-    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
-    for(auto ts : _tdc_ch4){
-      uint64_t diff = _raw_ts > ts ? _raw_ts - ts : ts - _raw_ts; //raw_ts must be found for every event else throw exception
-      if(diff < min_diff)
-      {
-        min_diff    = diff;
-        _tdc_etrig_ts = ts;
-      }
-    }
-  }
-
-  //HLT ETRIG 
-  //Grab all the ETRIG HLTS -- there might be more than 1
-  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
-    for (size_t j = 0; j < fPtbEtrigHlts.size(); j++){
-      if (_ptb_hlt_trunmask[i] == fPtbEtrigHlts[j]){
-        _ptb_hlt_etrig.push_back(_ptb_hlt_trunmask[i]);
-        _ptb_hlt_etrig_ts.push_back(_ptb_hlt_unmask_timestamp[i]);
-      }
-    }
-  }
-
-
-  if (_ptb_hlt_etrig.size() == 0){
-    throw cet::exception("FrameShift") << "No HLT ETRIG timestamps found! Check data quality!";
-  }
-  else if (_ptb_hlt_etrig.size() == 1){
-    _hlt_etrig = _ptb_hlt_etrig[0];
-    _hlt_etrig_ts = _ptb_hlt_etrig_ts[0];
-  }
-  else if(_ptb_hlt_etrig.size() > 1){
-    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
-    for(size_t i = 0; i < _ptb_hlt_etrig.size(); i++){
-      uint64_t diff = _raw_ts > _ptb_hlt_etrig_ts[i] ? _raw_ts - _ptb_hlt_etrig_ts[i] : _ptb_hlt_etrig_ts[i] - _raw_ts;
-      if(diff < min_diff)
-      {
-        min_diff    = diff;
-        _hlt_etrig = _ptb_hlt_etrig[i];
-        _hlt_etrig_ts = _ptb_hlt_etrig_ts[i];
-      }
-    }
-  }
-
-  //Decide which global frame to use as reference 
-  uint64_t _global_frame = kInvalidTimestamp;
-  if (_tdc_etrig_ts != kInvalidTimestamp){ _global_frame = _tdc_etrig_ts; }
-  else if (_hlt_etrig_ts != kInvalidTimestamp){ _global_frame = _hlt_etrig_ts; }
-  else { _global_frame = _raw_ts;}
-
-  if (fDebugFrame){
-    std::cout << "----------------------------------------------------" << std::endl;
-    if (_tdc_etrig_ts != kInvalidTimestamp){
-      std::cout << "Using TDC ETRIG as Global Frame Reference" << std::endl;
-    }
-    else if (_hlt_etrig_ts != kInvalidTimestamp){
-      std::cout << "Using PTB HLT ETRIG as Global Frame Reference" << std::endl;
-    }
-    else {
-      std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
-    }
-    std::cout << "Global Frame Timestamp: "
-                      << " (s) = " << _global_frame/uint64_t(1e9)
-                      << ", (ns) = " << _global_frame%uint64_t(1e9) 
-                      << std::endl;
-  }
+  uint64_t global_frame = DecideGlobalFrame();
 
   //---------------------------TDC Frame-----------------------------//
   // ch0: CRT T1
-  if (_tdc_ch0.size() == 1){
-    _tdc_crtt1_ts = _tdc_ch0[0];
-  }
-  else if(_tdc_ch0.size() > 1){
-    //Get the one closest to the global frame
-    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
-    for(auto ts : _tdc_ch0){
-      uint64_t diff = _global_frame > ts ? _global_frame - ts : ts - _global_frame;
-      if(diff < min_diff)
-      {
-        min_diff    = diff;
-        _tdc_crtt1_ts = ts;
-      }
-    }
-  }
+  if (_tdc_ch0.size() != 0)
+    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame);
 
   // ch1: BES
-  if (_tdc_ch1.size() == 1){
-    _tdc_bes_ts = _tdc_ch1[0];
-  }
-  else if(_tdc_ch1.size() > 1){
-    //Get the one closest to the global frame
-    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
-    for(auto ts : _tdc_ch1){
-      uint64_t diff = _global_frame > ts ? _global_frame - ts : ts - _global_frame;
-      if(diff < min_diff)
-      {
-        min_diff    = diff;
-        _tdc_bes_ts = ts;
-      }
-    }
-  }
+  if (_tdc_ch1.size() != 0)
+    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame);
 
   // ch2: RWM
-  if (_tdc_ch2.size() == 1){
-    _tdc_rwm_ts = _tdc_ch2[0];
-  }
-  else if(_tdc_ch2.size() > 1){
-    //Get the one closest to the global frame
-    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
-    for(auto ts : _tdc_ch2){
-      uint64_t diff = _global_frame > ts ? _global_frame - ts : ts - _global_frame;
-      if(diff < min_diff)
-      {
-        min_diff    = diff;
-        _tdc_rwm_ts = ts;
-      }
-    }
-  }
+  if (_tdc_ch2.size() != 0)
+    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame);
 
   if (fDebugTdc){
     std::cout << "----------------------------------------------------" << std::endl;
@@ -755,6 +525,239 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
 
   //Fill the tree
   fTree->Fill();
+}
+
+uint64_t sbnd::timing::FrameShift::FindClosest(const std::vector<uint64_t> &timestamps, const uint64_t &reference)
+{
+  uint64_t min_diff = kInvalidTimestamp;
+  uint64_t closest  = kInvalidTimestamp;
+
+  for(const uint64_t &timestamp : timestamps)
+    {
+      uint64_t diff = reference > timestamp ? reference - timestamp : timestamp - reference;
+
+      if(diff < min_diff)
+      {
+        min_diff = diff;
+	closest  = timestamp;
+      }
+    }
+
+  return closest;
+}
+
+void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
+{
+  art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
+  e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
+
+  if (!DAQHeaderHandle.isValid())
+    throw cet::exception("FrameShift") << "No artdaq::detail::RawEventHeader found w/ tag " << fDAQHeaderModuleLabel << ". Check data quality!";
+  else
+    {
+      artdaq::RawEvent rawHeaderEvent = artdaq::RawEvent(*DAQHeaderHandle);
+      _raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
+    }
+
+  if (fDebugDAQHeader)
+    {
+      std::cout << "----------------------------------------------------" << std::endl;
+      std::cout << "DAQ Header Timestamp: "
+		<< " (s) = " << _raw_ts/uint64_t(1e9)
+		<< ", (ns) = " << _raw_ts%uint64_t(1e9) 
+		<< std::endl;
+    }
+}
+
+void sbnd::timing::FrameShift::GetTDCTimestamps(const art::Event &e)
+{
+  art::Handle<std::vector<DAQTimestamp>> tdcHandle;
+  e.getByLabel(fTdcDecodeLabel, tdcHandle);
+  
+  if (!tdcHandle.isValid() || tdcHandle->size() == 0)
+    mf::LogInfo("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
+  else
+    {
+      for(auto const& tdc : *tdcHandle)
+	{
+	  const uint32_t  ch = tdc.Channel();
+	  const uint64_t  ts = tdc.Timestamp();
+	  //Also TODO: Make use of picosecond timestamps
+	  //const uint64_t  ts_ps = tdc.TimestampPs();
+
+	  switch(ch)
+	    {
+	    case 0:
+	      _tdc_ch0.push_back(ts);
+	      break;
+	    case 1:
+	      _tdc_ch1.push_back(ts);
+	      break;
+	    case 2:
+	      _tdc_ch2.push_back(ts);
+	      break;
+	    case 4:
+	      _tdc_ch4.push_back(ts);
+	      break;
+	    }
+	}
+    }
+}
+
+void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
+{
+  art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
+  e.getByLabel(fPtbDecodeLabel, ptbHandle);
+  
+  if ((!ptbHandle.isValid() || ptbHandle->size() == 0))
+    throw cet::exception("FrameShift") << "No raw::ptb::sbndptb found w/ tag " << fPtbDecodeLabel << ". Check data quality!";
+  else
+    {
+      // HLT Words
+      unsigned nHLTs = 0;
+
+      for(auto const& ptb : *ptbHandle)
+	nHLTs += ptb.GetNHLTriggers();
+  
+      _ptb_hlt_trigger.resize(nHLTs);
+      _ptb_hlt_timestamp.resize(nHLTs);
+      _ptb_hlt_trunmask.resize(nHLTs);
+      _ptb_hlt_unmask_timestamp.resize(nHLTs);
+
+      unsigned hlt_i = 0; //For multiple upbits in trigger words for unmasking
+      unsigned h_i = 0; //For trigger with bitmask
+
+      for(auto const& ptb : *ptbHandle)
+	{
+	  for(unsigned i = 0; i < ptb.GetNHLTriggers(); ++i)
+	    {
+	      _ptb_hlt_trigger[h_i]   = ptb.GetHLTrigger(i).trigger_word;
+	      _ptb_hlt_timestamp[h_i] = ptb.GetHLTrigger(i).timestamp * uint64_t(20); //Units can be found in the Decoder Module 
+	      h_i++;
+  
+	      int val = ptb.GetHLTrigger(i).trigger_word;
+	      int upBit[32];
+    
+	      for(int u=0; u<32; u++)
+		upBit[u] = -1; //setting default values for maximum of 32 bits
+  
+	      int numOfTrig = 0;
+	      for(int b=0; b<32; b++)
+		{
+		  if((val & 0x01) == 1)
+		    {
+		      upBit[numOfTrig] = b;
+		      numOfTrig++;
+		    }
+
+		  val = val >> 1;
+		}
+    
+	      if (numOfTrig == 1)
+		{
+		  _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+		  _ptb_hlt_trunmask[hlt_i]         = upBit[0];
+		  hlt_i++;
+		}
+	      else if (numOfTrig > 1)
+		{
+		  nHLTs += (numOfTrig - 1);
+		  _ptb_hlt_unmask_timestamp.resize(nHLTs);
+		  _ptb_hlt_trunmask.resize(nHLTs);
+  
+		  for (int mult = 0; mult < numOfTrig; mult++)
+		    {
+		      _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+		      _ptb_hlt_trunmask[hlt_i]         = upBit[mult];
+		      hlt_i++;
+		    }
+		}
+	    } //End of loop over nHLTriggers
+	} //End of loop over ptb in ptb_v
+    }
+
+  if(fDebugPtb)
+    {
+      for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
+	{
+	  std::cout << "----------------------------------------------------" << std::endl;
+	  std::cout << "HLT " << _ptb_hlt_trunmask[i] 
+		    << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
+		    << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
+		    << std::endl;
+	}
+    }
+}
+
+void sbnd::timing::FrameShift::FindETRIGs()
+{
+  if (_tdc_ch4.size() == 0)
+    throw cet::exception("FrameShift") << "No TDC ETRIG timestamps found! Check data quality!";
+  else
+    _tdc_etrig_ts = FindClosest(_tdc_ch4, _raw_ts);
+
+  //Grab all the ETRIG HLTS -- there might be more than 1
+  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
+    {
+      for (size_t j = 0; j < fPtbEtrigHlts.size(); j++)
+	{
+	  if (_ptb_hlt_trunmask[i] == fPtbEtrigHlts[j])
+	    {
+	      _ptb_hlt_etrig.push_back(_ptb_hlt_trunmask[i]);
+	      _ptb_hlt_etrig_ts.push_back(_ptb_hlt_unmask_timestamp[i]);
+	    }
+	}
+    }
+
+  if (_ptb_hlt_etrig.size() == 0)
+    throw cet::exception("FrameShift") << "No HLT ETRIG timestamps found! Check data quality!";
+  else
+    {
+      uint64_t min_diff = std::numeric_limits<uint64_t>::max();
+      for(size_t i = 0; i < _ptb_hlt_etrig.size(); i++)
+	{
+	  uint64_t diff = _raw_ts > _ptb_hlt_etrig_ts[i] ? _raw_ts - _ptb_hlt_etrig_ts[i] : _ptb_hlt_etrig_ts[i] - _raw_ts;
+
+	  if(diff < min_diff)
+	    {
+	      min_diff      = diff;
+	      _hlt_etrig    = _ptb_hlt_etrig[i];
+	      _hlt_etrig_ts = _ptb_hlt_etrig_ts[i];
+	    }
+	}
+    }
+}
+
+uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
+{
+  //Decide which global frame to use as reference
+  // Prioritise TDC ETRIG then PTB ETRIG then the raw header.
+  uint64_t global_frame = kInvalidTimestamp;
+
+  if (_tdc_etrig_ts != kInvalidTimestamp)
+    global_frame = _tdc_etrig_ts;
+  else if (_hlt_etrig_ts != kInvalidTimestamp)
+    global_frame = _hlt_etrig_ts;
+  else
+    global_frame = _raw_ts;
+
+  if (fDebugFrame)
+    {
+      std::cout << "----------------------------------------------------" << std::endl;
+      if (_tdc_etrig_ts != kInvalidTimestamp)
+	std::cout << "Using TDC ETRIG as Global Frame Reference" << std::endl;
+      else if (_hlt_etrig_ts != kInvalidTimestamp)
+	std::cout << "Using PTB HLT ETRIG as Global Frame Reference" << std::endl;
+      else
+	std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
+
+      std::cout << "Global Frame Timestamp: "
+		<< " (s) = " << global_frame/uint64_t(1e9)
+		<< ", (ns) = " << global_frame%uint64_t(1e9) 
+		<< std::endl;
+    }
+
+  return global_frame;
 }
 
 void sbnd::timing::FrameShift::beginJob()
