@@ -170,7 +170,7 @@ WireModifier::WireModifier(Parameters const& config) :
     auto load_splines = [&sp](const std::string& fname, std::vector<TGraph2D*>& spl) {
         std::string fname_fullpath;
         if (!sp.find_file(fname, fname_fullpath)) {
-            // try WireMod subdirectory
+            // try WireMod subdirectory within FW_SEARCH_PATH
             if (!sp.find_file("WireMod/" + fname, fname_fullpath)) {
                 throw std::runtime_error("Could not find spline file with name " + fname + " in FW_SEARCH_PATH");
             }
@@ -207,9 +207,10 @@ void WireModifier::produce(art::Event& evt) {
     const auto det_prop =
         art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
 
+    // TODO can we refactor this into the constructor?
     sys::WireModUtility wmUtil(fGeometry, fWireReadout, det_prop);
-    // wmUtil.splines_Charge_X = splines_x_q;
-    // wmUtil.splines_Sigma_X = splines_x_w;
+    wmUtil.applyYZScale = applyYZScale;
+    wmUtil.applyXXZAngleScale = applyXXZAngleScale;
 
     art::Handle<std::vector<recob::Wire>> wire_handle;
     evt.getByLabel(fWireLabel, wire_handle);
@@ -303,7 +304,6 @@ void WireModifier::produce(art::Event& evt) {
             auto sub_roi_properties = wmUtil.CalcSubROIProperties(roi_properties, roi_hit_vec);
 
             std::map<sys::WireModUtility::SubROI_Key_t, sys::WireModUtility::ScaleValues_t> scale_map;
-            // for (const auto& subroi_prop : sub_roi_properties) {
             for (size_t i_sr = 0; i_sr != sub_roi_properties.size(); i_sr++) {
                 // calculate truth & perform spline interpolation
                 // first set some defaults
@@ -330,7 +330,7 @@ void WireModifier::produce(art::Event& evt) {
                 const auto particle = mc_parts.at(0);
                 if (!id_to_ide_map.count(particle->TrackId())) continue;
 
-                // particle direction taken as the true hit direction
+                // TODO particle direction taken as the true hit direction
                 // this will be replaced in future productions when we have
                 // access to SimEnergyDeposits
                 const auto mcp_dir = particle->Momentum().Vect().Unit();
@@ -342,6 +342,13 @@ void WireModifier::produce(art::Event& evt) {
 
                 double factor_q = 1.0;
                 double factor_w = 1.0;
+
+                // defined here just printing below
+                double factor_yz_q = 1.0;
+                double factor_yz_w = 1.0;
+                double factor_xtxw_q = 1.0;
+                double factor_xtxw_w = 1.0;
+
                 // TODO for SBND SPRING PRODUCTION ONLY using sim::IDEs
                 // We will use WireMod Utility functions for most of this once
                 // we have access to SimEnergyDeposits
@@ -362,8 +369,10 @@ void WireModifier::produce(art::Event& evt) {
                     if (wmUtil.applyYZScale) { 
                         TGraph2D* spline_yz_q = splines_y_z_q.at(plane_idx);
                         TGraph2D* spline_yz_w = splines_y_z_w.at(plane_idx);
-                        factor_q *= spline_yz_q->Interpolate(ide_ptr->y, ide_ptr->z);
-                        factor_w *= spline_yz_w->Interpolate(ide_ptr->y, ide_ptr->z);
+                        factor_yz_q = spline_yz_q->Interpolate(ide_ptr->y, ide_ptr->z);
+                        factor_yz_w = spline_yz_w->Interpolate(ide_ptr->y, ide_ptr->z);
+                        factor_q *= factor_yz_q;
+                        factor_w *= factor_yz_w;
                     }
 
                     Double_t txw = std::numeric_limits<double>::quiet_NaN();
@@ -373,8 +382,10 @@ void WireModifier::produce(art::Event& evt) {
                         if (std::abs(txw) < fMaxThetaXW) {
                             TGraph2D* spline_xtxw_q = splines_x_txw_q.at(plane_idx);
                             TGraph2D* spline_xtxw_w = splines_x_txw_w.at(plane_idx);
-                            factor_q *= spline_xtxw_q->Interpolate(ide_ptr->x, txw);
-                            factor_w *= spline_xtxw_w->Interpolate(ide_ptr->x, txw);
+                            factor_xtxw_q = spline_xtxw_q->Interpolate(ide_ptr->x, txw);
+                            factor_xtxw_w = spline_xtxw_w->Interpolate(ide_ptr->x, txw);
+                            factor_q *= factor_xtxw_q;
+                            factor_w *= factor_xtxw_q;
                         }
                     }
                 
@@ -392,7 +403,9 @@ void WireModifier::produce(art::Event& evt) {
                         << " - TPC: " << tpc_geom.ID() << "\n"
                         << " - Plane: " << ip << "\n"
                         << " - spline index: " << plane_idx << "\n"
-                        << " - Spline: " << factor_q << " " << factor_w << "\n";
+                        << " - YZ Spline (q, w): " << factor_yz_q << " " << factor_yz_w << "\n"
+                        << " - XThetaXW Spline (q, w): " << factor_xtxw_q << " " << factor_xtxw_w << "\n"
+                        << " - Total Spline (q, w): " << factor_q << " " << factor_w << "\n";
                     break;
                 }
 
