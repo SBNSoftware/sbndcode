@@ -61,6 +61,7 @@ public:
   void ResetEventVars();
 
   uint64_t FindClosest(const std::vector<uint64_t> &timestamps, const uint64_t &reference);
+  std::string PrintFormatTimestamp(const uint64_t &timestamp);
 
   void GetRawTimestamp(const art::Event &e);
   void GetTDCTimestamps(const art::Event &e);
@@ -248,22 +249,10 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
 
   if (fDebugTdc){
     std::cout << "----------------------------------------------------" << std::endl;
-    std::cout << "TDC Channel 0 (CRTT1) Timestamp: " 
-                      << " (s) = " << _tdc_crtt1_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _tdc_crtt1_ts%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "TDC Channel 1 (BES) Timestamp: "
-                      << " (s) = " << _tdc_bes_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _tdc_bes_ts%kSecondInNanoseconds
-                      << std::endl;       
-    std::cout << "TDC Channel 2 (RWM) Timestamp: "
-                      << " (s) = " << _tdc_rwm_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _tdc_rwm_ts%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "TDC Channel 4 (ETRIG) Timestamp: "
-                      << " (s) = " << _tdc_etrig_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _tdc_etrig_ts%kSecondInNanoseconds
-                      << std::endl;
+    std::cout << "TDC Channel 0 (CRTT1) Timestamp: " << PrintFormatTimestamp(_tdc_crtt1_ts) << std::endl;
+    std::cout << "TDC Channel 1 (BES) Timestamp: " << PrintFormatTimestamp(_tdc_bes_ts) << std::endl;
+    std::cout << "TDC Channel 2 (RWM) Timestamp: "<< PrintFormatTimestamp(_tdc_rwm_ts) << std::endl;
+    std::cout << "TDC Channel 4 (ETRIG) Timestamp: "<< PrintFormatTimestamp(_tdc_etrig_ts) << std::endl;
     std::cout << "----------------------------------------------------" << std::endl;
   } 
   
@@ -318,21 +307,9 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
     std::cout << "----------------------------------------------------" << std::endl;
     if (_isBeam) std::cout << "This is Beam Stream!" << std::endl; 
     if (_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl; 
-    std::cout << "HLT ETRIG = " << _hlt_etrig
-                      << ", Timestamp: "
-                      << " (s) = " << _hlt_etrig_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _hlt_etrig_ts%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "HLT Gate = " << _hlt_gate
-                      << ", Timestamp: "
-                      << " (s) = " << _hlt_gate_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _hlt_gate_ts%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "HLT CRT T1 = " << _hlt_crtt1
-                      << ", Timestamp: "
-                      << " (s) = " << _hlt_crtt1_ts/kSecondInNanoseconds
-                      << ", (ns) = " << _hlt_crtt1_ts%kSecondInNanoseconds
-                      << std::endl;
+    std::cout << "HLT ETRIG = " << _hlt_etrig << ", Timestamp: " << PrintFormatTimestamp(_hlt_etrig_ts) << std::endl;
+    std::cout << "HLT Gate = " << _hlt_gate << ", Timestamp: " << PrintFormatTimestamp(_hlt_gate_ts) << std::endl;
+    std::cout << "HLT CRT T1 = " << _hlt_crtt1 << ", Timestamp: " << PrintFormatTimestamp(_hlt_crtt1_ts) << std::endl;
     std::cout << "----------------------------------------------------" << std::endl;
   }
 
@@ -490,26 +467,14 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   if (fDebugFrame){
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "Frame Shift Results:" << std::endl;
-    std::cout << "Frame CRT T1 type " << _timing_type_crtt1
-                      <<", channel " << _timing_channel_crtt1
-                      << ": (s) = " << _frame_crtt1/kSecondInNanoseconds
-                      << ", (ns) = " << _frame_crtt1%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "Frame Beam Gate  type " << _timing_type_gate
-                      <<", channel " << _timing_channel_gate
-                      << ": (s) = " << _frame_gate/kSecondInNanoseconds
-                      << ", (ns) = " << _frame_gate%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "Frame ETRIG type " << _timing_type_etrig
-                      <<", channel " << _timing_channel_etrig
-                      << ": (s) = " << _frame_etrig/kSecondInNanoseconds
-                      << ", (ns) = " << _frame_etrig%kSecondInNanoseconds
-                      << std::endl;
-    std::cout << "Default Frame type " << _timing_type_default
-                      <<", channel " << _timing_channel_default
-                      << " : (s) = " << _frame_default/kSecondInNanoseconds
-                      << ", (ns) = " << _frame_default%kSecondInNanoseconds
-                      << std::endl;
+    std::cout << "Frame CRT T1 type " << _timing_type_crtt1 <<", channel " << _timing_channel_crtt1 << ": "
+	      << PrintFormatTimestamp(_frame_crtt1) << std::endl;
+    std::cout << "Frame Beam Gate  type " << _timing_type_gate <<", channel " << _timing_channel_gate << ": "
+	      << PrintFormatTimestamp(_frame_gate) << std::endl;
+    std::cout << "Frame ETRIG type " << _timing_type_etrig <<", channel " << _timing_channel_etrig << ": "
+	      << PrintFormatTimestamp(_frame_etrig) << std::endl;
+    std::cout << "Default Frame type " << _timing_type_default <<", channel " << _timing_channel_default << ": "
+	      << PrintFormatTimestamp(_frame_default) << std::endl;
     std::cout << "--------------------------------------" << std::endl;
   }
   
@@ -548,6 +513,14 @@ uint64_t sbnd::timing::FrameShift::FindClosest(const std::vector<uint64_t> &time
   return closest;
 }
 
+std::string sbnd::timing::FrameShift::PrintFormatTimestamp(const uint64_t &timestamp)
+{
+  std::stringstream ss;
+  ss << "(s) = " <<  timestamp / kSecondInNanoseconds << ", (ns) = " << timestamp % kSecondInNanoseconds;
+
+  return ss.str();
+}
+
 void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
 {
   art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
@@ -564,10 +537,7 @@ void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
   if (fDebugDAQHeader)
     {
       std::cout << "----------------------------------------------------" << std::endl;
-      std::cout << "DAQ Header Timestamp: "
-		<< " (s) = " << _raw_ts/kSecondInNanoseconds
-		<< ", (ns) = " << _raw_ts%kSecondInNanoseconds
-		<< std::endl;
+      std::cout << "DAQ Header Timestamp: " << PrintFormatTimestamp(_raw_ts) << std::endl;
     }
 }
 
@@ -683,10 +653,7 @@ void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
       for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
 	{
 	  std::cout << "----------------------------------------------------" << std::endl;
-	  std::cout << "HLT " << _ptb_hlt_trunmask[i] 
-		    << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/kSecondInNanoseconds
-		    << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%kSecondInNanoseconds
-		    << std::endl;
+	  std::cout << "HLT " << _ptb_hlt_trunmask[i] << ": " << PrintFormatTimestamp(_ptb_hlt_unmask_timestamp[i]) << std::endl;
 	}
     }
 }
@@ -753,10 +720,7 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
       else
 	std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
 
-      std::cout << "Global Frame Timestamp: "
-		<< " (s) = " << global_frame_ts/kSecondInNanoseconds
-		<< ", (ns) = " << global_frame_ts%kSecondInNanoseconds
-		<< std::endl;
+      std::cout << "Global Frame Timestamp: " << PrintFormatTimestamp(global_frame_ts) << std::endl;
     }
 
   return global_frame_ts;
