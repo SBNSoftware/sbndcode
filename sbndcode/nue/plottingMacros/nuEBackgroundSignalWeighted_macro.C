@@ -1047,8 +1047,10 @@ void nuEBackgroundSignalWeighted_macro(){
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsaa/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1089,31 +1091,33 @@ void nuEBackgroundSignalWeighted_macro(){
 
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalCurrent;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBCurrent;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsCurrent;
     
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalUboone;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBUboone;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsUboone;
     
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalNuE;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBNuE;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsNuE;
 
     double totalPOTSignalCurrent = 0;
     double totalPOTBNBCurrent = 0;
-    double totalPOTCosmicsCurrent = 0;
     
     double totalPOTSignalUboone = 0;
     double totalPOTBNBUboone = 0;
-    double totalPOTCosmicsUboone = 0;
     
     double totalPOTSignalNuE = 0;
     double totalPOTBNBNuE = 0;
-    double totalPOTCosmicsNuE = 0;
 
     double cosmicSpillsSumCurrent = 0;
     double cosmicSpillsSumUboone = 0;
     double cosmicSpillsSumNuE = 0;
+
+    double BNBSpillsSumCurrent = 0;
+    double BNBSpillsSumUboone = 0;
+    double BNBSpillsSumNuE = 0;
+
+    double NuESpillsSumCurrent = 0;
+    double NuESpillsSumUboone = 0;
+    double NuESpillsSumNuE = 0;
 
     double POTSignalNuE_notMissing = 0;
     double POTSignalUboone_notMissing = 0;
@@ -1122,18 +1126,23 @@ void nuEBackgroundSignalWeighted_macro(){
     double POTBNBNuE_notMissing = 0;
     double POTBNBUboone_notMissing = 0;
     double POTBNBBDT_notMissing = 0;
-        
-    double counteraaaaaa = 0;
     
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
-        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents; counteraaaaaa++;
+        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents;
         if(subRunSignal == 3 && subRunDLCurrent == 0) cosmicSpillsSumUboone += subRunNumGenEvents;
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
 
-        std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
+        if(subRunSignal == 2 && subRunDLCurrent == 2) BNBSpillsSumCurrent += subRunNumGenEvents;
+        if(subRunSignal == 2 && subRunDLCurrent == 0) BNBSpillsSumUboone += subRunNumGenEvents;
+        if(subRunSignal == 2 && subRunDLCurrent == 5) BNBSpillsSumNuE += subRunNumGenEvents;
+        
+        if(subRunSignal == 1 && subRunDLCurrent == 2) NuESpillsSumCurrent += subRunNumGenEvents;
+        if(subRunSignal == 1 && subRunDLCurrent == 0) NuESpillsSumUboone += subRunNumGenEvents;
+        if(subRunSignal == 1 && subRunDLCurrent == 5) NuESpillsSumNuE += subRunNumGenEvents;
 
+        std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
 
         if(subRunSignal == 1){
             if(subRunDLCurrent == 2 && seenSubRunsSignalCurrent.find(key) == seenSubRunsSignalCurrent.end()){
@@ -1164,40 +1173,37 @@ void nuEBackgroundSignalWeighted_macro(){
             if(subRunDLCurrent == 2) POTBNBBDT_notMissing += subRunPOT;
             if(subRunDLCurrent == 0) POTBNBUboone_notMissing += subRunPOT;
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
-
-        } else if(subRunSignal == 3){
-            if(subRunDLCurrent == 2 && seenSubRunsCosmicsCurrent.find(key) == seenSubRunsCosmicsCurrent.end()){
-                totalPOTCosmicsCurrent += subRunPOT;
-                seenSubRunsCosmicsCurrent.insert(key);
-            } else if(subRunDLCurrent == 0 && seenSubRunsCosmicsUboone.find(key) == seenSubRunsCosmicsUboone.end()){
-                totalPOTCosmicsUboone += subRunPOT;
-                seenSubRunsCosmicsUboone.insert(key);
-            } else if(subRunDLCurrent == 5 && seenSubRunsCosmicsNuE.find(key) == seenSubRunsCosmicsNuE.end()){
-                totalPOTCosmicsNuE += subRunPOT;
-                seenSubRunsCosmicsNuE.insert(key);
-            }
         }
     }
 
-    double cosmicsPOTCurrent = cosmicSpillsSumCurrent * 5e12;
-    double cosmicsPOTUboone = cosmicSpillsSumUboone * 5e12;
-    double cosmicsPOTNuE = cosmicSpillsSumNuE * 5e12;
+    double targetPOT = POTSignalBDT_notMissing;
+    double targetSpills = (targetPOT/(5e12));
 
-    printf("Cosmic Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", cosmicSpillsSumCurrent, cosmicSpillsSumUboone, cosmicSpillsSumNuE);
-    std::cout << "cosmicsPOTCurrent = " << cosmicsPOTCurrent << ", " << cosmicsPOTUboone << ", " << cosmicsPOTNuE << std::endl;
+    double BNBScaledSpills_BDT = ((targetPOT/POTBNBBDT_notMissing) * BNBSpillsSumCurrent);
+    double BNBScaledSpills_Uboone = ((targetPOT/POTBNBUboone_notMissing) * BNBSpillsSumUboone);
+    double BNBScaledSpills_NuE = ((targetPOT/POTBNBNuE_notMissing) * BNBSpillsSumNuE);
+
+    double SignalScaledSpills_BDT = ((targetPOT/POTSignalBDT_notMissing) * NuESpillsSumCurrent);
+    double SignalScaledSpills_Uboone = ((targetPOT/POTSignalUboone_notMissing) * NuESpillsSumUboone);
+    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * NuESpillsSumNuE);
+
+    double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT - SignalScaledSpills_BDT) / cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone - SignalScaledSpills_Uboone) / cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE - SignalScaledSpills_NuE) / cosmicSpillsSumCurrent);
+
 
     weights_struct weights;
-    weights.signalCurrent = POTSignalBDT_notMissing/POTSignalBDT_notMissing;
-    weights.BNBCurrent = POTSignalBDT_notMissing/POTBNBBDT_notMissing;
-    weights.cosmicsCurrent = POTSignalBDT_notMissing/cosmicsPOTCurrent;
+    weights.signalCurrent = targetPOT / POTSignalBDT_notMissing;
+    weights.BNBCurrent = targetPOT /POTBNBBDT_notMissing;
+    weights.cosmicsCurrent = cosmicsWeights_BDT;
     
-    weights.signalUboone = POTSignalBDT_notMissing/POTSignalUboone_notMissing;
-    weights.BNBUboone = POTSignalBDT_notMissing/POTBNBUboone_notMissing;
-    weights.cosmicsUboone = POTSignalBDT_notMissing/cosmicsPOTUboone;
+    weights.signalUboone = targetPOT /POTSignalUboone_notMissing;
+    weights.BNBUboone = targetPOT /POTBNBUboone_notMissing;
+    weights.cosmicsUboone = cosmicsWeights_Uboone;
     
-    weights.signalNuE = POTSignalBDT_notMissing/POTSignalNuE_notMissing;
-    weights.BNBNuE = POTSignalBDT_notMissing/POTBNBNuE_notMissing;
-    weights.cosmicsNuE = POTSignalBDT_notMissing/cosmicsPOTNuE;
+    weights.signalNuE = targetPOT /POTSignalNuE_notMissing;
+    weights.BNBNuE = targetPOT /POTBNBNuE_notMissing;
+    weights.cosmicsNuE = cosmicsWeights_NuE;
 
     std::cout << "BNB POT Current = " << totalPOTBNBCurrent << ", Uboone = " << totalPOTBNBUboone << ", Nu+E = " << totalPOTBNBNuE << std::endl;
     std::cout << "ALL BNB POT Current = " << POTBNBBDT_notMissing << ", Uboone = " << POTBNBUboone_notMissing << ", Nu+E = " << POTBNBNuE_notMissing << std::endl;
@@ -1205,7 +1211,6 @@ void nuEBackgroundSignalWeighted_macro(){
     std::cout << "Signal POT Current = " << totalPOTSignalCurrent << ", Uboone = " << totalPOTSignalUboone << ", Nu+E = " << totalPOTSignalNuE << std::endl;
     std::cout << "ALL Signal POT Current = " << POTSignalBDT_notMissing << ", Uboone = " << POTSignalUboone_notMissing << ", Nu+E = " << POTSignalNuE_notMissing << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "Spills Cosmics POT Current = " << cosmicsPOTCurrent << ", Uboone = " << cosmicsPOTUboone << ", Nu+E = " << cosmicsPOTNuE << std::endl;  
     printf("Weights:\nCurrent: Signal = %f, BNB = %f, Cosmics = %f\nUboone: Signal = %f, BNB = %f, Cosmics = %f\nNu+E: Signal = %f, BNB = %f, Cosmics = %f\n", weights.signalCurrent, weights.BNBCurrent, weights.cosmicsCurrent, weights.signalUboone, weights.BNBUboone, weights.cosmicsUboone, weights.signalNuE, weights.BNBNuE, weights.cosmicsNuE);
 
     printf("\nPOT after weighting:\nSignal: Current = %f, Uboone = %f, Nu+E = %f\n", (totalPOTSignalCurrent*weights.signalCurrent), (totalPOTSignalUboone*weights.signalUboone), (totalPOTSignalNuE*weights.signalNuE));
@@ -1429,9 +1434,13 @@ void nuEBackgroundSignalWeighted_macro(){
     double numEvents_DLNuEBNB = 0;
     double numEvents_DLNuENuE = 0;
 
+    double eventCounter = 0;
+
     for(Long64_t e = 0; e < numEntries; ++e){
         //printf("=============================================================================\n");
         tree->GetEntry(e);
+
+        if(signal == 2 && DLCurrent == 2) eventCounter++;
 
         if(DLCurrent == 2 && signal == 3) numEvents_BDTCosmic++;
         else if(DLCurrent == 2 && signal == 2) numEvents_BDTBNB++;
@@ -2769,6 +2778,16 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(deltaRDist, 0, 13000, 999, 999, (base_path + "deltaR_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaRDist, 0, 5000, 999, 999, (base_path + "deltaR_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
 
+    styleDrawAll(deltaX, 0, 19000, 999, 999, (base_path + "deltaX_signalAll_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, true, true, true);
+    styleDrawAll(deltaY, 0, 19000, -10, 10, (base_path + "deltaY_signalAll_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, true, true, true);
+    styleDrawAll(deltaZ, 0, 19000, -5, 20, (base_path + "deltaZ_signalAll_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, true, true, true);
+    styleDrawAll(deltaR, 0, 25000, 0, 15, (base_path + "deltaR_signalAll_weighted.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, true, true, true);
+     
+    styleDrawAll(deltaX, 0, 250e6, 999, 999, (base_path + "deltaX_BNBAll_weighted.pdf").c_str(), "topRight", nullptr, &right, false, false, true, false, false, true, true, true);
+    styleDrawAll(deltaY, 0, 250e6, 999, 999, (base_path + "deltaY_BNBAll_weighted.pdf").c_str(), "topRight", nullptr, &right, false, false, true, false, false, true, true, true);
+    styleDrawAll(deltaZ, 0, 250e6, 999, 999, (base_path + "deltaZ_BNBAll_weighted.pdf").c_str(), "topRight", nullptr, &right, false, false, true, false, false, true, true, true);
+    styleDrawAll(deltaR, 0, 350e6, 999, 999, (base_path + "deltaR_BNBAll_weighted.pdf").c_str(), "topRight", nullptr, &right, false, false, true, false, false, true, true, true);
+    
     styleDrawAll(recoX, 999, 999, 999, 999, (base_path + "recoX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false, true);
     styleDrawAll(recoXDist, 999, 999, 999, 999, (base_path + "recoX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, false, false);
     styleDrawBackSig(recoX, 999, 999, 999, 999, (base_path + "recoX_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
@@ -2880,5 +2899,20 @@ void nuEBackgroundSignalWeighted_macro(){
     double NuEPerc_BDT = ((100 * numEvents_BDTNuE * weights.signalCurrent)/totalEvent_BDT);
     printf("Event Rates:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPerc_BDT, BNBPerc_BDT, NuEPerc_BDT);
 
-    std::cout << "counter = " << counteraaaaaa << std::endl;
+
+    printf("\n\nUsing spills to calculate rates:\n");
+    printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicSpillsSumCurrent, BNBSpillsSumCurrent, NuESpillsSumCurrent);
+    printf("Weights BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicSpillsSumCurrent * weights.cosmicsCurrent, BNBSpillsSumCurrent * weights.BNBCurrent, NuESpillsSumCurrent * weights.signalCurrent);
+    double totalEventSpills_BDT = ((cosmicSpillsSumCurrent * weights.cosmicsCurrent) + (BNBSpillsSumCurrent * weights.BNBCurrent) + (NuESpillsSumCurrent * weights.signalCurrent));
+    double cosmicPercSpills_BDT = ((100 * cosmicSpillsSumCurrent * weights.cosmicsCurrent)/totalEventSpills_BDT);
+    double BNBPercSpills_BDT = ((100 * BNBSpillsSumCurrent * weights.BNBCurrent)/totalEventSpills_BDT);
+    double NuEPercSpills_BDT = ((100 * NuESpillsSumCurrent * weights.signalCurrent)/totalEventSpills_BDT);
+    printf("Event Rates BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPercSpills_BDT, BNBPercSpills_BDT, NuEPercSpills_BDT);
+
+    printf("_______________________ Spills _______________________\nIntime Cosmic Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", cosmicSpillsSumCurrent, cosmicSpillsSumUboone, cosmicSpillsSumNuE);
+    printf("BNB Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", BNBSpillsSumCurrent, BNBSpillsSumUboone, BNBSpillsSumNuE);
+    printf("Nu+E Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", NuESpillsSumCurrent, NuESpillsSumUboone, NuESpillsSumNuE);
+    printf("Target POT = %f\n", targetPOT);
+   
+    std::cout << "eventcounter = " << eventCounter << std::endl;
 }
