@@ -29,8 +29,9 @@ frameshift_data:
   DebugFrame: false
   
   ShiftData2MC: 0
-  ShiftRWM2Gate: 1738 //ns
-  ShiftTDC2PTB: 257 //ns
+  ShiftTdcRwm2PtbGate: 1738 //ns
+  ShiftTdcEtrig2PtbEtrig: 257 //ns
+  ShiftTdcCrtt12PtbCrtt1: 0 //ns
 }
 
 END_PROLOG

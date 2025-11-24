@@ -91,17 +91,21 @@ private:
   uint64_t fShiftData2MC;              // Value to shift Data to MC -- so that data agree with MC [ns]
                                        // TODO: Derive this value and verify if it is consistent across pmt/crt
                                        // TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftRWM2Gate;             // Value to move RWM frame to agree with HLT Gate Frame
+  uint64_t fShiftTdcRwm2PtbGate;       // Value to move Tdc RWM (ch2) frame to agree with HLT Gate Frame
                                        // This is derived by subtracting: TDC RWM - HLT Gate.
                                        // Using the MC2025B dataset, this distribution has a mean of 1738 ns and std of 9 ns.
                                        // TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftTDC2PTB;              // Value to account for cable length between TDC and PTB
+  uint64_t fShiftTdcEtrig2PtbEtrig;    // Value to move Tdc Etrig (ch4) to agree with HLT ETRIG
+                                       // TODO: Derive + edit fcl
+                                       // TODO: Get from database
+  uint64_t fShiftTdcCrtt12PtbCrtt1;    // Value to move Tdc Crt T1 Reset (ch0) to agree with HLT CRT T1
+                                       // TODO: Derive + edit fcl
+                                       // TODO: Get from database
   bool fMakeTree;                      // Whether to produce a TTree in the hist file
   bool fDebugDAQHeader;                // Whether to print debug statements relevant to DAQ header
   bool fDebugPtb;                      // Whether to print debug statements relevant to PTB
   bool fDebugTdc;                      // Whether to print debug statements relevant to TDC
   bool fDebugFrame;                    // Whether to print debug statements relevant to frame shifts
-
 
   // Global Variables, set in processing
   int _run, _subrun, _event;                       // Stores the unique run, subrun, event number combination for this event
@@ -174,9 +178,10 @@ sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fBeamGateHlt = p.get<int>("BeamGateHlt");
   fOffbeamGateHlt = p.get<int>("OffbeamGateHlt");
   fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel");
-  fShiftData2MC = p.get<uint64_t>("ShiftData2MC"); //TODO: Get from database instead of fhicl parameters
-  fShiftRWM2Gate = p.get<uint64_t>("ShiftRWM2Gate"); //TODO: Get from database instead of fhicl parameters
-  fShiftTDC2PTB = p.get<uint64_t>("ShiftTDC2PTB"); //TODO: Get from database instead of fhicl parameters
+  fShiftData2MC = p.get<uint64_t>("ShiftData2MC"); //TODO: Define this parameter + Get from database instead of fhicl parameters
+  fShiftTdcRwm2PtbGate = p.get<uint64_t>("ShiftTdcRwm2PtbGate"); //TODO: Get from database instead of fhicl parameters
+  fShiftTdcEtrig2PtbEtrig = p.get<uint64_t>("ShiftTdcEtrig2PtbEtrig"); //TODO: Get from database instead of fhicl parameters
+  fShiftTdcCrtt12PtbCrtt1 = p.get<uint64_t>("ShiftTdcCrtt12PtbCrtt1"); //TODO: Get from database instead of fhicl parameters
   fMakeTree = p.get<bool>("MakeTree", false);
   fDebugDAQHeader = p.get<bool>("DebugDAQHeader", false);
   fDebugPtb = p.get<bool>("DebugPtb", false);
@@ -228,7 +233,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
     {
       if(_tdc_crtt1_ts != kInvalidTimestamp)
         {
-          _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
+          _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB: +fShiftTdcCrtt12PtbCrtt1
           _timing_type_crtt1    = kSPECTDCType;
           _timing_channel_crtt1 = 0;
         }
@@ -248,7 +253,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
       //Frame Beam Gate
       if(_isBeam && _tdc_rwm_ts != kInvalidTimestamp) // TODO: For Offbeam, I think HLT Gate is recorded in TDC as FTRIG and can be found
         {
-          _frame_gate          = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
+          _frame_gate          = _tdc_rwm_ts + fShiftTdcRwm2PtbGate; //TODO: Add  shift from Data to MD: + fShiftData2MC
           _timing_type_gate    = kSPECTDCType;
           _timing_channel_gate = 2;
         }
@@ -269,7 +274,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   //Frame ETRIG
   if(_tdc_etrig_ts != kInvalidTimestamp)
     {
-      _frame_etrig          = _tdc_etrig_ts + fShiftTDC2PTB;
+      _frame_etrig          = _tdc_etrig_ts + fShiftTdcEtrig2PtbEtrig;
       _timing_type_etrig    = kSPECTDCType;
       _timing_channel_etrig = 4;
     }
