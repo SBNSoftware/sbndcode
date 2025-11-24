@@ -67,6 +67,7 @@ public:
   void GetTDCTimestamps(const art::Event &e);
   void GetPTBTimestamps(const art::Event &e);
   void FindETRIGs();
+
   uint64_t DecideGlobalEtrigTimestamp();
   void DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts);
   void DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts);
@@ -179,7 +180,7 @@ private:
 
 sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
-  // More initializers here.
+    // More initializers here.
 {
   fDAQHeaderInstanceLabel = p.get<std::string>("DAQHeaderInstanceLabel");
   fDAQHeaderModuleLabel = p.get<std::string>("DAQHeaderModuleLabel");
@@ -226,8 +227,8 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   _subrun = e.id().subRun();
   _event  =  e.id().event();
 
-  if (fDebugTdc | fDebugPtb | fDebugFrame)
-        std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
+  if(fDebugTdc | fDebugPtb | fDebugFrame)
+    std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
   GetRawTimestamp(e);
   GetTDCTimestamps(e);
@@ -258,43 +259,43 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   if(_isBeam || _isOffbeam)
     {
       if(_tdc_crtt1_ts != kInvalidTimestamp)
-	{
-	  _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
-	  _timing_type_crtt1    = kSPECTDCType;
-	  _timing_channel_crtt1 = 0;
-	}
+        {
+          _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
+          _timing_type_crtt1    = kSPECTDCType;
+          _timing_channel_crtt1 = 0;
+        }
       else if(_hlt_crtt1_ts != kInvalidTimestamp)
-	{
-	  _frame_crtt1          = _hlt_crtt1_ts;
-	  _timing_type_crtt1    = kPTBHLTType;
-	  _timing_channel_crtt1 = _hlt_crtt1;
-	}
+        {
+          _frame_crtt1          = _hlt_crtt1_ts;
+          _timing_type_crtt1    = kPTBHLTType;
+          _timing_channel_crtt1 = _hlt_crtt1;
+        }
       else
-	{
-	  _frame_crtt1          = 0;
-	  _timing_type_crtt1    = kNoShiftType;
-	  _timing_channel_crtt1 = kInvalidChannel;
-	}
+        {
+          _frame_crtt1          = 0;
+          _timing_type_crtt1    = kNoShiftType;
+          _timing_channel_crtt1 = kInvalidChannel;
+        }
 
       //Frame Beam Gate
       if(_isBeam && _tdc_rwm_ts != kInvalidTimestamp) // TODO: For Offbeam, I think HLT Gate is recorded in TDC as FTRIG and can be found
-	{
-	  _frame_gate          = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
-	  _timing_type_gate    = kSPECTDCType;
-	  _timing_channel_gate = 2;
-	}
+        {
+          _frame_gate          = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
+          _timing_type_gate    = kSPECTDCType;
+          _timing_channel_gate = 2;
+        }
       else if(_hlt_gate_ts != kInvalidTimestamp)
-	{
-	  _frame_gate          = _hlt_gate_ts;
-	  _timing_type_gate    = kPTBHLTType;
-	  _timing_channel_gate = _hlt_gate;
-	}
+        {
+          _frame_gate          = _hlt_gate_ts;
+          _timing_type_gate    = kPTBHLTType;
+          _timing_channel_gate = _hlt_gate;
+        }
       else
-	{
-	  _frame_gate          = 0;
-	  _timing_type_gate    = kNoShiftType;
-	  _timing_channel_gate = kInvalidChannel;
-	}
+        {
+          _frame_gate          = 0;
+          _timing_type_gate    = kNoShiftType;
+          _timing_channel_gate = kInvalidChannel;
+        }
     }
 
   //Frame ETRIG
@@ -324,7 +325,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
       _timing_type_default    = _timing_type_gate;
       _timing_channel_default = _timing_channel_gate;
     }
-  else if (_isXmuon)
+  else if(_isXmuon)
     {
       //Pick default stream -- ETRIG
       _frame_default        = _frame_etrig;
@@ -332,29 +333,29 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
       _timing_channel_etrig = _timing_channel_etrig;
     }
 
-  if (fDebugFrame)
+  if(fDebugFrame)
     {
       std::cout << "--------------------------------------" << std::endl;
       std::cout << "Frame Shift Results:" << std::endl;
       std::cout << "Frame CRT T1 type " << _timing_type_crtt1 <<", channel " << _timing_channel_crtt1 << ": "
-		<< PrintFormatTimestamp(_frame_crtt1) << std::endl;
+                << PrintFormatTimestamp(_frame_crtt1) << std::endl;
       std::cout << "Frame Beam Gate  type " << _timing_type_gate <<", channel " << _timing_channel_gate << ": "
-		<< PrintFormatTimestamp(_frame_gate) << std::endl;
+                << PrintFormatTimestamp(_frame_gate) << std::endl;
       std::cout << "Frame ETRIG type " << _timing_type_etrig <<", channel " << _timing_channel_etrig << ": "
-		<< PrintFormatTimestamp(_frame_etrig) << std::endl;
+                << PrintFormatTimestamp(_frame_etrig) << std::endl;
       std::cout << "Default Frame type " << _timing_type_default <<", channel " << _timing_channel_default << ": "
-		<< PrintFormatTimestamp(_frame_default) << std::endl;
+                << PrintFormatTimestamp(_frame_default) << std::endl;
       std::cout << "--------------------------------------" << std::endl;
     }
 
   //Put product in event
   std::unique_ptr<FrameShiftInfo> newFrameShiftInfo(new FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
-								       _frame_gate, _timing_type_gate, _timing_channel_gate,
-								       _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
-								       _frame_default, _timing_type_default, _timing_channel_default));
+                                                                       _frame_gate, _timing_type_gate, _timing_channel_gate,
+                                                                       _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
+                                                                       _frame_default, _timing_type_default, _timing_channel_default));
 
   std::unique_ptr<TimingInfo> newTimingInfo(new TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts,
-							   _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
+                                                           _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
 
   e.put(std::move(newTimingInfo));
   e.put(std::move(newFrameShiftInfo));
@@ -373,10 +374,10 @@ uint64_t sbnd::timing::FrameShift::FindClosest(const std::vector<uint64_t> &time
       uint64_t diff = reference > timestamp ? reference - timestamp : timestamp - reference;
 
       if(diff < min_diff)
-      {
-        min_diff = diff;
-	closest  = timestamp;
-      }
+        {
+          min_diff = diff;
+          closest  = timestamp;
+        }
     }
 
   return closest;
@@ -395,7 +396,7 @@ void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
   art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
   e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
 
-  if (!DAQHeaderHandle.isValid())
+  if(!DAQHeaderHandle.isValid())
     throw cet::exception("FrameShift") << "No artdaq::detail::RawEventHeader found w/ tag " << fDAQHeaderModuleLabel << ". Check data quality!";
   else
     {
@@ -403,7 +404,7 @@ void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
       _raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
     }
 
-  if (fDebugDAQHeader)
+  if(fDebugDAQHeader)
     {
       std::cout << "----------------------------------------------------" << std::endl;
       std::cout << "DAQ Header Timestamp: " << PrintFormatTimestamp(_raw_ts) << std::endl;
@@ -415,33 +416,33 @@ void sbnd::timing::FrameShift::GetTDCTimestamps(const art::Event &e)
   art::Handle<std::vector<DAQTimestamp>> tdcHandle;
   e.getByLabel(fTdcDecodeLabel, tdcHandle);
   
-  if (!tdcHandle.isValid() || tdcHandle->size() == 0)
+  if(!tdcHandle.isValid() || tdcHandle->size() == 0)
     mf::LogInfo("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
   else
     {
       for(auto const& tdc : *tdcHandle)
-	{
-	  const uint32_t  ch = tdc.Channel();
-	  const uint64_t  ts = tdc.Timestamp();
-	  //Also TODO: Make use of picosecond timestamps
-	  //const uint64_t  ts_ps = tdc.TimestampPs();
+        {
+          const uint32_t  ch = tdc.Channel();
+          const uint64_t  ts = tdc.Timestamp();
+          //Also TODO: Make use of picosecond timestamps
+          //const uint64_t  ts_ps = tdc.TimestampPs();
 
-	  switch(ch)
-	    {
-	    case 0:
-	      _tdc_ch0.push_back(ts);
-	      break;
-	    case 1:
-	      _tdc_ch1.push_back(ts);
-	      break;
-	    case 2:
-	      _tdc_ch2.push_back(ts);
-	      break;
-	    case 4:
-	      _tdc_ch4.push_back(ts);
-	      break;
-	    }
-	}
+          switch(ch)
+            {
+            case 0:
+              _tdc_ch0.push_back(ts);
+              break;
+            case 1:
+              _tdc_ch1.push_back(ts);
+              break;
+            case 2:
+              _tdc_ch2.push_back(ts);
+              break;
+            case 4:
+              _tdc_ch4.push_back(ts);
+              break;
+            }
+        }
     }
 }
 
@@ -450,7 +451,7 @@ void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
   art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
   e.getByLabel(fPtbDecodeLabel, ptbHandle);
   
-  if ((!ptbHandle.isValid() || ptbHandle->size() == 0))
+  if((!ptbHandle.isValid() || ptbHandle->size() == 0))
     throw cet::exception("FrameShift") << "No raw::ptb::sbndptb found w/ tag " << fPtbDecodeLabel << ". Check data quality!";
   else
     {
@@ -458,7 +459,7 @@ void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
       unsigned nHLTs = 0;
 
       for(auto const& ptb : *ptbHandle)
-	nHLTs += ptb.GetNHLTriggers();
+        nHLTs += ptb.GetNHLTriggers();
   
       _ptb_hlt_trigger.resize(nHLTs);
       _ptb_hlt_timestamp.resize(nHLTs);
@@ -469,100 +470,100 @@ void sbnd::timing::FrameShift::GetPTBTimestamps(const art::Event &e)
       unsigned h_i = 0; //For trigger with bitmask
 
       for(auto const& ptb : *ptbHandle)
-	{
-	  for(unsigned i = 0; i < ptb.GetNHLTriggers(); ++i)
-	    {
-	      _ptb_hlt_trigger[h_i]   = ptb.GetHLTrigger(i).trigger_word;
-	      _ptb_hlt_timestamp[h_i] = ptb.GetHLTrigger(i).timestamp * uint64_t(20); //Units can be found in the Decoder Module 
-	      h_i++;
+        {
+          for(unsigned i = 0; i < ptb.GetNHLTriggers(); ++i)
+            {
+              _ptb_hlt_trigger[h_i]   = ptb.GetHLTrigger(i).trigger_word;
+              _ptb_hlt_timestamp[h_i] = ptb.GetHLTrigger(i).timestamp * uint64_t(20); //Units can be found in the Decoder Module 
+              h_i++;
   
-	      int val = ptb.GetHLTrigger(i).trigger_word;
-	      int upBit[32];
+              int val = ptb.GetHLTrigger(i).trigger_word;
+              int upBit[32];
     
-	      for(int u=0; u<32; u++)
-		upBit[u] = -1; //setting default values for maximum of 32 bits
+              for(int u=0; u<32; u++)
+                upBit[u] = -1; //setting default values for maximum of 32 bits
   
-	      int numOfTrig = 0;
-	      for(int b=0; b<32; b++)
-		{
-		  if((val & 0x01) == 1)
-		    {
-		      upBit[numOfTrig] = b;
-		      numOfTrig++;
-		    }
+              int numOfTrig = 0;
+              for(int b=0; b<32; b++)
+                {
+                  if((val & 0x01) == 1)
+                    {
+                      upBit[numOfTrig] = b;
+                      numOfTrig++;
+                    }
 
-		  val = val >> 1;
-		}
+                  val = val >> 1;
+                }
     
-	      if (numOfTrig == 1)
-		{
-		  _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
-		  _ptb_hlt_trunmask[hlt_i]         = upBit[0];
-		  hlt_i++;
-		}
-	      else if (numOfTrig > 1)
-		{
-		  nHLTs += (numOfTrig - 1);
-		  _ptb_hlt_unmask_timestamp.resize(nHLTs);
-		  _ptb_hlt_trunmask.resize(nHLTs);
+              if(numOfTrig == 1)
+                {
+                  _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+                  _ptb_hlt_trunmask[hlt_i]         = upBit[0];
+                  hlt_i++;
+                }
+              else if(numOfTrig > 1)
+                {
+                  nHLTs += (numOfTrig - 1);
+                  _ptb_hlt_unmask_timestamp.resize(nHLTs);
+                  _ptb_hlt_trunmask.resize(nHLTs);
   
-		  for (int mult = 0; mult < numOfTrig; mult++)
-		    {
-		      _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
-		      _ptb_hlt_trunmask[hlt_i]         = upBit[mult];
-		      hlt_i++;
-		    }
-		}
-	    } //End of loop over nHLTriggers
-	} //End of loop over ptb in ptb_v
+                  for(int mult = 0; mult < numOfTrig; mult++)
+                    {
+                      _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+                      _ptb_hlt_trunmask[hlt_i]         = upBit[mult];
+                      hlt_i++;
+                    }
+                }
+            } //End of loop over nHLTriggers
+        } //End of loop over ptb in ptb_v
     }
 
   if(fDebugPtb)
     {
       for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
-	{
-	  std::cout << "----------------------------------------------------" << std::endl;
-	  std::cout << "HLT " << _ptb_hlt_trunmask[i] << ": " << PrintFormatTimestamp(_ptb_hlt_unmask_timestamp[i]) << std::endl;
-	}
+        {
+          std::cout << "----------------------------------------------------" << std::endl;
+          std::cout << "HLT " << _ptb_hlt_trunmask[i] << ": " << PrintFormatTimestamp(_ptb_hlt_unmask_timestamp[i]) << std::endl;
+        }
     }
 }
 
 void sbnd::timing::FrameShift::FindETRIGs()
 {
-  if (_tdc_ch4.size() == 0)
+  if(_tdc_ch4.size() == 0)
     throw cet::exception("FrameShift") << "No TDC ETRIG timestamps found! Check data quality!";
   else
     _tdc_etrig_ts = FindClosest(_tdc_ch4, _raw_ts);
 
   //Grab all the ETRIG HLTS -- there might be more than 1
-  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
+  for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
     {
-      for (size_t j = 0; j < fPtbEtrigHlts.size(); j++)
-	{
-	  if (_ptb_hlt_trunmask[i] == fPtbEtrigHlts[j])
-	    {
-	      _ptb_hlt_etrig.push_back(_ptb_hlt_trunmask[i]);
-	      _ptb_hlt_etrig_ts.push_back(_ptb_hlt_unmask_timestamp[i]);
-	    }
-	}
+      for(size_t j = 0; j < fPtbEtrigHlts.size(); j++)
+        {
+          if(_ptb_hlt_trunmask[i] == fPtbEtrigHlts[j])
+            {
+              _ptb_hlt_etrig.push_back(_ptb_hlt_trunmask[i]);
+              _ptb_hlt_etrig_ts.push_back(_ptb_hlt_unmask_timestamp[i]);
+            }
+        }
     }
 
-  if (_ptb_hlt_etrig.size() == 0)
+  if(_ptb_hlt_etrig.size() == 0)
     throw cet::exception("FrameShift") << "No HLT ETRIG timestamps found! Check data quality!";
   else
     {
       uint64_t min_diff = std::numeric_limits<uint64_t>::max();
       for(size_t i = 0; i < _ptb_hlt_etrig.size(); i++)
-	{
-	  uint64_t diff = _raw_ts > _ptb_hlt_etrig_ts[i] ? _raw_ts - _ptb_hlt_etrig_ts[i] : _ptb_hlt_etrig_ts[i] - _raw_ts;
+        {
+          uint64_t diff = _raw_ts > _ptb_hlt_etrig_ts[i] ? _raw_ts - _ptb_hlt_etrig_ts[i] : _ptb_hlt_etrig_ts[i] - _raw_ts;
 
-	  if(diff < min_diff)
-	    {
-	      min_diff      = diff;
-	      _hlt_etrig    = _ptb_hlt_etrig[i];
-	      _hlt_etrig_ts = _ptb_hlt_etrig_ts[i];
-	    }
-	}
+          if(diff < min_diff)
+            {
+              min_diff      = diff;
+              _hlt_etrig    = _ptb_hlt_etrig[i];
+              _hlt_etrig_ts = _ptb_hlt_etrig_ts[i];
+            }
+        }
     }
 }
 
@@ -572,22 +573,22 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalEtrigTimestamp()
   // Prioritise TDC ETRIG then PTB ETRIG then the raw header.
   uint64_t global_etrig_ts = kInvalidTimestamp;
 
-  if (_tdc_etrig_ts != kInvalidTimestamp)
+  if(_tdc_etrig_ts != kInvalidTimestamp)
     global_etrig_ts = _tdc_etrig_ts;
-  else if (_hlt_etrig_ts != kInvalidTimestamp)
+  else if(_hlt_etrig_ts != kInvalidTimestamp)
     global_etrig_ts = _hlt_etrig_ts;
   else
     global_etrig_ts = _raw_ts;
 
-  if (fDebugFrame)
+  if(fDebugFrame)
     {
       std::cout << "----------------------------------------------------" << std::endl;
-      if (_tdc_etrig_ts != kInvalidTimestamp)
-	std::cout << "Using TDC ETRIG as Global Frame Reference" << std::endl;
-      else if (_hlt_etrig_ts != kInvalidTimestamp)
-	std::cout << "Using PTB HLT ETRIG as Global Frame Reference" << std::endl;
+      if(_tdc_etrig_ts != kInvalidTimestamp)
+        std::cout << "Using TDC ETRIG as Global Frame Reference" << std::endl;
+      else if(_hlt_etrig_ts != kInvalidTimestamp)
+        std::cout << "Using PTB HLT ETRIG as Global Frame Reference" << std::endl;
       else
-	std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
+        std::cout << "Using DAQ Header Timestamp as Global Frame Reference" << std::endl;
 
       std::cout << "Global Frame Timestamp: " << PrintFormatTimestamp(global_etrig_ts) << std::endl;
     }
@@ -598,18 +599,18 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalEtrigTimestamp()
 void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts)
 {
   // ch0: CRT T1
-  if (_tdc_ch0.size() != 0)
+  if(_tdc_ch0.size() != 0)
     _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_etrig_ts);
 
   // ch1: BES
-  if (_tdc_ch1.size() != 0)
+  if(_tdc_ch1.size() != 0)
     _tdc_bes_ts = FindClosest(_tdc_ch1, global_etrig_ts);
 
   // ch2: RWM
-  if (_tdc_ch2.size() != 0)
+  if(_tdc_ch2.size() != 0)
     _tdc_rwm_ts = FindClosest(_tdc_ch2, global_etrig_ts);
 
-  if (fDebugTdc)
+  if(fDebugTdc)
     {
       std::cout << "----------------------------------------------------" << std::endl;
       std::cout << "TDC Channel 0 (CRTT1) Timestamp: " << PrintFormatTimestamp(_tdc_crtt1_ts) << std::endl;
@@ -627,39 +628,39 @@ void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &globa
 
   for(const int &beam_etrig_hlt : fBeamEtrigHlt)
     {
-      if (_hlt_etrig == beam_etrig_hlt)
-	{
-	  _hlt_gate  = fBeamGateHlt;
-	  _hlt_crtt1 = fBeamCrtT1Hlt;
-	  _isBeam    = true;
-	  break;
-	}
+      if(_hlt_etrig == beam_etrig_hlt)
+        {
+          _hlt_gate  = fBeamGateHlt;
+          _hlt_crtt1 = fBeamCrtT1Hlt;
+          _isBeam    = true;
+          break;
+        }
     }
 
-  if (!_isBeam)
+  if(!_isBeam)
     {
       for(const int &offbeam_etrig_hlt : fOffbeamEtrigHlt)
-	{
-	  if (_hlt_etrig == offbeam_etrig_hlt)
-	    {
-	      _hlt_gate  = fOffbeamGateHlt;
-	      _hlt_crtt1 = fOffbeamCrtT1Hlt;
-	      _isOffbeam = true;
-	      break;
-	    }
-	}
+        {
+          if(_hlt_etrig == offbeam_etrig_hlt)
+            {
+              _hlt_gate  = fOffbeamGateHlt;
+              _hlt_crtt1 = fOffbeamCrtT1Hlt;
+              _isOffbeam = true;
+              break;
+            }
+        }
     }
 
-  if (!_isBeam & !_isOffbeam)
+  if(!_isBeam & !_isOffbeam)
     {
-      for (const int &xmuon_etrig_hlt : fXmuonEtrigHlt)
-	{
-	  if (_hlt_etrig == xmuon_etrig_hlt)
-	    {
-	      _isXmuon = true;
-	      break;
-	    }
-	}
+      for(const int &xmuon_etrig_hlt : fXmuonEtrigHlt)
+        {
+          if(_hlt_etrig == xmuon_etrig_hlt)
+            {
+              _isXmuon = true;
+              break;
+            }
+        }
     }
 
   if( !_isBeam & !_isOffbeam & !_isXmuon)
@@ -667,20 +668,20 @@ void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &globa
 
   //Get Gate and CRT T1 HLT timestamps
   //TODO: What if there is no Gate or CRT T1 HLT?
-  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
+  for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
     {
       if(_ptb_hlt_trunmask[i] == _hlt_gate)
-	_hlt_gate_ts = _ptb_hlt_unmask_timestamp[i];
+        _hlt_gate_ts = _ptb_hlt_unmask_timestamp[i];
       if(_ptb_hlt_trunmask[i] == _hlt_crtt1)
-	_hlt_crtt1_ts = _ptb_hlt_unmask_timestamp[i];
+        _hlt_crtt1_ts = _ptb_hlt_unmask_timestamp[i];
     }
 
-  if (fDebugPtb)
+  if(fDebugPtb)
     {
       std::cout << "----------------------------------------------------" << std::endl;
-      if (_isBeam) std::cout << "This is Beam Stream!" << std::endl;
-      if (_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl;
-      if (_isXmuon) std::cout << "This is Crossing Muon Stream!" << std::endl;
+      if(_isBeam) std::cout << "This is Beam Stream!" << std::endl;
+      if(_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl;
+      if(_isXmuon) std::cout << "This is Crossing Muon Stream!" << std::endl;
       std::cout << "HLT ETRIG = " << _hlt_etrig << ", Timestamp: " << PrintFormatTimestamp(_hlt_etrig_ts) << std::endl;
       std::cout << "HLT Gate = " << _hlt_gate << ", Timestamp: " << PrintFormatTimestamp(_hlt_gate_ts) << std::endl;
       std::cout << "HLT CRT T1 = " << _hlt_crtt1 << ", Timestamp: " << PrintFormatTimestamp(_hlt_crtt1_ts) << std::endl;
