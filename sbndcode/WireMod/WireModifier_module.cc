@@ -28,24 +28,23 @@
 #include "sbncode/CAFMaker/FillTrue.h"
 #include "sbncode/WireMod/Utility/WireModUtility.hh"
 
-// #include "bspline.h"
-
 namespace wiremod {
 
 
 bool ide_in_tpc(const sim::IDE* ide_ptr) {
+    // avoid larsoft exception if IDE is outside TPC
     return (ide_ptr->x > -199 && ide_ptr->x < 199)
         && (ide_ptr->y > -199 && ide_ptr->y < 199)
         && (ide_ptr->z > 1 && ide_ptr->z < 499);
 }
 
-// version in sbncode folds the angle and assumes degrees, and our convention
-// is different for the angles -- larsoft returns pi/6 for plane angles but
-// splines are done using pi/3
-// we're also using radians until the final spline lookup
-double ThetaXW(double dxdr, double dydr, double dzdr, double planeAngle, int tpc, int ip, bool fold=false) {
-    // TODO match spline convention
-    planeAngle = 0;
+// version of this function in sbncode folds the angle and assumes degrees, and
+// our convention is different for the plane angles -- larsoft returns pi/6 for
+// plane angles but splines are done using pi/3 we're also using radians until
+// the final spline lookup
+double ThetaXW(double dxdr, double dydr, double dzdr, int tpc, int ip, bool fold=false) {
+    // TODO use the version in WireMod utility library
+    double planeAngle = 0;
     if (tpc == 0 && ip == 0) {
         dzdr *= -1;
         planeAngle = util::pi() / 3;
@@ -97,6 +96,12 @@ public:
         fhicl::Atom<art::InputTag> WireAssnLabel {
             Name("WireAssnLabel"), Comment("Label for wire,hit association")
         };
+        fhicl::Atom<bool> ApplyYZScale {
+            Name("ApplyYZScale"), Comment("Apply scaling based on Y and Z")
+        };
+        fhicl::Atom<bool> ApplyXXZAngleScale {
+            Name("ApplyXXZAngleScale"), Comment("Apply scaling based on X and theta_XW")
+        };
         fhicl::Atom<std::string> SplineFileXTXW_Q {
             Name("SplineFileXTXW_Q"), Comment("ROOT file containing TGraph2D for ADC scaling in each plane by X and Theta_XW")
         };
@@ -129,40 +134,19 @@ private:
     std::string fSplineFileYZ_Q;
     std::string fSplineFileYZ_W;
     float fMaxThetaXW;
-    // std::string fSplineFileZ;
-    // std::string fSplineFileTXZ;
     art::InputTag fHitLabel; 
     art::InputTag fWireLabel; 
     art::InputTag fSimChannelLabel; 
     art::InputTag fMCPartAssnLabel; 
     art::InputTag fWireAssnLabel; 
-
-
-    /*
-    std::vector<TSpline3*> splines_x_w;
-    std::vector<TSpline3*> splines_x_q;
-    std::vector<TSpline3*> splines_y_w;
-    std::vector<TSpline3*> splines_y_q;
-    std::vector<TSpline3*> splines_z_w;
-    std::vector<TSpline3*> splines_z_q;
-    std::vector<TSpline3*> splines_txz_w;
-    std::vector<TSpline3*> splines_txz_q;
-    */
+    bool applyYZScale;
+    bool applyXXZAngleScale;
 
     std::vector<TGraph2D*> splines_x_txw_q;
     std::vector<TGraph2D*> splines_x_txw_w;
     std::vector<TGraph2D*> splines_y_z_q;
     std::vector<TGraph2D*> splines_y_z_w;
 
-    bool fApplyChannel; 
-    bool fApplyX; 
-    bool fApplyYZ; 
-    bool fApplyXZAngle; 
-    bool fApplyYZAngle; 
-    bool fApplydEdX; 
-    bool fSaveHistsByChannel; 
-    bool fSaveHistsByWire; 
-    bool fIsData; 
 }; // end WireModifier class
 
 WireModifier::WireModifier(Parameters const& config) :
@@ -176,31 +160,29 @@ WireModifier::WireModifier(Parameters const& config) :
     fWireLabel(config().WireLabel()),
     fSimChannelLabel(config().SimChannelLabel()),
     fMCPartAssnLabel(config().MCPartAssnLabel()),
-    fWireAssnLabel(config().WireAssnLabel())
+    fWireAssnLabel(config().WireAssnLabel()),
+    applyYZScale(config().ApplyYZScale()), 
+    applyXXZAngleScale(config().ApplyXXZAngleScale())
 {
-    /*
-    auto load_splines = [](const std::string& fname, std::vector<TSpline3*>& qspl, std::vector<TSpline3*>& wspl) {
-        TFile* f = TFile::Open(fname.c_str());
-        for (UInt_t i = 0; i < 6; i++) {
-            qspl.push_back(static_cast<TSpline3*>(f->Get(Form("spline_q_%d", i))->Clone()));
-            wspl.push_back(static_cast<TSpline3*>(f->Get(Form("spline_w_%d", i))->Clone()));
+
+    cet::search_path sp("FW_SEARCH_PATH");
+
+    auto load_splines = [&sp](const std::string& fname, std::vector<TGraph2D*>& spl) {
+        std::string fname_fullpath;
+        if (!sp.find_file(fname, fname_fullpath)) {
+            // try WireMod subdirectory
+            if (!sp.find_file("WireMod/" + fname, fname_fullpath)) {
+                throw std::runtime_error("Could not find spline file with name " + fname + " in FW_SEARCH_PATH");
+            }
         }
-        f->Close();
-    };
-    load_splines(fSplineFileX, splines_x_q, splines_x_w);
-    load_splines(fSplineFileY, splines_y_q, splines_y_w);
-    load_splines(fSplineFileZ, splines_z_q, splines_z_w);
-    load_splines(fSplineFileTXZ, splines_txz_q, splines_txz_w);
-    */
-    auto load_splines = [](const std::string& fname, std::vector<TGraph2D*>& spl) {
-        TFile* f = TFile::Open(fname.c_str());
+        TFile* f = TFile::Open(fname_fullpath.c_str());
         MF_LOG_INFO("WireModifier") <<
-            "Loading splines from " << fname.c_str();
+            "Loading splines from " << fname_fullpath.c_str();
         for (UInt_t i = 0; i < 6; i++) {
             std::string spline_name(Form("splines_%d", i));
             TGraph2D* spline = static_cast<TGraph2D*>(f->Get(spline_name.c_str()));
             if (!spline) {
-                throw std::runtime_error("Could not read spline with name " + spline_name + " from file " + fname);
+                throw std::runtime_error("Could not read spline with name " + spline_name + " from file " + fname_fullpath);
             }
             spl.push_back(static_cast<TGraph2D*>(spline->Clone()));
         }
@@ -345,7 +327,6 @@ void WireModifier::produce(art::Event& evt) {
                 if (mc_parts.size() == 0) continue;
 
                 // particle in IDE map?
-                // TODO: choose MC part with largest truth match contribution
                 const auto particle = mc_parts.at(0);
                 if (!id_to_ide_map.count(particle->TrackId())) continue;
 
@@ -378,20 +359,23 @@ void WireModifier::produce(art::Event& evt) {
                     size_t plane_idx = ip + 3 * tpc_geom.ID().TPC;
 
                     // spline is data/MC ratio, we want to scale MC to match data
-                    /*
-                    TGraph2D* spline_xy_q = splines_y_z_q.at(plane_idx);
-                    TGraph2D* spline_xy_w = splines_y_z_w.at(plane_idx);
-                    factor_q *= spline_xy_q->Interpolate(ide_ptr->y, ide_ptr->z);
-                    factor_w *= spline_xy_w->Interpolate(ide_ptr->y, ide_ptr->z);
-                    */
+                    if (wmUtil.applyYZScale) { 
+                        TGraph2D* spline_yz_q = splines_y_z_q.at(plane_idx);
+                        TGraph2D* spline_yz_w = splines_y_z_w.at(plane_idx);
+                        factor_q *= spline_yz_q->Interpolate(ide_ptr->y, ide_ptr->z);
+                        factor_w *= spline_yz_w->Interpolate(ide_ptr->y, ide_ptr->z);
+                    }
 
-                    // x vs theta_xw angle
-                    Double_t txw = (180.0 / util::pi()) * wiremod::ThetaXW(mcp_dir.X(), mcp_dir.Y(), mcp_dir.Z(), plane.ThetaZ(), tpc_geom.ID().TPC, ip);
-                    if (std::abs(txw) < fMaxThetaXW) {
-                        TGraph2D* spline_xtxw_q = splines_x_txw_q.at(plane_idx);
-                        TGraph2D* spline_xtxw_w = splines_x_txw_w.at(plane_idx);
-                        factor_q *= spline_xtxw_q->Interpolate(ide_ptr->x, txw);
-                        factor_w *= spline_xtxw_w->Interpolate(ide_ptr->x, txw);
+                    Double_t txw = std::numeric_limits<double>::quiet_NaN();
+                    if (wmUtil.applyXXZAngleScale) { 
+                        // x vs theta_xw angle
+                        txw = (180.0 / util::pi()) * wiremod::ThetaXW(mcp_dir.X(), mcp_dir.Y(), mcp_dir.Z(), tpc_geom.ID().TPC, ip);
+                        if (std::abs(txw) < fMaxThetaXW) {
+                            TGraph2D* spline_xtxw_q = splines_x_txw_q.at(plane_idx);
+                            TGraph2D* spline_xtxw_w = splines_x_txw_w.at(plane_idx);
+                            factor_q *= spline_xtxw_q->Interpolate(ide_ptr->x, txw);
+                            factor_w *= spline_xtxw_w->Interpolate(ide_ptr->x, txw);
+                        }
                     }
                 
                     MF_LOG_INFO("WireModifier")
@@ -412,7 +396,6 @@ void WireModifier::produce(art::Event& evt) {
                     break;
                 }
 
-                // std::cout << z << " " << factor << "\n";
                 scale_vals.r_Q *= factor_q;
                 scale_vals.r_sigma *= factor_w;
                 scale_map[key] = scale_vals;

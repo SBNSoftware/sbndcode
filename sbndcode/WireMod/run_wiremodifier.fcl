@@ -1,6 +1,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "hitfindermodules_sbnd.fcl"
 
 #include "messages_sbnd.fcl"
 
@@ -10,7 +11,7 @@ process_name: WireModifier
 
 services:
 {
-    TFileService: { fileName: "wiremod.root" }
+    TFileService: { fileName: "wiremod_hist.root" }
     @table::sbnd_basic_services
     DetectorClocksService:     @local::sbnd_detectorclocks
     LArPropertiesService:      @local::sbnd_properties
@@ -28,6 +29,23 @@ source:
 }
 
 
+physics:
+{
+    producers:
+    {
+        wiremod: @local::wiremod_sbnd
+        gaushit: @local::sbnd_gaushitfinder
+    }
+
+    wiremod:       [ wiremod, gaushit ]
+    trigger_paths: [ wiremod ]
+    
+    stream1: [ out1 ]
+    end_paths: [ stream1 ]
+}
+
+physics.producers.gaushit.CalDataModuleLabel: "wiremod"
+
 outputs:
 {
     out1:
@@ -42,19 +60,3 @@ outputs:
         ]
     }
 }
-
-
-physics:
-{
-    producers:
-    {
-        wiremod: @local::wiremod_sbnd
-    }
-
-    wiremod:       [ wiremod ]
-    trigger_paths: [ wiremod ]
-    
-    stream1: [ out1 ]
-    end_paths: [ stream1 ]
-}
-
