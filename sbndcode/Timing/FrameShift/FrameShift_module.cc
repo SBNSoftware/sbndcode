@@ -68,6 +68,8 @@ public:
   void GetPTBTimestamps(const art::Event &e);
   void FindETRIGs();
   uint64_t DecideGlobalFrame();
+  void DefineTDCFrame(const uint64_t &global_frame_ts);
+  void DefinePTBFrame(const uint64_t &global_frame_ts);
 
 private:
 
@@ -233,85 +235,8 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   FindETRIGs();
 
   uint64_t global_frame_ts = DecideGlobalFrame();
-
-  //---------------------------TDC Frame-----------------------------//
-  // ch0: CRT T1
-  if (_tdc_ch0.size() != 0)
-    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame_ts);
-
-  // ch1: BES
-  if (_tdc_ch1.size() != 0)
-    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame_ts);
-
-  // ch2: RWM
-  if (_tdc_ch2.size() != 0)
-    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame_ts);
-
-  if (fDebugTdc){
-    std::cout << "----------------------------------------------------" << std::endl;
-    std::cout << "TDC Channel 0 (CRTT1) Timestamp: " << PrintFormatTimestamp(_tdc_crtt1_ts) << std::endl;
-    std::cout << "TDC Channel 1 (BES) Timestamp: " << PrintFormatTimestamp(_tdc_bes_ts) << std::endl;
-    std::cout << "TDC Channel 2 (RWM) Timestamp: "<< PrintFormatTimestamp(_tdc_rwm_ts) << std::endl;
-    std::cout << "TDC Channel 4 (ETRIG) Timestamp: "<< PrintFormatTimestamp(_tdc_etrig_ts) << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
-  } 
-  
-  //---------------------------PTB Frame-----------------------------//
-
-  //Check which Gate/CRT T1 HLT to use based on ETRIG HLT
-  //Order to check: Beam -> Offbeam -> Xmuon
-  for (size_t i = 0; i < fBeamEtrigHlt.size(); i++){
-    if (_hlt_etrig == fBeamEtrigHlt[i]){
-      _hlt_gate = fBeamGateHlt;
-      _hlt_crtt1 = fBeamCrtT1Hlt;
-      _isBeam = true;
-      break;
-    }
-  }
-  if (!_isBeam){
-    for (size_t i = 0; i < fOffbeamEtrigHlt.size(); i++){
-      if (_hlt_etrig == fOffbeamEtrigHlt[i]){
-        _hlt_gate = fOffbeamGateHlt;
-        _hlt_crtt1 = fOffbeamCrtT1Hlt;
-        _isOffbeam = true;
-        break;
-      }
-    }
-  }
-  if (!_isBeam & !_isOffbeam){
-    for (size_t i = 0; i < fXmuonEtrigHlt.size(); i++){
-      if (_hlt_etrig == fXmuonEtrigHlt[i]){
-        _isXmuon = true;
-        break;
-      }
-    }
-  } 
-
-  if( !_isBeam & !_isOffbeam & !_isXmuon){
-    throw cet::exception("FrameShift") << "ETRIG HLT " << _hlt_etrig << " does not match any known Beam/Offbeam/Xmuon ETRIG HLT! Check data quality!";
-  }
-
-  //Get Gate and CRT T1 HLT timestamps 
-  //TODO: What if there is no Gate or CRT T1 HLT?
-  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
-    if(_ptb_hlt_trunmask[i] == _hlt_gate){
-      _hlt_gate_ts = _ptb_hlt_unmask_timestamp[i];
-    }
-    if(_ptb_hlt_trunmask[i] == _hlt_crtt1){
-      _hlt_crtt1_ts = _ptb_hlt_unmask_timestamp[i];
-    }
-  }
-
-  if (fDebugPtb){
-
-    std::cout << "----------------------------------------------------" << std::endl;
-    if (_isBeam) std::cout << "This is Beam Stream!" << std::endl; 
-    if (_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl; 
-    std::cout << "HLT ETRIG = " << _hlt_etrig << ", Timestamp: " << PrintFormatTimestamp(_hlt_etrig_ts) << std::endl;
-    std::cout << "HLT Gate = " << _hlt_gate << ", Timestamp: " << PrintFormatTimestamp(_hlt_gate_ts) << std::endl;
-    std::cout << "HLT CRT T1 = " << _hlt_crtt1 << ", Timestamp: " << PrintFormatTimestamp(_hlt_crtt1_ts) << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
-  }
+  DefineTDCFrame(global_frame_ts);
+  DefinePTBFrame(global_frame_ts);
 
   //-----------------------Pick default frame-----------------------//
   // The follow picks which frame to apply at downstream stage and store it as frame_default, based on the stream
@@ -724,6 +649,99 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalFrame()
     }
 
   return global_frame_ts;
+}
+
+void sbnd::timing::FrameShift::DefineTDCFrame(const uint64_t &global_frame_ts)
+{
+  // ch0: CRT T1
+  if (_tdc_ch0.size() != 0)
+    _tdc_crtt1_ts = FindClosest(_tdc_ch0, global_frame_ts);
+
+  // ch1: BES
+  if (_tdc_ch1.size() != 0)
+    _tdc_bes_ts = FindClosest(_tdc_ch1, global_frame_ts);
+
+  // ch2: RWM
+  if (_tdc_ch2.size() != 0)
+    _tdc_rwm_ts = FindClosest(_tdc_ch2, global_frame_ts);
+
+  if (fDebugTdc)
+    {
+      std::cout << "----------------------------------------------------" << std::endl;
+      std::cout << "TDC Channel 0 (CRTT1) Timestamp: " << PrintFormatTimestamp(_tdc_crtt1_ts) << std::endl;
+      std::cout << "TDC Channel 1 (BES) Timestamp: " << PrintFormatTimestamp(_tdc_bes_ts) << std::endl;
+      std::cout << "TDC Channel 2 (RWM) Timestamp: "<< PrintFormatTimestamp(_tdc_rwm_ts) << std::endl;
+      std::cout << "TDC Channel 4 (ETRIG) Timestamp: "<< PrintFormatTimestamp(_tdc_etrig_ts) << std::endl;
+      std::cout << "----------------------------------------------------" << std::endl;
+    }
+}
+
+void sbnd::timing::FrameShift::DefinePTBFrame(const uint64_t &global_frame_ts)
+{
+  //Check which Gate/CRT T1 HLT to use based on ETRIG HLT
+  //Order to check: Beam -> Offbeam -> Xmuon
+
+  for(const int &beam_etrig_hlt : fBeamEtrigHlt)
+    {
+      if (_hlt_etrig == beam_etrig_hlt)
+	{
+	  _hlt_gate  = fBeamGateHlt;
+	  _hlt_crtt1 = fBeamCrtT1Hlt;
+	  _isBeam    = true;
+	  break;
+	}
+    }
+
+  if (!_isBeam)
+    {
+      for(const int &offbeam_etrig_hlt : fOffbeamEtrigHlt)
+	{
+	  if (_hlt_etrig == offbeam_etrig_hlt)
+	    {
+	      _hlt_gate  = fOffbeamGateHlt;
+	      _hlt_crtt1 = fOffbeamCrtT1Hlt;
+	      _isOffbeam = true;
+	      break;
+	    }
+	}
+    }
+
+  if (!_isBeam & !_isOffbeam)
+    {
+      for (const int &xmuon_etrig_hlt : fXmuonEtrigHlt)
+	{
+	  if (_hlt_etrig == xmuon_etrig_hlt)
+	    {
+	      _isXmuon = true;
+	      break;
+	    }
+	}
+    }
+
+  if( !_isBeam & !_isOffbeam & !_isXmuon)
+    throw cet::exception("FrameShift") << "ETRIG HLT " << _hlt_etrig << " does not match any known Beam/Offbeam/Xmuon ETRIG HLT! Check data quality!";
+
+  //Get Gate and CRT T1 HLT timestamps
+  //TODO: What if there is no Gate or CRT T1 HLT?
+  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
+    {
+      if(_ptb_hlt_trunmask[i] == _hlt_gate)
+	_hlt_gate_ts = _ptb_hlt_unmask_timestamp[i];
+      if(_ptb_hlt_trunmask[i] == _hlt_crtt1)
+	_hlt_crtt1_ts = _ptb_hlt_unmask_timestamp[i];
+    }
+
+  if (fDebugPtb)
+    {
+      std::cout << "----------------------------------------------------" << std::endl;
+      if (_isBeam) std::cout << "This is Beam Stream!" << std::endl;
+      if (_isOffbeam) std::cout << "This is Offbeam Stream!" << std::endl;
+      if (_isXmuon) std::cout << "This is Crossing Muon Stream!" << std::endl;
+      std::cout << "HLT ETRIG = " << _hlt_etrig << ", Timestamp: " << PrintFormatTimestamp(_hlt_etrig_ts) << std::endl;
+      std::cout << "HLT Gate = " << _hlt_gate << ", Timestamp: " << PrintFormatTimestamp(_hlt_gate_ts) << std::endl;
+      std::cout << "HLT CRT T1 = " << _hlt_crtt1 << ", Timestamp: " << PrintFormatTimestamp(_hlt_crtt1_ts) << std::endl;
+      std::cout << "----------------------------------------------------" << std::endl;
+    }
 }
 
 void sbnd::timing::FrameShift::beginJob()
