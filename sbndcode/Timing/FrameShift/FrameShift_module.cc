@@ -36,12 +36,12 @@
 
 #include <bitset>
 
-namespace sbnd {
+namespace sbnd::timing {
   class FrameShift;
 }
 
 
-class sbnd::FrameShift : public art::EDProducer {
+class sbnd::timing::FrameShift : public art::EDProducer {
 public:
   explicit FrameShift(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
@@ -60,10 +60,6 @@ public:
   void beginJob() override;
   void ResetEventVars();
     
-  static constexpr uint64_t InvalidTimestamp = std::numeric_limits<uint64_t>::max(); ///< Invalid frame.    
-  static constexpr uint16_t InvalidTimingChannel = std::numeric_limits<uint16_t>::max(); ///< Invalid frame.    
-  static constexpr uint16_t InvalidTimingType = std::numeric_limits<uint16_t>::max(); ///< Invalid frame.    
-
 private:
 
   // Declare member data here.
@@ -168,7 +164,7 @@ private:
 };
 
 
-sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
+sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
@@ -205,11 +201,11 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fShiftRWM2Gate = p.get<uint64_t>("ShiftRWM2Gate"); 
   fShiftTDC2PTB = p.get<uint64_t>("ShiftTDC2PTB");
   
-  produces< sbnd::timing::FrameShiftInfo >();
-  produces< sbnd::timing::TimingInfo >();
+  produces< FrameShiftInfo >();
+  produces< TimingInfo >();
 }
 
-void sbnd::FrameShift::produce(art::Event& e)
+void sbnd::timing::FrameShift::produce(art::Event& e)
 {
 
   ResetEventVars();
@@ -241,15 +237,15 @@ void sbnd::FrameShift::produce(art::Event& e)
   }
 
   //---------------------------TDC-----------------------------//
-  art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+  art::Handle<std::vector<DAQTimestamp>> tdcHandle;
   e.getByLabel(fTdcDecodeLabel, tdcHandle);
 
   if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-    mf::LogInfo("FrameShift") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
-    //throw cet::exception("FrameShift") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
+    mf::LogInfo("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
+    //throw cet::exception("FrameShift") << "No DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
   }
   else{
-    std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+    std::vector<DAQTimestamp> tdc_v(*tdcHandle);
     for (size_t i=0; i<tdc_v.size(); i++){
       auto tdc = tdc_v[i];
       const uint32_t  ch = tdc.Channel();
@@ -404,17 +400,17 @@ void sbnd::FrameShift::produce(art::Event& e)
   }
 
   //Decide which global frame to use as reference 
-  uint64_t _global_frame = InvalidTimestamp;
-  if (_tdc_etrig_ts != InvalidTimestamp){ _global_frame = _tdc_etrig_ts; }
-  else if (_hlt_etrig_ts != InvalidTimestamp){ _global_frame = _hlt_etrig_ts; }
+  uint64_t _global_frame = kInvalidTimestamp;
+  if (_tdc_etrig_ts != kInvalidTimestamp){ _global_frame = _tdc_etrig_ts; }
+  else if (_hlt_etrig_ts != kInvalidTimestamp){ _global_frame = _hlt_etrig_ts; }
   else { _global_frame = _raw_ts;}
 
   if (fDebugFrame){
     std::cout << "----------------------------------------------------" << std::endl;
-    if (_tdc_etrig_ts != InvalidTimestamp){
+    if (_tdc_etrig_ts != kInvalidTimestamp){
       std::cout << "Using TDC ETRIG as Global Frame Reference" << std::endl;
     }
-    else if (_hlt_etrig_ts != InvalidTimestamp){
+    else if (_hlt_etrig_ts != kInvalidTimestamp){
       std::cout << "Using PTB HLT ETRIG as Global Frame Reference" << std::endl;
     }
     else {
@@ -587,53 +583,53 @@ void sbnd::FrameShift::produce(art::Event& e)
   if (_isBeam){
 
     //Frame CRT T1
-    if(_tdc_crtt1_ts != InvalidTimestamp){
+    if(_tdc_crtt1_ts != kInvalidTimestamp){
       _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
       _timing_type_crtt1 = 0; //SPECTDC
       _timing_channel_crtt1 = 0;
     }
-    else if(_hlt_crtt1_ts != InvalidTimestamp) {
+    else if(_hlt_crtt1_ts != kInvalidTimestamp) {
       _frame_crtt1 = _hlt_crtt1_ts;
       _timing_type_crtt1 = 1; //PTB HLT
       _timing_channel_crtt1 = _hlt_crtt1;
     }
     else{
-      _frame_crtt1 = InvalidTimestamp;
+      _frame_crtt1 = kInvalidTimestamp;
       _timing_type_crtt1 = 2;
-      _timing_channel_crtt1 = InvalidTimingChannel;
+      _timing_channel_crtt1 = kInvalidChannel;
     }
 
     //Frame Beam Gate
-    if(_tdc_rwm_ts != InvalidTimestamp){
+    if(_tdc_rwm_ts != kInvalidTimestamp){
       _frame_gate = _tdc_rwm_ts + fShiftRWM2Gate; //TODO: + fShiftData2MC;
       _timing_type_gate = 0; //SPECTDC
       _timing_channel_gate = 2;
     }
-    else if(_hlt_gate_ts != InvalidTimestamp){
+    else if(_hlt_gate_ts != kInvalidTimestamp){
       _frame_gate = _hlt_gate_ts;
       _timing_type_gate = 1; //PTB HLT
       _timing_channel_gate = _hlt_gate;
     }else{
-      _frame_gate = InvalidTimestamp;
+      _frame_gate = kInvalidTimestamp;
       _timing_type_gate = 2;
-      _timing_channel_gate = InvalidTimingChannel;
+      _timing_channel_gate = kInvalidChannel;
     }
 
     //Frame ETRIG
-    if(_tdc_etrig_ts != InvalidTimestamp){
+    if(_tdc_etrig_ts != kInvalidTimestamp){
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
       _timing_channel_etrig = 4;
     }
-    else if(_hlt_etrig_ts != InvalidTimestamp){
+    else if(_hlt_etrig_ts != kInvalidTimestamp){
       _frame_etrig = _hlt_etrig_ts;
       _timing_type_etrig = 1; //PTB HLT
       _timing_channel_etrig = _hlt_etrig;
     }
     else {
-      _frame_etrig = InvalidTimestamp;
+      _frame_etrig = kInvalidTimestamp;
       _timing_type_etrig = 2;
-      _timing_channel_etrig = InvalidTimingChannel;
+      _timing_channel_etrig = kInvalidChannel;
     }
 
     //Pick default stream -- beam gate
@@ -644,36 +640,36 @@ void sbnd::FrameShift::produce(art::Event& e)
   else if (_isOffbeam){
 
     //Frame CRT T1
-    if(_tdc_crtt1_ts != InvalidTimestamp){
+    if(_tdc_crtt1_ts != kInvalidTimestamp){
       _frame_crtt1 = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB
       _timing_type_crtt1 = 0; //SPECTDC
       _timing_channel_crtt1 = 0;
     }
-    else if(_hlt_crtt1_ts != InvalidTimestamp) {
+    else if(_hlt_crtt1_ts != kInvalidTimestamp) {
       _frame_crtt1 = _hlt_crtt1_ts;
       _timing_type_crtt1 = 1; //PTB HLT
       _timing_channel_crtt1 = _hlt_crtt1;
     }
     else{
-      _frame_crtt1 = InvalidTimestamp;
+      _frame_crtt1 = kInvalidTimestamp;
       _timing_type_crtt1 = 2;
-      _timing_channel_crtt1 = InvalidTimingChannel;
+      _timing_channel_crtt1 = kInvalidChannel;
     }
 
     //Frame Gate -- TODO: I think HLT Gate is recorded in TDC as FTRIG and can be found
-    if(_hlt_gate_ts != InvalidTimestamp) {
+    if(_hlt_gate_ts != kInvalidTimestamp) {
       _frame_gate = _hlt_gate_ts; // TODO: + fShiftData2MC;
       _timing_type_gate = 1; //PTB HLT
       _timing_channel_gate = _hlt_gate;
     }
     else {
-      _frame_gate = InvalidTimestamp;
+      _frame_gate = kInvalidTimestamp;
       _timing_type_gate = 2;
-      _timing_channel_gate = InvalidTimingChannel;
+      _timing_channel_gate = kInvalidChannel;
     }
 
     //Frame ETRIG
-    if(_tdc_etrig_ts != InvalidTimestamp) {
+    if(_tdc_etrig_ts != kInvalidTimestamp) {
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
       _timing_channel_etrig = 4;
@@ -684,9 +680,9 @@ void sbnd::FrameShift::produce(art::Event& e)
       _timing_channel_etrig = _hlt_etrig;
     }
     else {
-      _frame_etrig = InvalidTimestamp;
+      _frame_etrig = kInvalidTimestamp;
       _timing_type_etrig = 2;
-      _timing_channel_etrig = InvalidTimingChannel;
+      _timing_channel_etrig = kInvalidChannel;
     }
 
     //Pick default stream -- beam gate
@@ -697,20 +693,20 @@ void sbnd::FrameShift::produce(art::Event& e)
   else if (_isXmuon){
 
     //Frame ETRIG
-    if(_tdc_etrig_ts != InvalidTimestamp) {
+    if(_tdc_etrig_ts != kInvalidTimestamp) {
       _frame_etrig = _tdc_etrig_ts + fShiftTDC2PTB;
       _timing_type_etrig = 0; //SPECTDC
       _timing_channel_etrig = 4;
     }
-    else if(_hlt_etrig_ts != InvalidTimestamp) {
+    else if(_hlt_etrig_ts != kInvalidTimestamp) {
       _frame_etrig = _hlt_etrig_ts;
       _timing_type_etrig = 1; //PTB HLT
       _timing_channel_etrig = _hlt_etrig;
     }
     else {
-      _frame_etrig = InvalidTimestamp;
+      _frame_etrig = kInvalidTimestamp;
       _timing_type_etrig = 2;
-      _timing_channel_etrig = InvalidTimingChannel;
+      _timing_channel_etrig = kInvalidChannel;
     }
 
     //Pick default stream -- ETRIG
@@ -747,12 +743,12 @@ void sbnd::FrameShift::produce(art::Event& e)
   
 
   //Put product in event
-  std::unique_ptr< sbnd::timing::FrameShiftInfo > newFrameShiftInfo(new sbnd::timing::FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
+  std::unique_ptr< FrameShiftInfo > newFrameShiftInfo(new FrameShiftInfo(_frame_crtt1, _timing_type_crtt1, _timing_channel_crtt1,
                                                                                       _frame_gate, _timing_type_gate, _timing_channel_gate,
                                                                                       _frame_etrig, _timing_type_etrig,_timing_channel_etrig,
                                                                                       _frame_default, _timing_type_default, _timing_channel_default));
 
-  std::unique_ptr< sbnd::timing::TimingInfo > newTimingInfo(new sbnd::timing::TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts, _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
+  std::unique_ptr< TimingInfo > newTimingInfo(new TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts, _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
 
   e.put(std::move(newTimingInfo));
   e.put(std::move(newFrameShiftInfo));
@@ -761,7 +757,7 @@ void sbnd::FrameShift::produce(art::Event& e)
   fTree->Fill();
 }
 
-void sbnd::FrameShift::beginJob()
+void sbnd::timing::FrameShift::beginJob()
 {
   // Implementation of optional member function here.
   //Event Tree
@@ -811,23 +807,23 @@ void sbnd::FrameShift::beginJob()
   fTree->Branch("timing_channel_default", &_timing_channel_default);
 }
 
-void sbnd::FrameShift::ResetEventVars()
+void sbnd::timing::FrameShift::ResetEventVars()
 {
   _run = -1;
   _subrun = -1;
   _event = -1;
 
-  _raw_ts = InvalidTimestamp;
+  _raw_ts = kInvalidTimestamp;
 
   _tdc_ch0.clear();
   _tdc_ch1.clear();
   _tdc_ch2.clear();
   _tdc_ch4.clear();
 
-  _tdc_crtt1_ts = InvalidTimestamp;
-  _tdc_bes_ts = InvalidTimestamp;
-  _tdc_rwm_ts = InvalidTimestamp;
-  _tdc_etrig_ts = InvalidTimestamp;
+  _tdc_crtt1_ts = kInvalidTimestamp;
+  _tdc_bes_ts = kInvalidTimestamp;
+  _tdc_rwm_ts = kInvalidTimestamp;
+  _tdc_etrig_ts = kInvalidTimestamp;
 
   _ptb_hlt_trigger.clear();
   _ptb_hlt_timestamp.clear();
@@ -842,27 +838,27 @@ void sbnd::FrameShift::ResetEventVars()
   _isXmuon = false;  
 
   _hlt_etrig = std::numeric_limits<int>::max();
-  _hlt_etrig_ts = InvalidTimestamp;
+  _hlt_etrig_ts = kInvalidTimestamp;
   _hlt_gate = std::numeric_limits<int>::max();
-  _hlt_gate_ts = InvalidTimestamp;
+  _hlt_gate_ts = kInvalidTimestamp;
   _hlt_crtt1= std::numeric_limits<int>::max();
-  _hlt_crtt1_ts = InvalidTimestamp;
+  _hlt_crtt1_ts = kInvalidTimestamp;
   
-  _frame_crtt1 = InvalidTimestamp;
-  _timing_type_crtt1 = InvalidTimingType;
-  _timing_channel_crtt1 = InvalidTimingChannel;
+  _frame_crtt1 = kInvalidTimestamp;
+  _timing_type_crtt1 = kInvalidType;
+  _timing_channel_crtt1 = kInvalidChannel;
   
-  _frame_gate = InvalidTimestamp;
-  _timing_type_gate = InvalidTimingType;
-  _timing_channel_gate = InvalidTimingChannel;
+  _frame_gate = kInvalidTimestamp;
+  _timing_type_gate = kInvalidType;
+  _timing_channel_gate = kInvalidChannel;
   
-  _frame_etrig = InvalidTimestamp;
-  _timing_type_etrig = InvalidTimingType;
-  _timing_channel_etrig = InvalidTimingChannel;
+  _frame_etrig = kInvalidTimestamp;
+  _timing_type_etrig = kInvalidType;
+  _timing_channel_etrig = kInvalidChannel;
 
-  _frame_default = InvalidTimestamp;
-  _timing_type_default = InvalidTimingType;
-  _timing_channel_default = InvalidTimingChannel;
+  _frame_default = kInvalidTimestamp;
+  _timing_type_default = kInvalidType;
+  _timing_channel_default = kInvalidChannel;
 }
 
-DEFINE_ART_MODULE(sbnd::FrameShift)
+DEFINE_ART_MODULE(sbnd::timing::FrameShift)
