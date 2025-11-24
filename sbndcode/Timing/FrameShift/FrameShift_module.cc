@@ -74,149 +74,117 @@ public:
 
 private:
 
-  // Declare member data here.
-  //DAQ Header
-  std::string fDAQHeaderModuleLabel;
-  std::string fDAQHeaderInstanceLabel;
-  uint64_t fRawTSCorrection; //Correction for the Event timestamp to account for NTB
-  uint64_t fMaxAllowedRefTimeDiff;
-  uint64_t _raw_ts; //ns
-  
-  //Timing Reference
-  art::InputTag fTimingRefPmtLabel;
-  art::InputTag fTimingRefCrtLabel;
+  // FCL Parameters
+  std::string fDAQHeaderModuleLabel;   // Instance label for DAQ header product
+  std::string fDAQHeaderInstanceLabel; // Module label for DAQ header product
+  uint64_t fRawTSCorrection;           // Correction to the DAQ header timestamp to account for NTB offset
+  art::InputTag fPtbDecodeLabel;       // Module label for decoded PTB data
+  std::vector<int> fPtbEtrigHlts;      // All allowed PTB HLT codes for event triggers
+  std::vector<int> fBeamEtrigHlt;      // PTB HLT codes associated with beam trigger
+  std::vector<int> fOffbeamEtrigHlt;   // PTB HLT codes associated with offbeam trigger
+  std::vector<int> fXmuonEtrigHlt;     // PTB HLT codes associated with crossing muon trigger
+  int fBeamCrtT1Hlt;                   // PTB HLT code for beam CRT T1 reset
+  int fOffbeamCrtT1Hlt;                // PTB HLT code for offbeam CRT T1 reset
+  int fBeamGateHlt;                    // PTB HLT code for beam gate opening
+  int fOffbeamGateHlt;                 // PTB HLT code for offbeam gate opening
+  art::InputTag fTdcDecodeLabel;       // Module label for decoded TDC data
+  uint64_t fShiftData2MC;              // Value to shift Data to MC -- so that data agree with MC [ns]
+                                       // TODO: Derive this value and verify if it is consistent across pmt/crt
+                                       // TODO: Get this value from database instead of fhicl parameter
+  uint64_t fShiftRWM2Gate;             // Value to move RWM frame to agree with HLT Gate Frame
+                                       // This is derived by subtracting: TDC RWM - HLT Gate.
+                                       // Using the MC2025B dataset, this distribution has a mean of 1738 ns and std of 9 ns.
+                                       // TODO: Get this value from database instead of fhicl parameter
+  uint64_t fShiftTDC2PTB;              // Value to account for cable length between TDC and PTB
+  bool fMakeTree;                      // Whether to produce a TTree in the hist file
+  bool fDebugDAQHeader;                // Whether to print debug statements relevant to DAQ header
+  bool fDebugPtb;                      // Whether to print debug statements relevant to PTB
+  bool fDebugTdc;                      // Whether to print debug statements relevant to TDC
+  bool fDebugFrame;                    // Whether to print debug statements relevant to frame shifts
 
-  //PTB
-  art::InputTag fPtbDecodeLabel;
-  
-  std::vector<int> fPtbEtrigHlts; 
-  
-  std::vector<int> fBeamEtrigHlt;
-  std::vector<int> fOffbeamEtrigHlt;
-  std::vector<int> fXmuonEtrigHlt;
-  
-  int fBeamCrtT1Hlt;
-  int fOffbeamCrtT1Hlt;
-  
-  int fBeamGateHlt;
-  int fOffbeamGateHlt;
-  
-  std::vector<uint64_t> _ptb_hlt_trigger;
-  std::vector<uint64_t> _ptb_hlt_timestamp;
-  std::vector<uint64_t> _ptb_hlt_unmask_timestamp;
-  std::vector<int> _ptb_hlt_trunmask;
 
-  std::vector<int> _ptb_hlt_etrig;
-  std::vector<uint64_t> _ptb_hlt_etrig_ts;
+  // Global Variables, set in processing
+  int _run, _subrun, _event;                       // Stores the unique run, subrun, event number combination for this event
 
-  bool _isBeam;
-  bool _isOffbeam;
-  bool _isXmuon;  
+  uint64_t _raw_ts;                                // Stores DAQ header timestamp
+  std::vector<uint64_t> _ptb_hlt_trigger;          // Stores full trigger word from PTB HLT (indexed per HLT)
+  std::vector<uint64_t> _ptb_hlt_timestamp;        // Stores timestamp associated with PTB HLT (indexed per HLT)
+  std::vector<uint64_t> _ptb_hlt_unmask_timestamp; // Stores timestamp associated with PTB HLT for each element (indexed per HLT element once unmasked)
+  std::vector<int> _ptb_hlt_trunmask;              // Stores PTB HLT code for each element (indexed per HLT element once unmasked)
+  std::vector<int> _ptb_hlt_etrig;                 // Stores all PTB HLTs that are an 'allowed type' for this stream
+  std::vector<uint64_t> _ptb_hlt_etrig_ts;         // Stores the associated timestamps for the above HLTs
 
-  int _hlt_etrig;
-  uint64_t _hlt_etrig_ts;
-  int _hlt_gate;
-  uint64_t _hlt_gate_ts;
-  int _hlt_crtt1;
-  uint64_t _hlt_crtt1_ts;
+  bool _isBeam;                                    // Event is a beam trigger (BNB or BNBLight)
+  bool _isOffbeam;                                 // Event is an offbeam trigger (OffBeam or OffBeamLight)
+  bool _isXmuon;                                   // Event is a crossing muon trigger
+
+  int _hlt_etrig;                                  // Stores the HLT event trigger code, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _hlt_etrig_ts;                          // Stores the HLT timestamp, once we've decided which one was closest to the DAQ header timestamp
+  int _hlt_gate;                                   // Stores the HLT gate opening code, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _hlt_gate_ts;                           // Stores the HLT gate opening timestamp, once we've decided which one was closest to the DAQ header timestamp
+  int _hlt_crtt1;                                  // Stores the HLT CRT T1 code, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _hlt_crtt1_ts;                          // Stores the HLT CRT T1 timestamp, once we've decided which one was closest to the DAQ header timestamp
  
-  //TDC
-  art::InputTag fTdcDecodeLabel;
+  std::vector<uint64_t> _tdc_ch0;                  // Stores all the timestamps recorded in the TDC channel 0 (CRT T1)
+  std::vector<uint64_t> _tdc_ch1;                  // Stores all the timestamps recorded in the TDC channel 1 (BES)
+  std::vector<uint64_t> _tdc_ch2;                  // Stores all the timestamps recorded in the TDC channel 2 (RWM)
+  std::vector<uint64_t> _tdc_ch4;                  // Stores all the timestamps recorded in the TDC channel 4 (Event trigger)
 
-  std::vector<uint64_t> _tdc_ch0;
-  std::vector<uint64_t> _tdc_ch1;
-  std::vector<uint64_t> _tdc_ch2;
-  std::vector<uint64_t> _tdc_ch4;
+  uint64_t _tdc_crtt1_ts;                          // Stores the TDC CRT T1 timestamp, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _tdc_bes_ts;                            // Stores the TDC BES timestamp, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _tdc_rwm_ts;                            // Stores the TDC RWM timestamp, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _tdc_etrig_ts;                          // Stores the TDC event trigger timestamp, once we've decided which one was closest to the DAQ header timestamp
 
-  uint64_t _tdc_crtt1_ts;
-  uint64_t _tdc_bes_ts;
-  uint64_t _tdc_rwm_ts;
-  uint64_t _tdc_etrig_ts;
+  uint64_t _frame_crtt1;                           // Stores the shift required to move from the PPS frame to the CRT T1 frame
+  uint16_t _timing_type_crtt1;                     // Stores the type (TDC/PTB) used to produce the above shift
+  uint16_t _timing_channel_crtt1;                  // Stores the channel (TDC) / code (PTB) used to produce the above shift
+  uint64_t _frame_gate;                            // Stores the shift required to move from the PPS frame to the gate opening frame
+  uint16_t _timing_type_gate;                      // Stores the type (TDC/PTB) used to produce the above shift
+  uint16_t _timing_channel_gate;                   // Stores the channel (TDC) / code (PTB) used to produce the above shift
+  uint64_t _frame_etrig;                           // Stores the shift required to move from the PPS frame to the event trigger frame
+  uint16_t _timing_type_etrig;                     // Stores the type (TDC/PTB) used to produce the above shift
+  uint16_t _timing_channel_etrig;                  // Stores the channel (TDC) / code (PTB) used to produce the above shift
 
-  //Frame Shift
-  uint64_t _frame_crtt1; //ns
-  uint16_t _timing_type_crtt1;
-  uint16_t _timing_channel_crtt1;
-  uint64_t _frame_gate; //ns
-  uint16_t _timing_type_gate;
-  uint16_t _timing_channel_gate;
-  uint64_t _frame_etrig; //ns
-  uint16_t _timing_type_etrig;
-  uint16_t _timing_channel_etrig;
+  uint64_t _frame_default;                         // Stores the shift required to move from the PPS frame to the default frame for this stream
+  uint16_t _timing_type_default;                   // Stores the type (TDC/PTB) used to produce the above shift
+  uint16_t _timing_channel_default;                // Stores the channel (TDC) / code (PTB) used to produce the above shift
 
-  //Value to apply at downstream modules depending on which stream
-  uint64_t _frame_default;
-  uint16_t _timing_type_default;
-  uint16_t _timing_channel_default;
-
-  //Value to shift Data to MC -- so that data agree with MC [ns]
-  //TODO: Derive this value and verify if it is consistent across pmt/crt
-  //TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftData2MC; //ns
-
-  //Value to move RWM frame to agree with HLT Gate Frame
-  //This is derived by subtracting: TDC RWM - HLT Gate.
-  //Using the MC2025B dataset, this distribution has a mean of 1738 ns and std of 9 ns.
-  //TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftRWM2Gate; //ns
-
-  //Value to move TDC values to PTB HLT values
-  uint64_t fShiftTDC2PTB; //ns
-
-  //Debug
-  bool fDebugDAQHeader;
-  bool fDebugPtb;
-  bool fDebugTdc;
-  bool fDebugFrame;
-
-  //---TREE PARAMETERS
+  // Tree production
   TTree *fTree;
   art::ServiceHandle<art::TFileService> tfs;
-  int _run, _subrun, _event;
 
+  // Useful value
   static constexpr uint64_t kSecondInNanoseconds = static_cast<uint64_t>(1e9);
 };
 
 
 sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
-  : EDProducer{p}  // ,
-    // More initializers here.
+  : EDProducer{p}
 {
   fDAQHeaderInstanceLabel = p.get<std::string>("DAQHeaderInstanceLabel");
   fDAQHeaderModuleLabel = p.get<std::string>("DAQHeaderModuleLabel");
   fRawTSCorrection = p.get<uint64_t>("RawTSCorrection");
-  fMaxAllowedRefTimeDiff = p.get<uint64_t>("MaxAllowedRefTimeDiff");
-  
-  fTimingRefPmtLabel = p.get<art::InputTag>("TimingRefPmtLabel");
-  fTimingRefCrtLabel = p.get<art::InputTag>("TimingRefCrtLabel");
-
-  fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel");
   fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel");
-
   fPtbEtrigHlts = p.get<std::vector<int>>("PtbEtrigHlts");
-  
   fBeamEtrigHlt = p.get<std::vector<int>>("BeamEtrigHlt");
   fOffbeamEtrigHlt = p.get<std::vector<int>>("OffbeamEtrigHlt");
   fXmuonEtrigHlt = p.get<std::vector<int>>("XmuonEtrigHlt");
-  
   fBeamCrtT1Hlt = p.get<int>("BeamCrtT1Hlt");
   fOffbeamCrtT1Hlt = p.get<int>("OffbeamCrtT1Hlt");
-
   fBeamGateHlt = p.get<int>("BeamGateHlt");
   fOffbeamGateHlt = p.get<int>("OffbeamGateHlt");
-
+  fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel");
+  fShiftData2MC = p.get<uint64_t>("ShiftData2MC"); //TODO: Get from database instead of fhicl parameters
+  fShiftRWM2Gate = p.get<uint64_t>("ShiftRWM2Gate"); //TODO: Get from database instead of fhicl parameters
+  fShiftTDC2PTB = p.get<uint64_t>("ShiftTDC2PTB"); //TODO: Get from database instead of fhicl parameters
+  fMakeTree = p.get<bool>("MakeTree", false);
   fDebugDAQHeader = p.get<bool>("DebugDAQHeader", false);
   fDebugPtb = p.get<bool>("DebugPtb", false);
   fDebugTdc = p.get<bool>("DebugTdc", false);
   fDebugFrame = p.get<bool>("DebugFrame", false);
   
-  //TODO: Get from database instead of fhicl parameters
-  fShiftData2MC = p.get<uint64_t>("ShiftData2MC");
-  fShiftRWM2Gate = p.get<uint64_t>("ShiftRWM2Gate"); 
-  fShiftTDC2PTB = p.get<uint64_t>("ShiftTDC2PTB");
-  
-  produces< FrameShiftInfo >();
-  produces< TimingInfo >();
+  produces<FrameShiftInfo>();
+  produces<TimingInfo>();
 }
 
 void sbnd::timing::FrameShift::produce(art::Event& e)
@@ -361,7 +329,8 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   e.put(std::move(newFrameShiftInfo));
 
   //Fill the tree
-  fTree->Fill();
+  if(fMakeTree)
+    fTree->Fill();
 }
 
 uint64_t sbnd::timing::FrameShift::FindClosest(const std::vector<uint64_t> &timestamps, const uint64_t &reference)
@@ -691,52 +660,53 @@ void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &globa
 
 void sbnd::timing::FrameShift::beginJob()
 {
-  // Implementation of optional member function here.
-  //Event Tree
-  fTree = tfs->make<TTree>("events", "");
+  if(fMakeTree)
+    {
+      fTree = tfs->make<TTree>("events", "");
   
-  fTree->Branch("run", &_run);
-  fTree->Branch("subrun", &_subrun);
-  fTree->Branch("event", &_event);
+      fTree->Branch("run", &_run);
+      fTree->Branch("subrun", &_subrun);
+      fTree->Branch("event", &_event);
   
-  //TDC
-  fTree->Branch("tdc_ch0", &_tdc_ch0);
-  fTree->Branch("tdc_ch1", &_tdc_ch1);
-  fTree->Branch("tdc_ch2", &_tdc_ch2);
-  fTree->Branch("tdc_ch4", &_tdc_ch4);
+      //TDC
+      fTree->Branch("tdc_ch0", &_tdc_ch0);
+      fTree->Branch("tdc_ch1", &_tdc_ch1);
+      fTree->Branch("tdc_ch2", &_tdc_ch2);
+      fTree->Branch("tdc_ch4", &_tdc_ch4);
 
-  fTree->Branch("tdc_crtt1_ts", &_tdc_crtt1_ts);
-  fTree->Branch("tdc_bes_ts", &_tdc_bes_ts);
-  fTree->Branch("tdc_rwm_ts", &_tdc_rwm_ts);
-  fTree->Branch("tdc_etrig_ts", &_tdc_etrig_ts);
+      fTree->Branch("tdc_crtt1_ts", &_tdc_crtt1_ts);
+      fTree->Branch("tdc_bes_ts", &_tdc_bes_ts);
+      fTree->Branch("tdc_rwm_ts", &_tdc_rwm_ts);
+      fTree->Branch("tdc_etrig_ts", &_tdc_etrig_ts);
 
-  //PTB
-  fTree->Branch("ptb_hlt_unmask_timestamp", &_ptb_hlt_unmask_timestamp);
-  fTree->Branch("ptb_hlt_trunmask", &_ptb_hlt_trunmask);
+      //PTB
+      fTree->Branch("ptb_hlt_unmask_timestamp", &_ptb_hlt_unmask_timestamp);
+      fTree->Branch("ptb_hlt_trunmask", &_ptb_hlt_trunmask);
 
-  fTree->Branch("hlt_etrig", &_hlt_etrig);
-  fTree->Branch("hlt_etrig_ts", &_hlt_etrig_ts);
-  fTree->Branch("hlt_gate", &_hlt_gate);
-  fTree->Branch("hlt_gate_ts", &_hlt_gate_ts);
-  fTree->Branch("hlt_crtt1", &_hlt_crtt1);
-  fTree->Branch("hlt_crtt1_ts", &_hlt_crtt1_ts);
+      fTree->Branch("hlt_etrig", &_hlt_etrig);
+      fTree->Branch("hlt_etrig_ts", &_hlt_etrig_ts);
+      fTree->Branch("hlt_gate", &_hlt_gate);
+      fTree->Branch("hlt_gate_ts", &_hlt_gate_ts);
+      fTree->Branch("hlt_crtt1", &_hlt_crtt1);
+      fTree->Branch("hlt_crtt1_ts", &_hlt_crtt1_ts);
 
-  //Frame Shift
-  fTree->Branch("frame_crtt1", &_frame_crtt1);
-  fTree->Branch("timing_type_crtt1", &_timing_type_crtt1);
-  fTree->Branch("timing_channel_crtt1", &_timing_channel_crtt1);
+      //Frame Shift
+      fTree->Branch("frame_crtt1", &_frame_crtt1);
+      fTree->Branch("timing_type_crtt1", &_timing_type_crtt1);
+      fTree->Branch("timing_channel_crtt1", &_timing_channel_crtt1);
 
-  fTree->Branch("frame_gate", &_frame_gate);
-  fTree->Branch("timing_type_gate", &_timing_type_gate);
-  fTree->Branch("timing_channel_gate", &_timing_channel_gate);
+      fTree->Branch("frame_gate", &_frame_gate);
+      fTree->Branch("timing_type_gate", &_timing_type_gate);
+      fTree->Branch("timing_channel_gate", &_timing_channel_gate);
 
-  fTree->Branch("frame_etrig", &_frame_etrig);  
-  fTree->Branch("timing_type_etrig", &_timing_type_etrig);
-  fTree->Branch("timing_channel_etrig", &_timing_channel_etrig);
+      fTree->Branch("frame_etrig", &_frame_etrig);  
+      fTree->Branch("timing_type_etrig", &_timing_type_etrig);
+      fTree->Branch("timing_channel_etrig", &_timing_channel_etrig);
 
-  fTree->Branch("frame_default", &_frame_default);
-  fTree->Branch("timing_type_default", &_timing_type_default);
-  fTree->Branch("timing_channel_default", &_timing_channel_default);
+      fTree->Branch("frame_default", &_frame_default);
+      fTree->Branch("timing_type_default", &_timing_type_default);
+      fTree->Branch("timing_channel_default", &_timing_channel_default);
+    }
 }
 
 void sbnd::timing::FrameShift::ResetEventVars()
