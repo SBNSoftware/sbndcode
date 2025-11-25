@@ -298,8 +298,7 @@ namespace opdet {
     }
 
     // get PMT channels
-    for (const auto& wvf : fWaveforms) {
-        auto ch = wvf.ChannelNumber();
+    for (unsigned int ch = 0; ch < nChannels; ++ch) {
         if (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) fPMT_Channels.push_back(ch);
     }
 
