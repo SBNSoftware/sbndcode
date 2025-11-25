@@ -385,7 +385,7 @@ void WireModifier::produce(art::Event& evt) {
                             factor_xtxw_q = spline_xtxw_q->Interpolate(ide_ptr->x, txw);
                             factor_xtxw_w = spline_xtxw_w->Interpolate(ide_ptr->x, txw);
                             factor_q *= factor_xtxw_q;
-                            factor_w *= factor_xtxw_q;
+                            factor_w *= factor_xtxw_w;
                         }
                     }
                 
