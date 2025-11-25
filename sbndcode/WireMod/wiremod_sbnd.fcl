@@ -10,7 +10,7 @@ wiremod_sbnd:
     ApplyYZScale: true
     ApplyXXZAngleScale: true
     SplineFileXTXW_Q: "wiremod_xtxwq_splines_sbnd.root"
-    SplineFileXTXW_W: "wiremod_xtxwq_splines_sbnd.root"
+    SplineFileXTXW_W: "wiremod_xtxww_splines_sbnd.root"
     SplineFileYZ_Q: "wiremod_yzq_splines_sbnd.root"
     SplineFileYZ_W: "wiremod_yzw_splines_sbnd.root"
     MaxThetaXW: 75
