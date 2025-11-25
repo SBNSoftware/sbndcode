@@ -541,23 +541,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
       }
 
       // - Computation of the difference between TTTs difference and the length of the fragment in ns (to detect jittering between fragments).
-      //int32_t J = TTT_dif - frag_length;
-
-      // - Combination boolean variable.
-      //bool dump_comb_wvfms = true;
-        /*   if (is_nominal) { // Nominal fragment
-          if (!is_first && (TTT_dif <= (frag_length - fallowed_jittering))) {
-            std::cout << "\t\t WARNING: NOMINAL fragment too close to previous one! TTT_dif: " << TTT_dif << " ns, fragment idx: " << fragment_indices[board_idx] << ", board idx: " << board_idx << " (slot " << fboard_id_list[board_idx] << "), " << num_samples_per_wvfm << " samples. Skipping this fragment..." << std::endl;
-          }
-        } else { // Extended fragment
-          if (std::abs(J) <= fallowed_jittering) {
-            dump_comb_wvfms = false;
-          } else if (TTT_dif <= (frag_length - fallowed_jittering)) {
-            dump_comb_wvfms = false;
-            std::cout << "\t\t WARNING: EXTENDED fragment too close to previous one! TTT_dif: " << TTT_dif << " ns, fragment idx: " << fragment_indices[board_idx] << ", board idx: " << board_idx << " (slot " << fboard_id_list[board_idx] << "), " << num_samples_per_wvfm << " samples. Skipping this fragment..." << std::endl;
-          }
-        }*/
-
+      int32_t J = TTT_dif - frag_length;
 
       bool dump_comb_wvfms = !is_first && (is_nominal || (!is_nominal && (TTT_dif > (frag_length + fallowed_jittering))));
 
@@ -573,19 +557,43 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
         first_frag_idx = fragment_indices[board_idx];
         first_TTT = TTT_end_ns;
         first_frag_timestamp = frag_timestamp;
+        if (fdebug_jittering) std::cout << "NC - ";
+      } else {
+        if (fdebug_jittering) std::cout << "C -  ";
       }
       append_waveforms(wvfms, fragment_wvfms, num_channels);
     
       if (last_one) {
         if (fdebug_extended_fragments) std::cout << "\t\t LAST fragment " << std::endl;
-        fragment_indices[board_idx]++;  
         shift_time(TTT_ticks, first_TTT, first_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
         dump_waveforms(prod_wvfms, wvfms, first_frag_idx, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+      }
+
+      if (fdebug_jittering) {
+        if (is_first) {
+          std::cout << "\t\t FIRST ";
+        }
+        if (is_nominal) {
+          int32_t TTT_ini_ns = TTT_end_ns - static_cast<int32_t>(num_nominal_samples_per_wvfm * fns_per_sample);
+          std::cout << "NOMINAL fragment " << fboard_id_list[board_idx] << " - " << fragment_indices[board_idx] << " (" << num_samples_per_wvfm << "): [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_dif << " ns, length: " << frag_length << " ns, diff_with_length (jitt): " <<  J << std::endl;
+        } else {
+          int32_t TTT_ini_ns = TTT_end_ns - static_cast<int32_t>(num_nominal_samples_per_wvfm * fns_per_sample);
+          std::cout << "EXTENDED fragment " << fboard_id_list[board_idx] << " - " << fragment_indices[board_idx] << " (" << num_samples_per_wvfm << "): [" << TTT_ini_ns << ", " << TTT_end_ns << "] diff with prev: " << TTT_dif << " ns, length: " << frag_length << " ns, diff_with_length (jitt): " <<  J << std::endl;
+        }
+      }
+
+      // WARNINGS
+      if (TTT_dif < frag_length - fallowed_jittering) {
+        if (!is_first) {
+          if (!is_nominal) std::cout << "\t\t WARNING: EXTENDED fragment too close! This fragment is being combined." << std::endl;
+          if (is_nominal) std::cout << "\t\t WARNING: NOMINAL fragment too close! This fragment is not being combined." << std::endl;
+        }
       }
 
       prev_TTT = TTT_end_ns;
     
     } else { // Combination of extended fragments disabled.
+      first_frag_idx = fragment_indices[board_idx];
       shift_time(TTT_ticks, TTT_end_ns, frag_timestamp, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
       dump_waveforms(prod_wvfms, fragment_wvfms, first_frag_idx, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
     }
