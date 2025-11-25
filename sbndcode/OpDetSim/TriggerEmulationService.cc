@@ -17,7 +17,7 @@ namespace calib {
     : fMonWidth(pset.get<int>("MonWidth", 12)),
       fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 8)),
       PMTPerBoard(pset.get<int>("PMTPerBoard", 15)),
-      Baseline(pset.get<int>("Baseline", 14257)),
+      Baseline(pset.get<int>("Baseline")),
       fMC(pset.get<bool>("MC", true))
   {}
 
@@ -69,10 +69,10 @@ namespace calib {
               if (PMT_Channels.empty()) std::cout<<"Warning: Please provide PMT channels list to check if channels are PMT channels."<<std::endl;
               else {
                   if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch1) != PMT_Channels.end())) {
-                      std::cout<<"Paired channel "<<ch1<<" is not PMT channel. Check Pairs list. Skipping..."<<std::endl;
+                      throw cet::exception("TriggerEmulationService") << "Paired channel " << ch1 << " is not PMT channel. Check Pairs list. Skipping..." << std::endl;
                       continue; 
                   } if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch2) != PMT_Channels.end())) { 
-                      std::cout<<"Paired channel "<<ch2<<" is not PMT channel. Check Pairs list. Skipping..."<<std::endl; 
+                      throw cet::exception("TriggerEmulationService") << "Paired channel " << ch2 << " is not PMT channel. Check Pairs list. Skipping..." << std::endl;
                       continue; 
                   }
               }
@@ -104,7 +104,7 @@ namespace calib {
               if (PMT_Channels.empty()) std::cout<<"Warning: Please provide PMT channels list to check if channels are PMT channels."<<std::endl;
               else {
                   if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch) != PMT_Channels.end())) {
-                      std::cout<<"Unpaired channel "<<ch<<" is not PMT channel. Check list. Skipping..."<<std::endl;
+                      throw cet::exception("TriggerEmulationService") << "Unpaired channel " << ch << " is not PMT channel. Check list. Skipping..." << std::endl;
                       continue; 
                   }
               }

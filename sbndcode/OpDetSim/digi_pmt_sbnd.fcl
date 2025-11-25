@@ -24,7 +24,7 @@ sbnd_digipmt_alg:
 
   # Digitizer simulation
   PMTADCDynamicRange:    14745      #in ADC values
-  PMTBaseline:           14745      #in ADC
+  PMTBaseline:           14250      #in ADC
   PMTBaselineRMS:        2.6        #in ADC
   
   #Sample noise from data

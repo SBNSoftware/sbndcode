@@ -16,8 +16,6 @@ sbnd_opdetdigitizer:
   PercentTicksBeforeCross:             0.2
   MonThreshold:             15
   PairMultiplicityThreshold:             4 
-  SaveNewPlots:             true 
-  SaveOldPlots:             false
 
   @table::sbnd_digipmt_alg
   @table::sbnd_digiarapuca_alg

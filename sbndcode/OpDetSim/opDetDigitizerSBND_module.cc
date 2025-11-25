@@ -137,16 +137,6 @@ namespace opdet {
         Comment("Threshold for pair count threshold for event/flash triggers (to determine interesting trigger)")
       };
 
-      fhicl::Atom<bool> SaveNewPlots{
-        Name("SaveNewPlots"),
-        Comment("Save plots of triggered waveforms and MonPulse with new trigger logic.")
-      };
-
-      fhicl::Atom<bool> SaveOldPlots{
-        Name("SaveOldPlots"),
-        Comment("Save plots of triggered waveforms with old trigger logic.")
-      };
-
       fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
       fhicl::TableFragment<opdet::DigiArapucaSBNDAlgMaker::Config> araAlgoConfig;
       fhicl::TableFragment<opdet::opDetSBNDTriggerAlg::Config> trigAlgoConfig;
@@ -169,7 +159,7 @@ namespace opdet {
     // Required functions.
     void produce(art::Event & e) override;
     std::vector<raw::OpDetWaveform> sliceWaveforms(std::vector<raw::OpDetWaveform> fWaveforms,
-                                                        std::vector<int> PMT_Channels,
+                                                        std::vector<int> fPMT_Channels,
                                                         std::vector<int> *MonPulse,
                                                         int PairMultiplicityThreshold,
                                                         double tickPeriod,
@@ -184,6 +174,8 @@ namespace opdet {
     opdet::sbndPDMapAlg map; //map for photon detector types
     unsigned int nChannels = map.size();
     std::vector<raw::OpDetWaveform> fWaveforms; // holder for un-triggered waveforms
+
+    std::vector<int> fPMT_Channels; 
 
   private:
     bool fApplyTriggers;
@@ -218,8 +210,6 @@ namespace opdet {
     float PercentTicksBeforeCross; 
     int MonThreshold;
     int PairMultiplicityThreshold;
-    bool SaveNewPlots;
-    bool SaveOldPlots;
   };
 
   opDetDigitizerSBND::opDetDigitizerSBND(Parameters const& config)
@@ -233,8 +223,6 @@ namespace opdet {
     , PercentTicksBeforeCross(config().PercentTicksBeforeCross())
     , MonThreshold(config().MonThreshold())
     , PairMultiplicityThreshold(config().PairMultiplicityThreshold())
-    , SaveNewPlots(config().SaveNewPlots())
-    , SaveOldPlots(config().SaveOldPlots())
   {
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
 
@@ -309,6 +297,12 @@ namespace opdet {
                                   &fFinished);
     }
 
+    // get PMT channels
+    for (const auto& wvf : fWaveforms) {
+        auto ch = wvf.ChannelNumber();
+        if (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) fPMT_Channels.push_back(ch);
+    }
+
     // Call appropriate produces<>() functions here.
     produces< std::vector< raw::OpDetWaveform > >();
     produces<bool>("triggerEmulation");
@@ -376,27 +370,20 @@ namespace opdet {
 
           std::vector<int> numPairsOverThreshold;
 
-          // get PMT channels
-          std::vector<int> PMT_Channels; 
-          for (const auto& wvf : fWaveforms) {
-            auto ch = wvf.ChannelNumber();
-            if (map.isPDType(ch, "pmt_uncoated") || map.isPDType(ch, "pmt_coated")) PMT_Channels.push_back(ch);
-          }
-
-          if (PMT_Channels.empty()) std::cout<<"Error: PMT has *NO* PMT channels in fWaveforms"<<std::endl; 
-          int WaveIndex = PMT_Channels[0];
+          if (fPMT_Channels.empty()) throw cet::exception("opDetDigitizerSBND") << "PMT has *NO* PMT channels in fWaveforms" << std::endl;
+          int WaveIndex = fPMT_Channels[0];
           int WaveformSize = fWaveforms[WaveIndex].size();
 
           std::vector<int>* MonPulse = new std::vector<int>(WaveformSize, 0);
 
           int pairThisFlash = 0;
           // Send 3ms waveforms to ConstructMonPulse
-          fTriggerService->ConstructMonPulse(fWaveforms, MonThreshold, MonPulse, 0, &pairThisFlash, PMT_Channels);
+          fTriggerService->ConstructMonPulse(fWaveforms, MonThreshold, MonPulse, 0, &pairThisFlash, fPMT_Channels);
           numPairsOverThreshold.push_back(pairThisFlash);
 
           double tickPeriod = sampling_rate(clockData);
 
-          std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, PMT_Channels, MonPulse, PairMultiplicityThreshold, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
+          std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, fPMT_Channels, MonPulse, PairMultiplicityThreshold, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
           std::vector<std::vector<int>> SlicedMonPulse = sliceMonPulse(MonPulse, PairMultiplicityThreshold, ticksPerSlice, PercentTicksBeforeCross);
 
           int numSlices = SlicedMonPulse.size();
@@ -404,35 +391,6 @@ namespace opdet {
           MonPulsesFlat.insert(MonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
           pulseSizes.push_back(MonPulse->size());
 
-          if (SaveNewPlots) {
-              // Save histograms
-              // Sliced waveforms
-              for (size_t j; j < SlicedWaveformsAll.size(); ++j) { 
-                  std::stringstream plotname2; 
-                  plotname2 << "Sliced_waveforms_" << e.id().event() << "_Mon_" << MonThreshold << "_slice" << j;
-                  PlotWaveforms(SlicedWaveformsAll[j], plotname2.str());
-              }
-              // Long MonPulse
-              std::stringstream histname;
-              histname << "Long_event_" << e.id().event() << "_Mon_" << MonThreshold;
-              TH1D* MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(),
-                                              MonPulse->size(), 0.0, MonPulse->size() - 1);
-              for (size_t i = 0; i < MonPulse->size(); i++) {
-                  MonHist->SetBinContent(i + 1, (*MonPulse)[i]);
-              }
-              // Sliced MonPulse
-              for (size_t idx = 0; idx < SlicedMonPulse.size(); ++idx) {
-                  auto const& vec = SlicedMonPulse[idx];
-                  std::stringstream histname;
-                  histname << "Sliced_event_" << e.id().event() << "_Mon_" << MonThreshold << "_slice" << idx;
-
-                  TH1D* MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(),
-                                                  vec.size(), 0.0, vec.size() - 1);
-                  for (size_t i = 0; i < vec.size(); i++) {
-                      MonHist->SetBinContent(i + 1, vec[i]);
-                  }
-              }
-          }   
           delete MonPulse;
           //}
 
@@ -455,29 +413,20 @@ namespace opdet {
           opdet::StartopDetDigitizerWorkers(fNThreads, fSemStart);
           opdet::WaitopDetDigitizerWorkers(fNThreads, fSemFinish);
 
-          // plot fTriggeredWaveforms
-          if (SaveOldPlots) {
-              for (size_t j; j < fTriggeredWaveforms.size(); ++j) { 
-                  std::stringstream plotnameTW; 
-                  plotnameTW << "Triggered_waveforms_" << e.id().event() << "_Mon_" << MonThreshold;
-                  PlotWaveforms(fTriggeredWaveforms[j], plotnameTW.str());
-              }
-          }
-
           // put triggered waveforms in the event (old trigger logic)
           for (std::vector<raw::OpDetWaveform> &waveforms : fTriggeredWaveforms) {
             // move these waveforms into the pulseVecPtr
             pulseVecPtr->reserve(pulseVecPtr->size() + waveforms.size());
             std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*pulseVecPtr));
           }
-          // clean up the vector
-          for (unsigned i = 0; i < fTriggeredWaveforms.size(); i++) {
-            fTriggeredWaveforms[i] = std::vector<raw::OpDetWaveform>();
-          }
           // put the waveforms in the event
           e.put(std::move(pulseVecPtr));
           // clear out the triggers
           fTriggerAlg.ClearTriggerLocations();
+          // clean up the vector
+          for (unsigned i = 0; i < fTriggeredWaveforms.size(); i++) {
+            fTriggeredWaveforms[i] = std::vector<raw::OpDetWaveform>();
+          }
 
 
           // put boolean trigger result in the event
@@ -512,12 +461,12 @@ namespace opdet {
             SlicedWaveformsPtr->reserve(SlicedWaveformsPtr->size() + waveforms.size());
             std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*SlicedWaveformsPtr));
           }
+          // put the waveforms in the event
+          e.put(std::move(SlicedWaveformsPtr), "slicedWaveforms");
           // clean up the vector
           for (unsigned i = 0; i < SlicedWaveformsAll.size(); i++) {
             SlicedWaveformsAll[i] = std::vector<raw::OpDetWaveform>();
           }
-          // put the waveforms in the event
-          e.put(std::move(SlicedWaveformsPtr), "slicedWaveforms");
 
           // put MonPulses in the event
           auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
@@ -625,7 +574,7 @@ namespace opdet {
   // sliceWaveforms function
   std::vector<raw::OpDetWaveform> opDetDigitizerSBND::sliceWaveforms(
                                    std::vector<raw::OpDetWaveform> fWaveforms,
-                                   std::vector<int> PMT_Channels,
+                                   std::vector<int> fPMT_Channels,
                                    std::vector<int>* MonPulse,
                                    int PairMultiplicityThreshold,
                                    double tickPeriod,
@@ -641,7 +590,7 @@ namespace opdet {
 
       std::vector<raw::OpDetWaveform> SlicedWaveforms;
       // loop through channels
-      for (int chan : PMT_Channels) {
+      for (int chan : fPMT_Channels) {
           const raw::OpDetWaveform& wf = fWaveforms[chan];
 
           for (auto [start, end] : intervals) {
