@@ -48,7 +48,8 @@ public:
   void produce(art::Event& e) override;
 
   std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_time_s,
-                                           const uint32_t ref_time_ns);
+					   const uint32_t ref_time_ns, const uint32_t etrig_time_s,
+					   const uint32_t etrig_time_ns);
   std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
 
 private:
@@ -60,6 +61,9 @@ private:
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
+  bool                  fApplyETrigWindow;
+  double                fETrigMin;
+  double                fETrigMax;
   bool                  fApplyTs0Window;
   double                fTs0Min;
   double                fTs0Max;
@@ -78,6 +82,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyETrigWindow(p.get<bool>("ApplyETrigWindow"))
+  , fETrigMin(p.get<double>("ETrigMin", 0))
+  , fETrigMax(p.get<double>("ETrigMax", std::numeric_limits<double>::max()))
   , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
   , fTs0Min(p.get<double>("Ts0Min", 0))
   , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
@@ -106,8 +113,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   std::vector<art::Ptr<FEBData>> FEBDataVec;
   art::fill_ptr_vector(FEBDataVec, FEBDataHandle);
 
-  uint64_t ref_time = 0;
-  uint32_t ref_time_s = 0, ref_time_ns = 0;
+  uint32_t ref_time_s = 0, ref_time_ns = 0, etrig_time_s = 0, etrig_time_ns = 0;
 
   if(fReferenceTs0)
     {
@@ -117,18 +123,29 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
       if(!frameShiftHandle.isValid())
         throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
 
-      ref_time = frameShiftHandle->FrameDefault();
+      uint64_t ref_time = frameShiftHandle->FrameDefault();
 
       ref_time_s  = ref_time / sbnd::timing::kSecondInNanoseconds;
       ref_time_ns = ref_time % sbnd::timing::kSecondInNanoseconds;
 
       timingReferenceInfo->timingType    = frameShiftHandle->TimingTypeDefault();
       timingReferenceInfo->timingChannel = frameShiftHandle->TimingChannelDefault();
+
+      if(timingReferenceInfo->timingType == sbnd::timing::kNoShiftType)
+	{
+	  std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
+          ref_time_s = unix_set.size() ? *unix_set.rbegin(): 0;
+	}
+
+      uint64_t etrig_time = frameShiftHandle->FrameEtrig();
+
+      etrig_time_s  = etrig_time / sbnd::timing::kSecondInNanoseconds;
+      etrig_time_ns = etrig_time % sbnd::timing::kSecondInNanoseconds;
     }
 
   for(auto data : FEBDataVec)
     {
-      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_time_s, ref_time_ns);
+      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_time_s, ref_time_ns, etrig_time_s, etrig_time_ns);
 
       for(auto hit : newStripHits)
         {
@@ -145,7 +162,8 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 }
 
 std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_time_s,
-                                                                                    const uint32_t ref_time_ns)
+                                                                                    const uint32_t ref_time_ns, const uint32_t etrig_time_s,
+                                                                                    const uint32_t etrig_time_ns)
 {
   std::vector<CRTStripHit> stripHits;
 
@@ -189,6 +207,27 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   if(fReferenceTs0)
     t0 -= ref_time_ns;
+
+  if(fApplyETrigWindow)
+    {
+      double t0_etrig         = (int)data->Ts0() + module.t0DelayCorrection;
+      const int64_t unix_diff = static_cast<int64_t>(ref_time_s) - static_cast<int64_t>(etrig_time_s);
+
+      if(unix_diff < -1 || unix_diff > 1)
+        {
+          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
+        }
+
+      t0_etrig -= etrig_time_ns;
+
+      if(unix_diff == 1)
+	t0_etrig -= 1e9;
+      else if(unix_diff == -1)
+	t0_etrig += 1e9;
+
+      if(t0_etrig < fETrigMin || t0_etrig > fETrigMax)
+	return stripHits;
+    }
 
   if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
     return stripHits;
