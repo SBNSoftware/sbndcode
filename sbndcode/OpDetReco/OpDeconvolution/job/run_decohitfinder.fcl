@@ -41,10 +41,10 @@ physics:
 {
   producers:
   {
-    opdecopmt:     @local::SBNDOpDeconvolutionPMT
-    ophitpmt:  @local::SBNDDecoOpHitFinderPMT
-    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
-    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
+    opdecopmt:     @local::SBNDOpDeconvolutionPMT_realisticMC
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT_realisticMC
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0_realisticMC
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_realisticMC
 
     opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
     ophitxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
