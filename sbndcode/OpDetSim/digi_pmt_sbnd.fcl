@@ -35,12 +35,12 @@ sbnd_digipmt_alg:
   PMTDarkNoiseRate:      1000.0     #in Hz
   
   # Detection efficiencies
-  PMTCoatedVUVEff_tpc0:       0.0315      #PMT coated detection efficiency for direct (VUV) light
-  PMTCoatedVISEff_tpc0:       0.03493    #PMT coated detection efficiency for reflected (VIS) light
-  PMTUncoatedEff_tpc0:        0.03382   #PMT uncoated detection efficiency
+  PMTCoatedVUVEff_tpc0:       0.0385      #PMT coated detection efficiency for direct (VUV) light
+  PMTCoatedVISEff_tpc0:       0.026    #PMT coated detection efficiency for reflected (VIS) light
+  PMTUncoatedEff_tpc0:        0.0357   #PMT uncoated detection efficiency
 
-  PMTCoatedVUVEff_tpc1:       0.027      #PMT coated detection efficiency for direct (VUV) light
-  PMTCoatedVISEff_tpc1:       0.03493      #PMT coated detection efficiency for reflected (VIS) light
+  PMTCoatedVUVEff_tpc1:       0.0392      #PMT coated detection efficiency for direct (VUV) light
+  PMTCoatedVISEff_tpc1:       0.026      #PMT coated detection efficiency for reflected (VIS) light
   PMTUncoatedEff_tpc1:        0.03382      #PMT uncoated detection efficiency
 
   # Simulate gain fluctuations
