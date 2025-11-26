@@ -17,7 +17,7 @@ namespace calib {
     : fMonWidth(pset.get<int>("MonWidth", 12)),
       fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 8)),
       PMTPerBoard(pset.get<int>("PMTPerBoard", 15)),
-      Baseline(pset.get<int>("Baseline", 14250)),
+      Baseline(pset.get<int>("Baseline")),
       fMC(pset.get<bool>("MC", true))
   {}
 
@@ -29,9 +29,11 @@ namespace calib {
       int MonThreshold,
       std::vector<int> *MonPulse,
       int FlashCounter,
-      int *numPairsOverThreshold
+      int *numPairsOverThreshold,
+      std::vector<int> PMT_Channels
   )
   {
+
       // Loop over the entries in our waveform vector
       // We care about getting the pairing correct
 
@@ -44,8 +46,9 @@ namespace calib {
           }
 
           std::map<int, const raw::OpDetWaveform*> channel_to_waveform;
-          for (const auto& wvf : fWaveforms)
+          for (const auto& wvf : fWaveforms) {
               channel_to_waveform[wvf.ChannelNumber()] = &wvf;
+          }
 
           std::vector<int> Pair2 = { 6,   8,  10,  12,  14,  16,  36,  38,  40,  60,  62,  66,  68, 70,  84,  86,  88,  90,  92,  94, 114, 116, 118, 138, 140, 144, 146, 148, 162, 164, 168, 170, 172, 192, 194, 196, 216, 218, 220, 222, 224, 226, 240, 242, 246, 248, 250, 270, 272, 274, 294, 296, 298, 300, 302, 304};
           std::vector<int> Pair1 = { 7,   9,  11,  13,  15,  17,  37,  39,  41,  61,  63,  67,  69, 71,  85,  87,  89,  91,  93,  95, 115, 117, 119, 139, 141, 145, 147, 149, 163, 165, 169, 171, 173, 193, 195, 197, 217, 219, 221, 223, 225, 227, 241, 243, 247, 249, 251, 271, 273, 275, 295, 297, 299, 301, 303, 305};
@@ -53,13 +56,27 @@ namespace calib {
           std::set<int> used_channels;
 
           // resize
-          int ReadoutSize = fWaveforms[0].size();
+          int ReadoutSize;
+          if (PMT_Channels.empty()) { std::cout<<"Warning: Please provide PMT channels list."<<std::endl; ReadoutSize = fWaveforms[Pair1[0]].size(); }
+          else ReadoutSize = fWaveforms[PMT_Channels[0]].size();
           MonPulse->assign(ReadoutSize, 0);
 
           for (size_t i = 0; i < Pair1.size(); ++i) {
               int ch1 = Pair1[i];
               int ch2 = Pair2[i];
 
+              // check that ch1 and ch2 show up in PMT_Channels
+              if (PMT_Channels.empty()) std::cout<<"Warning: Please provide PMT channels list to check if channels are PMT channels."<<std::endl;
+              else {
+                  if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch1) != PMT_Channels.end())) {
+                      throw cet::exception("TriggerEmulationService") << "Paired channel " << ch1 << " is not PMT channel. Check Pairs list. Skipping..." << std::endl;
+                      continue; 
+                  } if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch2) != PMT_Channels.end())) { 
+                      throw cet::exception("TriggerEmulationService") << "Paired channel " << ch2 << " is not PMT channel. Check Pairs list. Skipping..." << std::endl;
+                      continue; 
+                  }
+              }
+ 
               // skip if either waveform is missing
               if (channel_to_waveform.count(ch1) == 0 || channel_to_waveform.count(ch2) == 0) continue;
               // skip if already processed
@@ -82,6 +99,16 @@ namespace calib {
           }
 
           for (int ch : Unpaired) { // Unpaired channels
+
+              // check that ch1 and ch2 show up in PMT_Channels
+              if (PMT_Channels.empty()) std::cout<<"Warning: Please provide PMT channels list to check if channels are PMT channels."<<std::endl;
+              else {
+                  if (!(std::find(PMT_Channels.begin(), PMT_Channels.end(), ch) != PMT_Channels.end())) {
+                      throw cet::exception("TriggerEmulationService") << "Unpaired channel " << ch << " is not PMT channel. Check list. Skipping..." << std::endl;
+                      continue; 
+                  }
+              }
+ 
               if (used_channels.count(ch)) continue;
               if (channel_to_waveform.count(ch) == 0) continue;
 
@@ -143,6 +170,9 @@ namespace calib {
                   CAENChannel=CAENChannel+ChannelStep;
               } //loop over channels
           } //loop over boards
+
+          if (numPairsOverThreshold) *numPairsOverThreshold = *std::max_element(MonPulse->begin(), MonPulse->end());
+
       } // data  
   } // ConstructMonPulse
 
