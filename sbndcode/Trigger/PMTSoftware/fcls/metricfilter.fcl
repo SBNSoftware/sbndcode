@@ -8,10 +8,11 @@ metricfilter_sbnd:
                         "pmtmetricbnblight",
                         "pmtmetricoffbeamzero",
                         "pmtmetricoffbeamlight",
-                        "pmtmetriccrossingmuon"]
- time_min: 0
+                        "pmtmetriccrossingmuon",
+                        "pmtmetricbnb",
+                        "pmtmetricoffbeam"]
  time_max: 3
- pe_thresh: 50
+ pe_thresh: 30
 }
 
 END_PROLOG

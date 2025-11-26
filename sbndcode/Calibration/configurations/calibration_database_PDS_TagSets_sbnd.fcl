@@ -1,0 +1,17 @@
+# File:    calibration_database_PDS_TagSets_sbnd.fcl
+# Author:  original authors in ICARUS: M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com), ported to SBND: S. Oh (sungbino@fnal.gov)
+# Date:    November 14, 2025
+# Purpose: Tags definitions for the PDS calibration databases
+
+BEGIN_PROLOG
+
+# Run ranges
+## r1: SBND Full Run 1 with light trigger, run number 18250-18618
+
+# For SBND 2025 Fall production
+PDS_CalibrationTags_Nov2025: {
+  PMTCalibrationDatabaseTag:    "v2r1"
+  DatabaseTimeStamp: 1763157679000000000
+}
+
+END_PROLOG

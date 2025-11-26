@@ -12,4 +12,14 @@ PMTNonLinearityTF1:
   NonLinearRange: [100, 701]
 }
 
+PMTNonLinearityTF1ChannelByChannel:
+{
+  tool_type: "PMTNonLinearityTF1ChannelByChannel"
+  #AttenuationForm:    "sqrt( (sqrt(1+8*(x/[0])**[1])-1)/( 4*(x/[0])**[1] ) )"
+  #AttenuationFormParams: [78.15, 1.96]
+  AttenuationForm:    "x/sqrt(1+(x/[0])**[1])"
+  AttenuationPreTime: 4 #ns
+  NonLinearRange: [100, 7000]
+}
+
 END_PROLOG

@@ -11,6 +11,7 @@ art_make(
 
     ROOT::Core
     ROOT::Tree
+    ROOT::Hist
 
 )
 

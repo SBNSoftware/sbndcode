@@ -40,5 +40,3 @@ cet_build_plugin(pmtTriggerProducer art::module SOURCE pmtTriggerProducer_module
 install_headers()
 install_fhicl()
 install_source()
-
-

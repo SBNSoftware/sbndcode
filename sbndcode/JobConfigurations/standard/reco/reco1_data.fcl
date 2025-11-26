@@ -1,8 +1,8 @@
 #include "drops_reco1.fcl"
 #include "wcsp_data_sbnd.fcl"
-#include "opdeconvolution_sbnd_data.fcl"
-#include "sbnd_ophitfinder_deco_data.fcl"
-#include "sbnd_flashfinder_deco_data.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_flashfinder_deco.fcl"
 #include "wfalign_sbnd_data.fcl"
 #include "standard_reco1_sbnd.fcl"
 

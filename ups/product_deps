@@ -253,9 +253,9 @@ wpdir   product_dir     wire-cell-cfg
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-sbncode		v10_12_02       -
+sbncode		v10_14_00       -
 cetmodules	v3_24_01	-	only_for_build
-sbnd_data	v01_37_00	-	
+sbnd_data	v01_38_00	-	
 sbndutil        v10_06_01    -       optional
 fhiclpy		v4_03_05    -
 end_product_list
@@ -326,6 +326,7 @@ end_qualifier_list
 ####################################
 table_fragment_begin
     # currently, XML pandora files are installed in 'scripts':
+    pathPrepend(GDK2NUFLUXXML, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/G4BNB/v1.1.0/GNuMIFlux.xml)
     pathPrepend(FW_SEARCH_PATH, ${SBNDCODE_DIR}/scripts)
     pathPrepend(FW_SEARCH_PATH, ${SBND_DATA_DIR}/CalibrationDatabase)
     pathPrepend(FW_SEARCH_PATH, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash)

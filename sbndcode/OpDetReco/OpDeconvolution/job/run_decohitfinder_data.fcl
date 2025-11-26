@@ -3,11 +3,10 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "opdeconvolution_sbnd_data.fcl"
-#include "sbnd_flashfinder_deco_data.fcl"
-#include "sbnd_ophitfinder_deco_data.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
 #include "wfalign_sbnd_data.fcl"
-
 process_name: DecoRecoData
 
 services:
@@ -56,7 +55,6 @@ physics:
     opflashtpc0,
     opflashtpc1
   ]
-
 
   stream1: [out1]
   trigger_paths: [reco]
