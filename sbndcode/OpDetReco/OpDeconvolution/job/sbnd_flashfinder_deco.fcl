@@ -62,6 +62,7 @@ SBNDDecoSimpleFlashTPC0_realisticMC.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC0_realisticMC.UseT0Tool: true
 SBNDDecoSimpleFlashTPC0_realisticMC.ReadoutDelay: 0 //cable time delay in us
 SBNDDecoSimpleFlashTPC0_realisticMC.CorrectLightPropagation: true
+SBNDDecoSimpleFlashTPC0_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_MC2.root"
 
 #TPC1
 SBNDDecoSimpleFlashTPC1_realisticMC: @local::SBNDSimpleFlashTPC1
@@ -73,7 +74,7 @@ SBNDDecoSimpleFlashTPC1_realisticMC.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC1_realisticMC.UseT0Tool: true
 SBNDDecoSimpleFlashTPC1_realisticMC.ReadoutDelay: 0 //cable time delay in us
 SBNDDecoSimpleFlashTPC1_realisticMC.CorrectLightPropagation: true
-SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2.root"
+SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_MC2.root"
 
 
 ###### XA IDEAL MC ######
