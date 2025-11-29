@@ -210,7 +210,7 @@ namespace BlipUtils {
           blip_i.Energy       += blip_j.Energy;
           blip_i.Position.SetXYZ( w1*blip_i.Position.X() + w2*blip_j.Position.X(), 
                                   w1*blip_i.Position.Y() + w2*blip_j.Position.Y(),
-                                  w1*blip_i.Position.Z() + w2*blip_j.Position.Z())
+                                  w1*blip_i.Position.Z() + w2*blip_j.Position.Z());
           blip_i.DriftTime    = w1*blip_i.DriftTime+ w2*blip_j.DriftTime; 
           blip_i.Time         = w1*blip_i.Time + w2*blip_j.Time; 
           blip_i.DepElectrons += blip_j.DepElectrons;
@@ -425,12 +425,16 @@ namespace BlipUtils {
     // YZ-plane, as well as the mean difference between intersection points.
     newblip.Position.SetXYZ(0,0,0);
     if( wirex.size() == 1 ) {
-      newblip.Position= wirex[0];
+      newblip.Position.SetXYZ(wirex[0]);
     } else {
       newblip.SigmaYZ = 0;
       double fact = 1./wirex.size();
-      for(auto& v : wirex ) newblip.Position  += v * fact;
-      for(auto& v : wirex ) newblip.SigmaYZ   += (v-newblip.Position).Mag() * fact;
+      for(auto& v : wirex ) newblip.Position.SetXYZ( newblip.Position.X()  + v.X() * fact, 
+                                                     newblip.Position.Y()  + v.Y() * fact, 
+                                                     newblip.Position.Z()  + v.Z() * fact);
+      for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( TMath::Pow(v.X()-newblip.Position.X(), 2) + 
+                                                              TMath::Pow(v.Y()-newblip.Position.Y(), 2) + 
+                                                              TMath::Pow(v.Z()-newblip.Position.Z(), 2)) * fact;
       // Ensure that difference between intersection points is
       // consistent with the maximal wire extent
       if( newblip.SigmaYZ > std::max(1.,0.5*newblip.dYZ) ) return newblip;
