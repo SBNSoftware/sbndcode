@@ -4,7 +4,6 @@ cet_make_library(
                 LIBRARY_NAME  
                 sbndcode_BlipUtils
                 LIBRARIES 
-                PUBLIC
                 larcorealg::Geometry
                 larcore::Geometry_Geometry_service
                 larsim::Simulation
@@ -39,7 +38,6 @@ cet_make_library(
                 sbndcode_CRTUtils
                 sbnobj::Common_CRT
 		sbnobj::SBND_Blip
-                #sbndcode_CosmicIdUtils
 )
 
 art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)

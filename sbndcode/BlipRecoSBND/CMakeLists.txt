@@ -8,7 +8,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            larevt::Filters
                            lardataobj::RawData
                            lardataobj::RecoBase
-			                     larreco::Calorimetry
+			               larreco::Calorimetry
                            larreco::RecoAlg
                            lardata::RecoObjects
                            larpandora::LArPandoraInterface
