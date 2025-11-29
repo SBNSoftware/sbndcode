@@ -1072,7 +1072,7 @@ namespace blip {
               TVector3 p2(b.X(), b.Y(), b.Z() );
               // TO-DO: if this track starts or ends at a TPC boundary, 
               // we should extend p1 or p2 to outside the AV to avoid blind spots
-              TVector3 bp = newBlip.Position;
+              TVector3 bp(newBlip.Position.X(), newBlip.Position.Y(), newBlip.Position.Z());
               float d = BlipUtils::DistToLine(p1,p2,bp);
               if( d > 0 ) {
                 // update closest trkdist
