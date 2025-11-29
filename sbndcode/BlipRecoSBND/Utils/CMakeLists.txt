@@ -42,7 +42,7 @@ cet_make_library(
                 #sbndcode_CosmicIdUtils
 )
 
-art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)
+art_dictionary(DICTIONARY_LIBRARIES sbnobj::SBND_Blip)
 install_headers()
 install_source()
 install_fhicl()
