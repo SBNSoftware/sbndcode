@@ -623,7 +623,7 @@ namespace BlipUtils {
   
   //=============================================================================
   // Length of particle trajectory
-  double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end)
+  double PathLength(const simb::MCParticle& part, geo::Point_t& start, geo::Point_t& end)
   {
     int n = part.NumberTrajectoryPoints();
     if( n <= 1 ) return 0.;
