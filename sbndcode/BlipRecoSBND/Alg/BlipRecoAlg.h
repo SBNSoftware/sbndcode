@@ -41,6 +41,7 @@
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
 #include "larcore/Geometry/WireReadout.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // Microboone includes
 //#include "ubevt/Database/TPCEnergyCalib/TPCEnergyCalibService.h"
