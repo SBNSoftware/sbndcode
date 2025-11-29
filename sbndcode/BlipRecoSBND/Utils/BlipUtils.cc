@@ -432,9 +432,9 @@ namespace BlipUtils {
       for(auto& v : wirex ) newblip.Position.SetXYZ( newblip.Position.X()  + v.X() * fact, 
                                                      newblip.Position.Y()  + v.Y() * fact, 
                                                      newblip.Position.Z()  + v.Z() * fact);
-      for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( TMath::Pow(v.X()-newblip.Position.X(), 2) + 
-                                                              TMath::Pow(v.Y()-newblip.Position.Y(), 2) + 
-                                                              TMath::Pow(v.Z()-newblip.Position.Z(), 2)) * fact;
+      for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( pow(v.X()-newblip.Position.X(), 2) + 
+                                                              pow(v.Y()-newblip.Position.Y(), 2) + 
+                                                              pow(v.Z()-newblip.Position.Z(), 2)) * fact;
       // Ensure that difference between intersection points is
       // consistent with the maximal wire extent
       if( newblip.SigmaYZ > std::max(1.,0.5*newblip.dYZ) ) return newblip;
