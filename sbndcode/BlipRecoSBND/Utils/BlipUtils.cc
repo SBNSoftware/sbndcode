@@ -643,7 +643,7 @@ namespace BlipUtils {
     return L;
   }
   double PathLength(const simb::MCParticle& part){
-    TVector3 a,b;
+    geo::Point_t a,b;
     return PathLength(part,a,b);
   }
 
