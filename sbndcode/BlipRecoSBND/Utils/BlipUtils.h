@@ -76,7 +76,7 @@ namespace BlipUtils {
   //void    HitTruth(art::Ptr<recob::Hit> const&, int&, float&, float&, float&);
   //si_t    HitTruthIds( art::Ptr<recob::Hit> const&);
   //bool    G4IdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
-  double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
+  double  PathLength(const simb::MCParticle&, geo::Point_t&, geo::Point_t&);
   double  PathLength(const simb::MCParticle&);
   bool    IsAncestorOf(int, int, bool);
   double  DistToBoundary(const recob::Track::Point_t&);
