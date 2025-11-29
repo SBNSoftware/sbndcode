@@ -38,11 +38,11 @@ cet_make_library(
                 ROOT::Gdml
                 sbndcode_CRTUtils
                 sbnobj::Common_CRT
-		sbndobj_BlipDataTypes
+		sbnobj::SBND_Blip
                 #sbndcode_CosmicIdUtils
 )
 
-art_dictionary(DICTIONARY_LIBRARIES sbnobj::SBND_Blip)
+art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)
 install_headers()
 install_source()
 install_fhicl()
