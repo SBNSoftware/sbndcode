@@ -34,7 +34,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
                            sbndcode_BlipUtils
-                           sbncode::SBND_Blip
+                           sbnobj::SBND_Blip
                            sbndcode_BlipRecoAlg
 )
 
