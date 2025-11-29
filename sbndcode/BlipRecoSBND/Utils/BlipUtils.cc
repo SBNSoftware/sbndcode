@@ -425,7 +425,7 @@ namespace BlipUtils {
     // YZ-plane, as well as the mean difference between intersection points.
     newblip.Position.SetXYZ(0,0,0);
     if( wirex.size() == 1 ) {
-      newblip.Position.SetXYZ(wirex[0]);
+      newblip.Position = wirex[0];
     } else {
       newblip.SigmaYZ = 0;
       double fact = 1./wirex.size();
