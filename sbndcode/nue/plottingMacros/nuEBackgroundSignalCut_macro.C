@@ -1047,8 +1047,8 @@ void nuEBackgroundSignalCut_macro(){
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_FV+CRUMBS+EThetaHighest/";
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsTest/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1089,31 +1089,33 @@ void nuEBackgroundSignalCut_macro(){
 
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalCurrent;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBCurrent;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsCurrent;
     
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalUboone;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBUboone;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsUboone;
     
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalNuE;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBNuE;
-    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsCosmicsNuE;
 
     double totalPOTSignalCurrent = 0;
     double totalPOTBNBCurrent = 0;
-    double totalPOTCosmicsCurrent = 0;
     
     double totalPOTSignalUboone = 0;
     double totalPOTBNBUboone = 0;
-    double totalPOTCosmicsUboone = 0;
     
     double totalPOTSignalNuE = 0;
     double totalPOTBNBNuE = 0;
-    double totalPOTCosmicsNuE = 0;
 
     double cosmicSpillsSumCurrent = 0;
     double cosmicSpillsSumUboone = 0;
     double cosmicSpillsSumNuE = 0;
+
+    double BNBSpillsSumCurrent = 0;
+    double BNBSpillsSumUboone = 0;
+    double BNBSpillsSumNuE = 0;
+
+    double NuESpillsSumCurrent = 0;
+    double NuESpillsSumUboone = 0;
+    double NuESpillsSumNuE = 0;
 
     double POTSignalNuE_notMissing = 0;
     double POTSignalUboone_notMissing = 0;
@@ -1122,18 +1124,23 @@ void nuEBackgroundSignalCut_macro(){
     double POTBNBNuE_notMissing = 0;
     double POTBNBUboone_notMissing = 0;
     double POTBNBBDT_notMissing = 0;
-        
-    double counteraaaaaa = 0;
     
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
-        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents; counteraaaaaa++;
+        if(subRunSignal == 3 && subRunDLCurrent == 2) cosmicSpillsSumCurrent += subRunNumGenEvents;
         if(subRunSignal == 3 && subRunDLCurrent == 0) cosmicSpillsSumUboone += subRunNumGenEvents;
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
 
-        std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
+        if(subRunSignal == 2 && subRunDLCurrent == 2) BNBSpillsSumCurrent += subRunNumGenEvents;
+        if(subRunSignal == 2 && subRunDLCurrent == 0) BNBSpillsSumUboone += subRunNumGenEvents;
+        if(subRunSignal == 2 && subRunDLCurrent == 5) BNBSpillsSumNuE += subRunNumGenEvents;
+        
+        if(subRunSignal == 1 && subRunDLCurrent == 2) NuESpillsSumCurrent += subRunNumGenEvents;
+        if(subRunSignal == 1 && subRunDLCurrent == 0) NuESpillsSumUboone += subRunNumGenEvents;
+        if(subRunSignal == 1 && subRunDLCurrent == 5) NuESpillsSumNuE += subRunNumGenEvents;
 
+        std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
 
         if(subRunSignal == 1){
             if(subRunDLCurrent == 2 && seenSubRunsSignalCurrent.find(key) == seenSubRunsSignalCurrent.end()){
@@ -1164,40 +1171,43 @@ void nuEBackgroundSignalCut_macro(){
             if(subRunDLCurrent == 2) POTBNBBDT_notMissing += subRunPOT;
             if(subRunDLCurrent == 0) POTBNBUboone_notMissing += subRunPOT;
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
-
-        } else if(subRunSignal == 3){
-            if(subRunDLCurrent == 2 && seenSubRunsCosmicsCurrent.find(key) == seenSubRunsCosmicsCurrent.end()){
-                totalPOTCosmicsCurrent += subRunPOT;
-                seenSubRunsCosmicsCurrent.insert(key);
-            } else if(subRunDLCurrent == 0 && seenSubRunsCosmicsUboone.find(key) == seenSubRunsCosmicsUboone.end()){
-                totalPOTCosmicsUboone += subRunPOT;
-                seenSubRunsCosmicsUboone.insert(key);
-            } else if(subRunDLCurrent == 5 && seenSubRunsCosmicsNuE.find(key) == seenSubRunsCosmicsNuE.end()){
-                totalPOTCosmicsNuE += subRunPOT;
-                seenSubRunsCosmicsNuE.insert(key);
-            }
         }
     }
 
-    double cosmicsPOTCurrent = cosmicSpillsSumCurrent * 5e12;
-    double cosmicsPOTUboone = cosmicSpillsSumUboone * 5e12;
-    double cosmicsPOTNuE = cosmicSpillsSumNuE * 5e12;
+    //double targetPOT = POTSignalBDT_notMissing;
+    double targetPOT = 1e21;
+    double targetSpills = (targetPOT/(5e12));
 
-    printf("Cosmic Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", cosmicSpillsSumCurrent, cosmicSpillsSumUboone, cosmicSpillsSumNuE);
-    std::cout << "cosmicsPOTCurrent = " << cosmicsPOTCurrent << ", " << cosmicsPOTUboone << ", " << cosmicsPOTNuE << std::endl;
+    double BNBScaledSpills_BDT = ((targetPOT/POTBNBBDT_notMissing) * BNBSpillsSumCurrent);
+    double BNBScaledSpills_Uboone = ((targetPOT/POTBNBUboone_notMissing) * BNBSpillsSumUboone);
+    double BNBScaledSpills_NuE = ((targetPOT/POTBNBNuE_notMissing) * BNBSpillsSumNuE);
+
+    double SignalScaledSpills_BDT = ((targetPOT/POTSignalBDT_notMissing) * NuESpillsSumCurrent);
+    double SignalScaledSpills_Uboone = ((targetPOT/POTSignalUboone_notMissing) * NuESpillsSumUboone);
+    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * NuESpillsSumNuE);
+
+    /*
+    double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT - SignalScaledSpills_BDT) / cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone - SignalScaledSpills_Uboone) / cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE - SignalScaledSpills_NuE) / cosmicSpillsSumCurrent);
+    */
+    double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT) / cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone) / cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE) / cosmicSpillsSumCurrent);
+
 
     weights_struct weights;
-    weights.signalCurrent = POTSignalBDT_notMissing/POTSignalBDT_notMissing;
-    weights.BNBCurrent = POTSignalBDT_notMissing/POTBNBBDT_notMissing;
-    weights.cosmicsCurrent = POTSignalBDT_notMissing/cosmicsPOTCurrent;
+    weights.signalCurrent = targetPOT / POTSignalBDT_notMissing;
+    weights.BNBCurrent = targetPOT /POTBNBBDT_notMissing;
+    weights.cosmicsCurrent = cosmicsWeights_BDT;
     
-    weights.signalUboone = POTSignalBDT_notMissing/POTSignalUboone_notMissing;
-    weights.BNBUboone = POTSignalBDT_notMissing/POTBNBUboone_notMissing;
-    weights.cosmicsUboone = POTSignalBDT_notMissing/cosmicsPOTUboone;
+    weights.signalUboone = targetPOT /POTSignalUboone_notMissing;
+    weights.BNBUboone = targetPOT /POTBNBUboone_notMissing;
+    weights.cosmicsUboone = cosmicsWeights_Uboone;
     
-    weights.signalNuE = POTSignalBDT_notMissing/POTSignalNuE_notMissing;
-    weights.BNBNuE = POTSignalBDT_notMissing/POTBNBNuE_notMissing;
-    weights.cosmicsNuE = POTSignalBDT_notMissing/cosmicsPOTNuE;
+    weights.signalNuE = targetPOT /POTSignalNuE_notMissing;
+    weights.BNBNuE = targetPOT /POTBNBNuE_notMissing;
+    weights.cosmicsNuE = cosmicsWeights_NuE;
 
     std::cout << "BNB POT Current = " << totalPOTBNBCurrent << ", Uboone = " << totalPOTBNBUboone << ", Nu+E = " << totalPOTBNBNuE << std::endl;
     std::cout << "ALL BNB POT Current = " << POTBNBBDT_notMissing << ", Uboone = " << POTBNBUboone_notMissing << ", Nu+E = " << POTBNBNuE_notMissing << std::endl;
@@ -1205,14 +1215,12 @@ void nuEBackgroundSignalCut_macro(){
     std::cout << "Signal POT Current = " << totalPOTSignalCurrent << ", Uboone = " << totalPOTSignalUboone << ", Nu+E = " << totalPOTSignalNuE << std::endl;
     std::cout << "ALL Signal POT Current = " << POTSignalBDT_notMissing << ", Uboone = " << POTSignalUboone_notMissing << ", Nu+E = " << POTSignalNuE_notMissing << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "Spills Cosmics POT Current = " << cosmicsPOTCurrent << ", Uboone = " << cosmicsPOTUboone << ", Nu+E = " << cosmicsPOTNuE << std::endl;  
     printf("Weights:\nCurrent: Signal = %f, BNB = %f, Cosmics = %f\nUboone: Signal = %f, BNB = %f, Cosmics = %f\nNu+E: Signal = %f, BNB = %f, Cosmics = %f\n", weights.signalCurrent, weights.BNBCurrent, weights.cosmicsCurrent, weights.signalUboone, weights.BNBUboone, weights.cosmicsUboone, weights.signalNuE, weights.BNBNuE, weights.cosmicsNuE);
 
     printf("\nPOT after weighting:\nSignal: Current = %f, Uboone = %f, Nu+E = %f\n", (totalPOTSignalCurrent*weights.signalCurrent), (totalPOTSignalUboone*weights.signalUboone), (totalPOTSignalNuE*weights.signalNuE));
 
     if((totalPOTSignalCurrent * weights.signalCurrent == totalPOTSignalUboone * weights.signalUboone) &&
                 (totalPOTSignalUboone * weights.signalUboone == totalPOTSignalNuE * weights.signalNuE)) std::cout << "POT IS THE SAME AFTER WEIGHTING" << std::endl;
-
 
     // NuETree
     UInt_t eventID, runID, subRunID;
@@ -1357,6 +1365,11 @@ void nuEBackgroundSignalCut_macro(){
     auto deltaRDist = createHistGroup("deltaRDist", "#DeltaR of Neutrino Vertex in Slice (Not Weighted)", "|#bar{r}_{Reco} - #bar{r}_{True}| (cm)", 80, 0, 40);
     auto deltaTheta = createHistGroup("deltaTheta", "Angle Between the True Electron and the Highest Energy PFP in the Slice", "#Delta#theta (degrees)", 90, 0, 180);
     auto deltaThetaDist = createHistGroup("deltaThetaDist", "Angle Between the True Electron and the Highest Energy PFP in the Slice (Not Weighted)", "#Delta#theta (degrees)", 90, 0, 180);
+
+    auto deltaEnergy = createHistGroup("deltaEnergy", "Energy Asymmetry of the Highest Energy PFP", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaEnergyDist = createHistGroup("deltaEnergyDist", "Energy Asymmetry of the Highest Energy PFP (Not Weighted)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaEnergySum = createHistGroup("deltaEnergySum", "Energy Asymmetry of the Sum of Energies of PFPs in Slice", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaEnergySumDist = createHistGroup("deltaEnergySumDist", "Energy Asymmetry of the Sum of Energies of PFPs in Slice (Not Weighted)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
 
     auto pfpCompleteness = createHistGroup("pfpCompleteness", "Completeness of the Highest Energy PFP in the Slice", "Completeness", 50, 0, 1);
     auto pfpCompletenessDist = createHistGroup("pfpCompletenessDist", "Completeness of the Highest Energy PFP in the Slice (Not Weighted)", "Completeness", 50, 0, 1);
@@ -1937,6 +1950,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.currentSignal->Fill(highestEnergy_purity);
                             deltaTheta.currentSignal->Fill(angleDifference, weight);
                             deltaThetaDist.currentSignal->Fill(angleDifference);
+                            deltaEnergy.currentSignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.currentSignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.currentSignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.currentSignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.currentSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.currentSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -2032,6 +2049,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.ubooneSignal->Fill(highestEnergy_purity);
                             deltaTheta.ubooneSignal->Fill(angleDifference, weight);
                             deltaThetaDist.ubooneSignal->Fill(angleDifference);
+                            deltaEnergy.ubooneSignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.ubooneSignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.ubooneSignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.ubooneSignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.ubooneSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.ubooneSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -2127,6 +2148,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.nuESignal->Fill(highestEnergy_purity);
                             deltaTheta.nuESignal->Fill(angleDifference, weight);
                             deltaThetaDist.nuESignal->Fill(angleDifference);
+                            deltaEnergy.nuESignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.nuESignal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.nuESignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.nuESignal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.nuESignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.nuESignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -2224,6 +2249,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.currentSignalFuzzy->Fill(highestEnergy_purity);
                             deltaTheta.currentSignalFuzzy->Fill(angleDifference, weight);
                             deltaThetaDist.currentSignalFuzzy->Fill(angleDifference);
+                            deltaEnergy.currentSignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.currentSignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.currentSignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.currentSignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.currentSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.currentSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -2318,6 +2347,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.ubooneSignalFuzzy->Fill(highestEnergy_purity);
                             deltaTheta.ubooneSignalFuzzy->Fill(angleDifference, weight);
                             deltaThetaDist.ubooneSignalFuzzy->Fill(angleDifference);
+                            deltaEnergy.ubooneSignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.ubooneSignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.ubooneSignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.ubooneSignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.ubooneSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.ubooneSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -2412,6 +2445,10 @@ void nuEBackgroundSignalCut_macro(){
                             pfpPurityDist.nuESignalFuzzy->Fill(highestEnergy_purity);
                             deltaTheta.nuESignalFuzzy->Fill(angleDifference, weight);
                             deltaThetaDist.nuESignalFuzzy->Fill(angleDifference);
+                            deltaEnergy.nuESignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy, weight);
+                            deltaEnergyDist.nuESignalFuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            deltaEnergySum.nuESignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            deltaEnergySumDist.nuESignalFuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
                       
                             ETrueThetaReco.nuESignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ETrueThetaRecoDist.nuESignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
@@ -3002,6 +3039,7 @@ void nuEBackgroundSignalCut_macro(){
 
     styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
+    styleDrawAll(deltaEnergy, 999, 999, 999, 999, (base_path + "deltaEnergy_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, true, true, true);
 
     styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
@@ -3069,13 +3107,15 @@ void nuEBackgroundSignalCut_macro(){
     printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
     printf("Weighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", (numEvents_BDTCosmic * weights.cosmicsCurrent), (numEvents_BDTBNB * weights.BNBCurrent), (numEvents_BDTNuE * weights.signalCurrent));
     printf("Weighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", (numEvents_DLNuECosmic * weights.cosmicsNuE), (numEvents_DLNuEBNB * weights.BNBNuE), (numEvents_DLNuENuE * weights.signalNuE));
-    double totalEvent_BDT = ((numEvents_BDTCosmic * weights.cosmicsCurrent) + (numEvents_BDTBNB * weights.BNBCurrent) + (numEvents_BDTNuE * weights.signalCurrent));
+    //double totalEvent_BDT = ((numEvents_BDTCosmic * weights.cosmicsCurrent) + (numEvents_BDTBNB * weights.BNBCurrent) + (numEvents_BDTNuE * weights.signalCurrent));
+    double totalEvent_BDT = ((numEvents_BDTCosmic * weights.cosmicsCurrent) + (BNBSpillsSumCurrent * weights.BNBCurrent) + (NuESpillsSumCurrent * weights.signalCurrent));
     double cosmicPerc_BDT = ((100 * numEvents_BDTCosmic * weights.cosmicsCurrent)/totalEvent_BDT);
-    double BNBPerc_BDT = ((100 * numEvents_BDTBNB * weights.BNBCurrent)/totalEvent_BDT);
-    double NuEPerc_BDT = ((100 * numEvents_BDTNuE * weights.signalCurrent)/totalEvent_BDT);
+    //double BNBPerc_BDT = ((100 * numEvents_BDTBNB * weights.BNBCurrent)/totalEvent_BDT);
+    //double NuEPerc_BDT = ((100 * numEvents_BDTNuE * weights.signalCurrent)/totalEvent_BDT);
+    double BNBPerc_BDT = ((100 * BNBSpillsSumCurrent * weights.BNBCurrent)/totalEvent_BDT);
+    double NuEPerc_BDT = ((100 * NuESpillsSumCurrent * weights.signalCurrent)/totalEvent_BDT);
     printf("Event Rates:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPerc_BDT, BNBPerc_BDT, NuEPerc_BDT);
-
-    std::cout << "counter = " << counteraaaaaa << std::endl;
+    std::cout << "Cosmics = " << numEvents_BDTCosmic << ", BNB = " << BNBSpillsSumCurrent << ", NUE = " << NuESpillsSumCurrent << std::endl;
 
     //printf("\n______ Number of Events Left After Cuts ______\nBDT\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_BDT, numSignal_afterCut_BDT, (100*numSignal_beforeCut_BDT/numSignal_afterCut_BDT), numSignalFuzzy_beforeCut_BDT, numSignalFuzzy_afterCut_BDT, (100*numSignalFuzzy_beforeCut_BDT/numSignalFuzzy_afterCut_BDT), numBNB_beforeCut_BDT, numBNB_afterCut_BDT, (100*numBNB_beforeCut_BDT/numBNB_afterCut_BDT), numBNBFuzzy_beforeCut_BDT, numBNBFuzzy_afterCut_BDT, (100*numBNBFuzzy_beforeCut_BDT/numBNBFuzzy_afterCut_BDT), numCosmic_beforeCut_BDT, numCosmic_afterCut_BDT, (100*numCosmic_beforeCut_BDT/numCosmic_afterCut_BDT));
     //printf("\nDL Uboone\nSignal: Before = %f, After = %f (%f %% left)\nSignal Fuzzy: Before = %f, After = %f (%f %% left)\nBNB: Before = %f, After = %f (%f %% left)\nBNB Fuzzy: Before = %f, After = %f (%f %% left)\nCosmics: Before = %f, After = %f (%f %% left)\n", numSignal_beforeCut_DLUboone, numSignal_afterCut_DLUboone, (100*numSignal_beforeCut_DLUboone/numSignal_afterCut_DLUboone), numSignalFuzzy_beforeCut_DLUboone, numSignalFuzzy_afterCut_DLUboone, (100*numSignalFuzzy_beforeCut_DLUboone/numSignalFuzzy_afterCut_DLUboone), numBNB_beforeCut_DLUboone, numBNB_afterCut_DLUboone, (100*numBNB_beforeCut_DLUboone/numBNB_afterCut_DLUboone), numBNBFuzzy_beforeCut_DLUboone, numBNBFuzzy_afterCut_DLUboone, (100*numBNBFuzzy_beforeCut_DLUboone/numBNBFuzzy_afterCut_DLUboone), numCosmic_beforeCut_DLUboone, numCosmic_afterCut_DLUboone, (100*numCosmic_beforeCut_DLUboone/numCosmic_afterCut_DLUboone));
