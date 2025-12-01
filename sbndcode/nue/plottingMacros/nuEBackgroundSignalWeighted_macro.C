@@ -1176,7 +1176,8 @@ void nuEBackgroundSignalWeighted_macro(){
         }
     }
 
-    double targetPOT = POTSignalBDT_notMissing;
+    //double targetPOT = POTSignalBDT_notMissing;
+    double targetPOT = 1e21;
     double targetSpills = (targetPOT/(5e12));
 
     double BNBScaledSpills_BDT = ((targetPOT/POTBNBBDT_notMissing) * BNBSpillsSumCurrent);
@@ -1187,9 +1188,14 @@ void nuEBackgroundSignalWeighted_macro(){
     double SignalScaledSpills_Uboone = ((targetPOT/POTSignalUboone_notMissing) * NuESpillsSumUboone);
     double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * NuESpillsSumNuE);
 
+    /*
     double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT - SignalScaledSpills_BDT) / cosmicSpillsSumCurrent);
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone - SignalScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE - SignalScaledSpills_NuE) / cosmicSpillsSumCurrent);
+    */
+    double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT) / cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone) / cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE) / cosmicSpillsSumCurrent);
 
 
     weights_struct weights;
@@ -2908,6 +2914,15 @@ void nuEBackgroundSignalWeighted_macro(){
     double BNBPercSpills_BDT = ((100 * BNBSpillsSumCurrent * weights.BNBCurrent)/totalEventSpills_BDT);
     double NuEPercSpills_BDT = ((100 * NuESpillsSumCurrent * weights.signalCurrent)/totalEventSpills_BDT);
     printf("Event Rates BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPercSpills_BDT, BNBPercSpills_BDT, NuEPercSpills_BDT);
+
+    printf("\n\nUsing spills and num events to calculate rates:\n");
+    printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, BNBSpillsSumCurrent, NuESpillsSumCurrent);
+    printf("Weighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", (numEvents_BDTCosmic * weights.cosmicsCurrent), (BNBSpillsSumCurrent * weights.BNBCurrent), (NuESpillsSumCurrent * weights.signalCurrent));
+    double totalEventMix_BDT = ((numEvents_BDTCosmic * weights.cosmicsCurrent) + (BNBSpillsSumCurrent * weights.BNBCurrent) + (NuESpillsSumCurrent * weights.signalCurrent));
+    double cosmicPercMix_BDT = ((100 * numEvents_BDTCosmic * weights.cosmicsCurrent)/totalEventMix_BDT);
+    double BNBPercMix_BDT = ((100 * BNBSpillsSumCurrent * weights.BNBCurrent)/totalEventMix_BDT);
+    double NuEPercMix_BDT = ((100 * NuESpillsSumCurrent * weights.signalCurrent)/totalEventMix_BDT);
+    printf("Event Rates BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", cosmicPercMix_BDT, BNBPercMix_BDT, NuEPercMix_BDT);
 
     printf("_______________________ Spills _______________________\nIntime Cosmic Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", cosmicSpillsSumCurrent, cosmicSpillsSumUboone, cosmicSpillsSumNuE);
     printf("BNB Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", BNBSpillsSumCurrent, BNBSpillsSumUboone, BNBSpillsSumNuE);
