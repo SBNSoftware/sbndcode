@@ -661,11 +661,21 @@ void sbnd::FrameShift::produce(art::Event& e)
   //    + Data: t = 0 = abitrary. All subsystem electronics time is reference to the last PPS
   
   if(_isBeam){
-    _frame_tdc_rwm += fShiftRWM2Gate; //
-    _frame_apply_at_caf = _frame_tdc_rwm; // +frame_data2mc
+    if (_frame_tdc_rwm != 0){
+      _frame_tdc_rwm += fShiftRWM2Gate; //align RWM signal to gate opening frame
+      _frame_apply_at_caf = _frame_tdc_rwm; // +frame_data2mc
+    }else if(_frame_hlt_gate != 0){
+      _frame_apply_at_caf = _frame_hlt_gate; //+frame_data2mc
+    }else{
+      _frame_apply_at_caf = 0;
+    }
   }
   else if(_isOffbeam){
-    _frame_apply_at_caf = _frame_hlt_gate; //+frame_data2mc
+    if(_frame_hlt_gate != 0){
+      _frame_apply_at_caf = _frame_hlt_gate; //+frame_data2mc
+    }else{
+      _frame_apply_at_caf = 0;
+    }
   }
   else if(_isXmuon){
     _frame_apply_at_caf = 0;

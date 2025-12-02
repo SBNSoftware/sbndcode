@@ -1,4 +1,5 @@
 #include "opdeconvolution_alg.fcl"
+#include "opdeconvolution_alg_data.fcl"
 
 BEGIN_PROLOG
 
@@ -11,6 +12,8 @@ SBNDOpDeconvolution:
   OpDecoAlg: @local::OpDeconvolutionAlg
 }
 
+###### PMT IDEAL MC ######
+
 SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
 SBNDOpDeconvolutionPMT.Electronics: [""]
@@ -19,6 +22,34 @@ SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
 SBNDOpDeconvolutionPMT.OpDecoAlg.FilterParams: [0.049, 2] #Freq in GHz
 SBNDOpDeconvolutionPMT.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
 SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
+
+
+###### PMT DATA ######
+
+SBNDOpDeconvolutionPMT_data: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionPMT_data.OpDecoAlg: @local::OpDeconvolutionAlgData
+SBNDOpDeconvolutionPMT_data.InputLabel: "wfalign:PMTChannels"
+SBNDOpDeconvolutionPMT_data.PDTypes: ["pmt_coated", "pmt_uncoated"]
+SBNDOpDeconvolutionPMT_data.Electronics: [""]
+SBNDOpDeconvolutionPMT_data.OpDecoAlg.OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data_OV6.root"
+SBNDOpDeconvolutionPMT_data.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
+SBNDOpDeconvolutionPMT_data.OpDecoAlg.DecoWaveformPrecision: 0.005
+SBNDOpDeconvolutionPMT_data.OpDecoAlg.SkipChannelList: [39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302]
+
+###### PMT REALISTIC MC ######
+
+SBNDOpDeconvolutionPMT_realisticMC: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionPMT_realisticMC.OpDecoAlg: @local::OpDeconvolutionAlgData
+SBNDOpDeconvolutionPMT_realisticMC.InputLabel: "pmtpulseoscillation"
+SBNDOpDeconvolutionPMT_realisticMC.PDTypes: ["pmt_coated", "pmt_uncoated"]
+SBNDOpDeconvolutionPMT_realisticMC.Electronics: [""]
+SBNDOpDeconvolutionPMT_realisticMC.OpDecoAlg.OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data_OV6.root"
+SBNDOpDeconvolutionPMT_realisticMC.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
+SBNDOpDeconvolutionPMT_realisticMC.OpDecoAlg.DecoWaveformPrecision: 0.005
+SBNDOpDeconvolutionPMT_realisticMC.OpDecoAlg.SkipChannelList: [39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302]
+
+
+###### XA IDEAL MC ######
 
 SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]

@@ -7,11 +7,14 @@
 
 #include "CRTArtdaqFragmentProducer.fcl"
 
+#include "crt_services_sbnd.fcl"
+
 process_name: CRTFragmentProducer
 
 services:
 {
     @table::sbnd_detsim_services
+    @table::crt_services_sbnd
     TFileService: { fileName: "crtfragsim_hist.root" }
     RandomNumberGenerator: {} #ART native random number generator
 }

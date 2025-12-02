@@ -66,7 +66,7 @@ sbnd_wcls_sp_data.wcls_main.structs:   {
                                         nticks: 3427
                                         nchunks: 2 # dummy for trad
                                         tick_per_slice: 4 # dummy for trad
-					enableLowROIThresholds: "false"
+					enableLowROIThresholds: "true"
                                        }
 #----------------------------------------------------------------------------------#
 ## Low threshold configuration 

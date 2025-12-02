@@ -145,7 +145,7 @@ base {
     },
 
     files: {
-        wires: "sbnd-wires-geometry-v0202.json.bz2", // new SBND geometry
+        wires: "sbnd-wires-geometry-v0206.json.bz2", // new SBND geometry
 
         fields: [ "garfield-sbnd-v1.json.bz2" ],
 

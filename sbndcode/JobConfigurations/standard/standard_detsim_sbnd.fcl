@@ -25,6 +25,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "detsim_drops.fcl"
+#include "crt_services_sbnd.fcl"
 
 #
 # modules
@@ -33,8 +34,9 @@
 #include "wcsimsp_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
+#include "sbnd_pmtpulseoscillation_config.fcl"
 #include "rootoutput_sbnd.fcl"
-
+#include "pmtmcmetricproducer.fcl"
 
 process_name: DetSim
 
@@ -42,6 +44,7 @@ services:
 {
   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   @table::sbnd_detsim_services
+  @table::crt_services_sbnd
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetGeometry: @local::sbnd_auxdetgeo
 }
@@ -62,13 +65,15 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    simtpc2d:  @local::sbnd_wcls_simsp
+    simtpc2d:  @local::sbnd_wcls_simsp_bothrois
     crtsim:    @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
+    pmtmetricmc: @local::sbnd_pmtmcmetricproducer
+    pmtpulseoscillation: @local::sbnd_pmtpulseoscillation
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate: [rns, simtpc2d, crtsim, opdaq]
+  simulate: [rns, simtpc2d, crtsim, opdaq, pmtmetricmc, pmtpulseoscillation]
 
   #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
@@ -92,4 +97,4 @@ outputs:
                     ]
   }
 }
-physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: false
+physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: true

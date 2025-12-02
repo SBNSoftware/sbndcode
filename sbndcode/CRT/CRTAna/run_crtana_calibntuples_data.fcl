@@ -1,0 +1,15 @@
+#include "run_crtana_calibntuples.fcl"
+
+services.ParticleInventoryService: @erase
+services.BackTrackerService:       @erase
+
+services:
+{
+  @table::services
+  @table::crt_services_data_sbnd
+}
+
+physics.analyzers.caloskim.G4producer: ""
+physics.analyzers.caloskim.SimChannelproducer: ""
+
+physics.analyzers.crtana: @local::crtana_data_sbnd

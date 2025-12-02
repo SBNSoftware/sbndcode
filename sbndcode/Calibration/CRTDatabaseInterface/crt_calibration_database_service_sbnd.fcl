@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+crt_calibration_database_service_sbnd:
+{
+  service_provider: "CRTCalibrationDatabaseService" 
+
+  Database:
+  {
+    DatabaseTag:       "v1r1"
+    DatabaseTimeStamp: 1756862739000000000
+    FEBTableName:      "crt_feb_calibration"
+    ChannelTableName:  "crt_channel_calibration"
+  }
+
+  Verbose: false
+}
+
+END_PROLOG

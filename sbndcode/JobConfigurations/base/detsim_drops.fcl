@@ -25,7 +25,8 @@ detsim_drops: [ @sequence::g4_drops
                 , "drop sim::SimEnergyDeposits_ionandscintout__*"
                 , "drop sim::SimEnergyDeposits_ionandscint_*_*"
                 , "drop sim::SimEnergyDeposits_largeant_*_*"
-				, "keep sim::SimEnergyDeposits_ionandscint_priorSCE_*"]
+				, "keep sim::SimEnergyDeposits_ionandscint_priorSCE_*"
+                , "drop raw::OpDetWaveforms_opdaq_*_*"]
 
 END_PROLOG
 
