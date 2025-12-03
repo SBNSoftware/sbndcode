@@ -288,35 +288,37 @@ void styleDrawBackSig(histGroup_struct hists,
     hists.canvas->SetTicky();
     hists.canvas->SetLogy(useLogScale);
 
-    auto combine = [useLogScale](TH1F* a, TH1F* b, TH1F* c, const char* name) -> TH1F* {
+    auto combine = [useLogScale](TH1F* a, TH1F* b, TH1F* c, TH1F* d, const char* name) -> TH1F* {
         TH1F* combo = nullptr;
         if (a) combo = (TH1F*)a->Clone(name);
         else if (b) combo = (TH1F*)b->Clone(name);
         else if (c) combo = (TH1F*)c->Clone(name);
+        else if (d) combo = (TH1F*)d->Clone(name);
         else return nullptr;
 
         combo->Reset();
         if (a) combo->Add(a);
         if (b) combo->Add(b);
         if (c) combo->Add(c);
-
+        if (d) combo->Add(d);
+    
         if (useLogScale) {
             for (int i = 1; i <= combo->GetNbinsX(); ++i)
                 if (combo->GetBinContent(i) <= 0)
-                    combo->SetBinContent(i, 1e-1);
+                    combo->SetBinContent(i, 1e-6);
         }
 
         return combo;
     };
 
-    TH1F* currentSignalCombo     = combine(hists.currentSignal, hists.currentSignalFuzzy, nullptr, "currentSignalCombo");
-    TH1F* currentBackgroundCombo = combine(hists.currentBNB, hists.currentBNBFuzzy, hists.currentCosmic, "currentBackgroundCombo");
+    TH1F* currentSignalCombo     = combine(hists.currentSignal, nullptr, nullptr, nullptr, "currentSignalCombo");
+    TH1F* currentBackgroundCombo = combine(hists.currentBNB, hists.currentBNBFuzzy, hists.currentCosmic, hists.currentSignalFuzzy, "currentBackgroundCombo");
 
-    TH1F* ubooneSignalCombo     = combine(hists.ubooneSignal, hists.ubooneSignalFuzzy, nullptr, "ubooneSignalCombo");
-    TH1F* ubooneBackgroundCombo = combine(hists.ubooneBNB, hists.ubooneBNBFuzzy, hists.ubooneCosmic, "ubooneBackgroundCombo");
+    TH1F* ubooneSignalCombo     = combine(hists.ubooneSignal, nullptr, nullptr, nullptr, "ubooneSignalCombo");
+    TH1F* ubooneBackgroundCombo = combine(hists.ubooneBNB, hists.ubooneBNBFuzzy, hists.ubooneCosmic, hists.ubooneSignalFuzzy, "ubooneBackgroundCombo");
 
-    TH1F* nuESignalCombo     = combine(hists.nuESignal, hists.nuESignalFuzzy, nullptr, "nuESignalCombo");
-    TH1F* nuEBackgroundCombo = combine(hists.nuEBNB, hists.nuEBNBFuzzy, hists.nuECosmic, "nuEBackgroundCombo");
+    TH1F* nuESignalCombo     = combine(hists.nuESignal, nullptr, nullptr, nullptr, "nuESignalCombo");
+    TH1F* nuEBackgroundCombo = combine(hists.nuEBNB, hists.nuEBNBFuzzy, hists.nuECosmic, hists.nuESignalFuzzy, "nuEBackgroundCombo");
 
     std::vector<TH1F*> allHists = {
         currentSignalCombo, currentBackgroundCombo,
@@ -1395,6 +1397,11 @@ void nuEBackgroundSignalWeighted_macro(){
     auto recoZ_high = createHistGroup("recoZ_high", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 40, 490, 510);
     auto recoZDist_high = createHistGroup("recoZDist_high", "Z Coordinate of Reco Neutrino (Not Weighted)", "z_{Reco} (cm)", 40, 490, 510);
 
+    auto QSquaredHighest = createHistGroup("QSquaredHighest", "Q^{2} Using Highest Energy PFP in Slice", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredHighestDist = createHistGroup("QSquaredHighestDist", "Q^{2} Using Highest Energy PFP in Slice (Not Weighted)", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredSum = createHistGroup("QSquaredSum", "Q^{2} Using Sum of PFP Energies in Slice", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredSumDist = createHistGroup("QSquaredSumDist", "Q^{2} Using Sum of PFP Energies in Slice (Not Weighted)", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+
     double xMin = -201.3; double xMax = 201.3;
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0; double zMax = 509.4;
@@ -1432,6 +1439,10 @@ void nuEBackgroundSignalWeighted_macro(){
     TH2D *yCoordAngleDifferenceDLNuE = new TH2D("yCoordAngleDifferenceDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLNuE = new TH2D("zCoordAngleDifferenceDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
 
+    TH2D *slicePurityAngleDifferenceBDT = new TH2D("slicePurityAngleDifferenceBDT", "", 102, 0, 1.02, 40, 0, 180);
+    TH2D *slicePurityAngleDifferenceDLUboone = new TH2D("slicePurityAngleDifferenceDLUboone", "", 102, 0, 1.02, 40, 0, 180);
+    TH2D *slicePurityAngleDifferenceDLNuE = new TH2D("slicePurityAngleDifferenceDLNuE", "", 102, 0, 1.02, 40, 0, 180);
+
     double numEvents_BDTCosmic = 0;
     double numEvents_BDTBNB = 0;
     double numEvents_BDTNuE = 0;
@@ -1441,6 +1452,16 @@ void nuEBackgroundSignalWeighted_macro(){
     double numEvents_DLNuENuE = 0;
 
     double eventCounter = 0;
+
+    double numSkippedBNBSlicesBDT = 0;
+    double numSkippedNuESlicesBDT = 0;
+    double numSkippedCosmicSlicesBDT = 0;
+    double numSkippedBNBSlicesDLNuE = 0;
+    double numSkippedNuESlicesDLNuE = 0;
+    double numSkippedCosmicSlicesDLNuE = 0;
+
+    double skippedNuESlicesGoodCompletenessBDT = 0;
+    double skippedNuESlicesGoodCompletenessDLNuE = 0;
 
     for(Long64_t e = 0; e < numEntries; ++e){
         //printf("=============================================================================\n");
@@ -1513,6 +1534,8 @@ void nuEBackgroundSignalWeighted_macro(){
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
 
+                double sliceCategoryPlottingMacro = -999999;
+
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
                     if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -1538,12 +1561,13 @@ void nuEBackgroundSignalWeighted_macro(){
                 //printf("Summed energy of all PFPs in slice = %f\n", summedEnergy);
                 //std::cout << "Number of PFPs in the slice = " << numPFPsSlice << std::endl;
 
+                double cosAngle = -999999;
                 double angleDifference = -999999;
                 if((highestEnergy_DX != -999999) && (recoilElectron_DX != -999999)){
                     double aDOTb = ((highestEnergy_DX * recoilElectron_DX) + (highestEnergy_DY * recoilElectron_DY) + (highestEnergy_DZ * recoilElectron_DZ));
                     double aMagnitude = std::sqrt((highestEnergy_DX * highestEnergy_DX) + (highestEnergy_DY * highestEnergy_DY) + (highestEnergy_DZ * highestEnergy_DZ));
                     double bMagnitude = std::sqrt((recoilElectron_DX * recoilElectron_DX) + (recoilElectron_DY * recoilElectron_DY) + (recoilElectron_DZ * recoilElectron_DZ));
-                    double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
+                    cosAngle = (aDOTb / (aMagnitude * bMagnitude));
                     angleDifference = (TMath::ACos(cosAngle) * TMath::RadToDeg());
                 }
 
@@ -1560,9 +1584,86 @@ void nuEBackgroundSignalWeighted_macro(){
                         //printf("Reco Neutrino in Slice: ID = %f, PDG = %f, Vertex = (%f, %f, %f)\n", reco_neutrinoID->at(recoNeut), reco_neutrinoPDG->at(recoNeut), reco_neutrinoVX->at(recoNeut), reco_neutrinoVY->at(recoNeut), reco_neutrinoVZ->at(recoNeut));
                     }
                 }
+
+                double Q2HighestValue = -999999;
+                double Q2SumValue = -999999;
+
+                if(highestEnergy_PFPID != -999999){
+                    double cosRecoilAngle = TMath::Cos(highestEnergy_theta);
+                    double momentumHighest = std::sqrt((highestEnergy_energy * highestEnergy_energy) - (0.511 * 0.511));
+                    double momentumSum = std::sqrt((summedEnergy * summedEnergy) - (0.511 * 0.511));
+
+                    //std::cout << "cosRecoilAngle = " << cosRecoilAngle << ", highestEnergy_theta = " << highestEnergy_theta << std::endl;
+                    double ENuHighest = (((939.565 * highestEnergy_energy) - ((0.511 * 0.511)/2))/(939.565 - highestEnergy_energy + (momentumHighest * cosRecoilAngle)));
+                    Q2HighestValue = (1e-6) * (2 * 939.565 * (ENuHighest - highestEnergy_energy));
+                    double ENuSum = (((939.565 * summedEnergy) - ((0.511 * 0.511)/2))/(939.565 - summedEnergy + (momentumSum * cosRecoilAngle)));
+                    Q2SumValue = (1e-6) * (2 * 939.565 * (ENuSum - summedEnergy));
                 
+                    /*
+                    if(reco_sliceCategory->at(slice) == 3) std::cout << "BNB Slice: Q2HighestValue = " << Q2HighestValue << ", Q2SumValue = " << Q2SumValue << std::endl;
+                    if(reco_sliceCategory->at(slice) == 0) std::cout << "Cosmic Slice: Q2HighestValue = " << Q2HighestValue << ", Q2SumValue = " << Q2SumValue << std::endl;
+                    if(reco_sliceCategory->at(slice) == 1) std::cout << "Nu+E Slice: Q2HighestValue = " << Q2HighestValue << ", Q2SumValue = " << Q2SumValue << std::endl;
+                    */
+                }
+
+                // Assigning new category to the slices
+                if(reco_sliceID->at(slice) != -999999){
+                    // The slice is valid
+                    if(reco_sliceInteraction->at(slice) == -100 || reco_sliceCategory->at(slice) == 0){
+                        // This is a cosmic slice
+                        sliceCategoryPlottingMacro = 0;
+                        if(reco_sliceCategory->at(slice) != 0) std::cout << "Cosmic slice Category not matching!" << std::endl;
+                    } else if(reco_sliceInteraction->at(slice) != -999999 && reco_sliceInteraction->at(slice) != 1098 && reco_sliceInteraction->at(slice) != -100){
+                        // This is a slice whose origin is a beam neutrino but isn't a nu+e elastic scatter - BNB slice
+                        if(reco_sliceCompleteness->at(slice) > 0.5){
+                            // This is a BNB slice (completeness > 0.5)
+                            sliceCategoryPlottingMacro = 3;
+                        } else{
+                            // This is a BNB fuzzy slice (completeness < 0.5)
+                            sliceCategoryPlottingMacro = 4;
+                        }
+                    } else if(reco_sliceInteraction->at(slice) == 1098){
+                        // This is a slice whose origin is a beam neutrino and is a nu+e elastic scatter - Nu+E slice
+                        if(reco_sliceCompleteness->at(slice) > 0.5){
+                            // This is a signal slice (completeness > 0.5)
+                            sliceCategoryPlottingMacro = 1;
+                        } else{
+                            // This is a signal fuzzy slice (completeness < 0.5)
+                            sliceCategoryPlottingMacro = 2;
+                        }
+                        
+                    }
+                }
+
+                if(reco_sliceCategory->at(slice) == -999999 && reco_sliceID->at(slice) != -999999){
+                    std::cout << "sliceCategory == -999999 but sliceID != -999999" << std::endl;
+                    std::cout << "sliceInteraction = " << reco_sliceInteraction->at(slice) << ", sliceCompleteness = " << reco_sliceCompleteness->at(slice) << ", slicePurity = " << reco_slicePurity->at(slice) << std::endl;
+                    if(reco_sliceInteraction->at(slice) == -100){
+                        std::cout << "Slice is truth matched to a cosmic" << std::endl;
+                        if(DLCurrent == 2) numSkippedCosmicSlicesBDT++;
+                        if(DLCurrent == 5) numSkippedCosmicSlicesDLNuE++;
+                    }
+                    if(reco_sliceInteraction->at(slice) != -999999 && reco_sliceInteraction->at(slice) != 1098 && reco_sliceInteraction->at(slice) != -100){
+                        std::cout << "Slice is truth matched to a BNB event" << std::endl;
+                        if(DLCurrent == 2) numSkippedBNBSlicesBDT++;
+                        if(DLCurrent == 5) numSkippedBNBSlicesDLNuE++;
+                    }
+                    if(reco_sliceInteraction->at(slice) == 1098){
+                        std::cout << "Slice is truth matched to a Nu+E elastic scatter" << std::endl;
+                        if(DLCurrent == 2){
+                            numSkippedNuESlicesBDT++;
+                            if(reco_sliceCompleteness->at(slice) > 0.5) skippedNuESlicesGoodCompletenessBDT++;
+                        }
+                        if(DLCurrent == 5){
+                            numSkippedNuESlicesDLNuE++;
+                            if(reco_sliceCompleteness->at(slice) > 0.5) skippedNuESlicesGoodCompletenessDLNuE++;
+                        }
+                    }
+                }
+
                 // Filling Histograms
-                if(reco_sliceCategory->at(slice) == 0){
+                //if(reco_sliceCategory->at(slice) == 0){
+                if(sliceCategoryPlottingMacro == 0){
                     // This is a cosmic slice
                     if(DLCurrent == 2){
                         sliceCompleteness.currentCosmic->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -1574,6 +1675,16 @@ void nuEBackgroundSignalWeighted_macro(){
 
                         sliceNumPFPs.currentCosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentCosmic->Fill(numPFPsSlice);
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.currentCosmic->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.currentCosmic->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.currentCosmic->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.currentCosmic->Fill(Q2SumValue);
+                        }
 
                         if(recoVX != -999999){
                             recoX.currentCosmic->Fill(recoVX, weight);
@@ -1631,6 +1742,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceNumPFPs.ubooneCosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneCosmic->Fill(numPFPsSlice);
                         
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.ubooneCosmic->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.ubooneCosmic->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.ubooneCosmic->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.ubooneCosmic->Fill(Q2SumValue);
+                        }
+                        
                         if(recoVX != -999999){
                             recoX.ubooneCosmic->Fill(recoVX, weight);
                             recoXDist.ubooneCosmic->Fill(recoVX);
@@ -1687,6 +1808,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceNumPFPs.nuECosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuECosmic->Fill(numPFPsSlice);
                         
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.nuECosmic->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.nuECosmic->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.nuECosmic->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.nuECosmic->Fill(Q2SumValue);
+                        }
+                        
                         if(recoVX != -999999){
                             recoX.nuECosmic->Fill(recoVX, weight);
                             recoXDist.nuECosmic->Fill(recoVX);
@@ -1733,7 +1864,8 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                     }
 
-                } else if(reco_sliceCategory->at(slice) == 1){
+                //} else if(reco_sliceCategory->at(slice) == 1){
+                } else if(sliceCategoryPlottingMacro == 1){
                     // This is a signal slice
                     if(DLCurrent == 2 && signal == 1){
                         sliceCompleteness.currentSignal->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -1745,6 +1877,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.currentSignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentSignal->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.currentSignal->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.currentSignal->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.currentSignal->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.currentSignal->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -1771,7 +1913,9 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.currentSignal->Fill(recoilElectron_energy);
                             ThetaTrue.currentSignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.currentSignal->Fill(recoilElectron_angle);
-                        
+                       
+                            if(angleDifference != -999999) slicePurityAngleDifferenceBDT->Fill(reco_slicePurity->at(slice), angleDifference);
+
                             if(recoVX != -999999){
                                 
                                 xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
@@ -1842,6 +1986,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.ubooneSignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneSignal->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.ubooneSignal->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.ubooneSignal->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.ubooneSignal->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.ubooneSignal->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -1866,6 +2020,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.ubooneSignal->Fill(recoilElectron_energy);
                             ThetaTrue.ubooneSignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.ubooneSignal->Fill(recoilElectron_angle);
+                            
+                            if(angleDifference != -999999) slicePurityAngleDifferenceDLUboone->Fill(reco_slicePurity->at(slice), angleDifference);
                             
                             if(recoVX != -999999){
                                 
@@ -1937,6 +2093,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.nuESignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuESignal->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.nuESignal->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.nuESignal->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.nuESignal->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.nuESignal->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -1961,6 +2127,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.nuESignal->Fill(recoilElectron_energy);
                             ThetaTrue.nuESignal->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.nuESignal->Fill(recoilElectron_angle);
+                            
+                            if(angleDifference != -999999) slicePurityAngleDifferenceDLNuE->Fill(reco_slicePurity->at(slice), angleDifference);
                             
                             if(recoVX != -999999){
                 
@@ -2022,7 +2190,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             //}
                         }
                     }
-                } else if(reco_sliceCategory->at(slice) == 2){
+                //} else if(reco_sliceCategory->at(slice) == 2){
+                } else if(sliceCategoryPlottingMacro == 2){
                     // This is a fuzzy signal slice
                     if(DLCurrent == 2 && signal == 1){
                         sliceCompleteness.currentSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2034,6 +2203,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.currentSignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentSignalFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.currentSignalFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.currentSignalFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.currentSignalFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.currentSignalFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2058,7 +2237,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.currentSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.currentSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.currentSignalFuzzy->Fill(recoilElectron_angle);
-                            
+                           
+                            /* 
                             if(recoVX != -999999){
                                 
                                 xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
@@ -2074,6 +2254,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                 if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
                                 else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
                             }
+                            */
                         }
                             
                         if(recoVX != -999999){ 
@@ -2128,6 +2309,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.ubooneSignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneSignalFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.ubooneSignalFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.ubooneSignalFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.ubooneSignalFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.ubooneSignalFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2152,7 +2343,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.ubooneSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.ubooneSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.ubooneSignalFuzzy->Fill(recoilElectron_angle);
-                        
+                       
+                            /* 
                             if(recoVX != -999999){
                                 
                                 xCoordAngleDifferenceDLUboone->Fill(recoVX, angleDifference);
@@ -2167,7 +2359,8 @@ void nuEBackgroundSignalWeighted_macro(){
                                 
                                 if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
                                 else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference); 
-                            }                        
+                            } 
+                            */                       
                         }
                             
                         if(recoVX != -999999){ 
@@ -2222,6 +2415,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.nuESignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuESignalFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.nuESignalFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.nuESignalFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.nuESignalFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.nuESignalFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2246,7 +2449,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.nuESignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.nuESignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.nuESignalFuzzy->Fill(recoilElectron_angle);
-                            
+                           
+                            /* 
                             if(recoVX != -999999){
                                 
                                 xCoordAngleDifferenceDLNuE->Fill(recoVX, angleDifference);
@@ -2261,7 +2465,8 @@ void nuEBackgroundSignalWeighted_macro(){
                                 
                                 if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
                                 else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
-                            }                        
+                            } 
+                            */                       
                         }
                             
                         if(recoVX != -999999){ 
@@ -2308,7 +2513,8 @@ void nuEBackgroundSignalWeighted_macro(){
                       
                         }
                     }
-                } else if(reco_sliceCategory->at(slice) == 3){
+                //} else if(reco_sliceCategory->at(slice) == 3){
+                } else if(sliceCategoryPlottingMacro == 3){
                     // This is a BNB slice
                     if(DLCurrent == 2){
                         sliceCompleteness.currentBNB->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2320,6 +2526,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.currentBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentBNB->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.currentBNB->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.currentBNB->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.currentBNB->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.currentBNB->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2386,6 +2602,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.ubooneBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneBNB->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.ubooneBNB->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.ubooneBNB->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.ubooneBNB->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.ubooneBNB->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2452,6 +2678,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.nuEBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuEBNB->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.nuEBNB->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.nuEBNB->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.nuEBNB->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.nuEBNB->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2508,7 +2744,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             //}
                         }
                     }
-                } else if(reco_sliceCategory->at(slice) == 4){
+                //} else if(reco_sliceCategory->at(slice) == 4){
+                } else if(sliceCategoryPlottingMacro == 4){
                     // This is a fuzzy BNB slice
                     if(DLCurrent == 2){
                         sliceCompleteness.currentBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2520,6 +2757,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.currentBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentBNBFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.currentBNBFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.currentBNBFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.currentBNBFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.currentBNBFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2585,6 +2832,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.ubooneBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneBNBFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.ubooneBNBFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.ubooneBNBFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.ubooneBNBFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.ubooneBNBFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2650,6 +2907,16 @@ void nuEBackgroundSignalWeighted_macro(){
                         
                         sliceNumPFPs.nuEBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuEBNBFuzzy->Fill(numPFPsSlice);
+                        
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest.nuEBNBFuzzy->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist.nuEBNBFuzzy->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum.nuEBNBFuzzy->Fill(Q2SumValue, weight);
+                            QSquaredSumDist.nuEBNBFuzzy->Fill(Q2SumValue);
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
@@ -2706,6 +2973,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             //}
                         }
                     }
+                } else{
+                    // This is a slice without a category
                 }
 
                 //printf("_______________________________________________________________\n");
@@ -2736,6 +3005,14 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+
+    styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(QSquaredHighestDist, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_Backsig_lower_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    
+    styleDrawAll(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(QSquaredSumDist, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_Backsig_lower_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
     styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
@@ -2862,6 +3139,9 @@ void nuEBackgroundSignalWeighted_macro(){
     efficiency(recoY_high, 0, 1, 999, 999, (base_path + "recoY_high").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(recoZ_high, 0, 1, 999, 999, (base_path + "recoZ_high").c_str(), "bottomRight", nullptr, &right, 1);
 
+    efficiency(QSquaredHighest, 0, 1, 999, 999, (base_path + "QSquared_highest_lower").c_str(), "bottomRight", nullptr, &right, 1);
+    efficiency(QSquaredSum, 0, 1, 999, 999, (base_path + "QSquared_sum_lower").c_str(), "bottomRight", nullptr, &right, 1);
+
     TwoDHistDraw(xCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(xCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(yCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
@@ -2894,6 +3174,10 @@ void nuEBackgroundSignalWeighted_macro(){
     TwoDHistDraw(xCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_x_DLNuE.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(yCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_y_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(zCoordAngleDifferenceDLNuE, (base_path + "angleDiffPosition_z_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    TwoDHistDraw(slicePurityAngleDifferenceBDT, (base_path + "angleDiffPurity_BDT.pdf").c_str(), "Purity of the Slice vs Angle Between True and Reco Track: BDT Vertexing;Slice Purity;Angle Difference (degrees)");
+    TwoDHistDraw(slicePurityAngleDifferenceDLUboone, (base_path + "angleDiffPurity_DLUboone.pdf").c_str(), "Purity of the Slice vs Angle Between True and Reco Track: DL Uboone Vertexing;Slice Purity;Angle Difference (degrees)");
+    TwoDHistDraw(slicePurityAngleDifferenceDLNuE, (base_path + "angleDiffPurity_DLNuE.pdf").c_str(), "Purity of the Slice vs Angle Between True and Reco Track: DL Nu+E Vertexing;Slice Purity;Angle Difference (degrees)");
 
     printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, numEvents_BDTBNB, numEvents_BDTNuE);
     printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
@@ -2930,4 +3214,7 @@ void nuEBackgroundSignalWeighted_macro(){
     printf("Target POT = %f\n", targetPOT);
    
     std::cout << "eventcounter = " << eventCounter << std::endl;
+
+    printf("\n\nNumber of Skipped Slices:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\nDL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numSkippedCosmicSlicesBDT, numSkippedBNBSlicesBDT, numSkippedNuESlicesBDT, numSkippedCosmicSlicesDLNuE, numSkippedBNBSlicesDLNuE, numSkippedNuESlicesDLNuE);
+    printf("\nNumber of nu+e slices with completeness > 0.5 that are skipped: BDT = %f, DL Nu+E = %f\n", skippedNuESlicesGoodCompletenessBDT, skippedNuESlicesGoodCompletenessDLNuE);
 }
