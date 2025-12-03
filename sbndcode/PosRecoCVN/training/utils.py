@@ -80,10 +80,10 @@ def vectorized_categorize_flashes(f_ophit_ch, channel_lookup):
 def smart_flash_selection(f_ophit_PE, categories, max_flashes_for_keep_all=2):
     """Optimized flash selection based on PE sums."""
     sum_pe = ak.sum(f_ophit_PE, axis=2)
-    
+
     mask_even = (categories == 0) | (categories == 2)
     mask_odd = (categories == 1) | (categories == 3)
-    
+
     sum_even = ak.sum(ak.where(mask_even, sum_pe, 0), axis=1)
     sum_odd = ak.sum(ak.where(mask_odd, sum_pe, 0), axis=1)
     
@@ -108,23 +108,53 @@ def apply_selection_mask(arrays_dict, mask):
 def select_tpc_values(tpc_dict, decision):
     """Select TPC values based on decision."""
     selector = ak.concatenate([
-        decision[:, np.newaxis], 
+        decision[:, np.newaxis],
         (~decision)[:, np.newaxis]
     ], axis=1)
-    
+
     result = {}
     for name, array in tpc_dict.items():
         result[name] = ak.sum(ak.where(selector, array, 0), axis=1)
-    
+
     return result
 
 
-def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t, 
-                  dEpromx, dEpromy, dEpromz, dEtpc, nuvZ, 
+def select_tpc_values_new(tpc_dict, decision):
+    """
+    Select TPC values based on decision - simple version using loops.
+
+    Arrays have structure [n_events, 2] where index 0=TPC0, index 1=TPC1
+    Decision: True=TPC0 (even), False=TPC1 (odd)
+    """
+    # Convert decision to list
+    decision_list = ak.to_list(decision)
+
+    result = {}
+    for name, array in tpc_dict.items():
+        array_list = ak.to_list(array)
+
+        selected_values = []
+        for event_idx, dec in enumerate(decision_list):
+            event_values = array_list[event_idx]
+
+            if event_values is None or len(event_values) < 2:
+                selected_values.append(0.0)  # Default
+            else:
+                # dec=True -> select index 0 (TPC0), dec=False -> select index 1 (TPC1)
+                idx = 0 if dec else 1
+                selected_values.append(float(event_values[idx]))
+
+        result[name] = ak.Array(selected_values)
+
+    return result
+
+
+def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
+                  dEpromx, dEpromy, dEpromz, dEtpc, nuvZ,
                   channel_dict, config, verbose=True):
     """
     Process events with optimized pipeline.
-    
+
     Parameters:
     -----------
     All the usual arrays plus:
@@ -132,29 +162,29 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
         Configuration dictionary with filter parameters
     verbose : bool
         Show progress and statistics
-        
+
     Returns:
     --------
     Tuple of all filtered arrays plus statistics tracker
     """
-    
+
     if verbose:
         print(">> Starting optimized event processing...")
         start_time = time.time()
-    
+
     initial_count = len(nuvT)
     tracker = CutFlowTracker(initial_count)
-    
+
     if verbose:
         print(f"Initial events: {initial_count:,}")
-    
+
     # Step 1: Single neutrino filter
     mask_single = ak.num(nuvT) == 1
-    
+
     arrays = {
         'nuvT': nuvT[mask_single],
         'f_ophit_PE': f_ophit_PE[mask_single],
-        'f_ophit_ch': f_ophit_ch[mask_single], 
+        'f_ophit_ch': f_ophit_ch[mask_single],
         'f_ophit_t': f_ophit_t[mask_single],
         'dEpromx': dEpromx[mask_single],
         'dEpromy': dEpromy[mask_single],
@@ -162,7 +192,7 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
         'dEtpc': dEtpc[mask_single],
         'nuvZ': nuvZ[mask_single]
     }
-    
+
     tracker.add_cut("Single neutrino", len(arrays['nuvT']))
     
     # Step 2: Has flashes filter  
@@ -174,30 +204,34 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
     # Step 3: Flash processing
     if verbose:
         print("Processing flashes...")
-    
+
     channel_lookup = create_channel_lookup(
         channel_dict, config['pmt_types'], config['xas_types']
     )
     categories = vectorized_categorize_flashes(arrays['f_ophit_ch'], channel_lookup)
-    
+
     flash_mask, decision = smart_flash_selection(
         arrays['f_ophit_PE'], categories, config['max_flashes_for_keep_all']
     )
     
     # Apply flash selection
     arrays['f_ophit_PE'] = arrays['f_ophit_PE'][flash_mask]
-    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask] 
+    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask]
     arrays['f_ophit_t'] = arrays['f_ophit_t'][flash_mask]
-    
-    # Select TPC values
+
+    # Select TPC values (only for dEprom and dEtpc - these have TPC structure)
     tpc_arrays = {
         'dEpromx': arrays['dEpromx'],
         'dEpromy': arrays['dEpromy'],
-        'dEpromz': arrays['dEpromz'], 
+        'dEpromz': arrays['dEpromz'],
         'dEtpc': arrays['dEtpc']
     }
     selected_tpc = select_tpc_values(tpc_arrays, decision)
     arrays.update(selected_tpc)
+
+    # Store TPC selection as simple label: 0 for TPC0 (even, X<0), 1 for TPC1 (odd, X>0)
+    arrays['selected_tpc'] = ak.where(decision, 0, 1)
+
     
     # Step 4: Valid data cut
     if verbose:
@@ -247,7 +281,7 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
             for var in ['dEpromx', 'dEpromy', 'dEpromz', 'dEtpc']:
                 arr = final_arrays[var]
                 print(f"  {var}: [{ak.min(arr):.1f}, {ak.max(arr):.1f}]")
-    
+
     return (
         final_arrays['nuvT'],
         final_arrays['f_ophit_PE'],
@@ -258,18 +292,547 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
         final_arrays['dEpromz'],
         final_arrays['dEtpc'],
         final_arrays['nuvZ'],
+        final_arrays['selected_tpc'],
+        tracker
+    )
+
+
+def smart_flash_selection_new(f_ophit_PE, categories, max_flashes_for_keep_all=2):
+    """
+    Simple flash selection - uses basic Python loops to avoid UnionArray issues.
+
+    Logic:
+    1. Sum PEs per flash
+    2. Sum flashes by TPC (even channels = TPC0, odd channels = TPC1)
+    3. Pick TPC with more total PE
+    """
+    # Sum PE per flash (axis=2 sums ophits within each flash)
+    sum_pe = ak.sum(f_ophit_PE, axis=2)
+
+    # Convert everything to lists for simple processing
+    sum_pe_list = ak.to_list(sum_pe)
+    categories_list = ak.to_list(categories)
+
+    n_events = len(sum_pe_list)
+    decisions = []
+    selection_masks = []
+
+    for event_idx in range(n_events):
+        event_sum_pe = sum_pe_list[event_idx]
+        event_categories = categories_list[event_idx]
+
+        if event_sum_pe is None or len(event_sum_pe) == 0:
+            decisions.append(True)  # Default to TPC0 (even)
+            selection_masks.append([])
+            continue
+
+        n_flashes = len(event_sum_pe)
+
+        # Sum PEs by TPC
+        sum_even = 0.0
+        sum_odd = 0.0
+
+        for flash_idx in range(n_flashes):
+            pe = float(event_sum_pe[flash_idx]) if event_sum_pe[flash_idx] is not None else 0.0
+            cat = event_categories[flash_idx]
+
+            # Categories: 0,2 = even (TPC0), 1,3 = odd (TPC1)
+            if cat in [0, 2]:
+                sum_even += pe
+            elif cat in [1, 3]:
+                sum_odd += pe
+
+        # Decide which TPC to use
+        decision = sum_even >= sum_odd  # True = TPC0 (even), False = TPC1 (odd)
+        decisions.append(decision)
+
+        # Create selection mask
+        if n_flashes <= max_flashes_for_keep_all:
+            # Keep all flashes
+            mask = [True] * n_flashes
+        else:
+            # Keep only flashes from selected TPC
+            if decision:  # Keep even (TPC0)
+                mask = [cat in [0, 2] for cat in event_categories]
+            else:  # Keep odd (TPC1)
+                mask = [cat in [1, 3] for cat in event_categories]
+
+        selection_masks.append(mask)
+
+    # Convert back to awkward arrays
+    selection_mask = ak.Array(selection_masks)
+    decision = ak.Array(decisions)
+
+    return selection_mask, decision
+
+
+def process_events_new(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
+                       dEpromx, dEpromy, dEpromz, dEtpc,
+                       channel_dict, config, verbose=True):
+    """
+    Process events with optimized pipeline - handles variable depth arrays.
+    Uses smart_flash_selection_new to avoid UnionArray errors.
+
+    Parameters:
+    -----------
+    All the usual arrays plus:
+    config : dict
+        Configuration dictionary with filter parameters
+    verbose : bool
+        Show progress and statistics
+
+    Returns:
+    --------
+    Tuple of all filtered arrays plus statistics tracker
+    """
+
+    if verbose:
+        print(">> Starting optimized event processing (new version)...")
+        start_time = time.time()
+
+    initial_count = len(nuvT)
+    tracker = CutFlowTracker(initial_count)
+
+    if verbose:
+        print(f"Initial events: {initial_count:,}")
+
+    # Step 1: Single neutrino filter
+    mask_single = ak.num(nuvT) == 1
+
+    arrays = {
+        'nuvT': nuvT[mask_single],
+        'f_ophit_PE': f_ophit_PE[mask_single],
+        'f_ophit_ch': f_ophit_ch[mask_single],
+        'f_ophit_t': f_ophit_t[mask_single],
+        'dEpromx': dEpromx[mask_single],
+        'dEpromy': dEpromy[mask_single],
+        'dEpromz': dEpromz[mask_single],
+        'dEtpc': dEtpc[mask_single]
+    }
+
+    tracker.add_cut("Single neutrino", len(arrays['nuvT']))
+
+    # Step 2: Has flashes filter
+    mask_flashes = ak.num(arrays['f_ophit_PE'], axis=1) >= config['min_flashes']
+    arrays = apply_selection_mask(arrays, mask_flashes)
+
+    tracker.add_cut("Has flashes", len(arrays['nuvT']))
+
+    # Step 3: Flash processing
+    if verbose:
+        print("Processing flashes...")
+
+    channel_lookup = create_channel_lookup(
+        channel_dict, config['pmt_types'], config['xas_types']
+    )
+    categories = vectorized_categorize_flashes(arrays['f_ophit_ch'], channel_lookup)
+
+    # Use new version that handles variable depth
+    flash_mask, decision = smart_flash_selection_new(
+        arrays['f_ophit_PE'], categories, config['max_flashes_for_keep_all']
+    )
+
+    # Apply flash selection
+    arrays['f_ophit_PE'] = arrays['f_ophit_PE'][flash_mask]
+    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask]
+    arrays['f_ophit_t'] = arrays['f_ophit_t'][flash_mask]
+
+    # Select TPC values (only for dEprom and dEtpc - these have TPC structure)
+    tpc_arrays = {
+        'dEpromx': arrays['dEpromx'],
+        'dEpromy': arrays['dEpromy'],
+        'dEpromz': arrays['dEpromz'],
+        'dEtpc': arrays['dEtpc']
+    }
+    selected_tpc = select_tpc_values_new(tpc_arrays, decision)
+    arrays.update(selected_tpc)
+
+    # Store TPC selection as simple label: 0 for TPC0 (even, X<0), 1 for TPC1 (odd, X>0)
+    decision_list = ak.to_list(decision)
+    arrays['selected_tpc'] = ak.Array([0 if d else 1 for d in decision_list])
+
+
+    # Step 4: Valid data cut
+    if verbose:
+        print("Applying data validity cuts...")
+
+    valid_mask = (
+        (arrays['dEpromx'] != config['invalid_marker']) &
+        (arrays['dEpromy'] != config['invalid_marker']) &
+        (arrays['dEpromz'] != config['invalid_marker'])
+    )
+
+    arrays = apply_selection_mask(arrays, valid_mask)
+    tracker.add_cut("Valid data (≠ -999 in dEprom)", len(arrays['nuvT']))
+
+    # Step 5: Energy cut
+    if verbose:
+        print("Applying energy cuts...")
+
+    energy_mask = arrays['dEtpc'] > config['min_energy_tpc']
+    arrays = apply_selection_mask(arrays, energy_mask)
+    tracker.add_cut("Energy cut", len(arrays['nuvT']))
+
+    # Step 6: Position cuts
+    if verbose:
+        print("Applying position cuts...")
+
+    position_mask = (
+        (arrays['dEpromx'] >= config['depromx_range'][0]) &
+        (arrays['dEpromx'] <= config['depromx_range'][1]) &
+        (arrays['dEpromy'] >= config['depromy_range'][0]) &
+        (arrays['dEpromy'] <= config['depromy_range'][1]) &
+        (arrays['dEpromz'] >= config['depromz_range'][0]) &
+        (arrays['dEpromz'] <= config['depromz_range'][1])
+    )
+
+    final_arrays = apply_selection_mask(arrays, position_mask)
+    tracker.add_cut("Position cut", len(final_arrays['nuvT']))
+
+    if verbose:
+        processing_time = time.time() - start_time
+        print(f">> Processing completed in {processing_time:.2f} seconds")
+        print()
+        tracker.display()
+
+        if len(final_arrays['nuvT']) > 0:
+            print("\n* Final dataset ranges:")
+            for var in ['dEpromx', 'dEpromy', 'dEpromz', 'dEtpc']:
+                arr = final_arrays[var]
+                print(f"  {var}: [{ak.min(arr):.1f}, {ak.max(arr):.1f}]")
+
+    return (
+        final_arrays['nuvT'],
+        final_arrays['f_ophit_PE'],
+        final_arrays['f_ophit_ch'],
+        final_arrays['f_ophit_t'],
+        final_arrays['dEpromx'],
+        final_arrays['dEpromy'],
+        final_arrays['dEpromz'],
+        final_arrays['dEtpc'],
+        final_arrays['selected_tpc'],
+        tracker
+    )
+
+
+def process_events_data(nuScore, f_ophit_PE, f_ophit_ch, f_ophit_t,
+                        channel_dict, config, verbose=True):
+    """
+    Process events for DATA (real data) - no MC information available.
+
+    Filters:
+    1. nuScore > threshold (default 0.5) - neutrino-like events
+    2. Has at least min_flashes flashes
+    3. Flash selection by TPC (same as MC processing)
+
+    Parameters:
+    -----------
+    nuScore : array
+        Neutrino score from ML classifier (per event)
+    f_ophit_PE, f_ophit_ch, f_ophit_t : arrays
+        Flash optical hit information
+    channel_dict : dict
+        Channel type mapping
+    config : dict
+        Configuration dictionary with filter parameters
+        Must include: 'nuScore_threshold', 'min_flashes', 'pmt_types', 'xas_types', 'max_flashes_for_keep_all'
+    verbose : bool
+        Show progress and statistics
+
+    Returns:
+    --------
+    Tuple: (nuScore_final, f_ophit_PE_final, f_ophit_ch_final, f_ophit_t_final, selected_tpc, tracker)
+    """
+
+    if verbose:
+        print(">> Starting DATA event processing...")
+        start_time = time.time()
+
+    initial_count = len(nuScore)
+    tracker = CutFlowTracker(initial_count)
+
+    if verbose:
+        print(f"Initial events: {initial_count:,}")
+
+    # Step 1: nuScore filter
+    nuScore_threshold = config.get('nuScore_threshold', 0.5)
+
+    # Handle nested nuScore structure (flatten if needed)
+    if nuScore.ndim > 1:
+        # If nuScore is nested (multiple values per event), take max per event
+        nuScore_flat = ak.max(nuScore, axis=-1)
+    else:
+        nuScore_flat = nuScore
+
+    mask_nuScore = nuScore_flat > nuScore_threshold
+
+    arrays = {
+        'nuScore': nuScore_flat[mask_nuScore],
+        'f_ophit_PE': f_ophit_PE[mask_nuScore],
+        'f_ophit_ch': f_ophit_ch[mask_nuScore],
+        'f_ophit_t': f_ophit_t[mask_nuScore]
+    }
+
+    tracker.add_cut(f"nuScore > {nuScore_threshold}", len(arrays['nuScore']))
+
+    # Step 2: Has flashes filter
+    mask_flashes = ak.num(arrays['f_ophit_PE'], axis=1) >= config['min_flashes']
+    arrays = apply_selection_mask(arrays, mask_flashes)
+
+    tracker.add_cut("Has flashes", len(arrays['nuScore']))
+
+    # Step 3: Flash processing (TPC selection)
+    if verbose:
+        print("Processing flashes...")
+
+    channel_lookup = create_channel_lookup(
+        channel_dict, config['pmt_types'], config['xas_types']
+    )
+    categories = vectorized_categorize_flashes(arrays['f_ophit_ch'], channel_lookup)
+
+    # Use new version that handles variable depth
+    flash_mask, decision = smart_flash_selection_new(
+        arrays['f_ophit_PE'], categories, config['max_flashes_for_keep_all']
+    )
+
+    # Apply flash selection
+    arrays['f_ophit_PE'] = arrays['f_ophit_PE'][flash_mask]
+    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask]
+    arrays['f_ophit_t'] = arrays['f_ophit_t'][flash_mask]
+
+    # Store TPC selection as simple label: 0 for TPC0 (even, X<0), 1 for TPC1 (odd, X>0)
+    decision_list = ak.to_list(decision)
+    arrays['selected_tpc'] = ak.Array([0 if d else 1 for d in decision_list])
+
+    final_arrays = arrays
+
+    if verbose:
+        processing_time = time.time() - start_time
+        print(f">> Processing completed in {processing_time:.2f} seconds")
+        print()
+        tracker.display()
+
+        if len(final_arrays['nuScore']) > 0:
+            print("\n* Final dataset statistics:")
+            print(f"  nuScore range: [{ak.min(final_arrays['nuScore']):.3f}, {ak.max(final_arrays['nuScore']):.3f}]")
+            print(f"  Mean nuScore: {ak.mean(final_arrays['nuScore']):.3f}")
+
+            # TPC distribution
+            tpc0_count = ak.sum(final_arrays['selected_tpc'] == 0)
+            tpc1_count = ak.sum(final_arrays['selected_tpc'] == 1)
+            print(f"\n* TPC distribution:")
+            print(f"  TPC0 (even): {tpc0_count:,} events ({100*tpc0_count/len(final_arrays['nuScore']):.1f}%)")
+            print(f"  TPC1 (odd):  {tpc1_count:,} events ({100*tpc1_count/len(final_arrays['nuScore']):.1f}%)")
+
+    return (
+        final_arrays['nuScore'],
+        final_arrays['f_ophit_PE'],
+        final_arrays['f_ophit_ch'],
+        final_arrays['f_ophit_t'],
+        final_arrays['selected_tpc'],
+        tracker
+    )
+
+
+def process_events2(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
+                   dEpromx, dEpromy, dEpromz, dEtpc, nuvZ,
+                   # Additional variables for analysis
+                   nuvE, dEspreadx, dEspready, dEspreadz,
+                   channel_dict, config, verbose=True):
+    """
+    Extended version of process_events with additional variables for analysis.
+
+    Parameters:
+    -----------
+    Standard inputs (same as process_events):
+        nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
+        dEpromx, dEpromy, dEpromz, dEtpc, nuvZ
+
+    Additional inputs for analysis:
+        nuvE : array
+            Neutrino energy (per-TPC, 2 values per event)
+        dEspreadx/y/z : array
+            Spatial spread of deposited energy (per-TPC, 2 values per event)
+
+    channel_dict : dict
+        Channel type mapping
+    config : dict
+        Configuration dictionary with filter parameters
+    verbose : bool
+        Show progress and statistics
+
+    Returns:
+    --------
+    Tuple of all filtered arrays (standard + extra) plus statistics tracker
+    """
+
+    if verbose:
+        print(">> Starting optimized event processing (with extra variables)...")
+        start_time = time.time()
+
+    initial_count = len(nuvT)
+    tracker = CutFlowTracker(initial_count)
+
+    if verbose:
+        print(f"Initial events: {initial_count:,}")
+
+    # Step 1: Single neutrino filter
+    mask_single = ak.num(nuvT) == 1
+
+    arrays = {
+        'nuvT': nuvT[mask_single],
+        'f_ophit_PE': f_ophit_PE[mask_single],
+        'f_ophit_ch': f_ophit_ch[mask_single],
+        'f_ophit_t': f_ophit_t[mask_single],
+        'dEpromx': dEpromx[mask_single],
+        'dEpromy': dEpromy[mask_single],
+        'dEpromz': dEpromz[mask_single],
+        'dEtpc': dEtpc[mask_single],
+        'nuvZ': nuvZ[mask_single],
+        # Extra variables
+        'nuvE': nuvE[mask_single],
+        'dEspreadx': dEspreadx[mask_single],
+        'dEspready': dEspready[mask_single],
+        'dEspreadz': dEspreadz[mask_single]
+    }
+
+    tracker.add_cut("Single neutrino", len(arrays['nuvT']))
+
+    # Step 2: Has flashes filter
+    mask_flashes = ak.num(arrays['f_ophit_PE'], axis=1) >= config['min_flashes']
+    arrays = apply_selection_mask(arrays, mask_flashes)
+
+    tracker.add_cut("Has flashes", len(arrays['nuvT']))
+
+    # Step 3: Flash processing
+    if verbose:
+        print("Processing flashes...")
+
+    channel_lookup = create_channel_lookup(
+        channel_dict, config['pmt_types'], config['xas_types']
+    )
+    categories = vectorized_categorize_flashes(arrays['f_ophit_ch'], channel_lookup)
+
+    flash_mask, decision = smart_flash_selection(
+        arrays['f_ophit_PE'], categories, config['max_flashes_for_keep_all']
+    )
+
+    # Apply flash selection
+    arrays['f_ophit_PE'] = arrays['f_ophit_PE'][flash_mask]
+    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask]
+    arrays['f_ophit_t'] = arrays['f_ophit_t'][flash_mask]
+
+    # Select TPC values (standard variables)
+    tpc_arrays = {
+        'dEpromx': arrays['dEpromx'],
+        'dEpromy': arrays['dEpromy'],
+        'dEpromz': arrays['dEpromz'],
+        'dEtpc': arrays['dEtpc']
+    }
+    selected_tpc = select_tpc_values(tpc_arrays, decision)
+    arrays.update(selected_tpc)
+
+    # Store TPC selection as simple label: 0 for TPC0 (even), 1 for TPC1 (odd)
+    arrays['selected_tpc'] = ak.where(decision, 0, 1)
+
+    # Select TPC values (extra variables that are per-TPC)
+    # dEspread variables are similar to dEprom - one value per TPC (2 per event)
+    extra_tpc_arrays = {
+        'dEspreadx': arrays['dEspreadx'],
+        'dEspready': arrays['dEspready'],
+        'dEspreadz': arrays['dEspreadz']
+    }
+    selected_extra_tpc = select_tpc_values(extra_tpc_arrays, decision)
+    arrays.update(selected_extra_tpc)
+
+    # nuvE is per-neutrino (like nuvT, nuvZ), not per-TPC
+    # It's already the correct structure, no TPC selection needed
+
+    # Step 4: Valid data cut
+    if verbose:
+        print("Applying data validity cuts...")
+
+    valid_mask = (
+        (arrays['dEpromx'] != config['invalid_marker']) &
+        (arrays['dEpromy'] != config['invalid_marker']) &
+        (arrays['dEpromz'] != config['invalid_marker'])
+    )
+
+    arrays = apply_selection_mask(arrays, valid_mask)
+    tracker.add_cut("Valid data (≠ -999 in dEprom)", len(arrays['nuvT']))
+
+    # Step 5: Energy cut
+    if verbose:
+        print("Applying energy cuts...")
+
+    energy_mask = arrays['dEtpc'] > config['min_energy_tpc']
+    arrays = apply_selection_mask(arrays, energy_mask)
+    tracker.add_cut("Energy cut", len(arrays['nuvT']))
+
+    # Step 6: Position cuts
+    if verbose:
+        print("Applying position cuts...")
+
+    position_mask = (
+        (arrays['dEpromx'] >= config['depromx_range'][0]) &
+        (arrays['dEpromx'] <= config['depromx_range'][1]) &
+        (arrays['dEpromy'] >= config['depromy_range'][0]) &
+        (arrays['dEpromy'] <= config['depromy_range'][1]) &
+        (arrays['dEpromz'] >= config['depromz_range'][0]) &
+        (arrays['dEpromz'] <= config['depromz_range'][1])
+    )
+
+    final_arrays = apply_selection_mask(arrays, position_mask)
+    tracker.add_cut("Position cut", len(final_arrays['nuvT']))
+
+    if verbose:
+        processing_time = time.time() - start_time
+        print(f">> Processing completed in {processing_time:.2f} seconds")
+        print()
+        tracker.display()
+
+        if len(final_arrays['nuvT']) > 0:
+            print("\n* Final dataset ranges:")
+            for var in ['dEpromx', 'dEpromy', 'dEpromz', 'dEtpc']:
+                arr = final_arrays[var]
+                print(f"  {var}: [{ak.min(arr):.1f}, {ak.max(arr):.1f}]")
+
+            # Print TPC distribution
+            tpc0_count = ak.sum(final_arrays['selected_tpc'] == 0)
+            tpc1_count = ak.sum(final_arrays['selected_tpc'] == 1)
+            print(f"\n* TPC distribution:")
+            print(f"  TPC0 (even): {tpc0_count:,} events ({100*tpc0_count/len(final_arrays['nuvT']):.1f}%)")
+            print(f"  TPC1 (odd):  {tpc1_count:,} events ({100*tpc1_count/len(final_arrays['nuvT']):.1f}%)")
+
+    return (
+        final_arrays['nuvT'],
+        final_arrays['f_ophit_PE'],
+        final_arrays['f_ophit_ch'],
+        final_arrays['f_ophit_t'],
+        final_arrays['dEpromx'],
+        final_arrays['dEpromy'],
+        final_arrays['dEpromz'],
+        final_arrays['dEtpc'],
+        final_arrays['nuvZ'],
+        # Extra variables
+        final_arrays['nuvE'],
+        final_arrays['dEspreadx'],
+        final_arrays['dEspready'],
+        final_arrays['dEspreadz'],
+        # TPC selection label: 0 = TPC0 (even), 1 = TPC1 (odd)
+        final_arrays['selected_tpc'],
         tracker
     )
 
 
 def create_pe_matrix(f_ophit_PE, f_ophit_ch, max_channels=312):
     """Create PE matrix using optimized approach for irregular arrays."""
-    
+
     start_time = time.time()
     n_events = len(f_ophit_PE)
-    
+
     print(f"Creating PE matrix for {n_events:,} events x {max_channels} channels")
-    
+
     pe_matrix = np.zeros((n_events, max_channels), dtype=np.float32)
     
     for i in range(n_events):
@@ -477,44 +1040,117 @@ def create_pe_images(pe_matrix, *maps, method="max", normalization_factors=None)
 def scale_coordinates(coordinates, coord_ranges):
     """
     Scale coordinates to normalized ranges.
-    
+
     Parameters:
     -----------
-    coordinates : array (n_events, 3) - [x_abs, y, z]
+    coordinates : array (n_events, n_coords) - [x_abs, y, z] or [x_abs, y, z, pca_y, pca_z]
     coord_ranges : dict - coordinate ranges for scaling
-    
+
     Returns:
     --------
-    scaled_coords : array (n_events, 3) - scaled coordinates
+    scaled_coords : array (n_events, n_coords) - scaled coordinates
     """
-    x_abs, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
-    
-    # Scale each coordinate
-    x_scaled = (x_abs - coord_ranges['x'][0]) / (coord_ranges['x'][1] - coord_ranges['x'][0])
-    y_scaled = (y - coord_ranges['y'][0]) / (coord_ranges['y'][1] - coord_ranges['y'][0]) * 2 - 1
-    z_scaled = (z - coord_ranges['z'][0]) / (coord_ranges['z'][1] - coord_ranges['z'][0])
-    
-    return np.stack([x_scaled, y_scaled, z_scaled], axis=1)
+    n_coords = coordinates.shape[1]
+
+    if n_coords == 3:
+        # Original behavior: position only
+        x_abs, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
+
+        # Scale each coordinate
+        x_scaled = (x_abs - coord_ranges['x'][0]) / (coord_ranges['x'][1] - coord_ranges['x'][0])
+        y_scaled = (y - coord_ranges['y'][0]) / (coord_ranges['y'][1] - coord_ranges['y'][0]) * 2 - 1
+        z_scaled = (z - coord_ranges['z'][0]) / (coord_ranges['z'][1] - coord_ranges['z'][0])
+
+        return np.stack([x_scaled, y_scaled, z_scaled], axis=1)
+
+    elif n_coords == 5:
+        # New behavior: position + PCA
+        x_abs, y, z, pca_y, pca_z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], coordinates[:, 3], coordinates[:, 4]
+
+        # Scale position coordinates
+        x_scaled = (x_abs - coord_ranges['x'][0]) / (coord_ranges['x'][1] - coord_ranges['x'][0])
+        y_scaled = (y - coord_ranges['y'][0]) / (coord_ranges['y'][1] - coord_ranges['y'][0]) * 2 - 1
+        z_scaled = (z - coord_ranges['z'][0]) / (coord_ranges['z'][1] - coord_ranges['z'][0])
+
+        # Scale PCA coordinates (already in [-1, 1] range, but apply same scaling for consistency)
+        pca_y_scaled = (pca_y - coord_ranges['pca_y'][0]) / (coord_ranges['pca_y'][1] - coord_ranges['pca_y'][0]) * 2 - 1
+        pca_z_scaled = (pca_z - coord_ranges['pca_z'][0]) / (coord_ranges['pca_z'][1] - coord_ranges['pca_z'][0]) * 2 - 1
+
+        return np.stack([x_scaled, y_scaled, z_scaled, pca_y_scaled, pca_z_scaled], axis=1)
+
+    elif n_coords == 6:
+        # Position + PCA + Quality
+        # Note: This is only for inverse scaling during inference
+        # During training, targets only have 5 coords (quality computed on-the-fly)
+        x_abs, y, z, pca_y, pca_z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], coordinates[:, 3], coordinates[:, 4]
+        quality = coordinates[:, 5]
+
+        # Scale position coordinates
+        x_scaled = (x_abs - coord_ranges['x'][0]) / (coord_ranges['x'][1] - coord_ranges['x'][0])
+        y_scaled = (y - coord_ranges['y'][0]) / (coord_ranges['y'][1] - coord_ranges['y'][0]) * 2 - 1
+        z_scaled = (z - coord_ranges['z'][0]) / (coord_ranges['z'][1] - coord_ranges['z'][0])
+
+        # Scale PCA coordinates
+        pca_y_scaled = (pca_y - coord_ranges['pca_y'][0]) / (coord_ranges['pca_y'][1] - coord_ranges['pca_y'][0]) * 2 - 1
+        pca_z_scaled = (pca_z - coord_ranges['pca_z'][0]) / (coord_ranges['pca_z'][1] - coord_ranges['pca_z'][0]) * 2 - 1
+
+        # Quality already in [0, 1], no scaling needed
+        return np.stack([x_scaled, y_scaled, z_scaled, pca_y_scaled, pca_z_scaled, quality], axis=1)
+
+    else:
+        raise ValueError(f"Expected 3, 5, or 6 coordinates, got {n_coords}")
 
 
 def inverse_scale_coordinates(scaled_coords, coord_ranges):
     """
     Inverse scale coordinates back to original ranges.
-    
+
     Parameters:
     -----------
-    scaled_coords : array (n_events, 3) - scaled coordinates
+    scaled_coords : array (n_events, n_coords) - scaled coordinates [x, y, z] or [x, y, z, pca_y, pca_z]
     coord_ranges : dict - coordinate ranges for scaling
-    
+
     Returns:
     --------
-    original_coords : array (n_events, 3) - original scale coordinates
+    original_coords : array (n_events, n_coords) - original scale coordinates
     """
-    x_inv = scaled_coords[:, 0] * (coord_ranges['x'][1] - coord_ranges['x'][0]) + coord_ranges['x'][0]
-    y_inv = ((scaled_coords[:, 1] + 1) / 2) * (coord_ranges['y'][1] - coord_ranges['y'][0]) + coord_ranges['y'][0]
-    z_inv = scaled_coords[:, 2] * (coord_ranges['z'][1] - coord_ranges['z'][0]) + coord_ranges['z'][0]
-    
-    return np.stack([x_inv, y_inv, z_inv], axis=1)
+    n_coords = scaled_coords.shape[1]
+
+    if n_coords == 3:
+        # Original behavior: position only
+        x_inv = scaled_coords[:, 0] * (coord_ranges['x'][1] - coord_ranges['x'][0]) + coord_ranges['x'][0]
+        y_inv = ((scaled_coords[:, 1] + 1) / 2) * (coord_ranges['y'][1] - coord_ranges['y'][0]) + coord_ranges['y'][0]
+        z_inv = scaled_coords[:, 2] * (coord_ranges['z'][1] - coord_ranges['z'][0]) + coord_ranges['z'][0]
+
+        return np.stack([x_inv, y_inv, z_inv], axis=1)
+
+    elif n_coords == 5:
+        # New behavior: position + PCA
+        x_inv = scaled_coords[:, 0] * (coord_ranges['x'][1] - coord_ranges['x'][0]) + coord_ranges['x'][0]
+        y_inv = ((scaled_coords[:, 1] + 1) / 2) * (coord_ranges['y'][1] - coord_ranges['y'][0]) + coord_ranges['y'][0]
+        z_inv = scaled_coords[:, 2] * (coord_ranges['z'][1] - coord_ranges['z'][0]) + coord_ranges['z'][0]
+
+        pca_y_inv = ((scaled_coords[:, 3] + 1) / 2) * (coord_ranges['pca_y'][1] - coord_ranges['pca_y'][0]) + coord_ranges['pca_y'][0]
+        pca_z_inv = ((scaled_coords[:, 4] + 1) / 2) * (coord_ranges['pca_z'][1] - coord_ranges['pca_z'][0]) + coord_ranges['pca_z'][0]
+
+        return np.stack([x_inv, y_inv, z_inv, pca_y_inv, pca_z_inv], axis=1)
+
+    elif n_coords == 6:
+        # Position + PCA + Quality
+        x_inv = scaled_coords[:, 0] * (coord_ranges['x'][1] - coord_ranges['x'][0]) + coord_ranges['x'][0]
+        y_inv = ((scaled_coords[:, 1] + 1) / 2) * (coord_ranges['y'][1] - coord_ranges['y'][0]) + coord_ranges['y'][0]
+        z_inv = scaled_coords[:, 2] * (coord_ranges['z'][1] - coord_ranges['z'][0]) + coord_ranges['z'][0]
+
+        pca_y_inv = ((scaled_coords[:, 3] + 1) / 2) * (coord_ranges['pca_y'][1] - coord_ranges['pca_y'][0]) + coord_ranges['pca_y'][0]
+        pca_z_inv = ((scaled_coords[:, 4] + 1) / 2) * (coord_ranges['pca_z'][1] - coord_ranges['pca_z'][0]) + coord_ranges['pca_z'][0]
+
+        # Quality already in [0, 1], no inverse scaling needed
+        quality_inv = scaled_coords[:, 5]
+
+        return np.stack([x_inv, y_inv, z_inv, pca_y_inv, pca_z_inv, quality_inv], axis=1)
+
+    else:
+        raise ValueError(f"Expected 3, 5, or 6 coordinates, got {n_coords}")
 
 
 def plot_pe_images(image_data, event_idx, labels=None, groups=None, 
@@ -631,10 +1267,203 @@ def plot_pe_images(image_data, event_idx, labels=None, groups=None,
     return fig, axes
 
 
+def create_pmt_position_dict(file, pmt_types=None):
+    """
+    Create PMT position dictionary from ROOT file PDSMapTree.
+
+    Parameters:
+    -----------
+    file : uproot file object
+        ROOT file with PDSMapTree
+    pmt_types : set, optional
+        Set of OpDetType values to include (e.g., {0, 1} for PMTs only)
+        If None, includes all detectors
+
+    Returns:
+    --------
+    pmt_positions : dict
+        Mapping {channel_id: (y, z)} for selected detector types
+    """
+    PDSMap = file['opanatree']['PDSMapTree']
+    ID = PDSMap['OpDetID'].array()
+    Y = PDSMap['OpDetY'].array()
+    Z = PDSMap['OpDetZ'].array()
+    Type = PDSMap['OpDetType'].array()
+
+    if pmt_types is not None:
+        # Filter by detector type (e.g., only PMTs)
+        pmt_positions = {int(id_val): (float(y_val), float(z_val))
+                         for id_val, y_val, z_val, type_val in zip(ID[0], Y[0], Z[0], Type[0])
+                         if int(type_val) in pmt_types}
+        print(f">> PMT position dictionary created: {len(pmt_positions)} channels (filtered for types {pmt_types})")
+    else:
+        # Include all detectors
+        pmt_positions = {int(id_val): (float(y_val), float(z_val))
+                         for id_val, y_val, z_val in zip(ID[0], Y[0], Z[0])}
+        print(f">> PMT position dictionary created: {len(pmt_positions)} channels (all types)")
+
+    return pmt_positions
+
+
+def calculate_light_pca(f_ophit_PE, f_ophit_ch, pmt_positions, verbose=False):
+    """
+    Calculate PCA of light distribution (2D: Y-Z plane) - VECTORIZED VERSION.
+    Equivalent to GetPCA() in TPCPMTBarycenterMatching_module.cc but ~100x faster.
+
+    Parameters:
+    -----------
+    f_ophit_PE : awkward array (n_events, n_flashes, n_ophits)
+        PE values for each ophit
+    f_ophit_ch : awkward array (n_events, n_flashes, n_ophits)
+        Channel for each ophit
+    pmt_positions : dict
+        Mapping from channel to (y, z) position
+    verbose : bool
+        Print progress
+
+    Returns:
+    --------
+    pca_vectors : array (n_events, 2)
+        Principal component direction [dy, dz] for each event
+    pca_elongation : array (n_events,)
+        Ratio of largest to smallest eigenvalue (elongation measure)
+    """
+    n_events = len(f_ophit_PE)
+
+    if verbose:
+        print(f">> Calculating Light PCA for {n_events:,} events (vectorized)...")
+        import time
+        start_time = time.time()
+
+    # Pre-create position lookup arrays for faster access
+    # Use max channel ID that could appear in data (not just in pmt_positions)
+    max_channel = 312  # SBND has 312 optical channels total
+    y_lookup = np.zeros(max_channel, dtype=np.float32)
+    z_lookup = np.zeros(max_channel, dtype=np.float32)
+    valid_channels = np.zeros(max_channel, dtype=bool)
+
+    for ch, (y, z) in pmt_positions.items():
+        if ch < max_channel:
+            y_lookup[ch] = y
+            z_lookup[ch] = z
+            valid_channels[ch] = True
+
+    # Flatten the nested awkward arrays for batch processing
+    if verbose:
+        print("   * Flattening awkward arrays...")
+
+    flat_pe = ak.flatten(ak.flatten(f_ophit_PE, axis=2), axis=1)
+    flat_ch = ak.flatten(ak.flatten(f_ophit_ch, axis=2), axis=1)
+
+    # Convert to numpy for fast indexing
+    flat_pe_np = ak.to_numpy(flat_pe)
+    flat_ch_np = ak.to_numpy(flat_ch).astype(int)
+
+    # Get event boundaries
+    counts = ak.num(ak.flatten(f_ophit_PE, axis=2), axis=1)
+    event_ends = np.cumsum(ak.to_numpy(counts))
+    event_starts = np.concatenate([[0], event_ends[:-1]])
+
+    if verbose:
+        print("   * Computing PCA for all events...")
+
+    # Initialize outputs
+    pca_vectors = np.zeros((n_events, 2), dtype=np.float32)
+    pca_elongation = np.zeros(n_events, dtype=np.float32)
+
+    # Process in batches for efficiency
+    batch_size = 1000
+    n_batches = (n_events + batch_size - 1) // batch_size
+
+    for batch_idx in range(n_batches):
+        start_ev = batch_idx * batch_size
+        end_ev = min((batch_idx + 1) * batch_size, n_events)
+
+        if verbose and batch_idx % 10 == 0:
+            elapsed = time.time() - start_time
+            progress = start_ev / n_events
+            if progress > 0:
+                eta = elapsed / progress - elapsed
+                print(f"   Batch {batch_idx+1}/{n_batches} | "
+                      f"Progress: {100*progress:.1f}% | "
+                      f"ETA: {eta:.1f}s")
+
+        # Process each event in batch
+        for event_idx in range(start_ev, end_ev):
+            start_idx = event_starts[event_idx]
+            end_idx = event_ends[event_idx]
+
+            if start_idx >= end_idx:  # No ophits
+                pca_vectors[event_idx] = [0.0, 1.0]
+                pca_elongation[event_idx] = 1.0
+                continue
+
+            # Get channels and PEs for this event
+            event_channels = flat_ch_np[start_idx:end_idx]
+            event_pes = flat_pe_np[start_idx:end_idx]
+
+            # Filter valid channels using lookup
+            mask = (event_channels < max_channel) & valid_channels[event_channels]
+
+            if np.sum(mask) < 2:  # Need at least 2 points
+                pca_vectors[event_idx] = [0.0, 1.0]
+                pca_elongation[event_idx] = 1.0
+                continue
+
+            # Get positions using vectorized lookup
+            valid_ch = event_channels[mask]
+            valid_pe = event_pes[mask]
+            ophit_y = y_lookup[valid_ch]
+            ophit_z = z_lookup[valid_ch]
+
+            # Weighted centroid
+            weight_sum = np.sum(valid_pe)
+            if weight_sum == 0:
+                pca_vectors[event_idx] = [0.0, 1.0]
+                pca_elongation[event_idx] = 1.0
+                continue
+
+            centroid_y = np.sum(valid_pe * ophit_y) / weight_sum
+            centroid_z = np.sum(valid_pe * ophit_z) / weight_sum
+
+            # Center points
+            centered_y = ophit_y - centroid_y
+            centered_z = ophit_z - centroid_z
+
+            # Weighted covariance matrix (vectorized)
+            cov_yy = np.sum(valid_pe * centered_y * centered_y) / weight_sum
+            cov_yz = np.sum(valid_pe * centered_y * centered_z) / weight_sum
+            cov_zz = np.sum(valid_pe * centered_z * centered_z) / weight_sum
+
+            # Eigenvalues and eigenvectors
+            cov_matrix = np.array([[cov_yy, cov_yz], [cov_yz, cov_zz]], dtype=np.float32)
+            eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)  # eigh is faster for symmetric
+
+            # Get principal component (largest eigenvalue)
+            max_idx = 1 if eigenvalues[1] > eigenvalues[0] else 0
+            pca_vectors[event_idx] = eigenvectors[:, max_idx]
+
+            # Elongation
+            if eigenvalues[0] > 1e-10:
+                pca_elongation[event_idx] = eigenvalues[1] / eigenvalues[0]
+            else:
+                pca_elongation[event_idx] = 100.0
+
+    if verbose:
+        elapsed = time.time() - start_time
+        print(f">> Light PCA calculation completed in {elapsed:.2f}s")
+        print(f"   Average rate: {n_events/elapsed:.0f} events/s")
+        print(f"   PCA vector range: Y=[{pca_vectors[:,0].min():.3f}, {pca_vectors[:,0].max():.3f}], "
+              f"Z=[{pca_vectors[:,1].min():.3f}, {pca_vectors[:,1].max():.3f}]")
+        print(f"   Elongation range: [{pca_elongation.min():.1f}, {pca_elongation.max():.1f}]")
+
+    return pca_vectors, pca_elongation
+
+
 def save_filtered_data(results, filename, config=None):
     """
     Save filtered data with optimal settings.
-    
+
     Parameters:
     -----------
     results : tuple

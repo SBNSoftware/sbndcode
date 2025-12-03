@@ -174,6 +174,7 @@ namespace opdet {
     std::vector<std::vector<float>> flash_ophit_time_sel;
     std::vector<int> categorized_flashes;  // 0=TPC0, 1=TPC1
     std::vector<double> dEpromx_sel, dEpromy_sel, dEpromz_sel, dEtpc_sel;
+    int selectedTPC = -1;  // Selected TPC (0 or 1) based on flash PE sum
 
     // After final quality cuts
     std::vector<std::vector<float>> flash_ophit_pe_final;
@@ -192,6 +193,7 @@ namespace opdet {
       flash_ophit_time_sel.clear();
       categorized_flashes.clear();
       dEpromx_sel.clear(); dEpromy_sel.clear(); dEpromz_sel.clear(); dEtpc_sel.clear();
+      selectedTPC = -1;
 
       flash_ophit_pe_final.clear();
       flash_ophit_ch_final.clear();
@@ -215,6 +217,7 @@ namespace opdet {
     double error3D = -999.0;  // Euclidean error [cm]
 
     double nuvT = -999.0, nuvZ = -999.0, dEtpc = -999.0;
+    int selectedTPC = -1;  // Selected TPC (0 or 1) based on flash PE
 
     void resetToDefaults() {
       run = subrun = event = 0;
@@ -224,6 +227,7 @@ namespace opdet {
       diffX = diffY = diffZ = -999.0;
       error3D = -999.0;
       nuvT = nuvZ = dEtpc = -999.0;
+      selectedTPC = -1;
     }
   };
 

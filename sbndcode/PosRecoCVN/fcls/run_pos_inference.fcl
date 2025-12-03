@@ -64,7 +64,7 @@ physics:
       # 1 = Basic processing info + flash timing details
       # 2 = Detailed processing information
       # >2 = Debug mode with TensorFlow details
-      Verbosity: 1
+      Verbosity: 0
 
       #------------------------------------------------------------------------
       # VERSION CONTROL
@@ -122,7 +122,7 @@ physics:
       # | true             | [out1]   | Full output: Object created and saved  |
       #
 
-      SavePixelMapVars: false
+      SavePixelMapVars: true
 
       #------------------------------------------------------------------------
       # AUTO-CONFIGURED PATHS
@@ -139,7 +139,7 @@ physics:
   # EXECUTION PATHS
   #----------------------------------------------------------------------------
   prod: [opanatree]               # Producer modules to run
-  stream: []                      # Empty = no RootOutput (only TTree saved)
+  stream: [out1]                      # Empty = no RootOutput (only TTree saved)
                                   # Set to [out1] if SavePixelMapVars: true
 
   trigger_paths: [prod]

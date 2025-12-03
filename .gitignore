@@ -58,3 +58,21 @@ Thumbs.db
 *.bak
 *.backup
 RepositoryTag
+
+# Custom analyzer for barycenter extraction #
+#############################################
+sbndcode/TPCPMTBarycenterMatching/BarycenterDumper_module.cc
+sbndcode/TPCPMTBarycenterMatching/dump_barycenters.fcl
+
+# Backup directories #
+######################
+sbndcode/TPCPMTBarycenterMatching_backup/
+sbndcode/OpDetAnalyzer_backup/
+
+# PosRecoCVN training files #
+#############################
+sbndcode/PosRecoCVN/training/barycenter_comparison.ipynb
+sbndcode/PosRecoCVN/training/custom_losses.py
+sbndcode/PosRecoCVN/training/model_lstm_nuvT_temporal.keras
+sbndcode/PosRecoCVN/training/scaler_nuvT_temporal.pkl
+sbndcode/PosRecoCVN/training/temporal_prediction.ipynb

@@ -101,6 +101,7 @@ void opdet::PosRecoCVNProducer::beginJob()
   fInferenceTree->Branch("pred_x", &fTreeData.predX, "pred_x/D");
   fInferenceTree->Branch("pred_y", &fTreeData.predY, "pred_y/D");
   fInferenceTree->Branch("pred_z", &fTreeData.predZ, "pred_z/D");
+  fInferenceTree->Branch("selected_tpc", &fTreeData.selectedTPC, "selected_tpc/I");
 
   // MC_testing mode: add ground truth and performance metrics
   if(fProcessingMode == "MC_testing") {
@@ -352,9 +353,22 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
       recob::OpFlash Flash = *FlashPtr;
 
       // Beam window filter: Reject out-of-time flashes (cosmic ray rejection)
-      // MC: AbsTime in μs | DATA: AbsTime in ns → convert to μs?
-      double flash_time_us = (fProcessingMode == "DATA_inference") ? Flash.AbsTime()/1000.0 : Flash.AbsTime();
-      if(flash_time_us < 0.367 || flash_time_us > 1.9) continue;
+      // Both MC and DATA: AbsTime in μs
+      double flash_time_us = Flash.AbsTime();
+
+      // Time window depends on processing mode
+      double time_min = (fProcessingMode == "DATA_inference") ? -1.2 : 0.367;
+      double time_max = (fProcessingMode == "DATA_inference") ?  0.4 : 1.9;
+
+      // DEBUG: Print ALL flashes before time cut
+      if(fVerbosity > 1) {
+        std::cout << "  [BEFORE CUT] Flash #" << i << ": t=" << flash_time_us
+                  << " μs, PE=" << Flash.TotalPE()
+                  << (flash_time_us < time_min || flash_time_us > time_max ? " [REJECTED]" : " [ACCEPTED]")
+                  << std::endl;
+      }
+
+      if(flash_time_us < time_min || flash_time_us > time_max) continue;
 
       if(fVerbosity > 2) {
         std::cout << "Flash #" << fOpticalData.flash_x.size() << ": t=" << flash_time_us
@@ -1003,6 +1017,7 @@ void opdet::PosRecoCVNProducer::FillInferenceTree(bool passedFilters)
   fTreeData.subrun = fEventInfo.subrunID;
   fTreeData.event = fEventInfo.eventID;
   fTreeData.passedFilters = passedFilters;
+  fTreeData.selectedTPC = fProcessedData.selectedTPC;
 
   // Initialize variables with default values
   // NOTE: fTreePred* variables are filled directly in RunInference() - do NOT reinitialize here
@@ -1564,7 +1579,10 @@ void opdet::PosRecoCVNProducer::ApplyFlashSelection(){
   // 4. Decision logic
   bool decision = (sum_even >= sum_odd);
   size_t n_flashes = categorized.size();
-  
+
+  // Store selected TPC: decision=true → TPC0, decision=false → TPC1
+  fProcessedData.selectedTPC = decision ? 0 : 1;
+
   std::vector<bool> selected_mask;
   if(n_flashes <= 2) {
     // Keep all flashes for <= 2 flashes

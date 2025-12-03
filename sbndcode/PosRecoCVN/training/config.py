@@ -15,11 +15,23 @@ DATA_CONFIG = {
     # Root file paths - update these as needed
     'training_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_30k_training.root',
     #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
-    'test_file': '/exp/sbnd/app/users/svidales/larsoft_develop/run_try/1000_new_optimization/opana_tree.root',
-    # Keys to load from ROOT files
+    # v2411 - 'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/tools/test_set_in_v10_06_00_02.root',
+    #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/comparison/barycenter_comparison_in_v10_06_00_02.root',
+    #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_10_03_02/fall_prod_DNN.root',
+    #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
+    'test_file': '/exp/sbnd/app/users/svidales/larsoft_v10_06_00_02/barycenter_v0212/opana_tree.root',
+    # Keys to load from ROOT files (minimal set for training)
     'keys_to_load': [
-        'flash_ophit_pe', 'flash_ophit_ch', 'flash_ophit_time', 
-        'nuvT', 'dEpromx', 'dEpromy', 'dEpromz', 'dEtpc', 'nuvZ'
+        # Input data (for creating PE images)
+        'flash_ophit_pe', 'flash_ophit_ch', 'flash_ophit_time',
+
+        # Target labels (position to predict)
+        'dEpromx', 'dEpromy', 'dEpromz',
+
+        # Filters and selection
+        'nuvT',    # Single neutrino filter
+        'dEtpc',   # Energy filter and TPC selection
+        'nuvZ',    # Fiducial volume selection
     ],
     
     # PMT map paths (relative to project root)
@@ -31,8 +43,8 @@ DATA_CONFIG = {
 
 # Loading configuration
 LOADING_CONFIG = {
-    'load_all': True,           # True = all events, False = fraction
-    'fraction': 0.5,            # If load_all=False, fraction to load
+    'load_all': True,          # True = all events, False = fraction
+    'fraction': 1.0,            # If load_all=False, fraction to load (10% for testing PCA)
     'start_event': 0            # Starting event
 }
 
@@ -66,8 +78,10 @@ IMAGE_CONFIG = {
 COORD_CONFIG = {
     'ranges': {
         'x': (0, 200),      # x_abs range
-        'y': (-200, 200),   # y range  
-        'z': (0, 500)       # z range
+        'y': (-200, 200),   # y range
+        'z': (0, 500),      # z range
+        'pca_y': (-1, 1),   # PCA Y component (normalized direction)
+        'pca_z': (-1, 1)    # PCA Z component (normalized direction)
     }
 }
 
@@ -76,7 +90,7 @@ TRAINING_CONFIG = {
     # Data splits (training uses only train/validation - test is separate)
     'train_fraction': 0.85,  # Increased since no test split needed
     'val_fraction': 0.15,    # Validation for training monitoring
-    
+
     # Model training parameters
     'epochs': 80,
     'batch_size': 32,       # Increased for better gradient estimates
@@ -85,17 +99,49 @@ TRAINING_CONFIG = {
     'reduce_lr_factor': 0.7, # Less aggressive LR reduction
     'min_lr': 1e-6,
     'dropout_rate': 0.3,    # Reduced dropout to prevent overfitting
-    
+
     # Optimizer
     'optimizer': 'adam',
     'loss': 'mean_squared_error',
-    'metrics': ['mse']
+    'metrics': ['mse'],
+
+    # PCA prediction settings
+    'use_pca': True,           # Enable PCA prediction (5 outputs vs 3)
+    'loss_type': 'huber',      # Options: 'simple_mse', 'huber', 'huber_separate', 'chi2', 'weighted_mse'
+
+    # Loss type descriptions:
+    # - 'simple_mse': Plain MSE over all outputs (fast, but sensitive to outliers)
+    # - 'huber': Huber loss - MSE for small errors, MAE for large errors (RECOMMENDED - robust to outliers)
+    # - 'huber_separate': Huber with separate deltas for position and PCA (more control)
+    # - 'chi2': Chi2 loss from TPCPMTBarycenterMatching (requires error parameters below)
+    # - 'weighted_mse': Weighted combination of position and angle (requires weights below)
+
+    # Huber loss settings (only used if loss_type='huber' or 'huber_separate')
+    'huber_delta': 0.1,        # Threshold for Huber loss (0.05=very robust, 0.1=balanced, 0.2=less robust)
+    'huber_delta_pos': 0.1,    # Separate delta for position (only used if loss_type='huber_separate')
+    'huber_delta_pca': 0.05,   # Separate delta for PCA (only used if loss_type='huber_separate')
+    'huber_weight_pos': 1.0,   # Weight for position (only used if loss_type='huber_separate')
+    'huber_weight_pca': 1.0,   # Weight for PCA (only used if loss_type='huber_separate')
+
+    # Chi2 loss parameters (only used if loss_type='chi2')
+    'chi2_errors': {
+        'x_error': 10.0,     # cm
+        'y_error': 10.0,     # cm
+        'z_error': 15.0,     # cm
+        'angle_error': 30.0  # degrees
+    },
+
+    # Weighted MSE parameters (only used if loss_type='weighted_mse')
+    'weighted_mse': {
+        'position_weight': 1.0,
+        'angle_weight': 1.0
+    }
 }
 
 # Model saving configuration
 MODEL_CONFIG = {
     'weights_file': '/tmp/weights_nuvT.hdf5.keras',
-    'export_path': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models',
+    'export_path': '/exp/sbnd/data/users/svidales',
     'model_name_template': 'v{date}_trained_w_{n_events}'  # Will be formatted with date and event count
 }
 
@@ -119,9 +165,9 @@ ANALYSIS_CONFIG = {
             'Z': (65, 135)
         },
         'hist_ranges': {
-            'X': (-250, 250),
-            'Y': (-250, 250),
-            'Z': (-250, 250)
+            'X': (-150, 150),
+            'Y': (-150, 150),
+            'Z': (-150, 150)
         }
     },
     
