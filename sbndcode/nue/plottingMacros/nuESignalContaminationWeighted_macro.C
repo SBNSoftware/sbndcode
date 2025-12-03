@@ -88,8 +88,12 @@ void styleDrawAll(histGroup_struct hists,
         };
     }
 
-    for (auto* hist : allHists)
-        if (hist) hist->SetStats(0);
+    for (auto* hist : allHists){
+        if (hist){
+            hist->SetStats(0);
+            if(hist->Integral() != 0) hist->Scale(1.0 / hist->Integral());
+        }
+    }
 
     hists.currentSignal_signal->SetLineWidth(2);                hists.currentSignal_signal->SetLineColor(TColor::GetColor("#964a8b"));
     hists.currentSignal_signalfuzzy->SetLineWidth(2);           hists.currentSignal_signalfuzzy->SetLineColor(TColor::GetColor("#e42536"));
@@ -211,8 +215,8 @@ void styleDrawAll(histGroup_struct hists,
 
 void nuESignalContaminationWeighted_macro(){
    
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_Nu+E_WithWithoutCosmics_new.root");
-    std::string base_path = "/nashome/c/coackley/nuESignalWithWithoutCosmics/";
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_Nu+E_WithWithoutCosmics_27Nov.root");
+    std::string base_path = "/nashome/c/coackley/nuESignalWithWithoutCosmicsAreaNorm/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -356,6 +360,9 @@ void nuESignalContaminationWeighted_macro(){
     std::vector<double> *reco_particleCompleteness = nullptr;
     std::vector<double> *reco_particlePurity = nullptr;
     std::vector<double> *reco_particleID = nullptr;
+    std::vector<double> *reco_particleTruePDG = nullptr;
+    std::vector<double> *reco_particleTrueOrigin = nullptr;
+    std::vector<double> *reco_particleTrueInteractionType = nullptr;
     
     std::vector<double> *reco_neutrinoID = nullptr;
     std::vector<double> *reco_neutrinoPDG = nullptr;
@@ -403,6 +410,9 @@ void nuESignalContaminationWeighted_macro(){
     tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
     tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
     tree->SetBranchAddress("reco_particleID", &reco_particleID);
+    tree->SetBranchAddress("reco_particleTruePDG", &reco_particleTruePDG);
+    tree->SetBranchAddress("reco_particleTrueOrigin", &reco_particleTrueOrigin);
+    tree->SetBranchAddress("reco_particleTrueInteractionType", &reco_particleTrueInteractionType);
     
     tree->SetBranchAddress("reco_neutrinoID", &reco_neutrinoID);
     tree->SetBranchAddress("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -438,11 +448,55 @@ void nuESignalContaminationWeighted_macro(){
     auto ERecoHighestThetaReco = createHistGroup("ERecoHighestThetaReco", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaRecoDist = createHistGroup("ERecoHighestThetaRecoDist", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice (Not Weighted)", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
 
+    auto deltaEHighest = createHistGroup("deltaEHighest", "Energy Asymmetry of the Highest Energy PFP", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaEHighestDist = createHistGroup("deltaEHighestDist", "Energy Asymmetry of the Highest Energy PFP (Not Weighted)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaESum = createHistGroup("deltaESum", "Energy Asymmetry of the Sum of Energies of PFPs in Slice", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaESumDist = createHistGroup("deltaESumDist", "Energy Asymmetry of the Sum of Energies of PFPs in Slice (Not Weighted)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+        
+    auto highestEnergyPFPTruePDG = createHistGroup("highestEnergyPFPTruePDG", "True PDG of the Highest Energy PFP in the Signal Slice", "PDG Number", 5, 10, 15);
+    auto highestEnergyPFPTrueOrigin = createHistGroup("highestEnergyPFPTrueOrigin", "True Origin of the Highest Energy PFP in the Signal Slice", "Origin", 3, 0, 3);
+
+    auto trackScorePFPCosmicOrigin = createHistGroup("trackScorePFPCosmicOrigin", "Trackscore of PFPs in the Slice Originating from a Cosmic Ray", "Trackscore", 20, 0, 1);
+    auto trackScorePFPNuEOrigin = createHistGroup("trackScorePFPNuEOrigin", "Trackscore of PFPs in the Slice Originating from a #nu+e Elastic Scatter", "Trackscore", 20, 0, 1);
+
+    auto percentageCosmicPFPs = createHistGroup("percentageCosmicPFPs", "Percentage of PFPs in the Slice that Originate from Cosmic Rays", "Percentage (%)", 25, 0, 100);
+    auto percentageNuEPFPs = createHistGroup("percentageNuEPFPs", "Percentage of PFPs in the Slice that Originate from a #nu+e Elastic Scatter", "Percentage (%)", 25, 0, 100);
+    auto numPFPsCosmicOrigin = createHistGroup("numPFPsCosmicOrigin", "Number of PFPs in the Slice that Originate from Cosmic Rays", "Number of PFPs", 20, 0, 20);
+    auto numPFPsNuEOrigin = createHistGroup("numPFPsNuEOrigin", "Number of PFPs in the Slice that Originate from a #nu+e Elastic Scatter", "Number of PFPs", 20, 0, 20);
+
+    auto highestEnergyPFPCosmicTrackScore = createHistGroup("highestEnergyPFPCosmicTrackScore", "Trackscores of the Highest Energy PFPs Truth Matched to a Cosmic", "Trackscore", 20, 0, 1);
+    auto highestEnergyPFPNuETrackScore = createHistGroup("highestEnergyPFPNuETrackScore", "Trackscores of the Highest Energy PFPs Truth Matched to a #nu+e Elastic Scatter", "Trackscore", 20, 0, 1);
+
     double numEvents_signalBDT = 0;
     double numEvents_signalDLNuE = 0;
     double numEvents_signalCosmicsBDT = 0;
     double numEvents_signalCosmicsDLNuE = 0;
+                
+    int highestEnergyPFP_BDT_withCosmic = 0;
+    int highestEnergyPFPCosmic_BDT_withCosmic = 0;
+    int highestEnergyPFPNuE_BDT_withCosmic = 0;
+    int highestEnergyPFP_DLNuE_withCosmic = 0;
+    int highestEnergyPFPCosmic_DLNuE_withCosmic = 0;
+    int highestEnergyPFPNuE_DLNuE_withCosmic = 0;
     
+    int highestEnergyPFP_BDT_withoutCosmic = 0;
+    int highestEnergyPFPCosmic_BDT_withoutCosmic = 0;
+    int highestEnergyPFPNuE_BDT_withoutCosmic = 0;
+    int highestEnergyPFP_DLNuE_withoutCosmic = 0;
+    int highestEnergyPFPCosmic_DLNuE_withoutCosmic = 0;
+    int highestEnergyPFPNuE_DLNuE_withoutCosmic = 0;
+    
+    int numEvents_signal_withCosmics_BDT = 0;
+    int numEvents_signalFuzzy_withCosmics_BDT = 0;
+    int numEvents_cosmics_withCosmics_BDT = 0;
+    int numEvents_noCategory_withCosmics_BDT = 0;
+
+    int numEvents_signal_withoutCosmics_BDT = 0;
+    int numEvents_signalFuzzy_withoutCosmics_BDT = 0;
+    int numEvents_cosmics_withoutCosmics_BDT = 0;
+    int numEvents_noCategory_withoutCosmics_BDT = 0;
+    
+
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
         if(DLCurrent == 2 && signal == 1) numEvents_signalCosmicsBDT++;
@@ -493,6 +547,8 @@ void nuESignalContaminationWeighted_macro(){
                 // Loop through all the reco neutrinos in the event          
                 int PFPcounter = 0;
                 int numPFPsSlice = 0;
+                int numPFPsSliceCosmicOrigin = 0;
+                int numPFPsSliceNuEOrigin = 0;
 
                 double summedEnergy = 0;
                 double highestEnergy_PFPID = -999999;
@@ -504,6 +560,10 @@ void nuESignalContaminationWeighted_macro(){
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
                 double highestEnergy_trackscore = -999999;
+                double highestEnergy_truePDG = -999999;
+                double highestEnergy_trueOrigin = -999999;
+                double highestEnergy_trueInteractionType = -999999;
+
 
                 // Loop through all the PFPs in the event
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
@@ -512,7 +572,10 @@ void nuESignalContaminationWeighted_macro(){
                         // This PFP is in the slice
                         numPFPsSlice++;
                         //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
-                        
+                       
+                        if(reco_particleTrueOrigin->at(pfp) == 2) numPFPsSliceCosmicOrigin++;
+                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) numPFPsSliceNuEOrigin++;
+
                         summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                         if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                             highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -524,6 +587,9 @@ void nuESignalContaminationWeighted_macro(){
                             highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                             highestEnergy_purity = reco_particlePurity->at(pfp);
                             highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
+                            highestEnergy_truePDG = reco_particleTruePDG->at(pfp);
+                            highestEnergy_trueOrigin = reco_particleTrueOrigin->at(pfp);
+                            highestEnergy_trueInteractionType = reco_particleTrueInteractionType->at(pfp);
                         }
                     }
                 }
@@ -551,9 +617,36 @@ void nuESignalContaminationWeighted_macro(){
                     }
                 }
 
+                if((numPFPsSliceCosmicOrigin + numPFPsSliceNuEOrigin) != numPFPsSlice){
+                    if(reco_sliceCategory->at(slice) == 1){
+                        std::cout << "numPFPsSliceCosmicOrigin + numPFPsSliceNuEOrigin) != numPFPsSlice" << std::endl;
+                        std::cout << "numPFPsSliceCosmicOrigin = " << numPFPsSliceCosmicOrigin << ", numPFPsSliceNuEOrigin = " << numPFPsSliceNuEOrigin << ", numPFPsSlice = " << numPFPsSlice << std::endl;
+                        for(size_t l = 0; l < reco_particlePDG->size(); ++l){
+                            if(reco_particleSliceID->at(l) == reco_sliceID->at(slice)){
+                                std::cout << "PFP Origin = " << reco_particleTrueOrigin->at(l) << ", Interaction Type = " << reco_particleTrueInteractionType->at(l) << std::endl;
+                                if(reco_particleTrueOrigin->at(l) == -999999) std::cout << "PDG = " << reco_particlePDG->at(l) << ", Theta = " << reco_particleTheta->at(l) << ", Trackscore = " << reco_particleTrackScore->at(l) << ", Completeness = " << reco_particleCompleteness->at(l) << ", Purity = " << reco_particlePurity->at(l) << std::endl;
+                            }
+                        }
+                    }
+
+                }
+                double percentageCosmic = -999999;
+                double percentageNuE = -999999;
+
+                if(numPFPsSlice != 0){
+                    percentageCosmic = (100*numPFPsSliceCosmicOrigin/numPFPsSlice);
+                    percentageNuE = (100*numPFPsSliceNuEOrigin/numPFPsSlice);
+                }
+
+                if(reco_sliceCategory->at(slice) == -999999){
+                    if(signal == 1 && DLCurrent == 2) numEvents_noCategory_withCosmics_BDT++;
+                    if(signal == 0 && DLCurrent == 2) numEvents_noCategory_withoutCosmics_BDT++;
+                }
+
                 if(reco_sliceCategory->at(slice) == 0){
                     // This is a cosmic slice
                     if(signal == 1 && DLCurrent == 2){
+                        numEvents_cosmics_withCosmics_BDT++;
                         sliceCompleteness.currentSignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice), weight); 
                         sliceCompletenessDist.currentSignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice)); 
                         slicePurity.currentSignalCosmics_cosmic->Fill(reco_slicePurity->at(slice), weight); 
@@ -561,9 +654,17 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.currentSignalCosmics_cosmic->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.currentSignalCosmics_cosmic->Fill(numPFPsSlice);   
 
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.currentSignalCosmics_cosmic->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.currentSignalCosmics_cosmic->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.currentSignalCosmics_cosmic->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.currentSignalCosmics_cosmic->Fill(numPFPsSliceNuEOrigin, weight);
+
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.currentSignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -571,6 +672,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp));
+
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.currentSignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -581,11 +685,19 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoSumThetaRecoDist.currentSignalCosmics_cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
-                           
+                          
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.currentSignalCosmics_cosmic->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.currentSignalCosmics_cosmic->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.currentSignalCosmics_cosmic->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.currentSignalCosmics_cosmic->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+
                             highestEnergyPFPPurity.currentSignalCosmics_cosmic->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.currentSignalCosmics_cosmic->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.currentSignalCosmics_cosmic->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.currentSignalCosmics_cosmic->Fill(highestEnergy_completeness);  
+                        
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.currentSignalCosmics_cosmic->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.currentSignalCosmics_cosmic->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_cosmic->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -595,16 +707,27 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.nuESignalCosmics_cosmic->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.nuESignalCosmics_cosmic->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.nuESignalCosmics_cosmic->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.nuESignalCosmics_cosmic->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.nuESignalCosmics_cosmic->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.nuESignalCosmics_cosmic->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore);
-                        
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.nuESignalCosmics_cosmic->Fill(highestEnergy_trackscore, weight);
+                       
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfp) == -999999) std::cout << "Trackscore is -999999" << std::endl;
                                     else{
                                         trackscoreAllPFPs.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.nuESignalCosmics_cosmic->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -616,15 +739,24 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.nuESignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_cosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.nuESignalCosmics_cosmic->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.nuESignalCosmics_cosmic->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.nuESignalCosmics_cosmic->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.nuESignalCosmics_cosmic->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.nuESignalCosmics_cosmic->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.nuESignalCosmics_cosmic->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.nuESignalCosmics_cosmic->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.nuESignalCosmics_cosmic->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.nuESignalCosmics_cosmic->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.nuESignalCosmics_cosmic->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 1){
                     // This is a signal slice
                     if(signal == 1 && DLCurrent == 2){
+                        numEvents_signal_withCosmics_BDT++;
                         sliceCompleteness.currentSignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
                         sliceCompletenessDist.currentSignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice)); 
                         slicePurity.currentSignalCosmics_signal->Fill(reco_slicePurity->at(slice), weight); 
@@ -632,9 +764,21 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.currentSignalCosmics_signal->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.currentSignalCosmics_signal->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.currentSignalCosmics_signal->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.currentSignalCosmics_signal->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.currentSignalCosmics_signal->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.currentSignalCosmics_signal->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.currentSignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignalCosmics_signal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.currentSignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.currentSignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            
+                            highestEnergyPFP_BDT_withCosmic++;
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmic_BDT_withCosmic++;
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuE_BDT_withCosmic++;
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -642,6 +786,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.currentSignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -653,10 +800,18 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.currentSignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.currentSignalCosmics_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.currentSignalCosmics_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.currentSignalCosmics_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.currentSignalCosmics_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.currentSignalCosmics_signal->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.currentSignalCosmics_signal->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.currentSignalCosmics_signal->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.currentSignalCosmics_signal->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.currentSignalCosmics_signal->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.currentSignalCosmics_signal->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -666,9 +821,21 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.nuESignalCosmics_signal->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.nuESignalCosmics_signal->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.nuESignalCosmics_signal->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.nuESignalCosmics_signal->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.nuESignalCosmics_signal->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.nuESignalCosmics_signal->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.nuESignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignalCosmics_signal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.nuESignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.nuESignalCosmics_signal->Fill(highestEnergy_trackscore, weight);
+                            
+                            highestEnergyPFP_DLNuE_withCosmic++;
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmic_DLNuE_withCosmic++;
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuE_DLNuE_withCosmic++;
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -676,6 +843,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.nuESignalCosmics_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -687,12 +857,21 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.nuESignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.nuESignalCosmics_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.nuESignalCosmics_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.nuESignalCosmics_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.nuESignalCosmics_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.nuESignalCosmics_signal->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.nuESignalCosmics_signal->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.nuESignalCosmics_signal->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.nuESignalCosmics_signal->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.nuESignalCosmics_signal->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.nuESignalCosmics_signal->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 0 && DLCurrent == 2){
+                        numEvents_signal_withoutCosmics_BDT++;
                         sliceCompleteness.currentSignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
                         sliceCompletenessDist.currentSignal_signal->Fill(reco_sliceCompleteness->at(slice)); 
                         slicePurity.currentSignal_signal->Fill(reco_slicePurity->at(slice), weight); 
@@ -700,9 +879,21 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.currentSignal_signal->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.currentSignal_signal->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.currentSignal_signal->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.currentSignal_signal->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.currentSignal_signal->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.currentSignal_signal->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.currentSignal_signal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignal_signal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.currentSignal_signal->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.currentSignal_signal->Fill(highestEnergy_trackscore, weight);
+                            
+                            highestEnergyPFP_BDT_withoutCosmic++;
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmic_BDT_withoutCosmic++;
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuE_BDT_withoutCosmic++;
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -710,6 +901,18 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.currentSignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        
+                                        if(reco_particleTrackScore->at(pfp) < 1e-20){
+                                            std::cout << "TRACKSCORE < 1e-20" << std::endl;
+                                            printf("PDG Code = %f, IsPrimary = %f, Trackscore = %.12f, Completeness = %f, Purity = %f\n", reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
+                                            printf("True PDG Code = %f, True Origin = %f, True Interaction Type = %f\n", reco_particleTruePDG->at(pfp), reco_particleTrueOrigin->at(pfp), reco_particleTrueInteractionType->at(pfp));
+                                            if(reco_particleTrackScore->at(pfp) != 0.0){
+                                                std::cout << "not equal to zero tho" << std::endl;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -721,10 +924,18 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.currentSignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.currentSignal_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.currentSignal_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.currentSignal_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.currentSignal_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.currentSignal_signal->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.currentSignal_signal->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.currentSignal_signal->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.currentSignal_signal->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.currentSignal_signal->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.currentSignal_signal->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 0 && DLCurrent == 5){
                         sliceCompleteness.nuESignal_signal->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -734,9 +945,21 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.nuESignal_signal->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.nuESignal_signal->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.nuESignal_signal->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.nuESignal_signal->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.nuESignal_signal->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.nuESignal_signal->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.nuESignal_signal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignal_signal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.nuESignal_signal->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.nuESignal_signal->Fill(highestEnergy_trackscore, weight);
+                            
+                            highestEnergyPFP_DLNuE_withoutCosmic++;
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmic_DLNuE_withoutCosmic++;
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuE_DLNuE_withoutCosmic++;
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -744,6 +967,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.nuESignal_signal->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -755,14 +981,23 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.nuESignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignal_signal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.nuESignal_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.nuESignal_signal->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.nuESignal_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.nuESignal_signal->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.nuESignal_signal->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.nuESignal_signal->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.nuESignal_signal->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.nuESignal_signal->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.nuESignal_signal->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.nuESignal_signal->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } 
                 } else if(reco_sliceCategory->at(slice) == 2){
                     if(signal == 1 && DLCurrent == 2){
+                        numEvents_signalFuzzy_withCosmics_BDT++;
                         sliceCompleteness.currentSignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
                         sliceCompletenessDist.currentSignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
                         slicePurity.currentSignalCosmics_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
@@ -770,9 +1005,17 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.currentSignalCosmics_signalfuzzy->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.currentSignalCosmics_signalfuzzy->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.currentSignalCosmics_signalfuzzy->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.currentSignalCosmics_signalfuzzy->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.currentSignalCosmics_signalfuzzy->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.currentSignalCosmics_signalfuzzy->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -780,6 +1023,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.currentSignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.currentSignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -791,10 +1037,18 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.currentSignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.currentSignalCosmics_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.currentSignalCosmics_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.currentSignalCosmics_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.currentSignalCosmics_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.currentSignalCosmics_signalfuzzy->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 1 && DLCurrent == 5){
                         sliceCompleteness.nuESignalCosmics_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -804,9 +1058,17 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.nuESignalCosmics_signalfuzzy->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.nuESignalCosmics_signalfuzzy->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.nuESignalCosmics_signalfuzzy->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.nuESignalCosmics_signalfuzzy->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.nuESignalCosmics_signalfuzzy->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.nuESignalCosmics_signalfuzzy->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -814,6 +1076,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.nuESignalCosmics_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -825,12 +1090,21 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.nuESignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignalCosmics_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.nuESignalCosmics_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.nuESignalCosmics_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.nuESignalCosmics_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.nuESignalCosmics_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.nuESignalCosmics_signalfuzzy->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 0 && DLCurrent == 2){
+                        numEvents_signalFuzzy_withoutCosmics_BDT++;
                         sliceCompleteness.currentSignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
                         sliceCompletenessDist.currentSignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice)); 
                         slicePurity.currentSignal_signalfuzzy->Fill(reco_slicePurity->at(slice), weight); 
@@ -838,9 +1112,17 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.currentSignal_signalfuzzy->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.currentSignal_signalfuzzy->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.currentSignal_signalfuzzy->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.currentSignal_signalfuzzy->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.currentSignal_signalfuzzy->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.currentSignal_signalfuzzy->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.currentSignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -848,6 +1130,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.currentSignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -859,10 +1144,18 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.currentSignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.currentSignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.currentSignal_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.currentSignal_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.currentSignal_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.currentSignal_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.currentSignal_signalfuzzy->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.currentSignal_signalfuzzy->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.currentSignal_signalfuzzy->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.currentSignal_signalfuzzy->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.currentSignal_signalfuzzy->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.currentSignal_signalfuzzy->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } else if(signal == 0 && DLCurrent == 5){
                         sliceCompleteness.nuESignal_signalfuzzy->Fill(reco_sliceCompleteness->at(slice), weight); 
@@ -872,9 +1165,17 @@ void nuESignalContaminationWeighted_macro(){
                         sliceNumPFPs.nuESignal_signalfuzzy->Fill(numPFPsSlice, weight);    
                         sliceNumPFPsDist.nuESignal_signalfuzzy->Fill(numPFPsSlice);    
                         
+                        if(percentageCosmic != -999999) percentageCosmicPFPs.nuESignal_signalfuzzy->Fill(percentageCosmic, weight);
+                        if(percentageNuE != -999999) percentageNuEPFPs.nuESignal_signalfuzzy->Fill(percentageNuE, weight); 
+                        numPFPsCosmicOrigin.nuESignal_signalfuzzy->Fill(numPFPsSliceCosmicOrigin, weight);
+                        numPFPsNuEOrigin.nuESignal_signalfuzzy->Fill(numPFPsSliceNuEOrigin, weight);
+                        
                         if(highestEnergy_PFPID != -999999){
                             trackscoreHighestEnergyPFP.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_trueOrigin == 2) highestEnergyPFPCosmicTrackScore.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
+                            if(highestEnergy_trueOrigin == 1 && highestEnergy_trueInteractionType == 1098) highestEnergyPFPNuETrackScore.nuESignal_signalfuzzy->Fill(highestEnergy_trackscore, weight);
                         
                             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
@@ -882,6 +1183,9 @@ void nuESignalContaminationWeighted_macro(){
                                     else{
                                         trackscoreAllPFPs.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                         trackscoreAllPFPsDist.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp));
+                                        
+                                        if(reco_particleTrueOrigin->at(pfp) == 2) trackScorePFPCosmicOrigin.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                        if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098) trackScorePFPNuEOrigin.nuESignal_signalfuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
                             }
@@ -893,10 +1197,18 @@ void nuESignalContaminationWeighted_macro(){
                             ERecoHighestThetaReco.nuESignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaRecoDist.nuESignal_signalfuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                             
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighest.nuESignal_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy , weight);
+                            if(recoilElectron_energy != -999999 && highestEnergy_energy != -999999) deltaEHighestDist.nuESignal_signalfuzzy->Fill((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy);
+                            if(recoilElectron_energy != -999999) deltaESum.nuESignal_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy, weight);
+                            if(recoilElectron_energy != -999999) deltaESumDist.nuESignal_signalfuzzy->Fill((recoilElectron_energy - summedEnergy)/recoilElectron_energy);
+                            
                             highestEnergyPFPPurity.nuESignal_signalfuzzy->Fill(highestEnergy_purity, weight);  
                             highestEnergyPFPPurityDist.nuESignal_signalfuzzy->Fill(highestEnergy_purity);  
                             highestEnergyPFPCompleteness.nuESignal_signalfuzzy->Fill(highestEnergy_completeness, weight);  
                             highestEnergyPFPCompletenessDist.nuESignal_signalfuzzy->Fill(highestEnergy_completeness);  
+                            
+                            if(highestEnergy_truePDG != -999999) highestEnergyPFPTruePDG.nuESignal_signalfuzzy->Fill(highestEnergy_truePDG, weight);
+                            if(highestEnergy_trueOrigin != -999999) highestEnergyPFPTrueOrigin.nuESignal_signalfuzzy->Fill(highestEnergy_trueOrigin, weight);
                         }
                     } 
                 } 
@@ -905,16 +1217,16 @@ void nuESignalContaminationWeighted_macro(){
     }
 
     // BDT Vertexing
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
-    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
-    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_BDT.pdf").c_str(), "topLeft", true, true, false, true, false);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
-    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
-    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
-    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
-    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
-    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_BDT.pdf").c_str(), "topRight", true, true, false, true, false);
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
 
     styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_dist_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
@@ -928,17 +1240,35 @@ void nuESignalContaminationWeighted_macro(){
     styleDrawAll(highestEnergyPFPCompleteness, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
     styleDrawAll(highestEnergyPFPCompletenessDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
 
+    styleDrawAll(highestEnergyPFPTruePDG, 999, 999, 999, 999, (base_path + "highestEnergyPFPTruePDG_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(highestEnergyPFPTrueOrigin, 999, 999, 999, 999, (base_path + "highestEnergyPFPTrueOrigin_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(trackScorePFPCosmicOrigin, 999, 999, 999, 999, (base_path + "trackScoreCosmicOrigin_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(trackScorePFPNuEOrigin, 999, 999, 999, 999, (base_path + "trackScoreNuEOrigin_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+
+    styleDrawAll(percentageCosmicPFPs, 999, 999, 999, 999, (base_path + "percentageCosmicPFPs_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(percentageNuEPFPs, 999, 999, 999, 999, (base_path + "percentageNuEPFPs_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(numPFPsCosmicOrigin, 999, 999, 999, 999, (base_path + "numPFPsCosmicOrigin_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+    styleDrawAll(numPFPsNuEOrigin, 999, 999, 999, 999, (base_path + "numPFPsNuEOrigin_weighted_BDT.pdf").c_str(), "topRight", true, false, false, true, false);
+
+    styleDrawAll(highestEnergyPFPCosmicTrackScore, 999, 999, 999, 999,  (base_path + "highestEnergyPFPCosmicTrackScore_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(highestEnergyPFPNuETrackScore, 999, 999, 999, 999,  (base_path + "highestEnergyPFPNuETrackScore_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    
+    styleDrawAll(deltaEHighest, 999, 999, 999, 999, (base_path + "energyAsymmetry_highestEnergy_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(deltaEHighestDist, 999, 999, 999, 999, (base_path + "energyAsymmetry_highestEnergy_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(deltaESum, 999, 999, 999, 999, (base_path + "energyAsymmetry_summedEnergy_weighted_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+    styleDrawAll(deltaESumDist, 999, 999, 999, 999, (base_path + "energyAsymmetry_summedEnergy_dist_BDT.pdf").c_str(), "topLeft", true, false, false, true, false);
+
     // DL Nu+E Train Vertexing
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
-    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
-    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_DLNuE.pdf").c_str(), "topLeft", true, true, false, false, true);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
-    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
-    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
-    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
-    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
-    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, true, false, false, true);
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
 
     styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_dist_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
@@ -951,4 +1281,37 @@ void nuESignalContaminationWeighted_macro(){
     styleDrawAll(highestEnergyPFPPurityDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPPurity_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
     styleDrawAll(highestEnergyPFPCompleteness, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
     styleDrawAll(highestEnergyPFPCompletenessDist, 999, 999, 999, 999, (base_path + "highestEnergyPFPCompleteness_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    
+    styleDrawAll(highestEnergyPFPTruePDG, 999, 999, 999, 999, (base_path + "highestEnergyPFPTruePDG_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(highestEnergyPFPTrueOrigin, 999, 999, 999, 999, (base_path + "highestEnergyPFPTrueOrigin_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(trackScorePFPCosmicOrigin, 999, 999, 999, 999, (base_path + "trackScoreCosmicOrigin_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(trackScorePFPNuEOrigin, 999, 999, 999, 999, (base_path + "trackScoreNuEOrigin_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    
+    styleDrawAll(percentageCosmicPFPs, 999, 999, 999, 999, (base_path + "percentageCosmicPFPs_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(percentageNuEPFPs, 999, 999, 999, 999, (base_path + "percentageNuEPFPs_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(numPFPsCosmicOrigin, 999, 999, 999, 999, (base_path + "numPFPsCosmicOrigin_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    styleDrawAll(numPFPsNuEOrigin, 999, 999, 999, 999, (base_path + "numPFPsNuEOrigin_weighted_DLNuE.pdf").c_str(), "topRight", true, false, false, false, true);
+    
+    styleDrawAll(highestEnergyPFPCosmicTrackScore, 999, 999, 999, 999,  (base_path + "highestEnergyPFPCosmicTrackScore_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(highestEnergyPFPNuETrackScore, 999, 999, 999, 999,  (base_path + "highestEnergyPFPNuETrackScore_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+
+    styleDrawAll(deltaEHighest, 999, 999, 999, 999, (base_path + "energyAsymmetry_highestEnergy_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(deltaEHighestDist, 999, 999, 999, 999, (base_path + "energyAsymmetry_highestEnergy_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(deltaESum, 999, 999, 999, 999, (base_path + "energyAsymmetry_summedEnergy_weighted_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+    styleDrawAll(deltaESumDist, 999, 999, 999, 999, (base_path + "energyAsymmetry_summedEnergy_dist_DLNuE.pdf").c_str(), "topLeft", true, false, false, false, true);
+
+    printf("BDT With Cosmics: Number of Events = %d, Highest Energy PFP Matches Recoil Electron = %d, Highest Energy PFP Matches Cosmic = %d, Correctly Identified = %d Percent\n", highestEnergyPFP_BDT_withCosmic, highestEnergyPFPNuE_BDT_withCosmic, highestEnergyPFPCosmic_BDT_withCosmic, (100*highestEnergyPFPNuE_BDT_withCosmic/highestEnergyPFP_BDT_withCosmic));
+    printf("DL Nu+E With Cosmics: Number of Events = %d, Highest Energy PFP Matches Recoil Electron = %d, Highest Energy PFP Matches Cosmic = %d, Correctly Identified = %d Percent\n", highestEnergyPFP_DLNuE_withCosmic, highestEnergyPFPNuE_DLNuE_withCosmic, highestEnergyPFPCosmic_DLNuE_withCosmic, (100*highestEnergyPFPNuE_DLNuE_withCosmic/highestEnergyPFP_DLNuE_withCosmic));
+    printf("BDT Without Cosmics: Number of Events = %d, Highest Energy PFP Matches Recoil Electron = %d, Highest Energy PFP Matches Cosmic = %d, Correctly Identified = %d Percent\n", highestEnergyPFP_BDT_withoutCosmic, highestEnergyPFPNuE_BDT_withoutCosmic, highestEnergyPFPCosmic_BDT_withoutCosmic, (100*highestEnergyPFPNuE_BDT_withoutCosmic/highestEnergyPFP_BDT_withoutCosmic));
+    printf("DL Nu+E Without Cosmics: Number of Events = %d, Highest Energy PFP Matches Recoil Electron = %d, Highest Energy PFP Matches Cosmic = %d, Correctly Identified = %d Percent\n", highestEnergyPFP_DLNuE_withoutCosmic, highestEnergyPFPNuE_DLNuE_withoutCosmic, highestEnergyPFPCosmic_DLNuE_withoutCosmic, (100*highestEnergyPFPNuE_DLNuE_withoutCosmic/highestEnergyPFP_DLNuE_withoutCosmic));
+
+    printf("\n\nBDT With Cosmics = %f, BDT Without Cosmics = %f\n", numEvents_signalCosmicsBDT, numEvents_signalBDT);
+    printf("BDT With Cosmics (Weighted) = %f, BDT Without Cosmics (Weighted) = %f\n", (numEvents_signalCosmicsBDT * weights.signalCosmicsCurrent), (numEvents_signalBDT * weights.signalCurrent));
+
+
+    printf("\n\nWith Cosmics:\nSignal Slices = %d, Signal Fuzzy Slices = %d, Cosmic Slices = %d, No Category = %d\n", numEvents_signal_withCosmics_BDT, numEvents_signalFuzzy_withCosmics_BDT, numEvents_cosmics_withCosmics_BDT, numEvents_noCategory_withCosmics_BDT);
+    printf("Without Cosmics:\nSignal Slices = %d, Signal Fuzzy Slices = %d, Cosmic Slices = %d, No Category = %d\n", numEvents_signal_withoutCosmics_BDT, numEvents_signalFuzzy_withoutCosmics_BDT, numEvents_cosmics_withoutCosmics_BDT, numEvents_noCategory_withoutCosmics_BDT);
+    printf("\n\nWeighted With Cosmics:\nSignal Slices = %f, Signal Fuzzy Slices = %f, Cosmic Slices = %f, No Category = %f\n", (numEvents_signal_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_signalFuzzy_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_cosmics_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_noCategory_withCosmics_BDT * weights.signalCosmicsCurrent));
+    printf("Weighted Without Cosmics:\nSignal Slices = %f, Signal Fuzzy Slices = %f, Cosmic Slices = %f, No Category = %f\n", (numEvents_signal_withoutCosmics_BDT * weights.signalCurrent), (numEvents_signalFuzzy_withoutCosmics_BDT * weights.signalCurrent), (numEvents_cosmics_withoutCosmics_BDT * weights.signalCurrent), (numEvents_noCategory_withoutCosmics_BDT * weights.signalCurrent));
+
 }
