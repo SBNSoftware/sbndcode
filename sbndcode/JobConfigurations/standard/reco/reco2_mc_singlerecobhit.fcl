@@ -1,0 +1,4 @@
+#include "standard_reco2_sbnd.fcl"
+physics.producers.blipPandoraCopy.HitFinderModuleLabel:          "gaushit"
+physics.producers.blipreco.HitProducer: "gaushit"
+physics.analyzers.blipana.HitProducer: "gaushit"
