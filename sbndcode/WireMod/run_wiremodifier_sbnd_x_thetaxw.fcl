@@ -1,0 +1,3 @@
+#include "run_wiremodifier_sbnd_base.fcl"
+
+physics.producers.wiremod: @local::wiremod_sbnd_X_ThetaXW

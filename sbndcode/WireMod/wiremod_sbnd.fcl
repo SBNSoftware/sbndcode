@@ -1,3 +1,5 @@
+# WireMod configurations for SBND
+
 BEGIN_PROLOG
 
 wiremod_sbnd:
@@ -7,8 +9,8 @@ wiremod_sbnd:
     SimChannelLabel: "simtpc2d:simpleSC:DetSim"
     MCPartAssnLabel: "gaushitTruthMatch"
     WireAssnLabel: "gaushit"
-    ApplyYZScale: true
-    ApplyXXZAngleScale: true
+    ApplyYZScale: false
+    ApplyXXZAngleScale: false
     SplineFileXTXW_Q: "wiremod_xtxwq_splines_sbnd.root"
     SplineFileXTXW_W: "wiremod_xtxww_splines_sbnd.root"
     SplineFileYZ_Q: "wiremod_yzq_splines_sbnd.root"
@@ -16,5 +18,11 @@ wiremod_sbnd:
     MaxThetaXW: 75
     module_type: "WireModifier"
 }
+
+wiremod_sbnd_X_ThetaXW: @local::wiremod_sbnd
+wiremod_sbnd_X_ThetaXW.ApplyXXZAngleScale: true
+
+wiremod_sbnd_Y_Z: @local::wiremod_sbnd
+wiremod_sbnd_Y_Z.ApplyYZScale: true
 
 END_PROLOG
