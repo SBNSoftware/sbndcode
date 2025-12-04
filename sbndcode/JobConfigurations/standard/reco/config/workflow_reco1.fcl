@@ -86,7 +86,8 @@ sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:gauss"
 sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
 sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 20
 sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
-sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabelVec:         "specialblipgaushit"
+sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabel: "specialblipgaushit"
+sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabelVec: ["specialblipgaushit"]
 sbnd_reco1_filters: {
     #filter events based on the number of reconstructed hits (avoids overly messy data events)
     numberofhitsfilter: @local::sbnd_numberofhitsfilter
