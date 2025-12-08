@@ -6,6 +6,7 @@ cet_build_plugin(WireModifier art::EDProducer
     LIBRARIES PRIVATE
     sbncode_CAFMaker
     sbncode::WireMod_Utility
+    sbncode::caf_RecoUtils
     sbnobj::Common_SBNEventWeight
     larsim::MCCheater_BackTrackerService_service
     sbnanaobj::StandardRecord
