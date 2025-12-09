@@ -1,5 +1,7 @@
 find_package(sbnobj)
 
+include_directories( $ENV{SBNCODE_INC}/sbncode/CAFMaker )
+
 cet_build_plugin(WireModifier art::EDProducer
     SOURCE
       WireModifier_module.cc
