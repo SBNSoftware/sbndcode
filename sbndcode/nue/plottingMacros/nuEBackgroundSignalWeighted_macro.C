@@ -1048,11 +1048,9 @@ void nuEBackgroundSignalWeighted_macro(){
     std::ofstream clearFile("purity_max_values_beforeCuts.txt", std::ios::trunc);
     clearFile.close();
 
-    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
-    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsaa/";
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_10Dec.root");
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithClearCosmic/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1199,7 +1197,6 @@ void nuEBackgroundSignalWeighted_macro(){
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE) / cosmicSpillsSumCurrent);
 
-
     weights_struct weights;
     weights.signalCurrent = targetPOT / POTSignalBDT_notMissing;
     weights.BNBCurrent = targetPOT /POTBNBBDT_notMissing;
@@ -1260,6 +1257,10 @@ void nuEBackgroundSignalWeighted_macro(){
     std::vector<double> *reco_sliceTrueVX = nullptr;  
     std::vector<double> *reco_sliceTrueVY = nullptr;  
     std::vector<double> *reco_sliceTrueVZ = nullptr;  
+    std::vector<double> *reco_sliceNumHits = nullptr;  
+    std::vector<double> *reco_sliceNumHitsTruthMatched = nullptr;  
+    std::vector<double> *reco_sliceNumTruthHits = nullptr;  
+    std::vector<double> *reco_sliceOrigin = nullptr;  
 
     std::vector<double> *reco_particlePDG = nullptr;
     std::vector<double> *reco_particleIsPrimary = nullptr;
@@ -1276,6 +1277,10 @@ void nuEBackgroundSignalWeighted_macro(){
     std::vector<double> *reco_particleCompleteness = nullptr;
     std::vector<double> *reco_particlePurity = nullptr;
     std::vector<double> *reco_particleID = nullptr;
+    std::vector<double> *reco_particleNumHits = nullptr;
+    std::vector<double> *reco_particleNumHitsTruthMatched = nullptr;
+    std::vector<double> *reco_particleNumTruthHits = nullptr;
+    std::vector<double> *reco_particleClearCosmic = nullptr;
     
     std::vector<double> *reco_neutrinoID = nullptr;
     std::vector<double> *reco_neutrinoPDG = nullptr;
@@ -1307,6 +1312,10 @@ void nuEBackgroundSignalWeighted_macro(){
     tree->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX);
     tree->SetBranchAddress("reco_sliceTrueVY", &reco_sliceTrueVY);
     tree->SetBranchAddress("reco_sliceTrueVZ", &reco_sliceTrueVZ);
+    tree->SetBranchAddress("reco_sliceNumHits", &reco_sliceNumHits);
+    tree->SetBranchAddress("reco_sliceNumHitsTruthMatched", &reco_sliceNumHitsTruthMatched);
+    tree->SetBranchAddress("reco_sliceNumTruthHits", &reco_sliceNumTruthHits);
+    tree->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin);
     
     tree->SetBranchAddress("reco_particlePDG", &reco_particlePDG);
     tree->SetBranchAddress("reco_particleIsPrimary", &reco_particleIsPrimary);
@@ -1323,6 +1332,10 @@ void nuEBackgroundSignalWeighted_macro(){
     tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
     tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
     tree->SetBranchAddress("reco_particleID", &reco_particleID);
+    tree->SetBranchAddress("reco_particleNumHits", &reco_particleNumHits);
+    tree->SetBranchAddress("reco_particleNumHitsTruthMatched", &reco_particleNumHitsTruthMatched);
+    tree->SetBranchAddress("reco_particleNumTruthHits", &reco_particleNumTruthHits);
+    tree->SetBranchAddress("reco_particleClearCosmic", &reco_particleClearCosmic);
     
     tree->SetBranchAddress("reco_neutrinoID", &reco_neutrinoID);
     tree->SetBranchAddress("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -1451,23 +1464,9 @@ void nuEBackgroundSignalWeighted_macro(){
     double numEvents_DLNuEBNB = 0;
     double numEvents_DLNuENuE = 0;
 
-    double eventCounter = 0;
-
-    double numSkippedBNBSlicesBDT = 0;
-    double numSkippedNuESlicesBDT = 0;
-    double numSkippedCosmicSlicesBDT = 0;
-    double numSkippedBNBSlicesDLNuE = 0;
-    double numSkippedNuESlicesDLNuE = 0;
-    double numSkippedCosmicSlicesDLNuE = 0;
-
-    double skippedNuESlicesGoodCompletenessBDT = 0;
-    double skippedNuESlicesGoodCompletenessDLNuE = 0;
-
     for(Long64_t e = 0; e < numEntries; ++e){
         //printf("=============================================================================\n");
         tree->GetEntry(e);
-
-        if(signal == 2 && DLCurrent == 2) eventCounter++;
 
         if(DLCurrent == 2 && signal == 3) numEvents_BDTCosmic++;
         else if(DLCurrent == 2 && signal == 2) numEvents_BDTBNB++;
@@ -1607,57 +1606,23 @@ void nuEBackgroundSignalWeighted_macro(){
                 }
 
                 // Assigning new category to the slices
-                if(reco_sliceID->at(slice) != -999999){
-                    // The slice is valid
-                    if(reco_sliceInteraction->at(slice) == -100 || reco_sliceCategory->at(slice) == 0){
-                        // This is a cosmic slice
-                        sliceCategoryPlottingMacro = 0;
-                        if(reco_sliceCategory->at(slice) != 0) std::cout << "Cosmic slice Category not matching!" << std::endl;
-                    } else if(reco_sliceInteraction->at(slice) != -999999 && reco_sliceInteraction->at(slice) != 1098 && reco_sliceInteraction->at(slice) != -100){
-                        // This is a slice whose origin is a beam neutrino but isn't a nu+e elastic scatter - BNB slice
-                        if(reco_sliceCompleteness->at(slice) > 0.5){
-                            // This is a BNB slice (completeness > 0.5)
-                            sliceCategoryPlottingMacro = 3;
-                        } else{
-                            // This is a BNB fuzzy slice (completeness < 0.5)
-                            sliceCategoryPlottingMacro = 4;
-                        }
-                    } else if(reco_sliceInteraction->at(slice) == 1098){
-                        // This is a slice whose origin is a beam neutrino and is a nu+e elastic scatter - Nu+E slice
-                        if(reco_sliceCompleteness->at(slice) > 0.5){
-                            // This is a signal slice (completeness > 0.5)
-                            sliceCategoryPlottingMacro = 1;
-                        } else{
-                            // This is a signal fuzzy slice (completeness < 0.5)
-                            sliceCategoryPlottingMacro = 2;
-                        }
-                        
+                // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
+                if(reco_sliceOrigin->at(slice) == 0){
+                    // This is a cosmic slice
+                    sliceCategoryPlottingMacro = 0;
+                } else if(reco_sliceOrigin->at(slice) == 1){
+                    // This is a nu+e elastic scatter slice
+                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                        sliceCategoryPlottingMacro = 1;
+                    } else{
+                        sliceCategoryPlottingMacro = 2;
                     }
-                }
-
-                if(reco_sliceCategory->at(slice) == -999999 && reco_sliceID->at(slice) != -999999){
-                    std::cout << "sliceCategory == -999999 but sliceID != -999999" << std::endl;
-                    std::cout << "sliceInteraction = " << reco_sliceInteraction->at(slice) << ", sliceCompleteness = " << reco_sliceCompleteness->at(slice) << ", slicePurity = " << reco_slicePurity->at(slice) << std::endl;
-                    if(reco_sliceInteraction->at(slice) == -100){
-                        std::cout << "Slice is truth matched to a cosmic" << std::endl;
-                        if(DLCurrent == 2) numSkippedCosmicSlicesBDT++;
-                        if(DLCurrent == 5) numSkippedCosmicSlicesDLNuE++;
-                    }
-                    if(reco_sliceInteraction->at(slice) != -999999 && reco_sliceInteraction->at(slice) != 1098 && reco_sliceInteraction->at(slice) != -100){
-                        std::cout << "Slice is truth matched to a BNB event" << std::endl;
-                        if(DLCurrent == 2) numSkippedBNBSlicesBDT++;
-                        if(DLCurrent == 5) numSkippedBNBSlicesDLNuE++;
-                    }
-                    if(reco_sliceInteraction->at(slice) == 1098){
-                        std::cout << "Slice is truth matched to a Nu+E elastic scatter" << std::endl;
-                        if(DLCurrent == 2){
-                            numSkippedNuESlicesBDT++;
-                            if(reco_sliceCompleteness->at(slice) > 0.5) skippedNuESlicesGoodCompletenessBDT++;
-                        }
-                        if(DLCurrent == 5){
-                            numSkippedNuESlicesDLNuE++;
-                            if(reco_sliceCompleteness->at(slice) > 0.5) skippedNuESlicesGoodCompletenessDLNuE++;
-                        }
+                } else if(reco_sliceOrigin->at(slice) == 3){
+                    // This is a BNB slice
+                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                        sliceCategoryPlottingMacro = 3;
+                    } else{
+                        sliceCategoryPlottingMacro = 4;
                     }
                 }
 
@@ -1687,6 +1652,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
 
                         if(recoVX != -999999){
+                            // There is a reco neutrino in the slice
                             recoX.currentCosmic->Fill(recoVX, weight);
                             recoXDist.currentCosmic->Fill(recoVX);
                             recoY.currentCosmic->Fill(recoVY, weight);
@@ -1694,29 +1660,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentCosmic->Fill(recoVZ, weight);
                             recoZDist.currentCosmic->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.currentCosmic->Fill(recoVX, weight);
-                                recoXDist_low.currentCosmic->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.currentCosmic->Fill(recoVX, weight);
-                                recoXDist_high.currentCosmic->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.currentCosmic->Fill(recoVY, weight);
-                                recoYDist_low.currentCosmic->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.currentCosmic->Fill(recoVY, weight);
-                                recoYDist_high.currentCosmic->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.currentCosmic->Fill(recoVZ, weight);
-                                recoZDist_low.currentCosmic->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.currentCosmic->Fill(recoVZ, weight);
-                                recoZDist_high.currentCosmic->Fill(recoVZ);
-                            //}
+                            recoX_low.currentCosmic->Fill(recoVX, weight);
+                            recoXDist_low.currentCosmic->Fill(recoVX);
+                            recoX_high.currentCosmic->Fill(recoVX, weight);
+                            recoXDist_high.currentCosmic->Fill(recoVX);
+                            
+                            recoY_low.currentCosmic->Fill(recoVY, weight);
+                            recoYDist_low.currentCosmic->Fill(recoVY);
+                            recoY_high.currentCosmic->Fill(recoVY, weight);
+                            recoYDist_high.currentCosmic->Fill(recoVY);
+                            
+                            recoZ_low.currentCosmic->Fill(recoVZ, weight);
+                            recoZDist_low.currentCosmic->Fill(recoVZ);
+                            recoZ_high.currentCosmic->Fill(recoVZ, weight);
+                            recoZDist_high.currentCosmic->Fill(recoVZ);
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1753,6 +1710,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                         
                         if(recoVX != -999999){
+                            // There is a reco neutrino in the slice
                             recoX.ubooneCosmic->Fill(recoVX, weight);
                             recoXDist.ubooneCosmic->Fill(recoVX);
                             recoY.ubooneCosmic->Fill(recoVY, weight);
@@ -1760,29 +1718,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneCosmic->Fill(recoVZ, weight);
                             recoZDist.ubooneCosmic->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.ubooneCosmic->Fill(recoVX, weight);
-                                recoXDist_low.ubooneCosmic->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.ubooneCosmic->Fill(recoVX, weight);
-                                recoXDist_high.ubooneCosmic->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.ubooneCosmic->Fill(recoVY, weight);
-                                recoYDist_low.ubooneCosmic->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.ubooneCosmic->Fill(recoVY, weight);
-                                recoYDist_high.ubooneCosmic->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.ubooneCosmic->Fill(recoVZ, weight);
-                                recoZDist_low.ubooneCosmic->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.ubooneCosmic->Fill(recoVZ, weight);
-                                recoZDist_high.ubooneCosmic->Fill(recoVZ);
-                            //}
+                            recoX_low.ubooneCosmic->Fill(recoVX, weight);
+                            recoXDist_low.ubooneCosmic->Fill(recoVX);
+                            recoX_high.ubooneCosmic->Fill(recoVX, weight);
+                            recoXDist_high.ubooneCosmic->Fill(recoVX);
+                            
+                            recoY_low.ubooneCosmic->Fill(recoVY, weight);
+                            recoYDist_low.ubooneCosmic->Fill(recoVY);
+                            recoY_high.ubooneCosmic->Fill(recoVY, weight);
+                            recoYDist_high.ubooneCosmic->Fill(recoVY);
+                            
+                            recoZ_low.ubooneCosmic->Fill(recoVZ, weight);
+                            recoZDist_low.ubooneCosmic->Fill(recoVZ);
+                            recoZ_high.ubooneCosmic->Fill(recoVZ, weight);
+                            recoZDist_high.ubooneCosmic->Fill(recoVZ);
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1819,6 +1768,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                         
                         if(recoVX != -999999){
+                            // There is a reco neutrino in the slice
                             recoX.nuECosmic->Fill(recoVX, weight);
                             recoXDist.nuECosmic->Fill(recoVX);
                             recoY.nuECosmic->Fill(recoVY, weight);
@@ -1826,29 +1776,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuECosmic->Fill(recoVZ, weight);
                             recoZDist.nuECosmic->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.nuECosmic->Fill(recoVX, weight);
-                                recoXDist_low.nuECosmic->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.nuECosmic->Fill(recoVX, weight);
-                                recoXDist_high.nuECosmic->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.nuECosmic->Fill(recoVY, weight);
-                                recoYDist_low.nuECosmic->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.nuECosmic->Fill(recoVY, weight);
-                                recoYDist_high.nuECosmic->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.nuECosmic->Fill(recoVZ, weight);
-                                recoZDist_low.nuECosmic->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.nuECosmic->Fill(recoVZ, weight);
-                                recoZDist_high.nuECosmic->Fill(recoVZ);
-                            //}
+                            recoX_low.nuECosmic->Fill(recoVX, weight);
+                            recoXDist_low.nuECosmic->Fill(recoVX);
+                            recoX_high.nuECosmic->Fill(recoVX, weight);
+                            recoXDist_high.nuECosmic->Fill(recoVX);
+                            
+                            recoY_low.nuECosmic->Fill(recoVY, weight);
+                            recoYDist_low.nuECosmic->Fill(recoVY);
+                            recoY_high.nuECosmic->Fill(recoVY, weight);
+                            recoYDist_high.nuECosmic->Fill(recoVY);
+                            
+                            recoZ_low.nuECosmic->Fill(recoVZ, weight);
+                            recoZDist_low.nuECosmic->Fill(recoVZ);
+                            recoZ_high.nuECosmic->Fill(recoVZ, weight);
+                            recoZDist_high.nuECosmic->Fill(recoVZ);
                         }
 
                         if(highestEnergy_PFPID != -999999){
@@ -1890,8 +1831,6 @@ void nuEBackgroundSignalWeighted_macro(){
 
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
-                            std::cout << "WEIGHT CHECK, should be 1 here - " << weight << std::endl;
-                            if(weight != 1){ std::cout << "signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl; std::cout << "Slice Category = " << reco_sliceCategory->at(slice) << ", Slice Interaction = " << reco_sliceInteraction->at(slice) << std::endl;}
                             ERecoSumThetaReco.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoSumThetaRecoDist.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
                             ERecoHighestThetaReco.currentSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -1917,7 +1856,6 @@ void nuEBackgroundSignalWeighted_macro(){
                             if(angleDifference != -999999) slicePurityAngleDifferenceBDT->Fill(reco_slicePurity->at(slice), angleDifference);
 
                             if(recoVX != -999999){
-                                
                                 xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
                                 yCoordAngleDifferenceBDT->Fill(recoVY, angleDifference);
                                 zCoordAngleDifferenceBDT->Fill(recoVZ, angleDifference);
@@ -1933,7 +1871,8 @@ void nuEBackgroundSignalWeighted_macro(){
                             }                        
                         }
                         
-                        if(recoVX != -999999){ 
+                        if(recoVX != -999999){
+                            // There is a reco neutrino in the slice 
                             deltaX.currentSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.currentSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.currentSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -1951,29 +1890,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignal->Fill(recoVZ, weight);
                             recoZDist.currentSignal->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.currentSignal->Fill(recoVX, weight);
-                                recoXDist_low.currentSignal->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.currentSignal->Fill(recoVX, weight);
-                                recoXDist_high.currentSignal->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.currentSignal->Fill(recoVY, weight);
-                                recoYDist_low.currentSignal->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.currentSignal->Fill(recoVY, weight);
-                                recoYDist_high.currentSignal->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.currentSignal->Fill(recoVZ, weight);
-                                recoZDist_low.currentSignal->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.currentSignal->Fill(recoVZ, weight);
-                                recoZDist_high.currentSignal->Fill(recoVZ);
-                            //}
+                            recoX_low.currentSignal->Fill(recoVX, weight);
+                            recoXDist_low.currentSignal->Fill(recoVX);
+                            recoX_high.currentSignal->Fill(recoVX, weight);
+                            recoXDist_high.currentSignal->Fill(recoVX);
+                            
+                            recoY_low.currentSignal->Fill(recoVY, weight);
+                            recoYDist_low.currentSignal->Fill(recoVY);
+                            recoY_high.currentSignal->Fill(recoVY, weight);
+                            recoYDist_high.currentSignal->Fill(recoVY);
+                            
+                            recoZ_low.currentSignal->Fill(recoVZ, weight);
+                            recoZDist_low.currentSignal->Fill(recoVZ);
+                            recoZ_high.currentSignal->Fill(recoVZ, weight);
+                            recoZDist_high.currentSignal->Fill(recoVZ);
                         }
 
                     } else if(DLCurrent == 0 && signal == 1){
@@ -2041,6 +1971,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                         
                         if(recoVX != -999999){
+                            // There is a reco neutrino in the slice
                             deltaX.ubooneSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.ubooneSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.ubooneSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2058,29 +1989,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneSignal->Fill(recoVZ, weight);
                             recoZDist.ubooneSignal->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.ubooneSignal->Fill(recoVX, weight);
-                                recoXDist_low.ubooneSignal->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.ubooneSignal->Fill(recoVX, weight);
-                                recoXDist_high.ubooneSignal->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.ubooneSignal->Fill(recoVY, weight);
-                                recoYDist_low.ubooneSignal->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.ubooneSignal->Fill(recoVY, weight);
-                                recoYDist_high.ubooneSignal->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.ubooneSignal->Fill(recoVZ, weight);
-                                recoZDist_low.ubooneSignal->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.ubooneSignal->Fill(recoVZ, weight);
-                                recoZDist_high.ubooneSignal->Fill(recoVZ);
-                            //}
+                            recoX_low.ubooneSignal->Fill(recoVX, weight);
+                            recoXDist_low.ubooneSignal->Fill(recoVX);
+                            recoX_high.ubooneSignal->Fill(recoVX, weight);
+                            recoXDist_high.ubooneSignal->Fill(recoVX);
+                            
+                            recoY_low.ubooneSignal->Fill(recoVY, weight);
+                            recoYDist_low.ubooneSignal->Fill(recoVY);
+                            recoY_high.ubooneSignal->Fill(recoVY, weight);
+                            recoYDist_high.ubooneSignal->Fill(recoVY);
+                            
+                            recoZ_low.ubooneSignal->Fill(recoVZ, weight);
+                            recoZDist_low.ubooneSignal->Fill(recoVZ);
+                            recoZ_high.ubooneSignal->Fill(recoVZ, weight);
+                            recoZDist_high.ubooneSignal->Fill(recoVZ);
                         }
 
                     } else if(DLCurrent == 5  && signal == 1){
@@ -2148,6 +2070,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.nuESignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.nuESignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.nuESignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2165,29 +2088,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuESignal->Fill(recoVZ, weight);
                             recoZDist.nuESignal->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.nuESignal->Fill(recoVX, weight);
-                                recoXDist_low.nuESignal->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.nuESignal->Fill(recoVX, weight);
-                                recoXDist_high.nuESignal->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.nuESignal->Fill(recoVY, weight);
-                                recoYDist_low.nuESignal->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.nuESignal->Fill(recoVY, weight);
-                                recoYDist_high.nuESignal->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.nuESignal->Fill(recoVZ, weight);
-                                recoZDist_low.nuESignal->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.nuESignal->Fill(recoVZ, weight);
-                                recoZDist_high.nuESignal->Fill(recoVZ);
-                            //}
+                            recoX_low.nuESignal->Fill(recoVX, weight);
+                            recoXDist_low.nuESignal->Fill(recoVX);
+                            recoX_high.nuESignal->Fill(recoVX, weight);
+                            recoXDist_high.nuESignal->Fill(recoVX);
+                            
+                            recoY_low.nuESignal->Fill(recoVY, weight);
+                            recoYDist_low.nuESignal->Fill(recoVY);
+                            recoY_high.nuESignal->Fill(recoVY, weight);
+                            recoYDist_high.nuESignal->Fill(recoVY);
+                            
+                            recoZ_low.nuESignal->Fill(recoVZ, weight);
+                            recoZDist_low.nuESignal->Fill(recoVZ);
+                            recoZ_high.nuESignal->Fill(recoVZ, weight);
+                            recoZDist_high.nuESignal->Fill(recoVZ);
                         }
                     }
                 //} else if(reco_sliceCategory->at(slice) == 2){
@@ -2237,27 +2151,10 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.currentSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.currentSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.currentSignalFuzzy->Fill(recoilElectron_angle);
-                           
-                            /* 
-                            if(recoVX != -999999){
-                                
-                                xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
-                                yCoordAngleDifferenceBDT->Fill(recoVY, angleDifference);
-                                zCoordAngleDifferenceBDT->Fill(recoVZ, angleDifference);
-                                
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
-                            }
-                            */
                         }
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.currentSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.currentSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.currentSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2275,29 +2172,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.currentSignalFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.currentSignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.currentSignalFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.currentSignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.currentSignalFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.currentSignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.currentSignalFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.currentSignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.currentSignalFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.currentSignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.currentSignalFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.currentSignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.currentSignalFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.currentSignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.currentSignalFuzzy->Fill(recoVX);
+                            recoX_high.currentSignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.currentSignalFuzzy->Fill(recoVX);
+                            
+                            recoY_low.currentSignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.currentSignalFuzzy->Fill(recoVY);
+                            recoY_high.currentSignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.currentSignalFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.currentSignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.currentSignalFuzzy->Fill(recoVZ);
+                            recoZ_high.currentSignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.currentSignalFuzzy->Fill(recoVZ);
                         }
                     } else if(DLCurrent == 0 && signal == 1){
                         sliceCompleteness.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2343,27 +2231,10 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.ubooneSignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.ubooneSignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.ubooneSignalFuzzy->Fill(recoilElectron_angle);
-                       
-                            /* 
-                            if(recoVX != -999999){
-                                
-                                xCoordAngleDifferenceDLUboone->Fill(recoVX, angleDifference);
-                                yCoordAngleDifferenceDLUboone->Fill(recoVY, angleDifference);
-                                zCoordAngleDifferenceDLUboone->Fill(recoVZ, angleDifference);
-                                
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference); 
-                            } 
-                            */                       
                         }
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.ubooneSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.ubooneSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.ubooneSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2381,29 +2252,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneSignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.ubooneSignalFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.ubooneSignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.ubooneSignalFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.ubooneSignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.ubooneSignalFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.ubooneSignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.ubooneSignalFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.ubooneSignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.ubooneSignalFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.ubooneSignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.ubooneSignalFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.ubooneSignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.ubooneSignalFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.ubooneSignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.ubooneSignalFuzzy->Fill(recoVX);
+                            recoX_high.ubooneSignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.ubooneSignalFuzzy->Fill(recoVX);
+                            
+                            recoY_low.ubooneSignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.ubooneSignalFuzzy->Fill(recoVY);
+                            recoY_high.ubooneSignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.ubooneSignalFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.ubooneSignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.ubooneSignalFuzzy->Fill(recoVZ);
+                            recoZ_high.ubooneSignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.ubooneSignalFuzzy->Fill(recoVZ);
                         }
                     } else if(DLCurrent == 5 && signal == 1){
                         sliceCompleteness.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2449,27 +2311,10 @@ void nuEBackgroundSignalWeighted_macro(){
                             ETrueDist.nuESignalFuzzy->Fill(recoilElectron_energy);
                             ThetaTrue.nuESignalFuzzy->Fill(recoilElectron_angle, weight);
                             ThetaTrueDist.nuESignalFuzzy->Fill(recoilElectron_angle);
-                           
-                            /* 
-                            if(recoVX != -999999){
-                                
-                                xCoordAngleDifferenceDLNuE->Fill(recoVX, angleDifference);
-                                yCoordAngleDifferenceDLNuE->Fill(recoVY, angleDifference);
-                                zCoordAngleDifferenceDLNuE->Fill(recoVZ, angleDifference);
-                                
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
-                            } 
-                            */                       
                         }
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.nuESignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.nuESignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.nuESignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2487,29 +2332,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuESignalFuzzy->Fill(recoVZ, weight);
                             recoZDist.nuESignalFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.nuESignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.nuESignalFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.nuESignalFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.nuESignalFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.nuESignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.nuESignalFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.nuESignalFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.nuESignalFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.nuESignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.nuESignalFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.nuESignalFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.nuESignalFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.nuESignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.nuESignalFuzzy->Fill(recoVX);
+                            recoX_high.nuESignalFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.nuESignalFuzzy->Fill(recoVX);
+                            
+                            recoY_low.nuESignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.nuESignalFuzzy->Fill(recoVY);
+                            recoY_high.nuESignalFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.nuESignalFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.nuESignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.nuESignalFuzzy->Fill(recoVZ);
+                            recoZ_high.nuESignalFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.nuESignalFuzzy->Fill(recoVZ);
                       
                         }
                     }
@@ -2550,6 +2386,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         }
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.currentBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.currentBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.currentBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2567,29 +2404,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentBNB->Fill(recoVZ, weight);
                             recoZDist.currentBNB->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.currentBNB->Fill(recoVX, weight);
-                                recoXDist_low.currentBNB->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.currentBNB->Fill(recoVX, weight);
-                                recoXDist_high.currentBNB->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.currentBNB->Fill(recoVY, weight);
-                                recoYDist_low.currentBNB->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.currentBNB->Fill(recoVY, weight);
-                                recoYDist_high.currentBNB->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.currentBNB->Fill(recoVZ, weight);
-                                recoZDist_low.currentBNB->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.currentBNB->Fill(recoVZ, weight);
-                                recoZDist_high.currentBNB->Fill(recoVZ);
-                            //}
+                            recoX_low.currentBNB->Fill(recoVX, weight);
+                            recoXDist_low.currentBNB->Fill(recoVX);
+                            recoX_high.currentBNB->Fill(recoVX, weight);
+                            recoXDist_high.currentBNB->Fill(recoVX);
+                            
+                            recoY_low.currentBNB->Fill(recoVY, weight);
+                            recoYDist_low.currentBNB->Fill(recoVY);
+                            recoY_high.currentBNB->Fill(recoVY, weight);
+                            recoYDist_high.currentBNB->Fill(recoVY);
+                            
+                            recoZ_low.currentBNB->Fill(recoVZ, weight);
+                            recoZDist_low.currentBNB->Fill(recoVZ);
+                            recoZ_high.currentBNB->Fill(recoVZ, weight);
+                            recoZDist_high.currentBNB->Fill(recoVZ);
                         }
 
                     } else if(DLCurrent == 0){
@@ -2626,6 +2454,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         } 
                            
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.ubooneBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.ubooneBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.ubooneBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2643,29 +2472,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneBNB->Fill(recoVZ, weight);
                             recoZDist.ubooneBNB->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.ubooneBNB->Fill(recoVX, weight);
-                                recoXDist_low.ubooneBNB->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.ubooneBNB->Fill(recoVX, weight);
-                                recoXDist_high.ubooneBNB->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.ubooneBNB->Fill(recoVY, weight);
-                                recoYDist_low.ubooneBNB->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.ubooneBNB->Fill(recoVY, weight);
-                                recoYDist_high.ubooneBNB->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.ubooneBNB->Fill(recoVZ, weight);
-                                recoZDist_low.ubooneBNB->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.ubooneBNB->Fill(recoVZ, weight);
-                                recoZDist_high.ubooneBNB->Fill(recoVZ);
-                            //}
+                            recoX_low.ubooneBNB->Fill(recoVX, weight);
+                            recoXDist_low.ubooneBNB->Fill(recoVX);
+                            recoX_high.ubooneBNB->Fill(recoVX, weight);
+                            recoXDist_high.ubooneBNB->Fill(recoVX);
+                            
+                            recoY_low.ubooneBNB->Fill(recoVY, weight);
+                            recoYDist_low.ubooneBNB->Fill(recoVY);
+                            recoY_high.ubooneBNB->Fill(recoVY, weight);
+                            recoYDist_high.ubooneBNB->Fill(recoVY);
+                            
+                            recoZ_low.ubooneBNB->Fill(recoVZ, weight);
+                            recoZDist_low.ubooneBNB->Fill(recoVZ);
+                            recoZ_high.ubooneBNB->Fill(recoVZ, weight);
+                            recoZDist_high.ubooneBNB->Fill(recoVZ);
                         }
 
                     } else if(DLCurrent == 5){
@@ -2702,6 +2522,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         } 
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.nuEBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.nuEBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.nuEBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2719,29 +2540,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuEBNB->Fill(recoVZ, weight);
                             recoZDist.nuEBNB->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.nuEBNB->Fill(recoVX, weight);
-                                recoXDist_low.nuEBNB->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.nuEBNB->Fill(recoVX, weight);
-                                recoXDist_high.nuEBNB->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.nuEBNB->Fill(recoVY, weight);
-                                recoYDist_low.nuEBNB->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.nuEBNB->Fill(recoVY, weight);
-                                recoYDist_high.nuEBNB->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.nuEBNB->Fill(recoVZ, weight);
-                                recoZDist_low.nuEBNB->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.nuEBNB->Fill(recoVZ, weight);
-                                recoZDist_high.nuEBNB->Fill(recoVZ);
-                            //}
+                            recoX_low.nuEBNB->Fill(recoVX, weight);
+                            recoXDist_low.nuEBNB->Fill(recoVX);
+                            recoX_high.nuEBNB->Fill(recoVX, weight);
+                            recoXDist_high.nuEBNB->Fill(recoVX);
+                            
+                            recoY_low.nuEBNB->Fill(recoVY, weight);
+                            recoYDist_low.nuEBNB->Fill(recoVY);
+                            recoY_high.nuEBNB->Fill(recoVY, weight);
+                            recoYDist_high.nuEBNB->Fill(recoVY);
+                            
+                            recoZ_low.nuEBNB->Fill(recoVZ, weight);
+                            recoZDist_low.nuEBNB->Fill(recoVZ);
+                            recoZ_high.nuEBNB->Fill(recoVZ, weight);
+                            recoZDist_high.nuEBNB->Fill(recoVZ);
                         }
                     }
                 //} else if(reco_sliceCategory->at(slice) == 4){
@@ -2781,6 +2593,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         } 
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.currentBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.currentBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.currentBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2798,29 +2611,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.currentBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.currentBNBFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.currentBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.currentBNBFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.currentBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.currentBNBFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.currentBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.currentBNBFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.currentBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.currentBNBFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.currentBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.currentBNBFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.currentBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.currentBNBFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.currentBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.currentBNBFuzzy->Fill(recoVX);
+                            recoX_high.currentBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.currentBNBFuzzy->Fill(recoVX);
+                            
+                            recoY_low.currentBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.currentBNBFuzzy->Fill(recoVY);
+                            recoY_high.currentBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.currentBNBFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.currentBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.currentBNBFuzzy->Fill(recoVZ);
+                            recoZ_high.currentBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.currentBNBFuzzy->Fill(recoVZ);
                         }
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2856,6 +2660,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         } 
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.ubooneBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.ubooneBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.ubooneBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2873,29 +2678,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.ubooneBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.ubooneBNBFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.ubooneBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.ubooneBNBFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.ubooneBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.ubooneBNBFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.ubooneBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.ubooneBNBFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.ubooneBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.ubooneBNBFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.ubooneBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.ubooneBNBFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.ubooneBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.ubooneBNBFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.ubooneBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.ubooneBNBFuzzy->Fill(recoVX);
+                            recoX_high.ubooneBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.ubooneBNBFuzzy->Fill(recoVX);
+                            
+                            recoY_low.ubooneBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.ubooneBNBFuzzy->Fill(recoVY);
+                            recoY_high.ubooneBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.ubooneBNBFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.ubooneBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.ubooneBNBFuzzy->Fill(recoVZ);
+                            recoZ_high.ubooneBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.ubooneBNBFuzzy->Fill(recoVZ);
                         }
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -2931,6 +2727,7 @@ void nuEBackgroundSignalWeighted_macro(){
                         } 
                             
                         if(recoVX != -999999){ 
+                            // There is a reco neutrino in the slice
                             deltaX.nuEBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
                             deltaXDist.nuEBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
                             deltaY.nuEBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
@@ -2948,29 +2745,20 @@ void nuEBackgroundSignalWeighted_macro(){
                             recoZ.nuEBNBFuzzy->Fill(recoVZ, weight);
                             recoZDist.nuEBNBFuzzy->Fill(recoVZ);
                             
-                            //if(recoVX >= xMin && recoVX <= xMin+20){
-                                recoX_low.nuEBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_low.nuEBNBFuzzy->Fill(recoVX);
-                            //} else if(recoVX <= xMax && recoVX >= xMax-20){
-                                recoX_high.nuEBNBFuzzy->Fill(recoVX, weight);
-                                recoXDist_high.nuEBNBFuzzy->Fill(recoVX);
-                            //}
-                                
-                            //if(recoVY >= yMin && recoVY <= yMin+20){
-                                recoY_low.nuEBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_low.nuEBNBFuzzy->Fill(recoVY);
-                            //} else if(recoVY <= yMax && recoVY >= yMax-20){
-                                recoY_high.nuEBNBFuzzy->Fill(recoVY, weight);
-                                recoYDist_high.nuEBNBFuzzy->Fill(recoVY);
-                            //}
-                                
-                            //if(recoVZ >= zMin && recoVZ <= zMin+20){
-                                recoZ_low.nuEBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_low.nuEBNBFuzzy->Fill(recoVZ);
-                            //} else if(recoVZ <= zMax && recoVZ >= zMax-20){
-                                recoZ_high.nuEBNBFuzzy->Fill(recoVZ, weight);
-                                recoZDist_high.nuEBNBFuzzy->Fill(recoVZ);
-                            //}
+                            recoX_low.nuEBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_low.nuEBNBFuzzy->Fill(recoVX);
+                            recoX_high.nuEBNBFuzzy->Fill(recoVX, weight);
+                            recoXDist_high.nuEBNBFuzzy->Fill(recoVX);
+                            
+                            recoY_low.nuEBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_low.nuEBNBFuzzy->Fill(recoVY);
+                            recoY_high.nuEBNBFuzzy->Fill(recoVY, weight);
+                            recoYDist_high.nuEBNBFuzzy->Fill(recoVY);
+                            
+                            recoZ_low.nuEBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_low.nuEBNBFuzzy->Fill(recoVZ);
+                            recoZ_high.nuEBNBFuzzy->Fill(recoVZ, weight);
+                            recoZDist_high.nuEBNBFuzzy->Fill(recoVZ);
                         }
                     }
                 } else{
@@ -3213,8 +3001,4 @@ void nuEBackgroundSignalWeighted_macro(){
     printf("Nu+E Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", NuESpillsSumCurrent, NuESpillsSumUboone, NuESpillsSumNuE);
     printf("Target POT = %f\n", targetPOT);
    
-    std::cout << "eventcounter = " << eventCounter << std::endl;
-
-    printf("\n\nNumber of Skipped Slices:\nBDT: Cosmic = %f, BNB = %f, Nu+E = %f\nDL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numSkippedCosmicSlicesBDT, numSkippedBNBSlicesBDT, numSkippedNuESlicesBDT, numSkippedCosmicSlicesDLNuE, numSkippedBNBSlicesDLNuE, numSkippedNuESlicesDLNuE);
-    printf("\nNumber of nu+e slices with completeness > 0.5 that are skipped: BDT = %f, DL Nu+E = %f\n", skippedNuESlicesGoodCompletenessBDT, skippedNuESlicesGoodCompletenessDLNuE);
 }
