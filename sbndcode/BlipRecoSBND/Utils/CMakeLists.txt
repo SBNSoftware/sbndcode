@@ -37,7 +37,7 @@ cet_make_library(
                 ROOT::Gdml
                 sbndcode_CRTUtils
                 sbnobj::Common_CRT
-		sbnobj::SBND_Blip
+	        sbnobj::SBND_Blip
 )
 
 art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)
