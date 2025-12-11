@@ -1049,7 +1049,8 @@ void nuEBackgroundSignalWeighted_macro(){
     clearFile.close();
 
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_10Dec.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_10Dec.root");
+    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuE_BDT.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithClearCosmic/";
 
     if(!file){
@@ -1261,6 +1262,18 @@ void nuEBackgroundSignalWeighted_macro(){
     std::vector<double> *reco_sliceNumHitsTruthMatched = nullptr;  
     std::vector<double> *reco_sliceNumTruthHits = nullptr;  
     std::vector<double> *reco_sliceOrigin = nullptr;  
+    std::vector<double> *reco_sliceTrueCCNC = nullptr;  
+    std::vector<double> *reco_sliceTrueNeutrinoType = nullptr;  
+    
+    std::vector<double> *truth_particleSliceID = nullptr;  
+    std::vector<double> *truth_particlePrimary = nullptr;  
+    std::vector<double> *truth_particleVX = nullptr;  
+    std::vector<double> *truth_particleVY = nullptr;  
+    std::vector<double> *truth_particleVZ = nullptr;  
+    std::vector<double> *truth_particlePDG = nullptr;  
+    std::vector<double> *truth_particleTrackID = nullptr;  
+    std::vector<double> *truth_particleMother = nullptr;  
+    std::vector<double> *truth_particleStatusCode = nullptr;  
 
     std::vector<double> *reco_particlePDG = nullptr;
     std::vector<double> *reco_particleIsPrimary = nullptr;
@@ -1316,7 +1329,19 @@ void nuEBackgroundSignalWeighted_macro(){
     tree->SetBranchAddress("reco_sliceNumHitsTruthMatched", &reco_sliceNumHitsTruthMatched);
     tree->SetBranchAddress("reco_sliceNumTruthHits", &reco_sliceNumTruthHits);
     tree->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin);
+    tree->SetBranchAddress("reco_sliceTrueCCNC", &reco_sliceTrueCCNC);
+    tree->SetBranchAddress("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType);
     
+    tree->SetBranchAddress("truth_particleSliceID", &truth_particleSliceID);
+    tree->SetBranchAddress("truth_particlePrimary", &truth_particlePrimary);
+    tree->SetBranchAddress("truth_particleVX", &truth_particleVX);
+    tree->SetBranchAddress("truth_particleVY", &truth_particleVY);
+    tree->SetBranchAddress("truth_particleVZ", &truth_particleVZ);
+    tree->SetBranchAddress("truth_particlePDG", &truth_particlePDG);
+    tree->SetBranchAddress("truth_particleTrackID", &truth_particleTrackID);
+    tree->SetBranchAddress("truth_particleMother", &truth_particleMother);
+    tree->SetBranchAddress("truth_particleStatusCode", &truth_particleStatusCode);
+
     tree->SetBranchAddress("reco_particlePDG", &reco_particlePDG);
     tree->SetBranchAddress("reco_particleIsPrimary", &reco_particleIsPrimary);
     tree->SetBranchAddress("reco_particleVX", &reco_particleVX);
@@ -1625,6 +1650,83 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCategoryPlottingMacro = 4;
                     }
                 }
+
+                int sliceEventType = -999999;
+                // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
+                if(reco_sliceOrigin->at(slice) != 0){
+                    // This is a slice that isn't truth-matched to a cosmic
+                    if(reco_sliceOrigin->at(slice) == 1){
+                        // This is a slice that is truth-matched to a nu+e elastic scatter
+                        if(reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 &&
+                           reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 &&
+                           reco_sliceTrueVZ->at(slice) > 0      && reco_sliceTrueVZ->at(slice) < 509.5){
+                            // Interaction happened inside the TPC
+                            sliceEventType = 1;
+                        } else{
+                            // Interaction happened outside the TPC - Dirt nu+e event
+                            sliceEventType = 7;
+                        }
+                    } else if(reco_sliceOrigin->at(slice) == 3){
+                        // This is a slice that is truth-matched to a beam neutrino that isn't a nu+e elastic scatter
+                        if(reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 &&
+                           reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 &&
+                           reco_sliceTrueVZ->at(slice) > 0      && reco_sliceTrueVZ->at(slice) < 509.5){
+                            // Interaction happened inside the TPC
+                            
+                            if(reco_sliceTrueCCNC->at(slice) == 0){
+                                // This is a CC process
+                                if(reco_sliceTrueNeutrinoType->at(slice) == 12){
+                                    // This is a CC nue
+                                    sliceEventType = 5;
+                                } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
+                                    // This is a CC numu
+                                    sliceEventType = 4;
+                                }
+                            } else if(reco_sliceTrueCCNC->at(slice) == 1){
+                                // This is an NC process
+                                int neutralPion = 0; // Number of neutral pions with status code = 1
+                                for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                                    if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                                        // True particle is in the slice
+                                        if(truth_particleStatusCode->at(trueParticle) == 1){
+                                            // True particle has status code of 1 -> Tracked by GENIE
+                                            if(truth_particlePDG->at(trueParticle) == 111){
+                                                // True particle is a neutral pion
+                                                neutralPion++;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if(neutralPion > 0){
+                                    // Slice has a true pi0 in it
+                                    // This is an NC Npi0 process
+                                    sliceEventType = 2;
+                                } else{
+                                    // This is an NC other process
+                                    sliceEventType = 3;
+                                }
+                            }
+                        } else{
+                            // Interaction happened outside the TPC - Dirt event
+                            sliceEventType = 6;       
+                        }
+                    }
+                } else{
+                    // This is a cosmic event
+                    sliceEventType = 0;
+                    
+                }
+
+                if(sliceEventType == 0) std::cout << "Event type = Cosmic" << std::endl;
+                else if(sliceEventType == 1) std::cout << "Event type = nu+e elastic scatter" << std::endl;
+                else if(sliceEventType == 2) std::cout << "Event type = NC Npi0" << std::endl;
+                else if(sliceEventType == 3) std::cout << "Event type = other NC" << std::endl;
+                else if(sliceEventType == 4) std::cout << "Event type = CC numu" << std::endl;
+                else if(sliceEventType == 5) std::cout << "Event type = CC nue" << std::endl;
+                else if(sliceEventType == 6) std::cout << "Event type = Dirt" << std::endl;
+                else if(sliceEventType == 7) std::cout << "Event type = Dirt nu+e" << std::endl;
+                else std::cout << "No event type assigned" << std::endl;
 
                 // Filling Histograms
                 //if(reco_sliceCategory->at(slice) == 0){
