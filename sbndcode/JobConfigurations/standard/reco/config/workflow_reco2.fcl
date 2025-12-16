@@ -53,6 +53,8 @@ sbnd_reco2_producers:{
     ### SCE-aware pandora:
     pandoraSCE:          @local::scecorrection
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
+    blipPandoraSCE:     @local::scecorrection
+    blipPandoraSCETrac:@local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
@@ -100,6 +102,8 @@ sbnd_reco2_producer_sequence: [
     , pandoraTrack
     , blipPandoraCopy
     , blipPandoraTrackCopy
+    , blipPandoraSCE
+    , blipPandoraSCETrack
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
@@ -192,10 +196,15 @@ sbnd_reco2_producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 sbnd_reco2_producers.pandoraSCE.T0Labels: []
 sbnd_reco2_producers.pandoraSCE.T0LabelsCorrectT0: []
 sbnd_reco2_producers.pandoraSCE.CorrectNoT0Tag: true
+sbnd_reco2_producers.blipPandoraSCE.T0Labels: []
+sbnd_reco2_producers.blipPandoraSCE.T0LabelsCorrectT0: []
+sbnd_reco2_producers.blipPandoraSCE.CorrectNoT0Tag: true
 # point track/shower creation to the SCE pandora
 sbnd_reco2_producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 sbnd_reco2_producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 sbnd_reco2_producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+sbnd_reco2_producers.blipPandoraSCETrack.PFParticleLabel:               "blipPandoraSCE"
+
 
 sbnd_reco2_producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
 sbnd_reco2_producers.crtspacepointmatchingSCE.PFPModuleLabel:            "pandoraSCE"
