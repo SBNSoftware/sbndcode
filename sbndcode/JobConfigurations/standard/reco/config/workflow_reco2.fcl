@@ -54,7 +54,7 @@ sbnd_reco2_producers:{
     pandoraSCE:          @local::scecorrection
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
     blipPandoraSCE:     @local::scecorrection
-    blipPandoraSCETrac:@local::sbnd_pandoraTrackCreation
+    blipPandoraSCETrack:@local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
