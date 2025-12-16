@@ -16,7 +16,7 @@ FlashGeoThreshold:{
 
 FlashGeoThresholdTPC0Data:{
   tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  PDTypes: ["pmt_coated"]
   ThresholdY: 0.5
   ThresholdZ: 0.5
   NormalizeByPDType: true
@@ -25,7 +25,7 @@ FlashGeoThresholdTPC0Data:{
 
 FlashGeoThresholdTPC1Data:{
   tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  PDTypes: ["pmt_coated"]
   ThresholdY: 0.5
   ThresholdZ: 0.5
   NormalizeByPDType: true
@@ -34,16 +34,16 @@ FlashGeoThresholdTPC1Data:{
 
 FlashGeoThresholdTPC0_realisticMC:{
   tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  PDTypes: ["pmt_coated"]
   ThresholdY: 0.7
   ThresholdZ: 0.7
   NormalizeByPDType: true
   WeightExp: 2
 }
 
-FlashGeoThresholdTPC0_realisticMC:{
+FlashGeoThresholdTPC1_realisticMC:{
   tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  PDTypes: ["pmt_coated"]
   ThresholdY: 0.6
   ThresholdZ: 0.6
   NormalizeByPDType: true
