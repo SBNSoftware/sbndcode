@@ -1,3 +1,7 @@
+#Nominal configuration uses dnn (ind) + trad (col) for hit finding.
+#Blip requires trad (all) for hit finding. 
+#This fcl configures everything to use the nominal config (dnn + trad)
+
 #include "standard_reco2_sbnd.fcl"
 physics.producers.blipPandoraCopy.HitFinderModuleLabel:          "gaushit"
 physics.producers.blipreco.BlipAlg.HitProducer: "gaushit"
