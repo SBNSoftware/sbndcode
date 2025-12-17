@@ -41,7 +41,6 @@ SBNDDecoSimpleFlashTPC1_data.ReadoutDelay: 0 //cable time delay in us
 SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
 SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.DataCalibration: true
 SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2_tpc1.root"
-SBNDDecoSimpleFlashTPC1_data.CorrectLightPropagation: true
 SBNDDecoSimpleFlashTPC1_data.FlashGeoConfig: @local::FlashGeoThresholdTPC1Data
 
 
