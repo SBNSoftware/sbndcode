@@ -102,8 +102,6 @@ sbnd_reco2_producer_sequence: [
     , pandoraTrack
     , blipPandoraCopy
     , blipPandoraTrackCopy
-    , blipPandoraSCE
-    , blipPandoraSCETrack
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
