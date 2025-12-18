@@ -51,7 +51,6 @@ private:
   std::vector<double> fSinglePEWave;
   std::vector<int> fSinglePEChannels;
   std::vector<double> fPeakAmplitude;
-  std::vector<int> fSkipChannelList;
   bool fPositivePolarity;
   bool fUseSaturated;
   int fADCSaturationValue;
@@ -129,7 +128,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fPMTChargeToADC = p.get< double >("PMTChargeToADC");
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
   fBaselineSample = p.get< short unsigned int >("BaselineSample");
-  fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
   fFilter = p.get< std::string >("Filter");
   fElectronics = p.get< std::string >("Electronics");
   fDaphne_Freq  = p.get< double >("DaphneFreq");
@@ -173,11 +171,9 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
 {
   std::vector<raw::OpDetWaveform> wfDeco;
   wfDeco.reserve(wfVector.size());
-  for(auto const& wf : wfVector)
-  {
+  for(auto const& wf : wfVector){
     int channelNumber = wf.ChannelNumber();
-    auto it = std::find(fSkipChannelList.begin(), fSkipChannelList.end(), channelNumber);
-    if (it == fSkipChannelList.end()) {
+    if(fPMTCalibrationDatabaseService->getReconstructChannel(channelNumber)) {
       fSinglePEWave = fPMTCalibrationDatabaseService->getSER(channelNumber);
       double SPEAmplitude =  fPMTCalibrationDatabaseService->getSPEAmplitude(channelNumber);
       double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
