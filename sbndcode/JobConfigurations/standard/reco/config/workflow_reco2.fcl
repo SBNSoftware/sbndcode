@@ -77,8 +77,8 @@ sbnd_reco2_producers:{
     fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
-    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
-    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducerMC
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCEMC
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
