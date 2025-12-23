@@ -154,6 +154,22 @@ private:
   std::vector<double>   reco_sliceTrueVX;
   std::vector<double>   reco_sliceTrueVY;
   std::vector<double>   reco_sliceTrueVZ;
+  std::vector<double>   reco_sliceNumHits;
+  std::vector<double>   reco_sliceNumHitsTruthMatched;
+  std::vector<double>   reco_sliceNumTruthHits;
+  std::vector<double>   reco_sliceOrigin;
+  std::vector<double>   reco_sliceTrueCCNC;
+  std::vector<double>   reco_sliceTrueNeutrinoType;
+
+  std::vector<double>   truth_particleSliceID;
+  std::vector<double>   truth_particlePrimary;
+  std::vector<double>   truth_particleVX;
+  std::vector<double>   truth_particleVY;
+  std::vector<double>   truth_particleVZ;
+  std::vector<double>   truth_particlePDG;
+  std::vector<double>   truth_particleTrackID;
+  std::vector<double>   truth_particleMother;
+  std::vector<double>   truth_particleStatusCode;
 
   std::vector<double>   reco_particlePDG;
   std::vector<double>   reco_particleIsPrimary;
@@ -170,6 +186,13 @@ private:
   std::vector<double>   reco_particleCompleteness;
   std::vector<double>   reco_particlePurity;
   std::vector<double>   reco_particleID;
+  std::vector<double>   reco_particleTruePDG;
+  std::vector<double>   reco_particleTrueOrigin;
+  std::vector<double>   reco_particleTrueInteractionType;
+  std::vector<double>   reco_particleNumHits;
+  std::vector<double>   reco_particleNumHitsTruthMatched;
+  std::vector<double>   reco_particleNumTruthHits;
+  std::vector<double>   reco_particleClearCosmic;
   
   std::vector<double>   reco_neutrinoID;
   std::vector<double>   reco_neutrinoPDG;
@@ -275,6 +298,22 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_sliceTrueVX", &reco_sliceTrueVX);
   NuETree->Branch("reco_sliceTrueVY", &reco_sliceTrueVY);
   NuETree->Branch("reco_sliceTrueVZ", &reco_sliceTrueVZ);
+  NuETree->Branch("reco_sliceNumHits", &reco_sliceNumHits);
+  NuETree->Branch("reco_sliceNumHitsTruthMatched", &reco_sliceNumHitsTruthMatched);
+  NuETree->Branch("reco_sliceNumTruthHits", &reco_sliceNumTruthHits);
+  NuETree->Branch("reco_sliceOrigin", &reco_sliceOrigin);
+  NuETree->Branch("reco_sliceTrueCCNC", &reco_sliceTrueCCNC);
+  NuETree->Branch("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType);
+  
+  NuETree->Branch("truth_particleSliceID", &truth_particleSliceID);
+  NuETree->Branch("truth_particlePrimary", &truth_particlePrimary);
+  NuETree->Branch("truth_particleVX", &truth_particleVX);
+  NuETree->Branch("truth_particleVY", &truth_particleVY);
+  NuETree->Branch("truth_particleVZ", &truth_particleVZ);
+  NuETree->Branch("truth_particlePDG", &truth_particlePDG);
+  NuETree->Branch("truth_particleTrackID", &truth_particleTrackID);
+  NuETree->Branch("truth_particleMother", &truth_particleMother);
+  NuETree->Branch("truth_particleStatusCode", &truth_particleStatusCode);
 
   NuETree->Branch("reco_particlePDG", &reco_particlePDG);
   NuETree->Branch("reco_particleIsPrimary", &reco_particleIsPrimary);
@@ -291,6 +330,13 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_particleCompleteness", &reco_particleCompleteness);
   NuETree->Branch("reco_particlePurity", &reco_particlePurity);
   NuETree->Branch("reco_particleID", &reco_particleID);
+  NuETree->Branch("reco_particleTruePDG", &reco_particleTruePDG);
+  NuETree->Branch("reco_particleTrueOrigin", &reco_particleTrueOrigin);
+  NuETree->Branch("reco_particleTrueInteractionType", &reco_particleTrueInteractionType);
+  NuETree->Branch("reco_particleNumHits", &reco_particleNumHits);
+  NuETree->Branch("reco_particleNumHitsTruthMatched", &reco_particleNumHitsTruthMatched);
+  NuETree->Branch("reco_particleNumTruthHits", &reco_particleNumTruthHits);
+  NuETree->Branch("reco_particleClearCosmic", &reco_particleClearCosmic);
   
   NuETree->Branch("reco_neutrinoID", &reco_neutrinoID);
   NuETree->Branch("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -370,7 +416,8 @@ double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<r
     for(unsigned int i = 0; i < objectHits.size(); ++i)
         ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-    //std::cout << "Number in object: " << objectHitsMap[ID] << " Number of hits in object in truth: " << fHitsMap[ID] << std::endl;
+    //std::cout << "Completeness calculator:" << std::endl;
+    //std::cout << "Number of truth-matched hits in reco object: " << objectHitsMap[ID] << " Number of hits in object in truth: " << fHitsMap[ID] << std::endl;
     return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
 }
 
@@ -382,6 +429,20 @@ double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::
     for(unsigned int i = 0; i < objectHits.size(); ++i)
         ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
+    double skippedHitsPFP = 0;
+    for(unsigned int i = 0; i < objectHits.size(); ++i){
+        double trueID_particle = TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true);
+        if(trueID_particle != ID){
+            skippedHitsPFP++;
+        }
+    }
+
+    /*
+    std::cout << "Purity calculator:" << std::endl;
+    std::cout << "Total number of PFP hits = " << static_cast<double>(objectHits.size()) << std::endl;
+    std::cout << "Total number of truth matched hits in PFP = " << objectHitsMap[ID] << std::endl;
+    std::cout << "Number of hits not truth matched to PFP = " << skippedHitsPFP << std::endl;
+    */
     return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
 }
 
@@ -432,11 +493,20 @@ void sbnd::NuE::PFPs(art::Event const& e){
                 const auto meta  = pfpMetadataAssns.at(pfp.key());
                 const auto props = meta->GetPropertiesMap();
                 const auto trackscoreobj = props.find("TrackScore");
+                const auto isClearCosmicObj = props.find("IsClearCosmic");
+                           
+                /* 
+                if(isClearCosmicObj != props.end()){
+                    std::cout << "isClearCosmic = " << isClearCosmicObj->second << std::endl;
+                } else{
+                    std::cout << "isClearCosmic = props.end()" << std::endl;
+                }
+                */
 
                 if(pfpVertexs.size() > 0){
                     if(!(pfp->IsPrimary() && (pfp->PdgCode() == 12 || pfp->PdgCode() == 14))){
                         // PFP is not the reco neutrino
-                        if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
+                        //if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
                             const std::vector<art::Ptr<recob::Hit>> showerHits(showerHitAssns.at(pfpShower.key()));
                             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
                             counter++;
@@ -445,6 +515,7 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             double pfpCompleteness = Completeness(e, showerHits, showerID_truth);
                             double pfpPurity = Purity(e, showerHits, showerID_truth);
 
+                            const simb::MCParticle* pfpMCParticle = particleInv->TrackIdToParticle_P(showerID_truth);
 
                             art::Handle<std::vector<simb::MCParticle>> truthParticleHandle;
                             std::vector<art::Ptr<simb::MCParticle>> truthParticleVec;
@@ -462,13 +533,62 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             reco_particleSliceID.push_back(pfpSlice->ID());
                             reco_particleBestPlaneEnergy.push_back(pfpShower->Energy()[pfpShower->best_plane()]);
                             reco_particleTheta.push_back(pfpShower->Direction().Theta());
-                            reco_particleTrackScore.push_back(trackscoreobj->second);
                             reco_particleCompleteness.push_back(pfpCompleteness);
                             reco_particlePurity.push_back(pfpPurity);
                             reco_particleID.push_back(pfp->Self());
-                        
-                            printf("Reco Particle %d: ID = %li, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f\n", counter, pfp->Self(), pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity);
-                        }
+                            reco_particleNumHits.push_back(showerHits.size());
+                            reco_particleNumHitsTruthMatched.push_back(pfpPurity*showerHits.size());
+                            reco_particleNumTruthHits.push_back(fHitsMap[showerID_truth]);
+
+                           
+                            if(trackscoreobj != props.end()){
+                                reco_particleTrackScore.push_back(trackscoreobj->second);
+                                if(trackscoreobj->second == 0) std::cout << "TRACKSCORE = 0" << std::endl;
+                                else std::cout << "Trackscore = " << trackscoreobj->second << std::endl;
+                            } else{
+                                std::cout << "Trackscore == props.end()" << std::endl;
+                                reco_particleTrackScore.push_back(-999999);
+                            }
+                           
+                            if(isClearCosmicObj != props.end()){
+                                std::cout << "isClearCosmic = " << isClearCosmicObj->second << std::endl;
+                                reco_particleClearCosmic.push_back(isClearCosmicObj->second);
+                            } else{
+                                std::cout << "isClearCosmic = props.end()" << std::endl;
+                                reco_particleClearCosmic.push_back(0);
+                            }
+
+                            if(isClearCosmicObj != props.end() && trackscoreobj != props.end()) std::cout << "PFP has Trackscore and ClearCosmic Score!! Trackscore = " << trackscoreobj->second << ", ClearCosmic = " << isClearCosmicObj->second << std::endl;
+                            
+                            //printf("Reco Particle %d: ID = %li, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f\n", counter, pfp->Self(), pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity);
+                            printf("Reco Particle %d: ID = %li, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Completeness = %f, Purity = %f\n", counter, pfp->Self(), pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), pfpCompleteness, pfpPurity);
+                            
+                            if(pfpMCParticle){
+                                // The PFP has truth info associated with it
+                            
+                                const art::Ptr<simb::MCTruth> pfpMCTruth = particleInv->TrackIdToMCTruth_P(showerID_truth);
+                                const simb::MCNeutrino pfpMCNeutrino = pfpMCTruth->GetNeutrino();
+                                
+                                reco_particleTruePDG.push_back(pfpMCParticle->PdgCode());
+                                reco_particleTrueOrigin.push_back(pfpMCTruth->Origin());
+                                if(pfpMCTruth->Origin() == 1){
+                                    // From a beam neutrino
+                                    reco_particleTrueInteractionType.push_back(pfpMCNeutrino.InteractionType());
+                                } else{
+                                    // From a cosmic ray
+                                    reco_particleTrueInteractionType.push_back(-999999);
+                                }
+                                
+                                
+                                std::cout << "Truth info associated with PFP: Interaction Type = " << pfpMCNeutrino.InteractionType() << ", Origin of Neutrino = " << pfpMCTruth->Origin() << ", True PDG Code = " << pfpMCParticle->PdgCode() << std::endl;
+                            } else{
+                                // No truth info associated with the PFP
+                                reco_particleTruePDG.push_back(-999999);
+                                reco_particleTrueOrigin.push_back(-999999);
+                                reco_particleTrueInteractionType.push_back(-999999);
+                                std::cout << "PFP has no truth info associated with it, showerID_truth = " << showerID_truth << std::endl;
+                            }
+                        //}
                     } else{
                         // This is the reco neutrino
                         neutrinoCounter++;
@@ -504,6 +624,13 @@ void sbnd::NuE::PFPs(art::Event const& e){
         reco_particleCompleteness.push_back(-999999);
         reco_particlePurity.push_back(-999999);
         reco_particleID.push_back(-999999);
+        reco_particleTruePDG.push_back(-999999);
+        reco_particleTrueOrigin.push_back(-999999);
+        reco_particleTrueInteractionType.push_back(-999999);
+        reco_particleNumHits.push_back(-999999);
+        reco_particleNumHitsTruthMatched.push_back(-999999);
+        reco_particleNumTruthHits.push_back(-999999);
+        reco_particleClearCosmic.push_back(-999999);
     }
 
     if(neutrinoCounter == 0){
@@ -627,6 +754,7 @@ void sbnd::NuE::Slices(art::Event const& e){
     std::cout << "_________ Slices _________" << std::endl;
 
     int counter = 0;
+    int counter_trueParticles = 0;
 
     art::Handle<std::vector<recob::Slice>>  sliceHandle;
     std::vector<art::Ptr<recob::Slice>>     sliceVec;
@@ -681,7 +809,36 @@ void sbnd::NuE::Slices(art::Event const& e){
                 const simb::MCNeutrino sliceMCNeutrino = sliceMCTruth->GetNeutrino();
                 const simb::MCParticle sliceMCNeutrinoParticle = sliceMCNeutrino.Nu();
 
-                std::cout << "MCParticle: PDG = " << sliceMCParticle->PdgCode() << std::endl;
+                int numTrueParticlesSlice = sliceMCTruth->NParticles();
+                std::cout << "Number of particles in the MC Truth matched to the slice = " << numTrueParticlesSlice << std::endl;
+                std::cout << "True Neutrino Track ID = " << sliceMCNeutrinoParticle.TrackId() << std::endl;
+                if(!(sliceMCTruth->Origin() == simb::kCosmicRay || sliceMCTruth->Origin() == 0)){
+                    for(int b = 0; b < numTrueParticlesSlice; b++){
+                        // Loop through all of the particles in the MC Truth
+                        counter_trueParticles++;
+                        const simb::MCParticle truthParticle_slice = sliceMCTruth->GetParticle(b);
+                        int primaryParticle = 0;
+                        if(sliceMCNeutrinoParticle.TrackId() == truthParticle_slice.Mother()){
+                            std::cout << "This particle has its mother as the neutrino!" << std::endl; 
+                            primaryParticle = 1;
+                        }
+                        std::cout << "Truth Particle " << b << ": Slice ID = " << sliceID << ", Primary = " << primaryParticle << ", Vertex = (" << truthParticle_slice.Vx() << ", " << truthParticle_slice.Vy() << ", " << truthParticle_slice.Vz() << "), PDG = " << truthParticle_slice.PdgCode() << ", Track ID = " << truthParticle_slice.TrackId() << ", Mother Track ID = " << truthParticle_slice.Mother() << ", Status Code = " << truthParticle_slice.StatusCode() << std::endl;
+                    
+                        truth_particleSliceID.push_back(sliceID);
+                        truth_particlePrimary.push_back(primaryParticle);
+                        truth_particleVX.push_back(truthParticle_slice.Vx());
+                        truth_particleVY.push_back(truthParticle_slice.Vy());
+                        truth_particleVZ.push_back(truthParticle_slice.Vz());
+                        truth_particlePDG.push_back(truthParticle_slice.PdgCode());
+                        truth_particleTrackID.push_back(truthParticle_slice.TrackId());
+                        truth_particleMother.push_back(truthParticle_slice.Mother());
+                        truth_particleStatusCode.push_back(truthParticle_slice.StatusCode());
+                    }
+                }else{
+                    std::cout << "slice is truth matched to cosmic origin, not looking at the true particles" << std::endl;
+                }
+
+                std::cout << "MCParticle that owns most hits in slice: PDG = " << sliceMCParticle->PdgCode() << std::endl;
                 std::cout << "MCTruth: Origin = " << sliceMCTruth->Origin() << ", Num Particles = " << sliceMCTruth->NParticles() << std::endl;
                 
                 if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
@@ -703,14 +860,20 @@ void sbnd::NuE::Slices(art::Event const& e){
                 double numTruthMatchedHitsSlice = 0;
                 double numHitsSlice = sliceHits.size();
 
+                if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() == 1098) std::cout << "SLICE MCTRUTH = NU+E SCATTER, LOOK HERE!" << std::endl;
+
                 // Looping through the hits in the slice
                 for(const art::Ptr<recob::Hit> &sliceHit : sliceHits){
                     // Gets the true particle ID of the truth particle which owns the hit. True is for rollup.
                     const int sliceHitTrueParticleID = TruthMatchUtils::TrueParticleID(clockData, sliceHit, true);
                     //std::cout << "The slice hit comes from true particle with ID = " << sliceHitTrueParticleID << std::endl;
                     
-                    if(sliceHitTrueParticleID == std::numeric_limits<int>::min()) continue;
-                    
+                    if(sliceHitTrueParticleID == std::numeric_limits<int>::min()){
+                        //std::cout << "sliceHitTrueParticleID = " << sliceHitTrueParticleID << std::endl;
+                        //geo::WireID wid = sliceHit->WireID();
+                        //std::cout << "Peak Time = " << sliceHit->PeakTime() << ", Wire ID: Cryostat = " << wid.Cryostat << ", TPC = " << wid.TPC << ", Plane = " << wid.Plane << ", Wire = " << wid.Wire << std::endl;
+                        continue;
+                    }
                     // Gets the MCParticle that the hit comes from
                     //const simb::MCParticle* sliceHitMCParticle = particleInv->TrackIdToParticle_P(sliceHitTrueParticleID);
                     
@@ -718,7 +881,13 @@ void sbnd::NuE::Slices(art::Event const& e){
                     const art::Ptr<simb::MCTruth> sliceHitMCTruth = particleInv->TrackIdToMCTruth_P(sliceHitTrueParticleID);
 
                     // If the MCTruth from the hit is the same as the MCTruth of the slice, add to the counter
-                    if(sliceMCTruth == sliceHitMCTruth) numTruthMatchedHitsSlice++;
+                    if(sliceMCTruth == sliceHitMCTruth){
+                        numTruthMatchedHitsSlice++;
+                    } else{
+                        const simb::MCNeutrino sliceHitMCNeutrino = sliceHitMCTruth->GetNeutrino();
+                        //std::cout << "This hit is in the slice but it isn't truth matched to the slice:" << std::endl;
+                        //std::cout << "sliceHitMCTruth: Origin = " << sliceHitMCTruth->Origin() << ", Interaction Type = " << sliceHitMCNeutrino.InteractionType() << std::endl;
+                    }
                 }
 
                 // Looping through all the hits in the event
@@ -765,22 +934,39 @@ void sbnd::NuE::Slices(art::Event const& e){
                 reco_slicePurity.push_back(slicePurity);        
                 reco_sliceScore.push_back(sliceScoreVar);        
                 reco_sliceCategory.push_back(sliceCategory);       
+                reco_sliceNumHits.push_back(numHitsSlice);
+                reco_sliceNumHitsTruthMatched.push_back(numTruthMatchedHitsSlice);
+                reco_sliceNumTruthHits.push_back(numTruthMatchedHits);
+
                 if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
                     reco_sliceInteraction.push_back(sliceMCNeutrino.InteractionType());
                     reco_sliceTrueVX.push_back(sliceMCNeutrinoParticle.Vx());        
                     reco_sliceTrueVY.push_back(sliceMCNeutrinoParticle.Vy());        
-                    reco_sliceTrueVZ.push_back(sliceMCNeutrinoParticle.Vz());       
-                    std::cout << "True Neutrino Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vz() << ")" << std::endl; 
-                } else if(sliceMCTruth->Origin() == simb::kCosmicRay){
+                    reco_sliceTrueVZ.push_back(sliceMCNeutrinoParticle.Vz());
+                    reco_sliceTrueCCNC.push_back(sliceMCNeutrino.CCNC());
+                    reco_sliceTrueNeutrinoType.push_back(sliceMCNeutrinoParticle.PdgCode());
+                    if(sliceMCNeutrino.InteractionType() == 1098){
+                        reco_sliceOrigin.push_back(1);
+                    } else{
+                        reco_sliceOrigin.push_back(3);
+                    }       
+                    std::cout << "True Neutrino Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vz() << "), Type of Interaction = " << sliceMCNeutrino.CCNC() << ", PDG Code of Neutrino = " << sliceMCNeutrinoParticle.PdgCode() << std::endl; 
+                } else if(sliceMCTruth->Origin() == simb::kCosmicRay || sliceMCTruth->Origin() == 0){
                     reco_sliceInteraction.push_back(-100);        
                     reco_sliceTrueVX.push_back(-999999);
                     reco_sliceTrueVY.push_back(-999999);
                     reco_sliceTrueVZ.push_back(-999999);
+                    reco_sliceOrigin.push_back(0);
+                    reco_sliceTrueCCNC.push_back(-999999);
+                    reco_sliceTrueNeutrinoType.push_back(-999999);
                 } else {
                     reco_sliceInteraction.push_back(-999999);        
                     reco_sliceTrueVX.push_back(-999999);
                     reco_sliceTrueVY.push_back(-999999);
                     reco_sliceTrueVZ.push_back(-999999);
+                    reco_sliceOrigin.push_back(-999999);
+                    reco_sliceTrueCCNC.push_back(-999999);
+                    reco_sliceTrueNeutrinoType.push_back(-999999);
                 }
             }
 
@@ -797,8 +983,27 @@ void sbnd::NuE::Slices(art::Event const& e){
         reco_sliceTrueVX.push_back(-999999); 
         reco_sliceTrueVY.push_back(-999999); 
         reco_sliceTrueVZ.push_back(-999999); 
+        reco_sliceNumHits.push_back(-999999);
+        reco_sliceNumHitsTruthMatched.push_back(-999999);
+        reco_sliceNumTruthHits.push_back(-999999);
+        reco_sliceOrigin.push_back(-999999);
+        reco_sliceTrueCCNC.push_back(-999999);
+        reco_sliceTrueNeutrinoType.push_back(-999999);
     }
-    
+   
+    if(counter_trueParticles == 0){
+        // There are no truth particles in the any of the slices in the event
+        truth_particleSliceID.push_back(-999999);
+        truth_particlePrimary.push_back(-999999);
+        truth_particleVX.push_back(-999999);
+        truth_particleVY.push_back(-999999);
+        truth_particleVZ.push_back(-999999);
+        truth_particlePDG.push_back(-999999);
+        truth_particleTrackID.push_back(-999999);
+        truth_particleMother.push_back(-999999);
+        truth_particleStatusCode.push_back(-999999);
+    }
+
     std::cout << "_________________________" << std::endl;
 
 }
@@ -835,6 +1040,22 @@ void sbnd::NuE::clearVectors(){
     reco_sliceTrueVX.clear();
     reco_sliceTrueVY.clear();
     reco_sliceTrueVZ.clear();
+    reco_sliceNumHits.clear();
+    reco_sliceNumHitsTruthMatched.clear();
+    reco_sliceNumTruthHits.clear();
+    reco_sliceOrigin.clear();
+    reco_sliceTrueCCNC.clear();
+    reco_sliceTrueNeutrinoType.clear();
+    
+    truth_particleSliceID.clear();
+    truth_particlePrimary.clear();
+    truth_particleVX.clear();
+    truth_particleVY.clear();
+    truth_particleVZ.clear();
+    truth_particlePDG.clear();
+    truth_particleTrackID.clear();
+    truth_particleMother.clear();
+    truth_particleStatusCode.clear();
 
     reco_particlePDG.clear();
     reco_particleIsPrimary.clear();
@@ -851,6 +1072,13 @@ void sbnd::NuE::clearVectors(){
     reco_particleCompleteness.clear();
     reco_particlePurity.clear();
     reco_particleID.clear();
+    reco_particleTruePDG.clear();
+    reco_particleTrueOrigin.clear();
+    reco_particleTrueInteractionType.clear();
+    reco_particleNumHits.clear();
+    reco_particleNumHitsTruthMatched.clear();
+    reco_particleNumTruthHits.clear();
+    reco_particleClearCosmic.clear();
     
     reco_neutrinoID.clear();
     reco_neutrinoPDG.clear();
