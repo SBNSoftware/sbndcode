@@ -13,6 +13,7 @@ physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
 physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatchingSCE"
 physics.producers.cafmaker.CVNLabel: "cvnSCE"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
@@ -23,6 +24,8 @@ physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
 
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
+physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
+physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"

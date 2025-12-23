@@ -34,6 +34,7 @@ sbnd_reco2_producers:{
     pandoraCalo:         @local::sbnd_gnewcalomc
     pandoraPid:          @local::sbnd_chi2pid
 
+
     pandoraSCECalo:      @local::sbnd_gnewcalomc
     pandoraSCEPid:       @local::sbnd_chi2pid
 
@@ -49,6 +50,7 @@ sbnd_reco2_producers:{
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
+
     ### CRT Veto
     crtveto:        @local::crtvetoproducer_sbnd
 
@@ -70,6 +72,7 @@ sbnd_reco2_producers:{
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -110,6 +113,7 @@ sbnd_reco2_producer_sequence: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+    , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
 ]
