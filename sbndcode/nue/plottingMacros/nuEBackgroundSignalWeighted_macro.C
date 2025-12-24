@@ -522,13 +522,13 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.cosmic->Draw("histsame");
 
     int nEntries = 8;
-    double height = std::max(0.025 * nEntries, 0.03);
+    double height = std::max(0.03 * nEntries, 0.03);
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
 
-    if(legendLocation == "topRight"){ Lxmin=0.62; Lymax=0.863; Lxmax=0.87; Lymin=Lymax - height; }
-    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.38; Lymin=Lymax - height; }
-    else if(legendLocation == "bottomRight"){ Lxmin=0.62; Lymin=0.137; Lxmax=0.87; Lymax=Lymin + height; }
-    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymin=0.137; Lxmax=0.38; Lymax=Lymin + height; }
+    if(legendLocation == "topRight"){ Lxmin=0.72; Lymax=0.863; Lxmax=0.87; Lymin=Lymax - height; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.28; Lymin=Lymax - height; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.72; Lymin=0.137; Lxmax=0.87; Lymax=Lymin + height; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymin=0.137; Lxmax=0.28; Lymax=Lymin + height; }
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     //auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
@@ -546,6 +546,79 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->Draw();
 
     hists.canvas->SaveAs(filename);
+
+    // Drawing the histograms as a stack.
+    const char* histsTitle = hists.nu_e->GetTitle();
+    const char* xAxisTitle = hists.nu_e->GetXaxis()->GetTitle();
+    const char* yAxisTitle = hists.nu_e->GetYaxis()->GetTitle();
+
+    std::string stackTitle = std::string(histsTitle) + ";" + xAxisTitle + ";" + yAxisTitle;
+
+    THStack* stack = new THStack("stack", stackTitle.c_str());
+    stack->Add(hists.nu_e);
+    stack->Add(hists.NCNpi0);
+    stack->Add(hists.otherNC);
+    stack->Add(hists.CCnumu);
+    stack->Add(hists.CCnue);
+    stack->Add(hists.dirt);
+    stack->Add(hists.nu_eDirt);
+    stack->Add(hists.cosmic);
+
+    hists.canvas->cd();
+    hists.canvas->Clear();
+
+    if(useLogScale) hists.canvas->SetLogy(1);
+    else hists.canvas->SetLogy(0);
+
+    // Build a frame with your desired axis limits
+    double xminFrame = (xmin != 999 ? xmin : hists.nu_e->GetXaxis()->GetXmin());
+    double xmaxFrame = (xmax != 999 ? xmax : hists.nu_e->GetXaxis()->GetXmax());
+    double yminFrame = (ymin != 999 ? ymin : 1e-6);
+    double ymaxFrame = (ymax != 999 ? ymax : stack->GetMaximum()*1.2);
+    
+    TH1F* frame = new TH1F("frame", stackTitle.c_str(),
+                           1, xminFrame, xmaxFrame);
+
+    frame->SetMinimum(yminFrame);
+    frame->SetMaximum(ymaxFrame);
+    frame->SetTitle(stackTitle.c_str());
+    //frame->GetXaxis()->SetTitle(xAxisTitle);
+    //frame->GetYaxis()->SetTitle(yAxisTitle);
+
+    frame->SetLineColor(0);
+    frame->SetLineWidth(0);
+    frame->SetFillStyle(0);     
+    frame->SetStats(0);
+    //frame->Draw("axis");
+    frame->Draw("HIST");
+
+    hists.canvas->Update();
+
+    stack->Draw("hist same");
+
+    gPad->RedrawAxis();
+
+    auto legendStack = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    legendStack->AddEntry(hists.nu_e, "#nu+e Elastic Scatter", "f");
+    legendStack->AddEntry(hists.NCNpi0, "NCN#pi^{0}", "f");
+    legendStack->AddEntry(hists.otherNC, "Other NC", "f");
+    legendStack->AddEntry(hists.CCnumu, "CC#nu_{#mu}", "f");
+    legendStack->AddEntry(hists.CCnue, "CC#nu_{e}", "f");
+    legendStack->AddEntry(hists.dirt, "Dirt", "f");
+    legendStack->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
+    legendStack->AddEntry(hists.cosmic, "Cosmic", "f");
+    legendStack->SetTextSize(0.0225);
+    legendStack->SetMargin(0.13);
+    legendStack->Draw();
+
+    std::string fname(filename);
+    std::string stackedFname;
+    size_t pos = fname.rfind(".pdf");
+    if(pos != std::string::npos) stackedFname = fname.substr(0, pos) + "_stacked.pdf";
+    else stackedFname = fname + "_stacked.pdf";
+
+    hists.canvas->SaveAs(stackedFname.c_str());
+
 }
 
 void styleDrawAll(histGroup_struct hists,
@@ -3720,7 +3793,7 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawSplit(ERecoHighestThetaReco_splitDLUboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     
     // DL Nu+E Vertexing
-    styleDrawSplit(sliceCompleteness_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceCompleteness_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(slicePurity_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScore_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
