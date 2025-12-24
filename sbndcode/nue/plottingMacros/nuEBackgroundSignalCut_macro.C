@@ -1277,6 +1277,22 @@ void nuEBackgroundSignalCut_macro(){
     int numPFPsCut = 1;
     int ETheta2Cut = 1;
 
+    if(clearCosmicCut == 1 && numPFPs0Cut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_cuts/";
+    } else if(numPFPs0Cut == 1 && numRecoNeutrinosCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_cuts/";
+    } else if(numRecoNeutrinosCut == 1 && FVCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_cuts/";
+    } else if(FVCut == 1 && CRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_cuts/";
+    } else if(CRUMBSCut == 1 && numPFPsCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
+    } else if(numPFPsCut == 1 && ETheta2Cut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_cuts/";
+    } else if(ETheta2Cut == 1){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_cuts/";
+    }
+
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
         return;
@@ -2144,43 +2160,41 @@ void nuEBackgroundSignalCut_macro(){
                     if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_DLNuE += weight;
                     
-                    if(numPFPsSlice == 0){
+                    if(numPFPs0Cut == 1 && numPFPsSlice == 0){
                         // This is a slice with 0 PFPs in it
                         continue;
                     }
                     
-                    if(numRecoNeutrinos == 0){
+                    if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
                         // This is a slice with no reco neutrino
                         continue;
                     }
-                
-                    /*
-                    if (!(recoVX < FVCut_xHigh_DLNuE && recoVX > FVCut_xLow_DLNuE && recoVY < FVCut_yHigh_DLNuE && recoVY > FVCut_yLow_DLNuE && recoVZ > FVCut_zLow_DLNuE && recoVZ < FVCut_zHigh_DLNuE)){ 
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
+               
+                    if(FVCut == 1){ 
+                        if (!(recoVX < FVCut_xHigh_DLNuE && recoVX > FVCut_xLow_DLNuE && recoVY < FVCut_yHigh_DLNuE && recoVY > FVCut_yLow_DLNuE && recoVZ > FVCut_zLow_DLNuE && recoVZ < FVCut_zHigh_DLNuE)){ 
+                            std::cout << "DLNuE: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                            if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                            continue;
+                        }
                     }
-                    */
                     
-                    /*
-                    if(reco_sliceScore->at(slice) < crumbsScoreCut_DLNuE){
+                    if(CRUMBSCut == 1 && reco_sliceScore->at(slice) < crumbsScoreCut_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if(numPFPsSlice > numPFPsCut_DLNuE){
+                    if(numPFPsCut == 1 && numPFPsSlice > numPFPsCut_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
+                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
-                    */
 
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_DLNuE += weight;
@@ -2195,43 +2209,41 @@ void nuEBackgroundSignalCut_macro(){
                     if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_DLUboone += weight;
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_DLUboone += weight;
                     
-                    if(numPFPsSlice == 0){
+                    if(numPFPs0Cut == 1 && numPFPsSlice == 0){
                         // This is a slice with 0 PFPs in it
                         continue;
                     }
                     
-                    if(numRecoNeutrinos == 0){
+                    if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
                         // This is a slice with no reco neutrino
                         continue;
                     }
                 
-                    /*
-                    if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue;
+                    if(FVCut == 1){
+                        if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
+                            std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                            if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                            continue;
+                        }
                     }
-                    */
                     
-                    /*
-                    if(reco_sliceScore->at(slice) < crumbsScoreCut_DLUboone){
+                    if(CRUMBSCut == 1 && reco_sliceScore->at(slice) < crumbsScoreCut_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
                     
-                    if(numPFPsSlice > numPFPsCut_DLUboone){
+                    if(numPFPsCut == 1 && numPFPsSlice > numPFPsCut_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
                     
-                    if((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
+                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
-                    */
 
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_DLUboone += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_DLUboone += weight;
