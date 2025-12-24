@@ -210,6 +210,8 @@ private:
   std::vector<double>   hit_integral;
   std::vector<double>   hit_sliceID;
   std::vector<double>   hit_PFPID;
+  std::vector<double>   hit_ny;
+  std::vector<double>   hit_nz;
 
   std::map<int,int> fHitsMap;
 
@@ -363,6 +365,8 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("hit_integral", &hit_integral);
   NuETree->Branch("hit_sliceID", &hit_sliceID);
   NuETree->Branch("hit_PFPID", &hit_PFPID);
+  NuETree->Branch("hit_ny", &hit_ny);
+  NuETree->Branch("hit_nz", &hit_nz);
 
 }
 
@@ -476,9 +480,13 @@ void sbnd::NuE::Hits(art::Event const& e){
                 
                 hit_x.push_back(xpos);
                 hit_uvz.push_back(uvz);
+                hit_ny.push_back(ny);
+                hit_nz.push_back(nz);
             } else{
                 hit_x.push_back(-999999);
                 hit_uvz.push_back(-999999);
+                hit_ny.push_back(-999999);
+                hit_nz.push_back(-999999);
             }
             
             // Getting the slice associated with the hit
@@ -1214,6 +1222,8 @@ void sbnd::NuE::clearVectors(){
     hit_integral.clear();
     hit_sliceID.clear();
     hit_PFPID.clear();
+    hit_ny.clear();
+    hit_nz.clear();
 }
 
 void sbnd::NuE::beginJob()
