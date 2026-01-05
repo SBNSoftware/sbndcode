@@ -55,7 +55,7 @@ namespace BlipUtils {
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
 
     // Central position of trajectory
-    pinfo.position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
+    pinfo.Position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
 
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
@@ -145,7 +145,7 @@ namespace BlipUtils {
 
     // If this is a new blip, initialize
     if( !tblip.G4ChargeMap.size() ) {
-      tblip.Position    = pinfo.position;
+      tblip.Position    = pinfo.Position;
       tblip.Time        = pinfo.time;
     
     // .. otherwise, check that the new particle
