@@ -72,6 +72,7 @@
 #include <memory>
 #include <math.h>
 #include <limits>
+#include <span>
 
 typedef std::map<int, std::map<int, std::map< int,float >>> CTPMap_t;
 typedef std::map<int, std::map<int,float >>                 CTMap_t;
