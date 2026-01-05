@@ -38,7 +38,6 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/WireReadoutGeom.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "larcorealg/Geometry/geo_vectors_utils.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
 #include "larcore/Geometry/WireReadout.h"
