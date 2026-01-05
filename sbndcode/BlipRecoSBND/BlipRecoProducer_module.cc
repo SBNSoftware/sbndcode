@@ -33,7 +33,7 @@
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
 #include "lardata/Utilities/AssociationUtil.h"
-#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+//#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // C++ includes
 #include <vector>

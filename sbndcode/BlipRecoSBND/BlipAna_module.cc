@@ -32,7 +32,7 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 #include "cetlib/search_path.h"
-#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+//#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // SBND-specific includes
 #include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"

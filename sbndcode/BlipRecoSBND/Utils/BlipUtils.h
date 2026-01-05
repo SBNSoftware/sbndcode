@@ -27,7 +27,7 @@
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/WireReadout.h"
-#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+//#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // c++
 #include <vector>
