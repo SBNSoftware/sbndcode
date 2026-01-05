@@ -155,7 +155,7 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      geo::vect::MiddlePointAccumulator<3U> mpalg;
+      geo::vect::MiddlePointAccumulator mpalg;
       mpalg.add(tblip.Position, w1);
       mpalg.add(pinfo.Position, w2);
       tblip.Position = mpalg.middlePoint();
@@ -207,7 +207,7 @@ namespace BlipUtils {
           float w1 = blip_i.DepElectrons/totQ;
           float w2 = blip_j.DepElectrons/totQ;
           blip_i.Energy       += blip_j.Energy;
-          geo::vect::MiddlePointAccumulator<3U> mpalg;
+          geo::vect::MiddlePointAccumulator mpalg;
           mpalg.add(blip_i.Position, w1);
           mpalg.add(blip_j.Position, w2);
           blip_i.Position = mpalg.middlePoint();
