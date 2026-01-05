@@ -19,7 +19,7 @@ BeamRatesCalib:
     # Save some example trigger pulses for each flash (TH1D similar to wvfana)
     SaveAllMon: true
     # The MON threshold used in the saved TH1D examples
-    FCLthreshold: 50 
+    FCLthreshold: 25 
     # PMT index corresponding to the opening of the beam acceptance BeamWindowEnd
     # Note that BeamWindowStart should not account for MTC/A wire+processing delays
     # Those are handled by CAENOffset

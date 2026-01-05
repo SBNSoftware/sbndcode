@@ -232,9 +232,8 @@ private:
   double                    fDistanceCandidateFlashes; ///< Maximum distance between candidate flashes to be considered for matching (cm)
   std::vector<double>       fCalAreaConst;         /// Calibration area constants for wire plane
   std::vector<int>          fSkipChannelList;
-  double                    fOpDetCoVUVEff;           // Efficiencies for PMT detection (Coated PMT VUV)
-  double                    fOpDetCoVISEff;           // Efficiencies for PMT detection (Coated PMT VIS)
-  double                    fOpDetUncoVISEff;           // Efficiencies for PMT detection (Uncoated PMT VIS)
+  double                    fOpDetVUVEff;           // Efficiencies for PMT detection
+  double                    fOpDetVISEff;           // Efficiencies for PMT detection
   bool                      fVerbose;              ///< Print extra info
   bool                      fFillMatchTree;        ///< Fill an output TTree in the supplemental file
   bool                      fDo3DMatching;         ///< Wether to perform the matching in 3D or 2D
@@ -305,9 +304,8 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fCollectionOnly(p.get<bool>("CollectionOnly", true)),
   fDistanceCandidateFlashes(p.get<double>("DistanceCandidateFlashes")), // cm
   fCalAreaConst(p.get<std::vector<double>>("CalAreaConst")),
-  fOpDetCoVUVEff (p.get<double>("OpDetCoVUVEff")),
-  fOpDetCoVISEff (p.get<double>("OpDetCoVISEff")),
-  fOpDetUncoVISEff (p.get<double>("OpDetUncoVISEff")),
+  fOpDetVUVEff (p.get<double>("OpDetVUVEff")),
+  fOpDetVISEff (p.get<double>("OpDetVISEff")),
   fVerbose(p.get<bool>("Verbose")),
   fFillMatchTree(p.get<bool>("FillMatchTree")),
   fDo3DMatching(p.get<bool>("Do3DMatching")),
@@ -893,10 +891,11 @@ double TPCPMTBarycenterMatchProducer::GetFlashLight(double flash_pe, std::vector
 
   for(size_t ch=0; ch<dir_visibility.size(); ch++){
     if (std::find(fSkipChannelList.begin(), fSkipChannelList.end(), ch) != fSkipChannelList.end()) continue;
-    if(fOpDetType[ch]==0) tot_visibility += fOpDetCoVUVEff*dir_visibility[ch] + fOpDetCoVISEff*ref_visibility[ch];
-    else if(fOpDetType[ch]==1) tot_visibility += fOpDetUncoVISEff*ref_visibility[ch];
+    if(fOpDetType[ch]==0) tot_visibility += fOpDetVUVEff*dir_visibility[ch] + fOpDetVISEff*ref_visibility[ch];
+    else if(fOpDetType[ch]==1) tot_visibility += fOpDetVISEff*ref_visibility[ch];
     else continue; // skip other types
   }
+  //std::cout << " The number of PEs in the flash is " << flash_pe << " the total direct visibility is " << total_dir_visibility << " the total reflected visibility is " << total_ref_visibility << " with a VUV QE " << fOpDetVUVEff << " and a vis QE " << fOpDetVISEff << " so the total visibility is " << tot_visibility << std::endl;
   if((flash_pe == 0) || std::isinf(1/tot_visibility))
     return 0.0;
   // deposited light is inverse of visibility * PE count

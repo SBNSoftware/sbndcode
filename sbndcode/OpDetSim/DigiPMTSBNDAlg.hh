@@ -81,6 +81,8 @@ namespace opdet {
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
       bool SimulateNonLinearity; //Fluctuate PMT gain
+      bool PositivePolarity;
+      bool OscillateAfterPulse;
       bool UseDataNoise;
       fhicl::ParameterSet NonLinearityParams;
       
@@ -132,6 +134,8 @@ namespace opdet {
       {
         return fParams.PMTBaseline;
       }
+
+    void AddOscillationAfterPulse( std::vector<double>& wave);
 
   private:
 

@@ -1,51 +1,17 @@
 BEGIN_PROLOG
 
-FlashGeoBarycenter:{
+FlashGeoBarycenter:
+{
   tool_type: "FlashGeoBarycenter"
   WeightExp: 2
 }
 
-FlashGeoThreshold:{
+FlashGeoThreshold:
+{
   tool_type: "FlashGeoThreshold"
   PDTypes: ["pmt_coated", "pmt_uncoated"]
-  ThresholdY: 0.8
-  ThresholdZ: 0.8
-  NormalizeByPDType: true
-  WeightExp: 2
-}
-
-FlashGeoThresholdTPC0Data:{
-  tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated"]
-  ThresholdY: 0.5
-  ThresholdZ: 0.5
-  NormalizeByPDType: true
-  WeightExp: 2
-}
-
-FlashGeoThresholdTPC1Data:{
-  tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated"]
-  ThresholdY: 0.5
-  ThresholdZ: 0.5
-  NormalizeByPDType: true
-  WeightExp: 2
-}
-
-FlashGeoThresholdTPC0_realisticMC:{
-  tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated"]
-  ThresholdY: 0.7
-  ThresholdZ: 0.7
-  NormalizeByPDType: true
-  WeightExp: 2
-}
-
-FlashGeoThresholdTPC1_realisticMC:{
-  tool_type: "FlashGeoThreshold"
-  PDTypes: ["pmt_coated"]
-  ThresholdY: 0.6
-  ThresholdZ: 0.6
+  ThresholdY: 0.75
+  ThresholdZ: 0.45
   NormalizeByPDType: true
   WeightExp: 2
 }
