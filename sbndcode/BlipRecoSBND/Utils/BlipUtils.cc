@@ -155,9 +155,9 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.position.X(), 
-                            w1*tblip.Position.Y() + w2*pinfo.position.Y(),
-                            w1*tblip.Position.Z() + w2*pinfo.position.Z());
+      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.Position.X(), 
+                            w1*tblip.Position.Y() + w2*pinfo.Position.Y(),
+                            w1*tblip.Position.Z() + w2*pinfo.Position.Z());
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
@@ -206,11 +206,9 @@ namespace BlipUtils {
           float w1 = blip_i.DepElectrons/totQ;
           float w2 = blip_j.DepElectrons/totQ;
           blip_i.Energy       += blip_j.Energy;
-          geo::vect::MiddlePointAccumulator mpalg;
-          mpalg.add(&blip_i.Position, w1);
-          mpalg.add(&blip_j.Position, w2);
-          blip_i.Position = mpalg.middlePoint();
-          mpalg.clear();
+          blip_i.Position.SetXYZ( w1*blip_i.Position.X() + w2*blip_j.Position.X(), 
+                                  w1*blip_i.Position.Y() + w2*blip_j.Position.Y(),
+                                  w1*blip_i.Position.Z() + w2*blip_j.Position.Z());
           blip_i.DriftTime    = w1*blip_i.DriftTime+ w2*blip_j.DriftTime; 
           blip_i.Time         = w1*blip_i.Time + w2*blip_j.Time; 
           blip_i.DepElectrons += blip_j.DepElectrons;
