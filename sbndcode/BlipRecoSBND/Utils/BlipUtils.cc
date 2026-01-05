@@ -382,7 +382,7 @@ namespace BlipUtils {
     // ------------------------------------------------
     /// Look for valid wire intersections between 
     // central-most hits in each cluster
-    std::vector<geo::Point_t> wirex;
+    std::vector<TVector3> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
       int pli = hcs[i].Plane;
       auto const& planegeo = wireReadoutGeom->Get().Plane(geo::PlaneID{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane}); 
@@ -411,7 +411,7 @@ namespace BlipUtils {
         }
 
         if( match3d ) {
-          geo::Point_t a{0., intsec_p.Y(), intsec_p.Z()};
+          TVector3 a(0., intsec_p.Y(), intsec_p.Z());
           wirex.push_back(a);
           newblip.clusters[pli] = hcs[i];
           newblip.clusters[plj] = hcs[j];
