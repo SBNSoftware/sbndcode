@@ -48,7 +48,7 @@ pmtdecoder:
     hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
 
     # trigger configurable
-    mon_threshold:   15 # ADC channel value threshold to add 1 to the trigger response MON pulse
+    mon_threshold:   50 # ADC channel value threshold to add 1 to the trigger response MON pulse
 
     # for when the fragIDs are mapped to the old configuration or you need to hardcode fragids...
     ## to use this, must set `fragid_offset` to 0!!!
