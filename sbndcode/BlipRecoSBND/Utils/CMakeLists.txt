@@ -40,6 +40,7 @@ cet_make_library(
                 sbnobj::SBND_Blip
 )
 
+art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)
 install_headers()
 install_source()
 install_fhicl()

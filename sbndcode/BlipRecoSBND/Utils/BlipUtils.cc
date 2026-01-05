@@ -55,7 +55,9 @@ namespace BlipUtils {
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
 
     // Central position of trajectory
-    pinfo.position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
+    pinfo.position.SetXYZ(0.5*(pinfo.startPoint.X()+pinfo.endPoint.X()),
+                         0.5*(pinfo.startPoint.Y()+pinfo.endPoint.Y()),
+                         0.5*(pinfo.startPoint.Z()+pinfo.endPoint.Z()) );
 
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
@@ -155,10 +157,9 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      geo::vect::MiddlePointAccumulator mpalg;
-      mpalg.add(tblip.Position, w1);
-      mpalg.add(pinfo.Position, w2);
-      tblip.Position = mpalg.middlePoint();
+      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.position.X(), 
+                            w1*tblip.Position.Y() + w2*pinfo.position.Y(),
+                            w1*tblip.Position.Z() + w2*pinfo.position.Z());
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
@@ -199,7 +200,7 @@ namespace BlipUtils {
         // check that the times are similar (we don't want to merge
         // together a blip that happened much later but in the same spot)
         if( fabs(blip_i.Time - blip_j.Time) > 5 ) continue;
-        float d = (blip_i.Position-blip_j.Position).R(); //Size of vector spanning two blips
+        float d = TMath::Sqrt((blip_i.Position-blip_j.Position).Mag2());
         if( d < dmin ) {
           isGrouped.at(j) = true;
           //float totE = blip_i.Energy + blip_j.Energy;
@@ -207,11 +208,9 @@ namespace BlipUtils {
           float w1 = blip_i.DepElectrons/totQ;
           float w2 = blip_j.DepElectrons/totQ;
           blip_i.Energy       += blip_j.Energy;
-          geo::vect::MiddlePointAccumulator mpalg;
-          mpalg.add(blip_i.Position, w1);
-          mpalg.add(blip_j.Position, w2);
-          blip_i.Position = mpalg.middlePoint();
-          mpalg.clear();
+          blip_i.Position.SetXYZ( w1*blip_i.Position.X() + w2*blip_j.Position.X(), 
+                                  w1*blip_i.Position.Y() + w2*blip_j.Position.Y(),
+                                  w1*blip_i.Position.Z() + w2*blip_j.Position.Z());
           blip_i.DriftTime    = w1*blip_i.DriftTime+ w2*blip_j.DriftTime; 
           blip_i.Time         = w1*blip_i.Time + w2*blip_j.Time; 
           blip_i.DepElectrons += blip_j.DepElectrons;
@@ -429,9 +428,10 @@ namespace BlipUtils {
       newblip.Position = wirex[0];
     } else {
       newblip.SigmaYZ = 0;
-      geo::vect::MiddlePointAccumulator position;
-      position.add(begin(wirex), end(wirex));
-      newblip.Position = position.middlePoint();
+      double fact = 1./wirex.size();
+      for(auto& v : wirex ) newblip.Position.SetXYZ( newblip.Position.X()  + v.X() * fact, 
+                                                     newblip.Position.Y()  + v.Y() * fact, 
+                                                     newblip.Position.Z()  + v.Z() * fact);
       for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( pow(v.X()-newblip.Position.X(), 2) + 
                                                               pow(v.Y()-newblip.Position.Y(), 2) + 
                                                               pow(v.Z()-newblip.Position.Z(), 2)) * fact;
