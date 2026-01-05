@@ -55,7 +55,10 @@ namespace BlipUtils {
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
 
     // Central position of trajectory
-    pinfo.Position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
+    pinfo.Position.SetXYZ(0.5*(pinfo.startPoint.X()+pinfo.endPoint.X()),
+                         0.5*(pinfo.startPoint.Y()+pinfo.endPoint.Y()),
+                         0.5*(pinfo.startPoint.Z()+pinfo.endPoint.Z()) );
+    //pinfo.Position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
 
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
