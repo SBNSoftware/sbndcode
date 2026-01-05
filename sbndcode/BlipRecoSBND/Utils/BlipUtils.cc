@@ -55,7 +55,7 @@ namespace BlipUtils {
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
 
     // Central position of trajectory
-    pinfo.position.SetXYZ(0.5*(pinfo.startPoint.X()+pinfo.endPoint.X()),
+    pinfo.Position.SetXYZ(0.5*(pinfo.startPoint.X()+pinfo.endPoint.X()),
                          0.5*(pinfo.startPoint.Y()+pinfo.endPoint.Y()),
                          0.5*(pinfo.startPoint.Z()+pinfo.endPoint.Z()) );
 
@@ -147,7 +147,7 @@ namespace BlipUtils {
 
     // If this is a new blip, initialize
     if( !tblip.G4ChargeMap.size() ) {
-      tblip.Position    = pinfo.position;
+      tblip.Position    = pinfo.Position;
       tblip.Time        = pinfo.time;
     
     // .. otherwise, check that the new particle
@@ -157,9 +157,9 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.position.X(), 
-                            w1*tblip.Position.Y() + w2*pinfo.position.Y(),
-                            w1*tblip.Position.Z() + w2*pinfo.position.Z());
+      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.Position.X(), 
+                            w1*tblip.Position.Y() + w2*pinfo.Position.Y(),
+                            w1*tblip.Position.Z() + w2*pinfo.Position.Z());
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
