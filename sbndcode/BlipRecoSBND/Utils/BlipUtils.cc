@@ -155,10 +155,9 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      geo::vect::MiddlePointAccumulator mpalg;
-      mpalg.add(&tblip.Position, w1);
-      mpalg.add(&pinfo.Position, w2);
-      tblip.Position = mpalg.middlePoint();
+      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.position.X(), 
+                            w1*tblip.Position.Y() + w2*pinfo.position.Y(),
+                            w1*tblip.Position.Z() + w2*pinfo.position.Z());
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
