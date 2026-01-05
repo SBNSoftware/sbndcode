@@ -430,6 +430,7 @@ namespace BlipUtils {
     } else {
       newblip.SigmaYZ = 0;
       double fact = 1./wirex.size();
+      position.add(wirex.begin(), wirex.end());
       for(auto& v : wirex ) newblip.Position.SetXYZ( newblip.Position.X()  + v.X() * fact, 
                                                      newblip.Position.Y()  + v.Y() * fact, 
                                                      newblip.Position.Z()  + v.Z() * fact);
