@@ -430,7 +430,7 @@ namespace BlipUtils {
     } else {
       newblip.SigmaYZ = 0;
       geo::vect::MiddlePointAccumulator position;
-      for(auto& v : wirex ) position.add(v);
+      position.add(wirex.begin(), wirex.end());
       newblip.Position = position.middlePoint();
       double fact = 1./wirex.size();
       for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( pow(v.X()-newblip.Position.X(), 2) + 
