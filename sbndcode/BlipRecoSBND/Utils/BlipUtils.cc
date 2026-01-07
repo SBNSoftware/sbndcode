@@ -55,9 +55,7 @@ namespace BlipUtils {
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
 
     // Central position of trajectory
-    pinfo.Position.SetXYZ(0.5*(pinfo.startPoint.X()+pinfo.endPoint.X()),
-                         0.5*(pinfo.startPoint.Y()+pinfo.endPoint.Y()),
-                         0.5*(pinfo.startPoint.Z()+pinfo.endPoint.Z()) );
+    pinfo.Position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
 
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
@@ -200,7 +198,7 @@ namespace BlipUtils {
         // check that the times are similar (we don't want to merge
         // together a blip that happened much later but in the same spot)
         if( fabs(blip_i.Time - blip_j.Time) > 5 ) continue;
-        float d = TMath::Sqrt((blip_i.Position-blip_j.Position).Mag2());
+        float d = (blip_i.Position-blip_j.Position).R(); //Size of vector spanning two blips
         if( d < dmin ) {
           isGrouped.at(j) = true;
           //float totE = blip_i.Energy + blip_j.Energy;
@@ -381,7 +379,7 @@ namespace BlipUtils {
     // ------------------------------------------------
     /// Look for valid wire intersections between 
     // central-most hits in each cluster
-    std::vector<TVector3> wirex;
+    std::vector<geo::Point_t> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
       int pli = hcs[i].Plane;
       auto const& planegeo = wireReadoutGeom->Get().Plane(geo::PlaneID{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane}); 
@@ -410,7 +408,7 @@ namespace BlipUtils {
         }
 
         if( match3d ) {
-          TVector3 a(0., intsec_p.Y(), intsec_p.Z());
+          geo::Point_t a{0., intsec_p.Y(), intsec_p.Z()};
           wirex.push_back(a);
           newblip.clusters[pli] = hcs[i];
           newblip.clusters[plj] = hcs[j];
