@@ -117,6 +117,10 @@ private:
   std::vector<int> fReco_nChildHitsW;
   std::vector<int> fReco_nChildSpacePoints;
   std::vector<int> fMC_primaryParticlePDG;
+  std::vector<int> fMC_allParticleTrackID;
+  std::vector<int> fMC_allParticlePDG;
+  std::vector<int> fMC_allParticleMotherID;
+  std::vector<int> fMC_primaryParticleParentID;
   std::vector<double> fMC_primaryParticleMass;
   std::vector<double> fMC_primaryParticleE;
   std::vector<double> fMC_primaryParticleP;
@@ -137,6 +141,7 @@ private:
 
   std::vector<int> fReco_hitNumber;
   std::vector<int> fReco_hitG4ID;
+  std::vector<int> fReco_hitView;
   std::vector<bool> fReco_hitHasTrackObject;
   std::vector<bool> fReco_hitHasShowerObject;
   std::vector<bool> fReco_hitHasPFPObject;
@@ -362,6 +367,7 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("reco_nuVertexZ", &fReco_nuVertexZ);
   fEventTree->Branch("reco_hitNumber", &fReco_hitNumber);
   fEventTree->Branch("reco_hitG4ID", &fReco_hitG4ID);
+  fEventTree->Branch("reco_hitView", &fReco_hitView);
   fEventTree->Branch("reco_hitHasTrackObject", &fReco_hitHasTrackObject);
   fEventTree->Branch("reco_hitHasShowerObject", &fReco_hitHasShowerObject);
   fEventTree->Branch("reco_hitHasPFPObject", &fReco_hitHasPFPObject);
@@ -371,6 +377,10 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("reco_hitG4IDs", &fReco_hitG4IDs);
   fEventTree->Branch("reco_hitEdeps", &fReco_hitEdeps);
   fEventTree->Branch("MC_primaryParticlePDG", &fMC_primaryParticlePDG);
+  fEventTree->Branch("MC_allParticleTrackID", &fMC_allParticleTrackID);
+  fEventTree->Branch("MC_allParticlePDG", &fMC_allParticlePDG);
+  fEventTree->Branch("MC_allParticleMotherID", &fMC_allParticleMotherID);
+  fEventTree->Branch("MC_primaryParticleParentID", &fMC_primaryParticleParentID);
   fEventTree->Branch("MC_primaryParticleMass", &fMC_primaryParticleMass);
   fEventTree->Branch("MC_primaryParticleE", &fMC_primaryParticleE);
   fEventTree->Branch("MC_primaryParticleP", &fMC_primaryParticleP);
@@ -384,6 +394,9 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("MC_primaryIsReconstructedAsTrack", &fMC_primaryIsReconstructedAsTrack);
   fEventTree->Branch("MC_primaryIsReconstructedAsShower", &fMC_primaryIsReconstructedAsShower);
   fEventTree->Branch("MC_primaryIsReconstructedAsPFP", &fMC_primaryIsReconstructedAsPFP);
+  fEventTree->Branch("MC_allParticlePDG", &fMC_allParticlePDG);
+  fEventTree->Branch("MC_allParticleTrackID", &fMC_allParticleTrackID);
+  fEventTree->Branch("MC_allParticleMotherID", &fMC_allParticleMotherID);
   //fEventTree->Branch("MC_isShower", &fMC_isShower);
   //fEventTree->Branch("MC_isTrack", &fMC_isTrack);
   fEventTree->Branch("MC_trackID", &fMC_trackID);
@@ -443,6 +456,7 @@ void nuclearFragments::RecoAnalysisIncShowers::ResetVariables()
   fReco_nChildSpacePoints.clear();
   fReco_hitNumber.clear();
   fReco_hitG4ID.clear();
+  fReco_hitView.clear();
   fReco_hitHasTrackObject.clear();
   fReco_hitHasShowerObject.clear();
   fReco_hitHasPFPObject.clear();
@@ -451,7 +465,11 @@ void nuclearFragments::RecoAnalysisIncShowers::ResetVariables()
   fReco_hitPFPObjectG4ID.clear();
   fReco_hitG4IDs.clear();
   fReco_hitEdeps.clear();
+  fMC_allParticleTrackID.clear();
+  fMC_allParticlePDG.clear();
+  fMC_allParticleMotherID.clear();
   fMC_primaryParticlePDG.clear();
+  fMC_primaryParticleParentID.clear();
   fMC_primaryParticleMass.clear();
   fMC_primaryParticleE.clear();
   fMC_primaryParticleP.clear();
@@ -617,6 +635,14 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseTruNu(const art::Ptr<simb:
   // Get particles associated with true neutrino
   std::vector<art::Ptr<simb::MCParticle>> particles = truNuParticleAssoc.at(truNu.key());
 
+
+  //truth info on all particles associated with neutrino
+  for(const art::Ptr<simb::MCParticle> &particle : particles){
+    fMC_allParticleTrackID.push_back(particle->TrackId());
+    fMC_allParticlePDG.push_back(particle->PdgCode());
+    fMC_allParticleMotherID.push_back(particle->Mother());
+  }
+
   // Loop over the neutrino's particles 
   for(const art::Ptr<simb::MCParticle> &particle : particles){
 
@@ -651,6 +677,7 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseTruNu(const art::Ptr<simb:
 
     fMC_trackID.push_back(particle->TrackId());
     fMC_primaryParticlePDG.push_back(particle->PdgCode());
+    fMC_primaryParticleParentID.push_back(particle->Mother());
     fMC_primaryParticleMass.push_back(particle->Mass());
     fMC_primaryParticleE.push_back(particle->E());
     fMC_primaryParticleP.push_back(particle->P());
@@ -741,6 +768,7 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseReco(art::ValidHandle<std:
     fReco_hitShowerObjectG4ID.push_back(-999);
     fReco_hitPFPObjectG4ID.push_back(-999);
     fReco_hitG4ID.push_back(TruthMatchUtils::TrueParticleID(clockData,hit,true));
+    fReco_hitView.push_back(hit->View());
     hitCount++;
     TruthMatchUtils::IDToEDepositMap idToEDepMap;
     std::vector<int> G4IDsForThisHit;
@@ -866,19 +894,12 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseReco(art::ValidHandle<std:
           }
 
           for(art::Ptr<recob::Hit> &hit : allHits){
-            //shout(std::to_string(hit->View()));
             hitViewMap[hit->View()]++;
-            shout("hit view: " + std::to_string(hit->View()));
           }
-
-          shout("G4ID: " + std::to_string(PFPg4ID));
 
           fReco_nChildHitsU.push_back(hitViewMap[geo::kU]);
           fReco_nChildHitsV.push_back(hitViewMap[geo::kV]);
           fReco_nChildHitsW.push_back(hitViewMap[geo::kW]);
-          shout("hits in U view: " + std::to_string(hitViewMap[geo::kU]));
-          shout("hits in V view: " + std::to_string(hitViewMap[geo::kV]));
-          shout("hits in W view: " + std::to_string(hitViewMap[geo::kW]));
           hitViewMap.clear();
         }
 
@@ -892,7 +913,6 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseReco(art::ValidHandle<std:
 
         std::vector<art::Ptr<recob::SpacePoint>> spacepoints(pfpSpacePointAssoc.at(nuSlicePFP.key()));
 
-        shout("spacepoints: " + std::to_string(spacepoints.size()));
         fReco_nChildSpacePoints.push_back(spacepoints.size());
 
         // Get tracks associated with this PFParticle
