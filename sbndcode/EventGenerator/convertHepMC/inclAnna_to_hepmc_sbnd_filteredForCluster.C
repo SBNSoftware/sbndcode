@@ -6,7 +6,7 @@
 #include "TTree.h"
 #include "TFile.h"
 
-void inclAnna_to_hepmc_sbnd_filtered(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
+void inclAnna_to_hepmc_sbnd_filteredForCluster(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
 
    //assumes your file is inclxx_file_name.root
 
@@ -60,8 +60,10 @@ void inclAnna_to_hepmc_sbnd_filtered(std::string indir , std::string inclxx_file
 
 
 
-   double GlobalTimeOffset = 3125.;
-   double RandomTimeOffset = 1600.;
+   //double GlobalTimeOffset = 3125.;
+   double GlobalTimeOffset = 0.;
+   //double RandomTimeOffset = 1600.;
+   double RandomTimeOffset = 0.;
 
    srand(time(0));
 
@@ -114,6 +116,9 @@ void inclAnna_to_hepmc_sbnd_filtered(std::string indir , std::string inclxx_file
 
       // Neutrino time in the spill
       double nu_time = rand() / double(RAND_MAX) * RandomTimeOffset + GlobalTimeOffset;
+
+      //SET NU TIME TO ZERO SO PANDORA ANALYSIS WORKS
+      //double nu_time = 0.;
 
 
 
