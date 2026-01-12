@@ -47,6 +47,8 @@ add_subdirectory(ChannelMaps)
 # for CVN
 add_subdirectory(SBNDCVN)
 
+add_subdirectory(nue)
+
 add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(BlipRecoSBND)
