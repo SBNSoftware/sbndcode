@@ -283,6 +283,19 @@ sbnd_flux_g4bnb_1_0_0_beamdump: {
 }
 
 
+#
+# Booster Neutrino Beam, beam-dump mode, G4BNB v1.1.1, A
+#
+sbnd_flux_g4bnb_1_1_1_beamdump: {
+  FluxType:         "dk2nu"
+  DetectorLocation: "SBND"
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/G4BNB/v1.1.1/beamdump/a/"
+  FluxFiles: [ "NuBeam_production_offTarg_BooNE_50m_offtarg_wires_al2O3_srbbs_I174000A_*.dk2nu.root" ]
+}
+
+
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
@@ -305,7 +318,7 @@ sbnd_flux_bnb_nu_rhc: @local::sbnd_flux_g4bnb_1_0_0_rhc
 #
 # Booster Neutrino Beam, beam-dump mode, "default" configuration
 #
-sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_0_0_beamdump
+sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_1_1_beamdump
 
 
 #
