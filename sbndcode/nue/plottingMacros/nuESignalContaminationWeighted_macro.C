@@ -63,6 +63,55 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };
 }
 
+
+void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
+    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "2D Histogram", 200, 10, 800, 600);
+    TwoDHistCanvas->SetTickx();
+    TwoDHistCanvas->SetTicky();
+
+    hist->SetTitle(title);
+    hist->Draw("COLZ");
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+
+    TwoDHistCanvas->SaveAs(filename);
+
+    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "s");
+
+    TCanvas* ProfileCanvas = new TCanvas("profile_canvas", "TProfile from TH2D", 300, 50, 800, 600);
+    ProfileCanvas->SetTickx();
+    ProfileCanvas->SetTicky();
+
+    profX->SetTitle(Form("ProfileX of %s", title));
+    profX->SetLineColor(kBlack);
+    profX->SetLineWidth(2);
+    profX->SetMarkerStyle(20);
+    profX->SetMarkerSize(0.8);
+    profX->SetMarkerColor(kBlack);
+    profX->Draw("E1");
+
+    profX->GetXaxis()->SetTickLength(0.04);
+    profX->GetYaxis()->SetTickLength(0.03);
+    profX->GetXaxis()->SetTickSize(0.02);
+    profX->GetYaxis()->SetTickSize(0.02);
+    profX->SetStats(0);
+
+    std::string profileFilename = std::string(filename);
+    size_t dotPos = profileFilename.find_last_of(".");
+    if (dotPos != std::string::npos)
+        profileFilename.insert(dotPos, "_profile");
+    else
+        profileFilename += "_profile.df"; 
+
+    ProfileCanvas->SaveAs(profileFilename.c_str());
+
+    TwoDHistCanvas->Clear();
+    ProfileCanvas->Clear();
+}
+
 void styleDrawAll(histGroup_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
                   const char* filename, const std::string& legendLocation,
@@ -467,6 +516,10 @@ void nuESignalContaminationWeighted_macro(){
     auto highestEnergyPFPCosmicTrackScore = createHistGroup("highestEnergyPFPCosmicTrackScore", "Trackscores of the Highest Energy PFPs Truth Matched to a Cosmic", "Trackscore", 20, 0, 1);
     auto highestEnergyPFPNuETrackScore = createHistGroup("highestEnergyPFPNuETrackScore", "Trackscores of the Highest Energy PFPs Truth Matched to a #nu+e Elastic Scatter", "Trackscore", 20, 0, 1);
 
+    TH2D *energyAsymmetryPFPCompletenessDLNuE = new TH2D("energyAsymmetryPFPCompletenessDLNuE", "", 102, 0, 1.02, 20, -1, 1);
+    TH2D *energyAsymmetryPFPHighestCompletenessDLNuE = new TH2D("energyAsymmetryPFPHighestCompletenessDLNuE", "", 102, 0, 1.02, 20, -1, 1);
+    TH2D *energyAsymmetryPFPPurityDLNuE = new TH2D("energyAsymmetryPFPPurityDLNuE", "", 102, 0, 1.02, 20, -1, 1);
+
     double numEvents_signalBDT = 0;
     double numEvents_signalDLNuE = 0;
     double numEvents_signalCosmicsBDT = 0;
@@ -499,6 +552,7 @@ void nuESignalContaminationWeighted_macro(){
 
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
+        std::cout << "_____________________________________________________________________________ NEW EVENT _____________________________________________________________________________" << std::endl;
         if(DLCurrent == 2 && signal == 1) numEvents_signalCosmicsBDT++;
         else if(DLCurrent == 5 && signal == 1) numEvents_signalCosmicsDLNuE++;
         else if(DLCurrent == 2 && signal == 0) numEvents_signalBDT++;
@@ -642,6 +696,34 @@ void nuESignalContaminationWeighted_macro(){
                     if(signal == 1 && DLCurrent == 2) numEvents_noCategory_withCosmics_BDT++;
                     if(signal == 0 && DLCurrent == 2) numEvents_noCategory_withoutCosmics_BDT++;
                 }
+
+                // Looking into why there is a spike at 0 for the energy asymmetry plot
+                //if(((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy) > 0.8){
+                    if(signal == 0 && DLCurrent == 5 && reco_sliceCategory->at(slice) == 1){
+                        std::cout << "___________________________________________" << std::endl;
+                        std::cout << "Energy Asymmetry > 0.8: Signal Slice, DL Nu+E Vertexing, Without Cosmics" << std::endl;
+                        std::cout << "Energy Asymmetry = " << (recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy << std::endl;
+                        std::cout << "Num PFPs in Slice = " << numPFPsSlice << ", True Energy = " << recoilElectron_energy << ", Reco Energy (Highest Energy PFP) = " << highestEnergy_energy << ", Reco Energy (Summed Energy) = " << summedEnergy << std::endl;
+                        std::cout << "True Recoil Angle = " << recoilElectron_angle*TMath::RadToDeg() << ", Reco Angle = " << highestEnergy_theta*TMath::RadToDeg() << std::endl;
+                        std::cout << "Slice Completeness = " << reco_sliceCompleteness->at(slice) << ", Purity = " << reco_slicePurity->at(slice) << std::endl;
+                        
+                        printf("\nLooping through PFPs in Slice:\n");
+                        double totalPFPCompleteness = 0;
+                        for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                            if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                                std::cout << "New PFP: Best Plane Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Theta = " << reco_particleTheta->at(pfp) << ", Completeness = " << reco_particleCompleteness->at(pfp) << ", Purity = " << reco_particlePurity->at(pfp) << std::endl;
+                                totalPFPCompleteness += reco_particleCompleteness->at(pfp);
+                            }
+                        }
+                        std::cout << "Total PFP Completeness = " << totalPFPCompleteness << std::endl;
+                        if(totalPFPCompleteness < 0.2) std::cout << "AAAA low completeness" << std::endl;
+                        energyAsymmetryPFPCompletenessDLNuE->Fill(totalPFPCompleteness, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                        energyAsymmetryPFPPurityDLNuE->Fill(highestEnergy_purity, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                        energyAsymmetryPFPHighestCompletenessDLNuE->Fill(highestEnergy_completeness, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+
+                        std::cout << "___________________________________________" << std::endl;
+                    }
+                //}
 
                 if(reco_sliceCategory->at(slice) == 0){
                     // This is a cosmic slice
@@ -1313,5 +1395,10 @@ void nuESignalContaminationWeighted_macro(){
     printf("Without Cosmics:\nSignal Slices = %d, Signal Fuzzy Slices = %d, Cosmic Slices = %d, No Category = %d\n", numEvents_signal_withoutCosmics_BDT, numEvents_signalFuzzy_withoutCosmics_BDT, numEvents_cosmics_withoutCosmics_BDT, numEvents_noCategory_withoutCosmics_BDT);
     printf("\n\nWeighted With Cosmics:\nSignal Slices = %f, Signal Fuzzy Slices = %f, Cosmic Slices = %f, No Category = %f\n", (numEvents_signal_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_signalFuzzy_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_cosmics_withCosmics_BDT * weights.signalCosmicsCurrent), (numEvents_noCategory_withCosmics_BDT * weights.signalCosmicsCurrent));
     printf("Weighted Without Cosmics:\nSignal Slices = %f, Signal Fuzzy Slices = %f, Cosmic Slices = %f, No Category = %f\n", (numEvents_signal_withoutCosmics_BDT * weights.signalCurrent), (numEvents_signalFuzzy_withoutCosmics_BDT * weights.signalCurrent), (numEvents_cosmics_withoutCosmics_BDT * weights.signalCurrent), (numEvents_noCategory_withoutCosmics_BDT * weights.signalCurrent));
+
+
+    TwoDHistDraw(energyAsymmetryPFPCompletenessDLNuE, (base_path + "energyAsymmetryPFPCompleteness_DLNuE_signalSlice_withoutCosmics.pdf").c_str(), "Total PFP Completeness vs Energy Asymmetry: DL Nu+E Vertexing, Signal Slice, Nu+E Events Without Cosmics;Total PFP Completeness; Energy Asymmetry");
+    TwoDHistDraw(energyAsymmetryPFPPurityDLNuE, (base_path + "energyAsymmetryPFPPurity_DLNuE_signalSlice_withoutCosmics.pdf").c_str(), "Purity of the Highest Energy PFP in Slice vs Energy Asymmetry: DL Nu+E Vertexing, Signal Slice, Nu+E Events Without Cosmics;Highest Energy PFP Purity; Energy Asymmetry");
+    TwoDHistDraw(energyAsymmetryPFPHighestCompletenessDLNuE, (base_path + "energyAsymmetryPFPHighestCompleteness_DLNuE_signalSlice_withoutCosmics.pdf").c_str(), "Completeness of the Highest Energy PFP in Slice vs Energy Asymmetry: DL Nu+E Vertexing, Signal Slice, Nu+E Events Without Cosmics;Highest Energy PFP Completeness; Energy Asymmetry");
 
 }
