@@ -457,6 +457,15 @@
     <VertexListName>DaughterVertices3D</VertexListName>
   </algorithm>
 
+  <!-- Shower Merging -->
+  <algorithm type = "LArShowerMergingPfoMopUp">
+    <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+    <AlignmentAngle>0.990</AlignmentAngle>
+    <StubShowerSeparation>2025</StubShowerSeparation>
+    <MaxVtxPfosSeparation>3</MaxVtxPfosSeparation>
+    <DaughterListNames>TrackParticles3D ShowerParticles3D DaughterVertices3D ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+  </algorithm>
+
   <!-- Output list management -->
   <algorithm type = "LArPostProcessing">
     <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
