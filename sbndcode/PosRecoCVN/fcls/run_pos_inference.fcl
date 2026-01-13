@@ -55,7 +55,7 @@ physics:
       # "MC_testing"    = Full MC analysis with ground truth comparison
       # "MC_inference"  = MC inference only, skip ground truth calculation
       # "DATA_inference" = Real data processing
-      ProcessingMode: "MC_testing"
+      ProcessingMode: "DATA_inference"
 
       #------------------------------------------------------------------------
       # VERBOSITY CONFIGURATION
@@ -122,7 +122,7 @@ physics:
       # | true             | [out1]   | Full output: Object created and saved  |
       #
 
-      SavePixelMapVars: true
+      SavePixelMapVars: false
 
       #------------------------------------------------------------------------
       # AUTO-CONFIGURED PATHS
@@ -139,7 +139,7 @@ physics:
   # EXECUTION PATHS
   #----------------------------------------------------------------------------
   prod: [opanatree]               # Producer modules to run
-  stream: [out1]                      # Empty = no RootOutput (only TTree saved)
+  stream: []                      # Empty = no RootOutput (only TTree saved)
                                   # Set to [out1] if SavePixelMapVars: true
 
   trigger_paths: [prod]

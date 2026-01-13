@@ -18,11 +18,13 @@ DATA_CONFIG = {
     # v2411 - 'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/tools/test_set_in_v10_06_00_02.root',
     #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/comparison/barycenter_comparison_in_v10_06_00_02.root',
     #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_10_03_02/fall_prod_DNN.root',
+    'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
     #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
-    'test_file': '/exp/sbnd/app/users/svidales/larsoft_v10_06_00_02/barycenter_v0212/opana_tree.root',
+    #'test_file': '/exp/sbnd/app/users/svidales/larsoft_v10_06_00_02/barycenter_v0212/opana_tree.root',
     # Keys to load from ROOT files (minimal set for training)
     'keys_to_load': [
         # Input data (for creating PE images)
+        #'slice_nuScore', 
         'flash_ophit_pe', 'flash_ophit_ch', 'flash_ophit_time',
 
         # Target labels (position to predict)

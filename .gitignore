@@ -66,13 +66,22 @@ sbndcode/TPCPMTBarycenterMatching/dump_barycenters.fcl
 
 # Backup directories #
 ######################
-sbndcode/TPCPMTBarycenterMatching_backup/
-sbndcode/OpDetAnalyzer_backup/
+sbndcode/TPCPMTBarycenterMatchingBackup/
+sbndcode/OpDetAnalyzerBackup/
 
 # PosRecoCVN training files #
 #############################
+# Temporal analysis (time prediction)
+sbndcode/PosRecoCVN/training/temp/
+
+# Python cache
+sbndcode/PosRecoCVN/training/__pycache__/
+
+# Exploratory analysis notebooks
 sbndcode/PosRecoCVN/training/barycenter_comparison.ipynb
-sbndcode/PosRecoCVN/training/custom_losses.py
-sbndcode/PosRecoCVN/training/model_lstm_nuvT_temporal.keras
-sbndcode/PosRecoCVN/training/scaler_nuvT_temporal.pkl
-sbndcode/PosRecoCVN/training/temporal_prediction.ipynb
+sbndcode/PosRecoCVN/training/PosRecoCVN_Inference_DATA.ipynb
+
+# Model and data files
+*.keras
+*.pkl
+*.ipynb_checkpoints/

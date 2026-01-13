@@ -47,7 +47,9 @@ add_subdirectory(ChannelMaps)
 # for CVN
 add_subdirectory(SBNDCVN)
 
-add_subdirectory(TPCPMTBarycenterMatching)
+# Use backup version with nuScore
+add_subdirectory(TPCPMTBarycenterMatchingBackup)
+# add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(BlipRecoSBND)
 add_subdirectory(LightPropagationCorrection)

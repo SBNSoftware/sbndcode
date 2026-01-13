@@ -634,6 +634,110 @@ def process_events_data(nuScore, f_ophit_PE, f_ophit_ch, f_ophit_t,
     )
 
 
+def process_data_simple(f_ophit_PE, f_ophit_ch, f_ophit_t,
+                       channel_dict, config, verbose=True):
+    """
+    Process events for DATA (real data) - simplified version without nuScore filtering.
+
+    This function processes optical flash data without neutrino score filtering,
+    applying only flash-based selection and TPC assignment.
+
+    Filters:
+    1. Has at least min_flashes flashes
+    2. Flash selection by TPC (same as MC processing)
+
+    Parameters:
+    -----------
+    f_ophit_PE, f_ophit_ch, f_ophit_t : arrays
+        Flash optical hit information (PhotoElectrons, Channels, Times)
+    channel_dict : dict
+        Channel type mapping
+    config : dict
+        Configuration dictionary with filter parameters
+        Must include: 'min_flashes', 'pmt_types', 'xas_types', 'max_flashes_for_keep_all'
+    verbose : bool
+        Show progress and statistics
+
+    Returns:
+    --------
+    Tuple: (f_ophit_PE_final, f_ophit_ch_final, f_ophit_t_final, selected_tpc, tracker)
+    """
+
+    if verbose:
+        print(">> Starting simplified DATA event processing (no nuScore filter)...")
+        start_time = time.time()
+
+    initial_count = len(f_ophit_PE)
+    tracker = CutFlowTracker(initial_count)
+
+    if verbose:
+        print(f"Initial events: {initial_count:,}")
+
+    # Step 1: Has flashes filter
+    mask_flashes = ak.num(f_ophit_PE, axis=1) >= config['min_flashes']
+
+    arrays = {
+        'f_ophit_PE': f_ophit_PE[mask_flashes],
+        'f_ophit_ch': f_ophit_ch[mask_flashes],
+        'f_ophit_t': f_ophit_t[mask_flashes]
+    }
+
+    tracker.add_cut("Has flashes", len(arrays['f_ophit_PE']))
+
+    # Step 2: Flash processing (TPC selection)
+    if verbose:
+        print("Processing flashes...")
+
+    channel_lookup = create_channel_lookup(
+        channel_dict, config['pmt_types'], config['xas_types']
+    )
+    categories = vectorized_categorize_flashes(arrays['f_ophit_ch'], channel_lookup)
+
+    # Use new version that handles variable depth
+    flash_mask, decision = smart_flash_selection_new(
+        arrays['f_ophit_PE'], categories, config['max_flashes_for_keep_all']
+    )
+
+    # Apply flash selection
+    arrays['f_ophit_PE'] = arrays['f_ophit_PE'][flash_mask]
+    arrays['f_ophit_ch'] = arrays['f_ophit_ch'][flash_mask]
+    arrays['f_ophit_t'] = arrays['f_ophit_t'][flash_mask]
+
+    # Store TPC selection as simple label: 0 for TPC0 (even, X<0), 1 for TPC1 (odd, X>0)
+    decision_list = ak.to_list(decision)
+    arrays['selected_tpc'] = ak.Array([0 if d else 1 for d in decision_list])
+
+    final_arrays = arrays
+
+    if verbose:
+        processing_time = time.time() - start_time
+        print(f">> Processing completed in {processing_time:.2f} seconds")
+        print()
+        tracker.display()
+
+        if len(final_arrays['f_ophit_PE']) > 0:
+            # TPC distribution
+            tpc0_count = ak.sum(final_arrays['selected_tpc'] == 0)
+            tpc1_count = ak.sum(final_arrays['selected_tpc'] == 1)
+            print(f"\n* TPC distribution:")
+            print(f"  TPC0 (even): {tpc0_count:,} events ({100*tpc0_count/len(final_arrays['f_ophit_PE']):.1f}%)")
+            print(f"  TPC1 (odd):  {tpc1_count:,} events ({100*tpc1_count/len(final_arrays['f_ophit_PE']):.1f}%)")
+
+            # Flash statistics
+            n_flashes = ak.num(final_arrays['f_ophit_PE'], axis=1)
+            print(f"\n* Flash statistics:")
+            print(f"  Flashes per event: [{ak.min(n_flashes)}, {ak.max(n_flashes)}]")
+            print(f"  Mean flashes: {ak.mean(n_flashes):.1f}")
+
+    return (
+        final_arrays['f_ophit_PE'],
+        final_arrays['f_ophit_ch'],
+        final_arrays['f_ophit_t'],
+        final_arrays['selected_tpc'],
+        tracker
+    )
+
+
 def process_events2(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
                    dEpromx, dEpromy, dEpromz, dEtpc, nuvZ,
                    # Additional variables for analysis
