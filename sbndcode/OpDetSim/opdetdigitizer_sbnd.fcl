@@ -14,7 +14,7 @@ sbnd_opdetdigitizer:
   ApplyTriggers:             true  #optional
   ticksPerSlice:             5000 # corresponds to 10us
   PercentTicksBeforeCross:             0.2
-  MonThreshold:             15
+  MonThreshold:             50
   PairMultiplicityThreshold:             4 
 
   @table::sbnd_digipmt_alg
