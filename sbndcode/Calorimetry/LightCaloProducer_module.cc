@@ -421,8 +421,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
       plane_hits.at(hit_plane)++; 
     }
 
-    uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
-    uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
+    int bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
 
     _slice_Q = plane_charge.at(bestHits);
 
@@ -517,7 +516,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
       std::cout << "energy: " << _slice_E << std::endl;
     }
 
-    sbn::LightCalo lightcalo(_slice_Q,_slice_L,_slice_E,bestHits);
+    sbn::LightCalo lightcalo{_slice_Q,_slice_L,_slice_E,bestHits};
     lightcalo_v->push_back(lightcalo);
     util::CreateAssn(*this, e, *lightcalo_v, slice,    *slice_assn_v);
     util::CreateAssn(*this, e, *lightcalo_v, opflash0, *flash_assn_v);
