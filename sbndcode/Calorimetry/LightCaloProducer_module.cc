@@ -369,7 +369,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     }
   }
 
-  int nsuccessful_matches=0;
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
     // initialize tree variables 
     _pfpid = -1;
@@ -446,7 +445,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           // correct for e- attenuation 
           auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
-          double charge = (1/fcal_area_const.at(bestPlane))*atten_correction*hit->Integral();
+          double charge = (1/fcal_area_const.at(hit->View()))*atten_correction*hit->Integral();
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
         }
@@ -524,7 +523,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     util::CreateAssn(*this, e, *lightcalo_v, opflash0, *flash_assn_v);
     util::CreateAssn(*this, e, *lightcalo_v, opflash1, *flash_assn_v);
 
-    nsuccessful_matches++;
     _tree->Fill();
   } // end slice loop
 } // end produce 
@@ -607,10 +605,8 @@ void sbnd::LightCaloProducer::CollectMatches(const art::Handle<std::vector<Match
 
 
 std::vector<std::vector<double>> sbnd::LightCaloProducer::CalcVisibility(std::vector<geo::Point_t> xyz_v,
-                                                                    std::vector<double> charge_v){
+                                                                         std::vector<double> charge_v){
   // returns of two vectors (len is # of opdet) for the visibility for every opdet                                     
-  if (xyz_v.size() != charge_v.size()) std::cout << "spacepoint coord and charge vector size mismatch" << std::endl;
-
   std::vector<double> dir_visibility_map(nchan, 0);
   std::vector<double> ref_visibility_map(nchan, 0);
   double sum_charge0 = 0;
@@ -628,7 +624,6 @@ std::vector<std::vector<double>> sbnd::LightCaloProducer::CalcVisibility(std::ve
     std::vector<double> reflect_visibility;
     fsemi_model->detectedDirectVisibilities(direct_visibility, xyz);
     fsemi_model->detectedReflectedVisibilities(reflect_visibility, xyz);
-    // if (dir_visibility_map.size() != direct_visibility.size()) std::cout << "mismatch of visibility vector size" << std::endl;
 
     // weight by charge
     for (size_t ch=0; ch<direct_visibility.size(); ch++){
