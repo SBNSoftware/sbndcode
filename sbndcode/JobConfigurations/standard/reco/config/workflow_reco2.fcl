@@ -20,6 +20,7 @@
 
 #include "SBNDCVNMapper.fcl"
 #include "blipreco_configs.fcl"
+#include "lightcalo.fcl"
 
 BEGIN_PROLOG
 
@@ -90,6 +91,9 @@ sbnd_reco2_producers:{
       module_type: "BlipRecoProducer"
       BlipAlg:     @local::sbnd_blipalg
     }
+
+    ### light calorimtery 
+    lightcaloSCE : @local::sbnd_lightcalo
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -129,6 +133,7 @@ sbnd_reco2_producer_sequence: [
     , cvn
     , cvnSCE
     , blipreco
+    , lightcalo
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl

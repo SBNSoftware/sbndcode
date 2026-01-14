@@ -2,7 +2,7 @@
 #include "sbndopticalpath_tool.fcl"
 
 BEGIN_PROLOG
-lightcalo:
+sbnd_lightcalo:
 {
     module_type: "LightCaloProducer"
 
@@ -12,11 +12,12 @@ lightcalo:
 
     OpFlashProducers:    ["opflashtpc0", "opflashtpc1"]
     OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
-    PDTypes: ["pmt_coated"] # "pmt_uncoated", "xarapuca_vuv", "xarapuca_vis"
+    # only validated for coated PMTs for now
+    PDTypes:             ["pmt_coated"] # "pmt_uncoated", "xarapuca_vuv", "xarapuca_vis"
 
-    SliceProducer:       "pandora"
-    OpT0FinderProducer:  "opt0finder"
-    BCFMProducer:        "tpcpmtbarycentermatching"
+    SliceProducer:       "pandoraSCE"
+    OpT0FinderProducer:  "opt0finderSCE"
+    BCFMProducer:        "tpcpmtbarycentermatchingSCE"
 
     UseBCFM:             true
     UseOpT0Finder:       false
