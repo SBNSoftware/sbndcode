@@ -16,21 +16,27 @@ TPCPMTBarycenterMatchProducer:
     DistanceCandidateFlashes: 100
     VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
     VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
-    OpDetVUVEff: @local::sbnd_digipmt_alg.PMTCoatedVUVEff_tpc1
-    OpDetVISEff:  @local::sbnd_digipmt_alg.PMTUncoatedEff_tpc1
+    OpDetCoVUVEff: @local::sbnd_digipmt_alg.PMTCoatedVUVEff_tpc1
+    OpDetCoVISEff: @local::sbnd_digipmt_alg.PMTCoatedVISEff_tpc1
+    OpDetUncoVISEff:  @local::sbnd_digipmt_alg.PMTUncoatedEff_tpc1
     CalAreaConst: @local::sbnd_calorimetryalgdata.CalAreaConstants
     LightChargeRatioBounds: [0.25, 3]
-    XError: 12 // cm
-    YError: 23 // cm
-    ZError: 23 // cm
+    XError: 11 // cm
+    YError: 21 // cm
+    ZError: 25 // cm
     AngleError: 27 // deg
-    FlashVetoWindow: [-1500000,1500000] // ns
+    FlashVetoWindow: [-5,5] // ns
     OpticalPathTool:  @local::SBNDOpticalPath
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
+TPCPMTBarycenterMatchProducerMC: @local::TPCPMTBarycenterMatchProducer 
+TPCPMTBarycenterMatchProducerMC.XError: 9
+
+TPCPMTBarycenterMatchProducerSCEMC: @local::TPCPMTBarycenterMatchProducerMC
+TPCPMTBarycenterMatchProducerSCEMC.PandoraLabel: "pandoraSCE"
+
 TPCPMTBarycenterMatchProducerSCE: @local::TPCPMTBarycenterMatchProducer 
 TPCPMTBarycenterMatchProducerSCE.PandoraLabel: "pandoraSCE"
-
 
 END_PROLOG

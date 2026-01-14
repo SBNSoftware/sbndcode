@@ -31,6 +31,8 @@ sbnd_reco2_producers:{
     ### pandora
     pandora:             @local::sbnd_pandora
     pandoraTrack:        @local::sbnd_pandoraTrackCreation
+    blipPandoraCopy:     @local::sbnd_pandora
+    blipPandoraTrackCopy:@local::sbnd_pandoraTrackCreation
     pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
     pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
     pandoraCalo:         @local::sbnd_gnewcalomc
@@ -52,6 +54,8 @@ sbnd_reco2_producers:{
     ### SCE-aware pandora:
     pandoraSCE:          @local::scecorrection
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
+    blipPandoraSCE:     @local::scecorrection
+    blipPandoraSCETrack:@local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
@@ -76,8 +80,8 @@ sbnd_reco2_producers:{
     fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
-    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
-    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducerMC
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCEMC
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -100,6 +104,8 @@ sbnd_reco2_producer_sequence: [
     rns
     , pandora
     , pandoraTrack
+    , blipPandoraCopy
+    , blipPandoraTrackCopy
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
@@ -193,10 +199,15 @@ sbnd_reco2_producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 sbnd_reco2_producers.pandoraSCE.T0Labels: []
 sbnd_reco2_producers.pandoraSCE.T0LabelsCorrectT0: []
 sbnd_reco2_producers.pandoraSCE.CorrectNoT0Tag: true
+sbnd_reco2_producers.blipPandoraSCE.T0Labels: []
+sbnd_reco2_producers.blipPandoraSCE.T0LabelsCorrectT0: []
+sbnd_reco2_producers.blipPandoraSCE.CorrectNoT0Tag: true
 # point track/shower creation to the SCE pandora
 sbnd_reco2_producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 sbnd_reco2_producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 sbnd_reco2_producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+sbnd_reco2_producers.blipPandoraSCETrack.PFParticleLabel:               "blipPandoraSCE"
+
 
 sbnd_reco2_producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
 sbnd_reco2_producers.crtspacepointmatchingSCE.PFPModuleLabel:            "pandoraSCE"
@@ -205,7 +216,8 @@ sbnd_reco2_producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandor
 sbnd_reco2_producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
 sbnd_reco2_producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
-
+sbnd_reco2_producers.blipPandoraCopy.HitFinderModuleLabel:          "specialblipgaushit"
+sbnd_reco2_producers.blipPandoraTrackCopy.PFParticleLabel: "blipPandoraCopy"
 sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
     crtana:   @local::crtana_sbnd

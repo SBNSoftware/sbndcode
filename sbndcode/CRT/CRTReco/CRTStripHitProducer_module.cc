@@ -28,6 +28,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 
 #include <memory>
 #include <bitset>
@@ -56,7 +57,8 @@ public:
 
 private:
 
-  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+  art::ServiceHandle<CRTGeoService>              fCRTGeoService;
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
   std::string           fFEBDataModuleLabel;
   uint16_t              fADCThreshold;
@@ -205,14 +207,15 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 {
   std::vector<CRTStripHit> stripHits;
 
-  const uint32_t mac5  = data->Mac5();
-  uint32_t unixs       = data->UnixS();
+  const uint32_t offline_module_id = data->Mac5();
+  uint32_t unixs                   = data->UnixS();
 
   // Only consider "real data" readouts, not clock resets etc
   if(!(data->Flags() == 3 || (fAllowFlag1 && data->Flags() == 1)))
     return stripHits;
-  
-  const CRTModuleGeo module = fCRTGeoService->GetModule(mac5 * 32);
+
+  const uint32_t offline_channel_id = fCRTChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(offline_module_id, 0);
+  const CRTModuleGeo module         = fCRTGeoService->GetModule(offline_channel_id);
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
@@ -257,11 +260,11 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
     {
       // Calculate SiPM channel number
-      const uint16_t channel = mac5 * 32 + adc_i;
+      const uint16_t offline_channel_id = fCRTChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(offline_module_id, adc_i);
 
-      const CRTStripGeo strip = fCRTGeoService->GetStrip(channel);
-      const CRTSiPMGeo sipm1  = fCRTGeoService->GetSiPM(channel);
-      const CRTSiPMGeo sipm2  = fCRTGeoService->GetSiPM(channel+1);
+      const CRTStripGeo strip = fCRTGeoService->GetStrip(offline_channel_id);
+      const CRTSiPMGeo sipm1  = fCRTGeoService->GetSiPM(offline_channel_id);
+      const CRTSiPMGeo sipm2  = fCRTGeoService->GetSiPM(offline_channel_id+1);
 
       if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
         continue;
@@ -287,7 +290,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           if(pos - err < 0)
             err = pos;
 
-          stripHits.emplace_back(channel, t0, t1, ref_time_s, pos, err, adc1, adc2);
+          stripHits.emplace_back(offline_channel_id, t0, t1, ref_time_s, pos, err, adc1, adc2);
         }
     }
 

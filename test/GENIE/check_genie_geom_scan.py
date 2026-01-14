@@ -7,7 +7,7 @@ pset = fhicl.make_pset('prodgenie_corsika_proton_rockbox_sbnd.fcl')
 #
 pset_geom_scan = pset['physics']['producers']['generator']['GeomScan']
 
-geom_scan_flux_config = pset_geom_scan.split('flux')[1][0]
+geom_scan_flux_config = pset_geom_scan.split('fluxG4v')[1][:5]
 geom_scan_gdml_version = pset_geom_scan.split('gdml')[1][:6]
 
 print('Using GeomScan file:', pset_geom_scan)
@@ -20,11 +20,11 @@ print('\t -> using gdml version:', geom_scan_gdml_version)
 #
 pset_gdml = pset['services']['Geometry']['GDML']
 pset_flux = pset['physics']['producers']['generator']['FluxSearchPaths']
+print('Using:', pset_flux, pset_gdml)
 
-flux_config = pset_flux.split('config')[1][0]
+flux_config = pset_flux.split('G4BNB/v')[1][:5]
 gdml_version = pset_gdml.split('sbnd_')[1][:6]
 
-print('Using:')
 print('\t -> gdml version:', gdml_version)
 print('\t -> flux configuration:', flux_config)
 

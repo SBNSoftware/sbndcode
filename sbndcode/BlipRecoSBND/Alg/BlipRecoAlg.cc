@@ -357,18 +357,32 @@ namespace blip {
     if (evt.getByLabel(fGeantProducer,pHandle))
       art::fill_ptr_vector(plist, pHandle);
  
-    // -- SimEnergyDeposits
-    art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
-    std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
-    if (evt.getByLabel(fSimDepProducer,sedHandle)){
-      art::fill_ptr_vector(sedlist, sedHandle);
-    }
-
+    // -- SimEnergyDeposits (usually dropped in reco
+    //art::Handle<std::vector<sim::EnergyDeposit> > sedHandle;
+    std::vector<sim::IDE > sedlist;
+    //if (evt.getByLabel(fSimDepProducer,sedHandle)){
+    //  art::fill_ptr_vector(sedlist, sedHandle);
+    // }
     // -- SimChannels (usually dropped in reco)
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
-    if (evt.getByLabel(fSimChanProducer,simchanHandle)) 
+    if (evt.getByLabel(fSimChanProducer,simchanHandle))
+      { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
+      //Loop over channels to get full sedlist
+      for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
+	{
+	  std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
+	  const geo::PlaneID&      planeID = wids[0].planeID();
+	  if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
+	  std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
+	  for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
+	    {
+	      //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
+	      sedlist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+	    }
+	}
+      }
 
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;

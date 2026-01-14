@@ -18,18 +18,18 @@ sbnd_reco1_producers:{
     rns:                 { module_type: RandomNumberSaver }
 
     ### optical deconvolution
-    opdecopmt:          @local::SBNDOpDeconvolutionPMT
-	 opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+    opdecopmt:          @local::SBNDOpDeconvolutionPMT_realisticMC
+	opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
     ### optical hit finders
     # ophit:               @local::sbnd_hit_finder
-    ophitpmt:            @local::SBNDDecoOpHitFinderPMT
-	 ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+    ophitpmt:            @local::SBNDDecoOpHitFinderPMT_realisticMC
+	ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
     ### flash finders
     # opflash:             @local::sbnd_opflash
-    opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
-    opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
+    opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0_realisticMC
+    opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1_realisticMC
 
     ## opflash(arapucas):             @local::sbnd_opflash
     opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
@@ -40,10 +40,12 @@ sbnd_reco1_producers:{
 
     ### hit-finder producers
     gaushit:             @local::sbnd_gaushitfinder
+    specialblipgaushit:  @local::sbnd_gaushitfinder
     fasthit:             @local::sbnd_fasthitfinder
 
     ### Truth-matich for hits
     gaushitTruthMatch:   @local::standard_mcparticlehitmatching
+    blipgaushitTruthMatch:   @local::standard_mcparticlehitmatching
 
     ### CRT reconstruction
     crtstrips:      @local::crtstriphitproducer_sbnd
@@ -67,6 +69,8 @@ sbnd_reco1_producer_sequence: [
   #, opflashtpc1xarapuca
   , gaushit
   , gaushitTruthMatch
+  , specialblipgaushit
+  , blipgaushitTruthMatch
   , crtstrips
   , crtclustering
   , crtspacepoints
@@ -75,10 +79,15 @@ sbnd_reco1_producer_sequence: [
  ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
-sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:gauss"
+sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:dnnsp"
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
 sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
-
+sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:gauss"
+sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
+sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 20
+sbnd_reco1_producers.specialblipgaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
+sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabel: "specialblipgaushit"
+sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabelVec: ["specialblipgaushit"]
 sbnd_reco1_filters: {
     #filter events based on the number of reconstructed hits (avoids overly messy data events)
     numberofhitsfilter: @local::sbnd_numberofhitsfilter

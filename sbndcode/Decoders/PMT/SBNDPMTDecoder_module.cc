@@ -195,6 +195,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     produces< std::vector<int> >("MonPulses");
     produces< std::vector<int> >("MonPulseSizes"); 
+    produces<int>("pairsOverThreshold");
 }
 
 void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
@@ -278,6 +279,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         auto sizesPtr = std::make_unique<std::vector<int>>();
         evt.put(std::move(flatPtr), "MonPulses");
         evt.put(std::move(sizesPtr), "MonPulseSizes");
+
+        auto pairFlag = std::make_unique<int>(-1);
+        evt.put(std::move(pairFlag), "pairsOverThreshold");
         return;
     }
     
@@ -623,30 +627,27 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     std::vector<int> pulseSizes;
     MonPulsesFlat.clear();
     pulseSizes.clear();
-    int TotalFlash = pmtwvfmVec->size()/((int)fn_caenboards*PMTPerBoard); // pmtwvfmVec = waveHandle ???
+    int pmt_caenboards = (int)fn_caenboards-1;
+    int TotalFlash = pmtwvfmVec->size()/(pmt_caenboards*PMTPerBoard);
+
+    int numPairsOverThreshold = 0;
     for (int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
       int WaveIndex = FlashCounter*PMTPerBoard;
       int WaveformSize = (*pmtwvfmVec)[WaveIndex].size();
+      int pairThisFlash = 0;
       std::vector<int> *MonPulse = new std::vector<int>(WaveformSize);
-      fTriggerService->ConstructMonPulse(*pmtwvfmVec, fmon_threshold, MonPulse, FlashCounter);
+      fTriggerService->ConstructMonPulse(*pmtwvfmVec, fmon_threshold, MonPulse, FlashCounter, &pairThisFlash);
       //MonPulsesAll.push_back(std::move(MonPulse));
       MonPulsesFlat.insert(MonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
       pulseSizes.push_back(MonPulse->size());
+      numPairsOverThreshold = numPairsOverThreshold + pairThisFlash;
       delete MonPulse;
     }
     // make ptrs
     auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
     auto sizesPtr = std::make_unique<std::vector<int>>(std::move(pulseSizes));
-
-    /*std::unique_ptr< std::vector< std::vector<int> > >  MonPulsesPtr(std::make_unique< std::vector< std::vector<int> > > ());
-    for (auto &pulse : MonPulsesAll) {
-      MonPulsesPtr->reserve(MonPulsesPtr->size() + pulse.size());
-      std::move(pulse.begin(), pulse.end(), std::back_inserter(*MonPulsesPtr));
-    }
-    // clean up the vector
-    for (unsigned i = 0; i < MonPulsesAll.size(); i++) MonPulsesAll[i] = std::vector<int>();
-    */ 
+    auto pairFlag = std::make_unique<int>(numPairsOverThreshold);
 
     board_frag_v.clear();
 
@@ -663,6 +664,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
     evt.put(std::move(flatPtr), "MonPulses");
     evt.put(std::move(sizesPtr), "MonPulseSizes");
+    evt.put(std::move(pairFlag), "pairsOverThreshold");
 }
 
 void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v){
