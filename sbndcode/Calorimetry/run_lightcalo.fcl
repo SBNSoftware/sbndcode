@@ -2,10 +2,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
-#include "particleinventoryservice.fcl"
-
 #include "lightcalo.fcl"
-##include "lightcalo_ana.fcl"
 
 process_name: LightCaloProducer
 
@@ -15,8 +12,8 @@ services:
     RandomNumberGenerator:     {}
     message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
     FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
-                                @table::sbnd_services              # from services_sbnd.fcl
-                                @table::sbnd_g4_services
+                               @table::sbnd_services              # from services_sbnd.fcl
+                               @table::sbnd_g4_services
 
 }
 
@@ -34,7 +31,6 @@ outputs:
         fileName: "lightcalo-art.root"
         dataTier: "reconstructed"
         compressionLevel:1
-        SelectEvents: ["reco"]
     }
 }
 
@@ -42,15 +38,11 @@ physics:
 {   
     producers:
     {
-        lightcalo: @local::lightcalo
+        lightcalo: @local::sbnd_lightcalo
     }
-    analyzers:
-    {
-        # lightcaloana: @local::lightcalo_ana
-    }
+
     #define the producer and filter modules for this path, order matters,
     reco: [lightcalo]
-    # ana:  [lightcaloana]
 
     # define the output stream, there could be more than one if using filters
     stream1: [out1]
@@ -63,6 +55,3 @@ physics:
     # ie analyzers and output streams.  these all run simultaneously
     end_paths: [stream1]
 }
-
-physics.producers.lightcalo.Verbose: true
-physics.producers.lightcalo.TruthValidation: true
