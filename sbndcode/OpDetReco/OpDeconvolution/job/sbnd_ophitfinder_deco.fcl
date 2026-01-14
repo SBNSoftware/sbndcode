@@ -103,7 +103,5 @@ SBNDDecoOpHitFinderPMT_data.PedAlgoPset.Method:2
 
 #####OpHit finder for PMT deconvolved waveforms#####
 SBNDDecoOpHitFinderPMT_realisticMC: @local::SBNDDecoOpHitFinderPMT_data
-####SPE area must be 1./DecoWaveformPrecision
-SBNDDecoOpHitFinderPMT_realisticMC.InputModule: "pmtpulseoscillation"
 
 END_PROLOG

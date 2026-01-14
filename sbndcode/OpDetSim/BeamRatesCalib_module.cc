@@ -200,7 +200,7 @@ namespace opdet { //OpDet means optical detector
     fBeamWindowEnd = p.get<int>("BeamWindowEnd", 1688+680);
     fSaveAllMON = p.get<bool>("SaveAllMon", false);
     fCheckTriggers = p.get<bool>("CheckHardwareTriggers", false); //Needs MTCA LLT to be digitized which is unusual (run 15670)
-    fFCLthreshold        = p.get<int>("FCLthreshold", 15);
+    fFCLthreshold        = p.get<int>("FCLthreshold", 50);
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
     fCheckSoftTrig = p.get<bool>("CheckSoftTrig", false);
     fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
