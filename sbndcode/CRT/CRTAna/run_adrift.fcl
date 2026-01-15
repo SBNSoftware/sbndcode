@@ -36,15 +36,15 @@ physics:
       TopSaveDirectory:         "/exp/sbnd/data/users/hlay/crt_comm_summer_2024/plots/adrift"
       Only2HitSpacePoints:      false
       SaveAllFits:              false
-      SaveBadFits:              true
+      SaveBadFits:              false
       SaveSubset:               false
       FEBs:                     true
       StripHits:                true
       SpacePoints:              true
       Tracks:                   true
-      TrackLA:                  false
+      TrackLA:                  true
       SaveROOTHists:            true
-      AnalysePE:                true
+      AnalysePE:                false
       TrackAngleLimit:          20
       PullWindow:               0.05
       RawTSCorrection:          367000
