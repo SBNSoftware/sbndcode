@@ -142,6 +142,7 @@ private:
 
   float fpmt_ara_offset; 
   std::vector<float> fnoise_thresh;
+  std::vector<float> fupper_thresh; 
 
   std::vector<float> fcal_area_const; 
   std::vector<float> fopdet_vuv_eff;
@@ -203,6 +204,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 
   fpmt_ara_offset  = p.get<float>("PMTARAFlashOffset");
   fnoise_thresh    = p.get<std::vector<float>>("FlashNoiseThreshold");
+  fupper_thresh    = p.get<std::vector<float>>("OpDetMaxPEThreshold");
 
   fcal_area_const  = p.get<std::vector<float>>("CalAreaConstants");
   fopdet_vuv_eff   = p.get<std::vector<float>>("OpDetVUVEfficiencies");
@@ -482,21 +484,20 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
         } // end of arapuca if 
         for (size_t ich=0; ich<flash_pe_v.size(); ich++){
           if (std::find(fpd_types.begin(), fpd_types.end(), opdetmap.pdType(ich) ) == fpd_types.end() ) continue;
+          if (flash_pe_v[ich] > fupper_thresh[0]) continue; // skip if above max PE threshold
           total_pe[ich] += flash_pe_v[ich];
         }
       }
     } // end of TPC loop 
 
-    // mask out specific channels in opdet mask
-    for (size_t imask=0; imask<fopdet_mask.size(); imask++){
-      total_pe.at(fopdet_mask.at(imask)) = 0;
-    }
-
     // error is proportional to the amount of light
     // that actually reached the optical detector 
-    for (size_t ich=0; ich<total_pe.size(); ich++)
+    for (size_t ich=0; ich<total_pe.size(); ich++){
+      // # if ich is in fopdet_mask, set to zero 
+      if (fopdet_mask.end() != std::find(fopdet_mask.begin(), fopdet_mask.end(), ich))
+        total_pe.at(ich) = 0;
       total_err.at(ich) = std::sqrt(total_pe.at(ich));
-
+    }
     _visibility.resize(nchan,0);
     // calculate the photon estimates for every entry in total_pe
     CalcLight(total_pe, dir_visibility_map, ref_visibility_map, total_gamma);
