@@ -138,8 +138,8 @@ sbnd_reco2_producer_sequence: [
     , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
-    , blipreco
-    , lightcalo
+    # , blipreco
+    , lightcaloSCE
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -238,7 +238,7 @@ sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtana
-    , blipana
+    # , blipana
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
