@@ -536,6 +536,7 @@ namespace blip {
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
     }
+    std::cout << "end of true blips" << std::endl;
 
 
     //=======================================
@@ -668,6 +669,7 @@ namespace blip {
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
 
     }//endloop over hits
+    std::cout << " Hit info filled in " << std::endl;
     
     //for(auto& a : tpc_plane_hitsMap ) {
       //for(auto& b : a.second ) 
@@ -734,7 +736,7 @@ namespace blip {
     // Hit clustering
     // ---------------------------------------------------
     std::map<int,std::map<int,std::vector<int>>> tpc_planeclustsMap;
-   
+   std::cout << "Hit clustering processing" << std::endl;
     for(auto const& tpc_plane_hitsMap : cryo_tpc_plane_hitsMap ) {
     
     for(auto const& plane_hitsMap : tpc_plane_hitsMap.second ) {
@@ -877,6 +879,7 @@ namespace blip {
       }//loop over planes
     }//loop over TPCs
     }//loop over cryostats
+    std::cout << "Done Hit clustering processing" << std::endl;
     //std::cout<<"All done with clustering\n";
     
 
@@ -895,7 +898,7 @@ namespace blip {
     
     float _matchQDiffLimit= (fMatchQDiffLimit <= 0 ) ? std::numeric_limits<float>::max() : fMatchQDiffLimit;
     float _matchMaxQRatio = (fMatchMaxQRatio  <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxQRatio;
-     
+     std::cout << "Plane matching " << std::endl;
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
       
       //std::cout
@@ -1110,6 +1113,7 @@ namespace blip {
         }//endloop over caloplane ("Plane A") clusters
       }//endif calo plane has clusters
     }//endloop over TPCs
+    std::cout << " done planematching " << std::endl;
 
     // Re-index the clusters after removing unmatched
     if( !keepAllClusts ) {
