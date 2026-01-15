@@ -367,22 +367,22 @@ namespace blip {
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
     if (evt.getByLabel(fSimChanProducer,simchanHandle))
-      { 
+    { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
       //Loop over channels to get full sedlist
       for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
-	{
-	  std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
-	  const geo::PlaneID&      planeID = wids[0].planeID();
-	  if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
-	  std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
-	  for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	    {
-	      //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
-	      sedlist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+      std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
+      const geo::PlaneID&      planeID = wids[0].planeID();
+      if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
+      std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
+      for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
+	        {
+	        //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
+	        sedlist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+	       }
 	    }
-	}
-      }
+    }
 
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;
@@ -442,7 +442,7 @@ namespace blip {
     //===============================================================
     std::map< int, int > map_gh;
     // if input collection is already gaushit, this is trivial
-    if( fHitProducer == "gaushit" ) {
+    if( fHitProducer == "gaushit" ||  fHitProducer == "specialblipgaushit") {
       for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     // ... but if not, find the matching gaushit. There's no convenient
     // hit ID, so we must loop through and compare channel/time (ugh)
