@@ -442,7 +442,9 @@ namespace blip {
     //===============================================================
     std::map< int, int > map_gh;
     // if input collection is already gaushit, this is trivial
+    std::cout << " About to fill in map with hitProducer " << fHitProducer << std::endl;
     if( fHitProducer == "gaushit" ||  fHitProducer == "specialblipgaushit") {
+      std::cout << " in special branch" << std::endl;
       for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     // ... but if not, find the matching gaushit. There's no convenient
     // hit ID, so we must loop through and compare channel/time (ugh)
@@ -457,6 +459,7 @@ namespace blip {
         }
       }
     }
+    std::cout << "done with map" << std::endl;
    
     //=====================================================
     // Record PDG for every G4 Track ID
