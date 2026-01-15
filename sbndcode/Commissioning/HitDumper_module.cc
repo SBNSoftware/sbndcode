@@ -54,6 +54,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 #include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
@@ -407,6 +408,7 @@ private:
   std::vector<double> _hit_ph;                  ///< Hit pulse height
   std::vector<double> _hit_width;               ///< Hit width (rms), RMS of the hit shape, in tick units
   std::vector<double> _hit_full_integral;       ///< Hit charge integral ?????????????
+  std::vector<double> _hit_z;
 
   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
   std::vector<short>  _adc_on_wire;             ///< ADC on wire to draw waveform
@@ -417,7 +419,7 @@ private:
   std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
   std::vector<int>    _channel_number;
   std::vector<double> _hit_time;
-
+  std::vector<double> _hit_z_pos;
 
   //****************diffusion*******************//
 
@@ -427,6 +429,12 @@ private:
     double high;
     std::string label;
   };
+  std::vector<TimeWindow> timeWindows;
+  std::map<std::string, std::vector<double>> sum_bin_contents_by_window;
+  std::map<std::string, int> nWaveforms_by_window;
+  int nBins = 41;
+  std::map<std::string, std::vector<double>> hit_times_by_window;
+  std::map<std::string, std::vector<double>> half_widths_by_window;
 
   // CRT strip variables
   uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
@@ -477,6 +485,14 @@ private:
   std::vector<double> _theta_yz_CRT;
   std::vector<double> _crt_gradient;
   std::vector<double> _crt_intercept;
+
+  std::vector<double>  _crt_track_midx;
+  std::vector<double> _crt_track_predicted_t;
+  std::vector<double> _crt_track_time_cut_upper;
+  std::vector<double> _crt_track_time_cut_lower;
+  std::vector<double> _crt_track_gradient;
+  std::vector<double> _crt_track_intercept;
+
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -697,6 +713,16 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
   , fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
 {
 
+  timeWindows = {{400, 530, "window1"},{530, 660, "window2"},{660, 790, "window3"},{790, 920, "window4"},{920, 1050, "window5"},{1050, 1180, "window6"},{1180, 1310, "window7"},{1310, 1440, "window8"},{1440, 1570, "window9"},{1570, 1700, "window1\
+0"},{1700, 1830, "window11"},{1830, 1960, "window12"},{1960, 2090, "window13"},{2090, 2220, "window14"},{2220, 2350, "window15"},{2350, 2480, "window16"},{2480, 2610, "window17"},{2610, 2740, "window18"},{2740, 2870, "window19"},{2870, 3000, "window20"},{3000, 3130, "window21"} ,{3130, 3260, "window22"},{3260, 3390, "window23"}
+  };
+
+  for (const auto &w : timeWindows) {
+    sum_bin_contents_by_window[w.label] = std::vector<double>(nBins, 0.0);
+    nWaveforms_by_window[w.label] = 0;
+  }
+
+
   fGeometryService = lar::providerFrom<geo::Geometry>();
   fWireReadoutGeom = &art::ServiceHandle<geo::WireReadout>()->Get();
   // fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
@@ -831,7 +857,7 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   ResetWireHitsVars(_nhits);
-
+  auto const& wireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
   size_t counter = 0;
   for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
@@ -849,7 +875,12 @@ void Hitdumper::analyze(const art::Event& evt)
     _hit_charge[counter] = hitlist[i]->Integral();
     _hit_ph[counter] = hitlist[i]->PeakAmplitude();
     _hit_width[counter] = hitlist[i]->RMS();
+    auto bounds = wireReadout.WireEndPoints(wireid);
+    auto const& start = bounds.first;
+    auto const& end   = bounds.second;
+    double z =0.5*(start.Z()+end.Z());
 
+    _hit_z[counter]=z;
     counter ++;
   }
 
@@ -942,7 +973,9 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   double time_cut_upper;
   double time_cut_lower;
-
+  double crt_trk_time;
+  double mt;
+  double ct;
   _n_crt_tracks = 0;
   if (fKeepCRTTracks) {
 
@@ -989,14 +1022,12 @@ void Hitdumper::analyze(const art::Event& evt)
 	  double dz;
 	  double CRT_theta_xz;
 	  double CRT_theta_yz;
-	  double average_xvalue;
 	  double hit_time_ticks;
-	  double start_x=200- abs(start.X());	    
-	  double end_x=200- abs(end.X());
 
-	  average_xvalue = (start_x + end_x)/2 ;      
-	  std::cout<<"start x"<<start_x<<std::endl;
-	  std::cout<<"end x"<<end_x<<std::endl;
+	  crt_trk_time = crttrack->Ts0();
+	  double average_xvalue = ((200- abs(start.X())) + (200- abs(end.X())))/2 ;      
+	  //  std::cout<<"start x"<<start_x<<std::endl;
+	  // std::cout<<"end x"<<end_x<<std::endl;
 	  std::cout<<"average x"<<average_xvalue<<std::endl;
 
 	  hit_time_ticks= (average_xvalue*2/_electron_vel)+400 ;
@@ -1004,6 +1035,37 @@ void Hitdumper::analyze(const art::Event& evt)
 	  std::cout<<"hit time"<< hit_time_ticks<< std::endl;	  
 	  time_cut_upper=hit_time_ticks + _time_window;
 	  time_cut_lower=hit_time_ticks - _time_window;
+
+	  _crt_track_midx.push_back(average_xvalue);
+	  _crt_track_predicted_t.push_back(hit_time_ticks);
+	  _crt_track_time_cut_upper.push_back(time_cut_upper);
+	  _crt_track_time_cut_lower.push_back(time_cut_lower);
+
+	  auto p1 = start;
+	  auto p2 = end;
+
+	  // ensure increasing Z
+	  if (p2.Z() < p1.Z()) std::swap(p1, p2);
+
+	  double m = ((200-abs(p2.X())) - (200-abs(p1.X()))) / (p2.Z() - p1.Z());
+	  double c = (200-abs(p1.X()) - m * p1.Z());
+
+	  mt = (2.0/_electron_vel) * m;
+	  ct = (2.0/_electron_vel) * c + 400;
+	  /*
+	  std::cout << "\n=== CRT TRACK LINE DEBUG ===\n";
+	  std::cout << "Start point:  X=" << p1.X() << "  Z=" << p1.Z() << "\n";
+	  std::cout << "End point:    X=" << p2.X() << "  Z=" << p2.Z() << "\n";
+
+	  std::cout << "Using ordered points: Z1=" << p1.Z() << "  Z2=" << p2.Z() << "\n";
+
+	  std::cout << "m  (dX/dZ)      = " << m  << "\n";
+	  std::cout << "c  (intercept)  = " << c  << "\n";
+	  std::cout << "mt (time slope) = " << mt << "\n";
+	  std::cout << "ct (time int.)  = " << ct << "\n";
+	  */
+	  _crt_track_gradient.push_back(mt);
+	  _crt_track_intercept.push_back(ct);
 
 	  dx =end.X() - start.X();
 	  dy =end.Y() - start.Y();
@@ -1236,7 +1298,24 @@ void Hitdumper::analyze(const art::Event& evt)
     std::map<int, int> channelHitCounts;
 
     for (int ihit = 0; ihit < _nhits; ++ihit) {
-      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num && _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
+      /*
+      double z_hit    = _hit_z[ihit];
+      double peakT    = _hit_peakT[ihit];
+      double pred_mid = mt * z_hit + ct;
+      double pred_up  = pred_mid + 175;
+      double pred_low = pred_mid - 175;
+
+      std::cout << "\n--- HIT DEBUG " << ihit << " ---\n";
+      std::cout << "Hit:   Z = " << z_hit << "   peakT = " << peakT << "\n";
+      std::cout << "mt = " << mt << "   ct = " << ct << "\n";
+      std::cout << "Pred:  mt*z+ct = " << pred_mid
+		<< "   range: [" << pred_low << ", " << pred_up << "]\n";
+
+      std::cout << "Pass? "
+		<< ((_hit_peakT[ihit] < pred_up && _hit_peakT[ihit] > pred_low) ? "YES" : "NO")
+		<< "\n";
+      */
+      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num && _hit_peakT[ihit] < ((mt*_hit_z[ihit])+ct+_time_window) && _hit_peakT[ihit] > ((mt*_hit_z[ihit])+ct-_time_window) &&  _hit_z[ihit]>10. && _hit_z[ihit]<490.) {
 	channelHitCounts[_hit_channel[ihit]]++;
 	++hit_counter;
       }
@@ -1250,6 +1329,7 @@ void Hitdumper::analyze(const art::Event& evt)
     std::vector<double> temp_wire_number;
     std::vector<double> temp_channel_number;
     std::vector<double> temp_hit_time;
+    std::vector<double> temp_z;
 
     std::map<int, std::vector<double>> waveform_adc_map;
     std::map<int, std::vector<double>> waveform_time_map;
@@ -1257,6 +1337,7 @@ void Hitdumper::analyze(const art::Event& evt)
     std::map<int, std::vector<int>> waveform_number_map;
     std::map<int, std::vector<int>> waveform_channel_number;
     std::map<int, std::vector<int>> waveform_hit_time;
+    std::map<int, std::vector<double>> waveform_z;
 
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
@@ -1268,11 +1349,9 @@ void Hitdumper::analyze(const art::Event& evt)
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
 
-      
-      // see if there is a hit on this channel
       if (channelHitCounts[channel] == 1 && hit_counter > _max_tpc_hits) {
 	for (int ihit = 0; ihit < _nhits; ++ihit) {
-	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower) {
+	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<((mt*_hit_z[ihit])+ct+_time_window) && _hit_peakT[ihit]>((mt*_hit_z[ihit])+ct-_time_window) &&  _hit_z[ihit]>10. && _hit_z[ihit]<490.) {
 	   
 	    int pedestal = (int)digitVec->GetPedestal();
 	    //UNCOMPRESS THE DATA.
@@ -1313,7 +1392,8 @@ void Hitdumper::analyze(const art::Event& evt)
 	     temp_wire_number.push_back(_hit_wire[ihit]);
 	     temp_channel_number.push_back(_hit_channel[ihit]);
 	     temp_hit_time.push_back(_hit_peakT[ihit]);
-	     
+	     temp_z.push_back(_hit_z[ihit]);	     
+
 	     int wave_num =static_cast<int>(temp_waveform_number.back());
 	     waveform_adc_map[wave_num].push_back(temp_adc_on_wire.back());
 	     waveform_time_map[wave_num].push_back(temp_time_for_waveform.back());
@@ -1321,29 +1401,33 @@ void Hitdumper::analyze(const art::Event& evt)
 	     waveform_number_map[wave_num].push_back(temp_waveform_number.back());
 	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
 	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
-	   	   
+	     waveform_z[wave_num].push_back(temp_z.back());	   	   
+
 	    }//bin loop
 	  } // if cuts
 	} //end loop over hits
       }//if one hit per channel
     }// end loop over waveforms
 
-    
-    std::vector<TimeWindow> timeWindows = {{400, 530, "window1"},{530, 660, "window2"},{660, 790, "window3"},{790, 920, "window4"},{920, 1050, "window5"},{1050, 1180, "window6"},{1180, 1310, "window7"},{1310, 1440, "window8"},{1440, 1570, "window9"},{1570, 1700, "window10"},{1700, 1830, "window11"},{1830, 1960, "window12"},{1960, 2090, "window13"},{2090, 2220, "window14"},{2220, 2350, "window15"},{2350, 2480, "window16"},{2480, 2610, "window17"},{2610, 2740, "window18"},{2740, 2870, "window19"},{2870, 3000, "window20"}
-    };
-
-    for (const auto& window : timeWindows) {
-      std::vector<TH1D*> temp_histograms;
-
+  
     for (const auto &entry : waveform_adc_map) {
       int wave_num = entry.first; // The current waveform number
       const std::vector<double> &adc_vals = entry.second;
       const std::vector<double> &time_vals = waveform_time_map[wave_num];
-      // const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
-      // const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
-      // const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
-      const std::vector<int> &hit_times = waveform_hit_time[wave_num];
-          
+      const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
+      const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
+      const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
+      const std::vector<double> &z_position=waveform_z[wave_num];
+
+      std::vector<int> hit_times;
+      hit_times.reserve(waveform_hit_time[wave_num].size());
+
+      double crt_ticks = crt_trk_time / 500.0;  // convert once
+
+      for (int t : waveform_hit_time[wave_num]) {
+	hit_times.push_back(static_cast<int>(t - crt_ticks));
+      }
+
       /*******************hit quality cuts****************************/
       //	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
       //	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
@@ -1363,26 +1447,41 @@ void Hitdumper::analyze(const art::Event& evt)
       */
       /********************hit quality cuts ************************/
 
-      if (hit_times[0] > window.low && hit_times[0] < window.high && _plane_num ==2) {
+      _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+      _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+      _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+      _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+      _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+      _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+      _hit_z_pos.insert(_hit_z_pos.end(), z_position.begin(), z_position.end());
 
-	int nBins = adc_vals.size();
+      for (const auto& win : timeWindows) {
+      if (hit_times[0] > win.low && hit_times[0] < win.high && _plane_num ==2) {
+
+	int nbins = std::min<int>(adc_vals.size(), nBins);
 	TH1D* hist = new TH1D(
-			      Form("waveform_%d_%s", wave_num, window.label.c_str()),
+			      Form("waveform_%d_%s", wave_num, win.label.c_str()),
 			      Form("Waveform %d (%s);Time index;ADC (pedestal-subtracted)",
-				   wave_num, window.label.c_str()),
-			      nBins, 0, nBins
+				   wave_num, win.label.c_str()),
+			      nbins, 0, nbins
 			      );
 
-	// Fill the histogram
+	// Accumulate ADC values
+	for (int k = 0; k < nbins; ++k)
+	  sum_bin_contents_by_window[win.label][k] += adc_vals[k];
+
+	nWaveforms_by_window[win.label]++;
+	hit_times_by_window[win.label].push_back(hit_times[0]);
+
 	for (size_t k = 0; k < adc_vals.size(); k++)
-	  hist->SetBinContent(k + 1, adc_vals[k]);
-
-	temp_histograms.push_back(hist);
+	hist->SetBinContent(k + 1, adc_vals[k]);
+	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitude(hist);
+	delete hist;
+	half_widths_by_window[win.label].push_back(half_width);
+	break; 
       }
-    }
-
-    // Store the histograms for this event and time window
-    histogramsByWindow[window.label].push_back(temp_histograms);
+      }
+      
     }
 
   }// end if fCheckTrasparency
@@ -1613,6 +1712,8 @@ void Hitdumper::endJob() {
   double window_upper = -1.0;
   TObjString* window_label = nullptr;
   int nWaveforms = 0;
+  std::vector<double> hit_times;
+  std::vector<double> half_widths;
 
   fTree2->Branch("window_label", "TObjString", &window_label);
   fTree2->Branch("window_lower", &window_lower, "window_lower/D");
@@ -1621,7 +1722,10 @@ void Hitdumper::endJob() {
   fTree2->Branch("avg_bin_contents", avg_bin_contents, Form("avg_bin_contents[%d]/D", nBins));
   fTree2->Branch("avg_half_width", &avg_half_width, "avg_half_width/D");
   fTree2->Branch("avg_amplitude", &avg_amplitude, "avg_amplitude/D");
+  fTree2->Branch("hit_times", &hit_times);
+  fTree2->Branch("half_widths", &half_widths);
 
+ 
   std::vector<TimeWindow> timeWindows = {
     {400, 530, "window1"},
     {530, 660, "window2"},
@@ -1641,50 +1745,50 @@ void Hitdumper::endJob() {
     {2350, 2480, "window16"},
     {2480, 2610, "window17"},
     {2610, 2740, "window18"},
-    {2740, 2870, "window19"},
-    {2870, 3000, "window20"}
+    {2740, 2870, "window19"} ,
+    {2870, 3000, "window20"},
+    {3000, 3130, "window21"} ,
+    {3130, 3260, "window22"},
+    {3260, 3390, "window23"}
   };
-
-  std::map<std::string, TimeWindow> timeWindowsMap;
-  for (const auto& w : timeWindows) {
-    timeWindowsMap[w.label] = w;
-  }
 
   for (const auto& win : timeWindows) {
     const std::string& label = win.label;
+    auto sum_it = sum_bin_contents_by_window.find(label);
+    auto count_it = nWaveforms_by_window.find(label);
+    if (sum_it == sum_bin_contents_by_window.end() || count_it == nWaveforms_by_window.end()) continue;
 
-    // Check that this window exists in the map
-    auto it = histogramsByWindow.find(label);
-    if (it == histogramsByWindow.end()) continue;
+    const auto& summed_bins = sum_it->second;
+    nWaveforms = count_it->second;
+    if (nWaveforms == 0) continue;
 
-    const auto& histograms = it->second;
-
-
-    window_label = new TObjString(win.label.c_str());
-    window_lower = win.low;
-    window_upper = win.high;
-
-    nWaveforms = 0;
-    for (const auto& eventHistograms : histograms)
-      nWaveforms += eventHistograms.size();
-
-    std::cout << " Window " << label
-              << " (" << window_lower << "–" << window_upper << " ticks)"
-              << " has " << nWaveforms << " contributing waveforms." << std::endl;
-
-   TH1D* averageHistogram = CalculateAverageHistogram(histograms, nBins);
-
+    // Average the accumulated bin contents
     for (int i = 0; i < nBins; ++i)
-      avg_bin_contents[i] = averageHistogram->GetBinContent(i + 1);
-    auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitude(averageHistogram);
-   
- 
+      avg_bin_contents[i] = summed_bins[i] / static_cast<double>(nWaveforms);
+
+
+    TH1D* tempHist = new TH1D("temp", "temporary", nBins, 0, nBins);
+    for (int i = 0; i < nBins; ++i)
+      tempHist->SetBinContent(i + 1, avg_bin_contents[i]);
+
+    auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitude(tempHist);
+    delete tempHist;
+
     avg_half_width = half_width;
     avg_amplitude  = amplitude;
 
-    std::cout << std::fixed << std::setprecision(2);
-    std::cout << "   ↳ Amplitude: " << avg_amplitude
+    window_label = new TObjString(label.c_str());
+    window_lower = win.low;
+    window_upper = win.high;
+    hit_times = hit_times_by_window[label];
+    half_widths  = half_widths_by_window[label];
+    
+    std::cout << "Window " << label
+              << " (" << window_lower << "–" << window_upper << " ticks)"
+              << " → " << nWaveforms << " waveforms\n"
+              << "   ↳ Amplitude: " << avg_amplitude
               << ", Half-width: " << avg_half_width << std::endl;
+    
 
     fTree2->Fill();
   }
@@ -1721,18 +1825,20 @@ void Hitdumper::beginJob()
   fTree->Branch("hit_ph", &_hit_ph);
   fTree->Branch("hit_width", &_hit_width);
   fTree->Branch("hit_full_integral", &_hit_full_integral);
+  fTree->Branch("hit_z", &_hit_z);
 
 
   if (fcheckTransparency) {
-    //    fTree->Branch("adc_count", &_adc_count,"adc_count/I");
-    // fTree->Branch("waveform_number", &_waveform_number);
-    // fTree->Branch("time_for_waveform",&_time_for_waveform);
-    // fTree->Branch("adc_on_wire", &_adc_on_wire);
-    // fTree->Branch("waveform_integral", &_waveform_integral);
-    // fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
-    //fTree->Branch("wire_number", &_wire_number);
-    // fTree->Branch("channel_number", &_channel_number);
-    //fTree->Branch("hit_time", &_hit_time); 
+    fTree->Branch("adc_count", &_adc_count,"adc_count/I");
+    fTree->Branch("waveform_number", &_waveform_number);
+    fTree->Branch("time_for_waveform",&_time_for_waveform);
+    fTree->Branch("adc_on_wire", &_adc_on_wire);
+    fTree->Branch("waveform_integral", &_waveform_integral);
+    fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
+    fTree->Branch("wire_number", &_wire_number);
+    fTree->Branch("channel_number", &_channel_number);
+    fTree->Branch("hit_time", &_hit_time);
+    fTree->Branch("hit_z_pos", &_hit_z_pos); 
 
   }
 
@@ -1786,6 +1892,12 @@ void Hitdumper::beginJob()
     fTree->Branch("theta_yz_CRT", &_theta_yz_CRT);
     fTree->Branch("crt_gradient", &_crt_gradient);
     fTree->Branch("crt_intercept", &_crt_intercept);
+    fTree->Branch("crt_track_midx", &_crt_track_midx);
+    fTree->Branch("crt_track_predicted_t", &_crt_track_predicted_t);
+    fTree->Branch("crt_track_time_cut_upper", &_crt_track_time_cut_upper);
+    fTree->Branch("crt_track_time_cut_lower", &_crt_track_time_cut_lower);
+    fTree->Branch("crt_track_gradient", &_crt_track_gradient);
+    fTree->Branch("crt_track_intercept",&_crt_track_intercept);
   }
 
   if (freadOpHits) {
@@ -1974,7 +2086,7 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_ph.assign(n, DEFAULT_VALUE);
   _hit_width.assign(n, DEFAULT_VALUE);
   _hit_full_integral.assign(n, DEFAULT_VALUE);
-
+  _hit_z.assign(n, DEFAULT_VALUE);
 }
 
 void Hitdumper::ResetWaveforms(){
@@ -1986,7 +2098,7 @@ void Hitdumper::ResetWaveforms(){
   _wire_number.clear();
   _channel_number.clear();
   _hit_time.clear();
-
+  _hit_z_pos.clear();
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
@@ -2021,6 +2133,12 @@ void Hitdumper::ResetCRTTracksVars() {
   _theta_yz_CRT.clear();
   _crt_gradient.clear();
   _crt_intercept.clear();
+  _crt_track_midx.clear();
+  _crt_track_predicted_t.clear();
+  _crt_track_time_cut_upper.clear();
+  _crt_track_time_cut_lower.clear();
+  _crt_track_gradient.clear();
+  _crt_track_intercept.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars() {

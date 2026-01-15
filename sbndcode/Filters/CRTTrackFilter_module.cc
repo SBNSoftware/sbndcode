@@ -14,6 +14,10 @@
 #include "art/Framework/Principal/Event.h" 
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "lardataobj/RecoBase/Hit.h"
+#include "larcore/Geometry/WireReadout.h"
+
+#include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
+
 #include "art/Framework/Principal/Handle.h"
 #include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Persistency/Common/PtrVector.h"
@@ -32,6 +36,8 @@ private:
   std::string fCRTTrackModuleLabel;
   double fXPosMin;     // minimum absolute value of x position of CRT track endpoints, in cm
   double fXPosMax;     // maximum absolute value of x position of CRT track endpoints, in cm
+  double fYPosMax;
+  double fYPosMin;
   double fThetaXZMax;  // maximum angle theta_XZ of CRT track, in degrees
   bool fUseLengthMin;  // flag to use the fancy calculation of projected CRT track length the active volume, and to cut on that
   double fLengthMin;   // if above is true, then this is minimum length in the active volume, in cm
@@ -57,16 +63,21 @@ private:
   std::vector<int>    _hit_wire;                ///< Wire where the hit belongs to                                                                                                                                   
   std::vector<int>    _hit_channel;             
   std::vector<double> _hit_peakT;
+  std::vector<double>_hit_z;
   double average_xvalue;
   double hit_time_ticks;
   double time_cut_upper;
   double time_cut_lower;
+  double ct;
+  double mt;
 };
 
 CRTTrackFilter::CRTTrackFilter(fhicl::ParameterSet const& p) : EDFilter{p} {
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel","crttracks");
-  fXPosMin             = p.get<double>("XPosMin",150.);
-  fXPosMax             = p.get<double>("XPosMax",200.);
+  fXPosMin             = p.get<double>("XPosMin",0.);
+  fXPosMax             = p.get<double>("XPosMax",190.);
+  fYPosMin             = p.get<double>("YPosMin",0.);
+  fYPosMax             = p.get<double>("YPosMax",190.);
   fThetaXZMax          = p.get<double>("ThetaXZMax",10.);
   fUseLengthMin        = p.get<bool>("UseLengthMin",true);
   fLengthMin           = p.get<double>("LengthMin",300.);
@@ -90,6 +101,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
   e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
   auto const& CRTTrackVec(*CRTTrackHandle);
 
+  auto const& wireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
   art::Handle<std::vector<recob::Hit>> hitListHandle;
   std::vector<art::Ptr<recob::Hit>> hitlist;
   if (e.getByLabel(fHitsModuleLabel,hitListHandle)) {
@@ -108,6 +120,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
   _hit_wire.clear();
   _hit_channel.clear();
   _hit_peakT.clear();
+  _hit_z.clear();
   for (size_t i = 0; i < hitlist.size(); ++i) {
     geo::WireID wireid = hitlist[i]->WireID();
     _hit_tpc.push_back(wireid.TPC);
@@ -115,6 +128,15 @@ bool CRTTrackFilter::filter(art::Event& e) {
     _hit_wire.push_back(wireid.Wire);
     _hit_channel.push_back(hitlist[i]->Channel());
     _hit_peakT.push_back(hitlist[i]->PeakTime());
+    auto bounds = wireReadout.WireEndPoints(wireid);
+
+    auto const& start = bounds.first;
+    auto const& end   = bounds.second;
+
+
+    double z =0.5*(start.Z()+end.Z());
+    _hit_z.push_back(z);
+
     counter ++;
   }
 
@@ -174,6 +196,9 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if(fVerbose) std::cout << "    Found track that meets x position requirements on south point" << std::endl;
     if( not(abs(x_N) > fXPosMin and abs(x_N) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on both points" << std::endl;
+
+    if( not(abs(y_S) > fYPosMin and abs(y_S) < fYPosMax) ) continue;
+    if( not(abs(y_N) > fYPosMin and abs(y_N) < fYPosMax) ) continue;
 
    // Check whether Delta x between the CRT track points satisfies the requirement: Delta x < tan(10deg) * Delta z
     if( not(abs(Delta_x) < tan(fThetaXZMax*PI/180)*abs(Delta_z)) ) continue;
@@ -240,22 +265,33 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if(fVerbose) std::cout << "    abs(tof - (length/29.9792...)) " << abs(crt_trk.ToF()-(crt_trk.Length()/29.9792))<<std::endl;
     if(fVerbose) std::cout << "    Number of hits " << hitlist.size() << std::endl;  
     good_crt= true;
+ 
+    double m = ((200-abs(x_N)) - (200-abs(x_S))) / (z_N - z_S);
+    double c = (200-abs(x_S) - m * z_S);
+
+    mt = (2.0/_electron_vel) * m;
+    ct = (2.0/_electron_vel) * c + 400;
+ 
     double start_x=200- abs(x_S);
     double end_x=200- abs(x_N);
     average_xvalue = (start_x + end_x)/2 ;
     hit_time_ticks= (average_xvalue*2/_electron_vel)+400 ;
     time_cut_upper=hit_time_ticks + _time_window;
     time_cut_lower=hit_time_ticks - _time_window;
-    if(fVerbose) std::cout<<"averag x  "<<average_xvalue<<std::endl;
-    if(fVerbose) std::cout<<"hit time  "<<hit_time_ticks<<std::endl;
-    if(fVerbose) std::cout<<"upper cut  "<<time_cut_upper<<std::endl;
-    if(fVerbose) std::cout<<"lower cut  "<<time_cut_lower<<std::endl;
+ 
+
+    //    if(fVerbose) std::cout<<"averag x  "<<average_xvalue<<std::endl;
+    // if(fVerbose) std::cout<<"hit time  "<<hit_time_ticks<<std::endl;
+    // if(fVerbose) std::cout<<"upper cut  "<<time_cut_upper<<std::endl;
+    // if(fVerbose) std::cout<<"lower cut  "<<time_cut_lower<<std::endl;
+    
+
   } // end loop over CRT tracks
 
   bool good_tpc=false;
   int hit_counter=0;
    for (int ihit = 0; ihit < _nhits; ++ihit) {
-     if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
+     if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit]<((mt*_hit_z[ihit])+ct+_time_window) && _hit_peakT[ihit]>((mt*_hit_z[ihit])+ct-_time_window) && _hit_z[ihit]>10. && _hit_z[ihit]<490.) {
        ++hit_counter;
     }
    }
