@@ -393,7 +393,11 @@ namespace blip {
     // -- hits (from gaushit), these are used in truth-matching of hits
     art::Handle< std::vector<recob::Hit> > hitHandleGH;
     std::vector<art::Ptr<recob::Hit> > hitlistGH;
-    if (evt.getByLabel("gaushit",hitHandleGH))
+    if(fHitProducer == "specialblipgaushit")
+    {
+      if(evt.getByLabel("specialblipgaushit",hitHandleGH)) art::fill_ptr_vector(hitlistGH, hitHandleGH);
+    }
+    else if(evt.getByLabel("gaushit",hitHandleGH))
       art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
