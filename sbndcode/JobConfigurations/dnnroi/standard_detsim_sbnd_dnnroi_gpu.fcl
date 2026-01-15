@@ -1,0 +1,12 @@
+# File: standard_detsim_sbnd_dnnroi.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
+
+# runs WC 2D signal processing during detsim using only DNN-based ROI finding
+# create one Wire product: simtpc2d:dnnsp
+
+
+#include "standard_detsim_sbnd.fcl"
+
+physics.producers.simtpc2d: @local::sbnd_wcls_simsp_dnnroi
+physics.producers.simtpc2d.wcls_main.params.wc_device: "gpu" 
+physics.producers.simtpc2d.wcls_main.plugins: [@sequence::sbnd_wcls_simsp_dnnroi.wcls_main.plugins, "WireCellCuda"]

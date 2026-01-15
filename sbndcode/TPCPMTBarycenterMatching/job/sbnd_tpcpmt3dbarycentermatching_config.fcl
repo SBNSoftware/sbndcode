@@ -39,5 +39,4 @@ TPCPMTBarycenterMatchProducerSCEMC.PandoraLabel: "pandoraSCE"
 TPCPMTBarycenterMatchProducerSCE: @local::TPCPMTBarycenterMatchProducer 
 TPCPMTBarycenterMatchProducerSCE.PandoraLabel: "pandoraSCE"
 
-
 END_PROLOG

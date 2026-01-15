@@ -125,8 +125,11 @@ physics:
 # change tools in sbn to have 2D TPC sim/sp input
 physics.producers.pandoraShowerRazzle.SimChannelLabel: "sptpc2d:gauss"
 physics.producers.pandoraTrackDazzle.SimChannelLabel: "sptpc2d:gauss"
-
 physics.producers.cnnid.WireLabel: "sptpc2d:gauss"
+# uncomment below lines to use DNN ROI SP for Razzle/Dazzle/CNNID
+#physics.producers.pandoraShowerRazzle.SimChannelLabel: "sptpc2d:dnnsp"
+#physics.producers.pandoraTrackDazzle.SimChannelLabel: "sptpc2d:dnnsp"
+#physics.producers.cnnid.WireLabel: "sptpc2d:dnnsp"
 
 ### Calorimetry for data
 physics.producers.cnnid.PointIdAlg.CalorimetryAlg: @local::sbnd_calorimetryalgdata

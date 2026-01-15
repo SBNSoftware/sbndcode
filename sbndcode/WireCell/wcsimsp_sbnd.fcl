@@ -17,7 +17,7 @@ sbnd_wcls: {
         configs: []
 
         ## Libraries in which to look for WCT components
-        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch"]
         inputers: []
         outputers: []
         
@@ -29,7 +29,7 @@ sbnd_wcls: {
 
 # ------------------------------------------------------------------------------------ #
 
-## Configuration for 2D Sim + Signal Processing 
+## Configuration for 2D Sim + Signal Processing -- default: run only traditional ROI finding
 sbnd_wcls_simsp: @local::sbnd_wcls
 sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
@@ -44,7 +44,10 @@ sbnd_wcls_simsp.wcls_main.params:   {
              
                                      ## Set "data" vs. "sim".  The epoch below probably should follow suit.
                                      reality: "sim"
-             
+
+                                     ## if using dnnroi, use this device 
+                                     wc_device: "cpu" 
+
                                      ## if epoch is "dynamic" you MUST add
                                      ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
                                      ## add it if not "dynamic"
@@ -84,6 +87,25 @@ sbnd_wcls_simsp.wcls_main.structs:  {
 
 # ------------------------------------------------------------------------------------ #
 
+## Configuration for 2D Sim + Signal Processing -- run both traditional and DNN ROI finding
+sbnd_wcls_simsp_bothrois: @local::sbnd_wcls_simsp
+sbnd_wcls_simsp_bothrois.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+sbnd_wcls_simsp_bothrois.wcls_main.params.roi: "both"
+sbnd_wcls_simsp_bothrois.wcls_main.structs.nchunks: 2 # should match training config
+sbnd_wcls_simsp_bothrois.wcls_main.structs.tick_per_slice: 4 # should match training config
+
+# ------------------------------------------------------------------------------------ #
+## Configuration for 2D Sim + Signal Processing -- run DNN ROI finding only
+sbnd_wcls_simsp_dnnroi: @local::sbnd_wcls_simsp
+sbnd_wcls_simsp_dnnroi.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+sbnd_wcls_simsp_dnnroi.wcls_main.params.roi: "dnn"
+sbnd_wcls_simsp_dnnroi.wcls_main.structs.nchunks: 2 # should match training config
+sbnd_wcls_simsp_dnnroi.wcls_main.structs.tick_per_slice: 4 # should match training config
+
+
+
+# ------------------------------------------------------------------------------------ #
+
 ## Configuration for **Signal processing ONLY**
 sbnd_wcls_sp: @local::sbnd_wcls
 sbnd_wcls_sp.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp.jsonnet"]
@@ -92,10 +114,15 @@ sbnd_wcls_sp.wcls_main.inputers:  ["wclsRawFrameSource"
                                     # and you must have geo::Geometry service in your environment.
                                     # ,"wclsMultiChannelNoiseDB"
                                   ]
-sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
+sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"
+                                   # "wclsFrameSaver:dnnsaver"
+                                  ]
 sbnd_wcls_sp.wcls_main.params :   {
                                    # This locates the input raw::RawDigit collection in the art::Event 
                                    raw_input_label: "daq"   
+
+                                   # if dnnroi is used, this device will be used
+                                   wc_device: "cpu"   
 
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
                                    reality: "sim"   
@@ -107,6 +134,10 @@ sbnd_wcls_sp.wcls_main.params :   {
 
                                    # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
                                    signal_output_form: "sparse"
+
+                                   roi: "trad"
+                                   dnnroi_model_p0: "DNN_ROI/plane0.ts"
+                                   dnnroi_model_p1: "DNN_ROI/plane1.ts"
                                    }
 
 sbnd_wcls_sp.wcls_main.structs:   {

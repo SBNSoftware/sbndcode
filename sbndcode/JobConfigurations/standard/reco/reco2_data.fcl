@@ -33,6 +33,7 @@ physics.producers:
     ### SCE-aware shower reco for data
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreationData
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
+
     frameshift: @local::frameshift_data
 }
 
@@ -41,6 +42,7 @@ physics.reco2: [ pandora, pandoraTrack, blipPandoraCopy, blipPandoraTrackCopy, p
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData, pandoraSCELikePidData,
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
                  caloskimCalorimetry, blipreco, lightpropagationcorrectionSCE, frameshift]
+
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""

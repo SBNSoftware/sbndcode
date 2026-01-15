@@ -14,6 +14,7 @@ $${\color{red}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 - [ ] Linked any relevant issues under `Developement`
 - [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer ([PetrilloAtWork](https://github.com/PetrilloAtWork) or [JosiePaton](https://github.com/JosiePaton)) as additional reviewer.
 - [ ] Does this affect the standard workflow? 
+- [ ] Is this PR a patch for the ongoing production? If so, separate PR must also be made for production/v10_06_00 branch! 
 
 ### Relevant PR links (optional)
 Does this PR require merging another PR in a different repository (such as sbnanobj/sbnobj etc.)?
