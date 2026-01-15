@@ -114,6 +114,23 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << "Encountered error (code " << error
         << ") while trying to access 'caen_digitizer_channel' on table " << dbname << "\n";
     fPMTCalibrationData[channel].caenDigitizerChannel = static_cast<int>(_caen_digitizer_channel);
+    // Read on PMT
+    bool _on_pmt = false;
+    error = db.GetNamedChannelData(channel, "on_pmt", _on_pmt);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'on_pmt' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].onPMT = _on_pmt;
+
+    // Read reconstruct channel
+    bool _reconstruct_channel = false;
+    error = db.GetNamedChannelData(channel, "reconstruct_channel", _reconstruct_channel);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'reconstruct_channel' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].reconstructChannel = _reconstruct_channel;
 
     // Read total transit time
     double _total_transit_time = 0.;
@@ -124,6 +141,15 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << ") while trying to access 'total_transit_time' on table " << dbname << "\n";
     fPMTCalibrationData[channel].totalTransitTime = _total_transit_time;
 
+    // Read cosmic timing correction
+    double _cosmic_timing_correction = 0.;
+    error = db.GetNamedChannelData(channel, "cosmic_timing_correction", _cosmic_timing_correction);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'cosmic_timing_correction' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].cosmicTimeCorrection = _cosmic_timing_correction;
+
     // Read spe amplitude
     double _spe_amplitude = 0.;
     error = db.GetNamedChannelData(channel, "spe_amp", _spe_amplitude);
@@ -132,6 +158,15 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << "Encountered error (code " << error
         << ") while trying to access 'spe_amplitude' on table " << dbname << "\n";
     fPMTCalibrationData[channel].spe_amplitude = _spe_amplitude;
+
+    // Read spe amplitude std
+    double _spe_amplitude_std = 0.;
+    error = db.GetNamedChannelData(channel, "spe_amp_std", _spe_amplitude_std);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'spe_amplitude_std' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].spe_amplitude_std = _spe_amplitude_std;
 
     // Read gauss filter power
     double _gauss_w_wc_power = 0;
@@ -151,6 +186,21 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << dbname << "\n";
     fPMTCalibrationData[channel].gauss_wc = _gauss_wc;
 
+    double _nonlinearity_pesat = 0.;
+    error = db.GetNamedChannelData(channel, "nonlinearity_pesat", _nonlinearity_pesat);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'nonlinearity_pesat' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].nonlinearity_pesat = _nonlinearity_pesat;
+    double _nonlinearity_alpha = 0.;
+    error = db.GetNamedChannelData(channel, "nonlinearity_alpha", _nonlinearity_alpha);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'nonlinearity_alpha' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].nonlinearity_alpha = _nonlinearity_alpha;
+    
     // Read SER
     std::vector<double> _ser;
     std::string name_base = "ser_vec_";

@@ -1,0 +1,32 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+##include "crtbacktrackeralg_sbnd.fcl"
+#include "workflow_reco2.fcl"
+
+process_name: CRTTPCRecoAna
+
+services:
+{
+  @table::sbnd_services
+  TFileService: { fileName: "crtana_sbnd.root" }
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics.producers: @local::sbnd_reco2_producers
+
+physics.analyzers.crtana: @local::crtana_data_sbnd
+
+physics.reco:          [ pandora, pandoraSCE, pandoraSCETrack,  crtspacepointmatchingSCE, crttrackmatchingSCE ]
+physics.trigger_paths: [ reco ]
+
+physics.ana:       [ crtana ]
+physics.end_paths: [ ana ]
+

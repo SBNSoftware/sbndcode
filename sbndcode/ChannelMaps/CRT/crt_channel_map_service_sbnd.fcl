@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+crt_channel_map_sbnd:
+{
+  FileName: "SBNDCRTChannelMap_Commissioning_v5.txt"
+}
+
+crt_channel_map_no_inversion:
+{
+  FileName: "SBNDCRTChannelMap_Commissioning_v5_no_inversion.txt"
+}
+
+END_PROLOG

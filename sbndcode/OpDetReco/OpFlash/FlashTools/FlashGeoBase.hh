@@ -25,6 +25,8 @@ namespace lightana
                                   double& Ycenter, double& Zcenter,
                                   double& Ywidth, double& Zwidth) = 0 ;
 
+    // Method to initialize geometry-dependent algorithm
+    virtual void InitializeFlashGeoAlgo(){}; 
   private:
 
   };

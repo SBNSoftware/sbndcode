@@ -151,7 +151,43 @@ local nf_maker = import 'pgrapher/experiment/sbnd/nf-data.jsonnet'; //added Ewer
 local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp_override = 
+if roi == "dnn" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+    //decon_charge_tag: "",
+    //gauss_tag: "",
+    //wiener_tag: "",
+} 
+else if roi == "both" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+} 
+else {
+    sparse: true,
+};
+//local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp = sp_maker(params, tools, sp_override);
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';

@@ -12,6 +12,7 @@ set(
         lardataobj::AnalysisBase
         lardataobj::RecoBase
         larsim::Simulation
+	larsim::OpticalPath
         lardataobj::Simulation
         larpandora::LArPandoraInterface
         nusimdata::SimulationBase

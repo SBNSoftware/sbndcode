@@ -119,11 +119,11 @@ local wcls_depoflux_writer = g.pnode({
     anodes: [wc.tn(anode) for anode in tools.anodes],
     field_response: wc.tn(tools.field),
     tick: 0.5 * wc.us,
-    window_start: 0.0 * wc.ms,
+    window_start: params.sim.tick0_time, // -205 * wc.us,
     window_duration: self.tick * params.daq.nticks,
     nsigma: 3.0,
 
-    reference_time: -1700 * wc.us,
+    reference_time: - 1700  * wc.us - self.window_start, // target is tick 410 should be 3400
 
     //energy: 1, # equivalent to use_energy = true
     simchan_label: 'simpleSC',
@@ -133,7 +133,44 @@ local wcls_depoflux_writer = g.pnode({
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+
+local sp_override = 
+if roi == "dnn" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+    //decon_charge_tag: "",
+    gauss_tag: "",
+    wiener_tag: "",
+} 
+else if roi == "both" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+} 
+else if roi == "trad" then {
+    sparse: true,
+};
+
+local sp = sp_maker(params, tools, sp_override);
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';

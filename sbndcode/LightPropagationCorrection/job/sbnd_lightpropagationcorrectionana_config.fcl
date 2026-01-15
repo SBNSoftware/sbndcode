@@ -1,0 +1,10 @@
+
+BEGIN_PROLOG
+
+lightpropagationcorrection_ana:
+{
+  module_type: "LightPropagationCorrectionAna"
+  LightPropCorrectionLabel: "lightpropcorrection"
+}
+
+END_PROLOG

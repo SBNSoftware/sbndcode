@@ -1,13 +1,11 @@
 art_make(
          MODULE_LIBRARIES
          ROOT::Tree
-         ROOT::Graf3d
-         artdaq_core::artdaq-core_Data
+         art_root_io::TFileService_service
          larsim::Utils
-         sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
+         lardata::DetectorClocksService
          sbnobj::SBND_CRT
          sbnobj::SBND_Timing
-         sbndcode_GeoWrappers
          sbndcode_CRT_CRTBackTracker
 )
 

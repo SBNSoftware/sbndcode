@@ -79,7 +79,7 @@ namespace sbnd::crt {
 
       const double crtTime = fUseTs0 ? crtSP->Ts0() * 1e-3 + fTimeCorrection : crtSP->Ts1() * 1e-3 + fTimeCorrection;
 
-      if(!(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
+      if(driftDirection != 0 && !(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
         continue;
 
       if(crtSP->PE() < fPECut || crtSP->XErr() > fMaxUncert || crtSP->YErr() > fMaxUncert || crtSP->ZErr() > fMaxUncert)

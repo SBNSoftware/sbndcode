@@ -50,17 +50,35 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         int getCAENDigitizerChannel( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).caenDigitizerChannel;
         };
+        bool getOnPMT(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).onPMT;
+        };
+        bool getReconstructChannel(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).reconstructChannel;
+        };
         double getTotalTransitTime( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).totalTransitTime;
         };
+        double getCosmicTimeCorrection(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).cosmicTimeCorrection;
+        };
         double getSPEAmplitude( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).spe_amplitude;
+        };
+        double getSPEAmplitudeStd( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).spe_amplitude_std;
         };
         double getGaussFilterPower( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).gauss_wc_power;
         };
         double getGaussFilterWC( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).gauss_wc;
+        };
+        double getNonLineatiryPESat( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).nonlinearity_pesat;
+        };
+        double getNonLineatiryAlpha( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).nonlinearity_alpha;
         };
         std::vector<double> getSER( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).ser;
@@ -80,15 +98,20 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             size_t breakoutBox=0;
             size_t caenDigitizer=0;
             size_t caenDigitizerChannel=0;
-            size_t totalTransitTime=0;
+            bool onPMT=true;
+            bool reconstructChannel=false;
+            double totalTransitTime=0.;
+            double cosmicTimeCorrection=0.;
             double spe_amplitude=0.;
+            double spe_amplitude_std=0.;
             double gauss_wc_power=0.;
             double gauss_wc=0.;
+            double nonlinearity_pesat=0.;
+            double nonlinearity_alpha=0.;
             std::vector<double> ser={};
             };
             
-        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, 0, 0.0, 0.0, 0.0, {}};
-
+        const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, true, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
         
