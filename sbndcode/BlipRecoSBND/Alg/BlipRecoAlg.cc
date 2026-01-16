@@ -361,6 +361,7 @@ namespace blip {
     art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
     if (evt.getByLabel(fSimDepProducer,sedHandle)){
+      std::cout << " in the sedlist filler " << std::endl;
       art::fill_ptr_vector(sedlist, sedHandle);
      }
     std::vector<sim::IDE > sIDElist;
@@ -376,10 +377,8 @@ namespace blip {
       std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
-      std::cout << " Got my wire for chIndex " << chIndex << " it has size " << wids.size() << " first entry string is " << wids[0].toString() << std::endl;
       unsigned int MaxTDCTick = 3401;
       std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, MaxTDCTick);
-      std::cout << " this channel has " << TempChIDE.size() << " IDEs" << std::endl;
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
 	        sIDElist.push_back( TempChIDE[ideIndex] ); //may need to add a &
@@ -538,8 +537,9 @@ namespace blip {
       pinfo.resize(plist.size());
       for(size_t i = 0; i<plist.size(); i++){
         //use sim::EnergyDeposits by default. This is heavy and may be dropped
-        if(evt.getByLabel(fSimDepProducer,sedHandle))
+        if(sedlist.size()>0)
         {
+          std::cout << " filling particle info with sedlist" << std::endl;
           BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
         }
         else //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
