@@ -49,7 +49,7 @@ namespace BlipUtils {
   //###################################################
   //void      InitializeDetProps();
   void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane);
-  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane);
+  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SIDEVec_t&, int plane);
   void      FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
