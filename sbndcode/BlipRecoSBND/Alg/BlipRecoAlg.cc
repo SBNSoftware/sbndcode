@@ -655,7 +655,7 @@ namespace blip {
       
 
       // find associated track
-      if( fHitProducer == "gaushit" && fmtrk.isValid() ) {
+      if( fHitProducer == "specialblipgaushit" && fmtrk.isValid() ) {
         if(fmtrk.at(i).size()) hitinfo[i].trkid = fmtrk.at(i)[0]->ID();
       
       // if the hit collection didn't have associations made
