@@ -50,6 +50,7 @@ cet_build_plugin(HitDumper art::module SOURCE HitDumper_module.cc LIBRARIES ${MO
 cet_build_plugin(MuonTrackFilter art::module SOURCE MuonTrackFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(MuonTrackProducer art::module SOURCE MuonTrackProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(OnlineEvd art::module SOURCE OnlineEvd_module.cc LIBRARIES ${MODULE_LIBRARIES})
+target_include_directories(sbndcode_Commissioning_OnlineEvd_module PRIVATE $ENV{HEP_HPC_INC})
 
 install_source()
 
