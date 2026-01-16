@@ -16,6 +16,8 @@ sbnd_reco1_drops: [
   , "drop *_fasthit_*_*"
   , "drop recob::Wires_*_wiener_*"  #drop wiener wires
   , "drop recob::Wires_*_gauss_*"
+  , "drop *ints_opdaq_MonPulseSizes_DetSim*"
+  , "drop *ints_opdaq_MonPulses_DetSim*"
   , @sequence::sbnd_reco1_ml_drops
 ]
 
