@@ -32,9 +32,8 @@ namespace BlipUtils {
   //===========================================================================
   // Provided a MCParticle, calculate everything we'll need for later calculations
   // and save into ParticleInfo object
-  void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
-    
-    // Get important info and do conversions
+void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo){
+  // Get important info and do conversions
     pinfo.particle    = part;
     pinfo.trackId     = part.TrackId();
     pinfo.isPrimary   = (int)(part.Process() == "primary");
@@ -50,17 +49,29 @@ namespace BlipUtils {
     pinfo.time        = /*ns ->mus*/1e-3 * part.T();
     pinfo.endtime     = /*ns ->mus*/1e-3 * part.EndT();
     pinfo.numTrajPts  = part.NumberTrajectoryPoints();
-
     // Pathlength (in AV) and start/end point
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
-
     // Central position of trajectory
     pinfo.position    = 0.5*(pinfo.startPoint+pinfo.endPoint);
-
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
+    return;
+}
+void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
+    FillParticleInfo( part, pinfo);
     for(auto& sed : sedvec ) {
+      if( sed->TrackID() == part.TrackId() ) {
+        pinfo.depEnergy     += sed->Energy();
+        pinfo.depElectrons  += sed->NumElectrons();
+      }
+    }
+    return;
+  }
+  void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SIDEVec_t& sIDEvec, int caloPlane){
+    
+    FillParticleInfo( part, pinfo);
+    for(auto& sed : sIDEvec ) {
       if( -1*sed.trackID == part.TrackId() || sed.trackID == part.TrackId() ) {
         pinfo.depEnergy     += sed.energy;
         pinfo.depElectrons  += sed.numElectrons;

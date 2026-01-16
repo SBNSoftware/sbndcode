@@ -37,8 +37,8 @@
 #include "sbndcode/BlipRecoSBND/Utils/DataTypes.h"
 #include "TH1D.h"
 
-
-typedef std::vector<sim::IDE> SEDVec_t;
+typedef std::vector<art::Ptr<sim::SimEnergyDeposit>> SEDVec_t;
+typedef std::vector<sim::IDE> SIDEVec_t;
 
 geo::View_t kViews[3]={geo::kU, geo::kV, geo::kW};
 
@@ -49,6 +49,8 @@ namespace BlipUtils {
   //###################################################
   //void      InitializeDetProps();
   void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane=2);
+  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane=2);
+  void      FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
   void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&); 

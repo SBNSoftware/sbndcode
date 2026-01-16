@@ -357,31 +357,32 @@ namespace blip {
     if (evt.getByLabel(fGeantProducer,pHandle))
       art::fill_ptr_vector(plist, pHandle);
  
-    // -- SimEnergyDeposits (usually dropped in reco
-    //art::Handle<std::vector<sim::EnergyDeposit> > sedHandle;
-    std::vector<sim::IDE > sedlist;
-    //if (evt.getByLabel(fSimDepProducer,sedHandle)){
-    //  art::fill_ptr_vector(sedlist, sedHandle);
-    // }
-    // -- SimChannels (usually dropped in reco)
+    // -- SimEnergyDeposits 
+    art::Handle<std::vector<sim::EnergyDeposit> > sedHandle;
+    std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
+    if (evt.getByLabel(fSimDepProducer,sedHandle)){
+      art::fill_ptr_vector(sedlist, sedHandle);
+     }
+    std::vector<sim::IDE > sIDElist;
+    // -- SimChannels 
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
     if (evt.getByLabel(fSimChanProducer,simchanHandle))
     { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
-      //Loop over channels to get full sedlist
+      //Loop over channels to get full sIDElist
       for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
 	    {
       std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
-      std::cout << " Got my wire for chIndex " << chIndex << " it has size " << wids.size() << " first entry string is " << wids[0].toString() << std::endl;
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
-      std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
+      std::cout << " Got my wire for chIndex " << chIndex << " it has size " << wids.size() << " first entry string is " << wids[0].toString() << std::endl;
+      unsigned int MaxTDCTick = 3401;
+      std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, MaxTDCTick);
       std::cout << " this channel has " << TempChIDE.size() << " IDEs" << std::endl;
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
-	        //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
-	        sedlist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+	        sIDElist.push_back( TempChIDE[ideIndex] ); //may need to add a &
 	       }
 	    }
     }
@@ -535,7 +536,15 @@ namespace blip {
     if( plist.size() ) {
       pinfo.resize(plist.size());
       for(size_t i = 0; i<plist.size(); i++){
-        BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
+        //use sim::EnergyDeposits by default. This is heavy and may be dropped
+        if(evt.getByLabel(fSimDepProducer,sedHandle))
+        {
+          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
+        }
+        else //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
+        {
+          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sIDElist, fCaloPlane);
+        }
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
         pinfo[i].index = i;
       }
