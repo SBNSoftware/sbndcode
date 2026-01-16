@@ -36,7 +36,7 @@
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
@@ -80,7 +80,7 @@ public:
 
 private:
 
-  CRTGeoAlg fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
   TPCGeoAlg fTPCGeoAlg;
 
   std::string fCRTStripHitModuleLabel, fCRTClusterModuleLabel, fCRTSpacePointModuleLabel,
@@ -201,7 +201,6 @@ private:
 
 sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
 {
   fCRTStripHitModuleLabel        = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
   fCRTClusterModuleLabel         = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
@@ -616,7 +615,7 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTStripHits(const art::Event &e, cons
         continue;
 
       _sh_channel.push_back(hit->Channel());
-      _sh_tagger.push_back(fCRTGeoAlg.ChannelToTaggerEnum(hit->Channel()));
+      _sh_tagger.push_back(fCRTGeoService->ChannelToTaggerEnum(hit->Channel()));
       _sh_ts0.push_back(hit->Ts0());
       _sh_ts0_rwm_ref.push_back(hit->Ts0() + _rwm_etrig_diff);
       _sh_ts0_ptb_hlt_beam_gate_ref.push_back(hit->Ts0() + _ptb_hlt_beam_gate_etrig_diff);

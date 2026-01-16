@@ -1,17 +1,13 @@
-#include "crtgeoalg_sbnd.fcl"
 #include "services_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
+#include "crt_services_sbnd.fcl"
 
 process_name: CRTRateAnalyzer
 
 services:
 {
   @table::sbnd_basic_services
-
-  TFileService:         { fileName: "crtrateana_sbnd.root" }
-  CRTChannelMapService: @local::crt_channel_map_standard
-  CRTCalibService:      @local::crt_calib_service
+  @table::crt_services_data_sbnd
+  TFileService: { fileName: "crtrateana_sbnd.root" }
 }
 
 source:

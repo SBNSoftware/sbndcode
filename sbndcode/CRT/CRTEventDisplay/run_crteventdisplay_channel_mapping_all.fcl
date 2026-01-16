@@ -1,17 +1,16 @@
 #include "services_sbnd.fcl"
 #include "particleinventoryservice.fcl"
 #include "crteventdisplay_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
-#include "crt_calib_service.fcl"
+#include "crt_services_sbnd.fcl"
 
 process_name: CRTEventDisplay
 
 services:
 {
   @table::sbnd_services
+  @table::crt_services_sbnd
   ParticleInventoryService: @local::standard_particleinventoryservice
   CRTChannelMapService:     @local::crt_channel_map_no_inversion
-  CRTCalibService:          @local::crt_calib_service
 }
 
 source:

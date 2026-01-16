@@ -30,7 +30,8 @@
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTBlob.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 
 namespace sbnd {
   namespace crt {
@@ -61,7 +62,8 @@ public:
 
 private:
 
-  CRTGeoAlg fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService>              fCRTGeoService;
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
   std::string fFEBDataModuleLabel, fCRTSpacePointModuleLabel,
     fCRTBlobModuleLabel, fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel;
@@ -84,7 +86,6 @@ private:
 
 sbnd::crt::CRTRateAnalysis::CRTRateAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCRTBlobModuleLabel(p.get<std::string>("CRTBlobModuleLabel"))
@@ -166,7 +167,7 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
   for(auto const& data : FEBDataVec)
     {
       ResetRawVars();
-      _tagger = fCRTGeoAlg.AuxDetIndexToTaggerEnum(data->Mac5());
+      _tagger = fCRTGeoService->AuxDetIndexToTaggerEnum(data->Mac5());
       _module = data->Mac5();
 
       int max_adc = -1, max_ch = -1;
@@ -182,7 +183,7 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
             }
         }
 
-      _max_channel = _module * 32 + max_ch;
+      _max_channel = fCRTChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(_module, max_ch);
 
       fRawTree->Fill();
     }

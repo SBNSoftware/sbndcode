@@ -1,10 +1,7 @@
-#include "crtgeoalg_sbnd.fcl"
-
 BEGIN_PROLOG
 
 crtrateana_sbnd:
 {
-  CRTGeoAlg:                @local::crtgeoalg_sbnd
   FEBDataModuleLabel:       "crtsim"
   CRTSpacePointModuleLabel: "crtspacepoints"
   CRTBlobModuleLabel:       "crtblobs"
@@ -14,7 +11,6 @@ crtrateana_sbnd:
 }
 
 crtrateana_data_sbnd: @local::crtrateana_sbnd
-crtrateana_data_sbnd.CRTGeoAlg:          @local::crtgeoalg_data_sbnd
 crtrateana_data_sbnd.FEBDataModuleLabel: "crtdecoder"
 
 END_PROLOG

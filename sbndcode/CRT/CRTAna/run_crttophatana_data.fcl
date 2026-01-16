@@ -1,6 +1,6 @@
-#include "crtgeoalg_sbnd.fcl"
 #include "services_sbnd.fcl"
 #include "crttophatana_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
 
 process_name: CRTTopHatAna
 
@@ -8,6 +8,7 @@ services:
 {
   TFileService: { fileName: "crttophatana_sbnd.root" }
   @table::sbnd_basic_services
+  @table::crt_services_data_sbnd
 }
 
 source:

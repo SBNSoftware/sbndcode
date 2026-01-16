@@ -55,17 +55,16 @@ public:
 
 private:
 
-  CRTEventDisplayAlg fCRTEventDisplayAlg;
-  CRTGeoAlg          fCRTGeoAlg;
-  std::string        fSaveDir;
-  std::vector<int>   fChosenTaggers;
+  CRTEventDisplayAlg                fCRTEventDisplayAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+  std::string                       fSaveDir;
+  std::vector<int>                  fChosenTaggers;
 };
 
 
 sbnd::crt::CRTChannelMappingEventDisplay::CRTChannelMappingEventDisplay(Parameters const& config)
   : EDAnalyzer{config}
   , fCRTEventDisplayAlg(config().EventDisplayConfig())
-  , fCRTGeoAlg(config().EventDisplayConfig().GeoAlgConfig())
   , fSaveDir(config().SaveDir())
   , fChosenTaggers(config().EventDisplayConfig().ChosenTaggers())
   {
@@ -76,7 +75,7 @@ void sbnd::crt::CRTChannelMappingEventDisplay::analyze(art::Event const& e)
 {
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
 
-  for(auto const& [ name, module ] : fCRTGeoAlg.GetModules())
+  for(auto const& [ name, module ] : fCRTGeoService->GetModules())
     {
       if(std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
         continue;

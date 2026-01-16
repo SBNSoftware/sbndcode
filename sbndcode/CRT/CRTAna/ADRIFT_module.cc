@@ -44,7 +44,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 
 namespace sbnd {
@@ -93,7 +93,7 @@ private:
   void SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin, bool badChannel);
   static double LanGau(double *x, double *par);
 
-  CRTGeoAlg fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
 
   // Inputs
   std::string fFEBDataModuleLabel, fCRTStripHitModuleLabel, fCRTClusterModuleLabel,
@@ -144,7 +144,6 @@ private:
 
 sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
 {
   fFEBDataModuleLabel       = p.get<std::string>("FEBDataModuleLabel");
   fCRTStripHitModuleLabel   = p.get<std::string>("CRTStripHitModuleLabel");
@@ -636,8 +635,8 @@ void sbnd::crt::ADRIFT::AnalyseStripHits(art::Event const &e, const int window)
       if(strip_hit->Channel() % 2)
         std::cout << "ODD Strip Hit Channel Number" << std::endl;
       
-      CRTSiPMGeo sipm1 = fCRTGeoAlg.GetSiPM(strip_hit->Channel());
-      CRTSiPMGeo sipm2 = fCRTGeoAlg.GetSiPM(strip_hit->Channel() + 1);
+      CRTSiPMGeo sipm1 = fCRTGeoService->GetSiPM(strip_hit->Channel());
+      CRTSiPMGeo sipm2 = fCRTGeoService->GetSiPM(strip_hit->Channel() + 1);
 
       hADCSH[window][strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
       hADCSH[window][strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
@@ -692,8 +691,8 @@ void sbnd::crt::ADRIFT::AnalyseSpacePoints(art::Event const &e, const int window
           if(strip_hit->Channel() % 2)
             std::cout << "ODD Strip Hit Channel Number" << std::endl;
       
-          CRTSiPMGeo sipm1 = fCRTGeoAlg.GetSiPM(strip_hit->Channel());
-          CRTSiPMGeo sipm2 = fCRTGeoAlg.GetSiPM(strip_hit->Channel() + 1);
+          CRTSiPMGeo sipm1 = fCRTGeoService->GetSiPM(strip_hit->Channel());
+          CRTSiPMGeo sipm2 = fCRTGeoService->GetSiPM(strip_hit->Channel() + 1);
           
           hADCSP[window][strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
           hADCSP[window][strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
@@ -775,8 +774,8 @@ void sbnd::crt::ADRIFT::AnalyseTracks(art::Event const &e, const int window)
               if(strip_hit->Channel() % 2)
                 std::cout << "ODD Strip Hit Channel Number" << std::endl;
       
-              CRTSiPMGeo sipm1 = fCRTGeoAlg.GetSiPM(strip_hit->Channel());
-              CRTSiPMGeo sipm2 = fCRTGeoAlg.GetSiPM(strip_hit->Channel() + 1);
+              CRTSiPMGeo sipm1 = fCRTGeoService->GetSiPM(strip_hit->Channel());
+              CRTSiPMGeo sipm2 = fCRTGeoService->GetSiPM(strip_hit->Channel() + 1);
           
               if(fTracks)
                 {
@@ -840,24 +839,23 @@ void sbnd::crt::ADRIFT::endJob()
 
       std::cout << "=== Processing module " << gdml_i << std::endl;
 
-      SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(gdml_i);
-      uint mac5 = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
-      bool invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
+      uint mac5   = ChannelMapService->GetMAC5FromOfflineModuleID(gdml_i);
+      bool invert = ChannelMapService->GetInversionFromOfflineModuleID(gdml_i);
 
       for(int ch_i = 0; ch_i < 32; ++ch_i)
         {
-          const int ch = gdml_i * 32 + ch_i;
+          const int ch = ChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(gdml_i, ch_i);
 
           _channel        = ch;
           _gdml_id        = gdml_i;
           _mac5           = mac5;
           _raw_channel    = invert ? 31 - ch_i : ch_i;
-          _tagger         = fCRTGeoAlg.ChannelToTaggerEnum(ch);
-          _channel_status = fCRTGeoAlg.GetSiPM(ch).status;
-          _area           = fCRTGeoAlg.StripArea(ch);
-          _y_average      = fCRTGeoAlg.StripAverageY(ch);
-          _ped_calib      = fCRTGeoAlg.GetSiPM(ch).pedestal;
-          _gain_calib     = fCRTGeoAlg.GetSiPM(ch).gain;
+          _tagger         = fCRTGeoService->ChannelToTaggerEnum(ch);
+          _channel_status = fCRTGeoService->GetSiPM(ch).status;
+          _area           = fCRTGeoService->StripArea(ch);
+          _y_average      = fCRTGeoService->StripAverageY(ch);
+          _ped_calib      = fCRTGeoService->GetSiPM(ch).pedestal;
+          _gain_calib     = fCRTGeoService->GetSiPM(ch).gain;
           _horizontal     = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
 
           for(uint window = 0; window < fUnixWindows.size(); ++window)

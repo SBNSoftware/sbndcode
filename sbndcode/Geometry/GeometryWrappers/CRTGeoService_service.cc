@@ -70,6 +70,7 @@ namespace sbnd::crt {
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
+                const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
 
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName, 0, 0, invert, minos);
@@ -562,7 +563,7 @@ namespace sbnd::crt {
            (point.Z() > lims[2] && point.Z() < lims[5]);
   }
 
-  double CRTGeoAlg::StripArea(const uint16_t channel)
+  double CRTGeoService::StripArea(const uint16_t channel)
   {
     CRTStripGeo strip = GetStrip(channel);
     const double x = abs(strip.maxX - strip.minX) / 2;
@@ -573,7 +574,7 @@ namespace sbnd::crt {
     return x * y * z;
   }
 
-  double CRTGeoAlg::StripAverageY(const uint16_t channel)
+  double CRTGeoService::StripAverageY(const uint16_t channel)
   {
     CRTStripGeo strip = GetStrip(channel);
 
