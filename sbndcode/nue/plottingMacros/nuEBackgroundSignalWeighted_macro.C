@@ -1261,10 +1261,10 @@ void nuEBackgroundSignalWeighted_macro(){
     std::ofstream clearFile("purity_max_values_beforeCuts.txt", std::ios::trunc);
     clearFile.close();
 
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_10Dec.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_11Dec.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit/";
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_11Dec.root");
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit/";
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/enuelastic_DLVertexingDLNu+E_26Dec_v10_06_00_gen_g4_detsim_reco1_reco2_analysed_DLNu+E_26Dec_25890928_2176_Analysed_DLNu+E_output-0f528a1f-2a9b-4b7f-b99e-7c2684cabb08.root");
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_nuE/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1406,10 +1406,15 @@ void nuEBackgroundSignalWeighted_macro(){
     double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT - SignalScaledSpills_BDT) / cosmicSpillsSumCurrent);
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone - SignalScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE - SignalScaledSpills_NuE) / cosmicSpillsSumCurrent);
-    */
     double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT) / cosmicSpillsSumCurrent);
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE) / cosmicSpillsSumCurrent);
+    */
+
+    double targetGates = ((1333568/6.293443e+18)*targetPOT);
+    double cosmicsWeights_BDT = (((1-0.0754) * targetGates)/cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = (((1-0.0754) * targetGates)/cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
 
     weights_struct weights;
     weights.signalCurrent = targetPOT / POTSignalBDT_notMissing;
@@ -2762,8 +2767,23 @@ void nuEBackgroundSignalWeighted_macro(){
                     std::cout << "DL Nu+E, nu+e slice with purity < 0.3" << std::endl;
                     std::cout << "signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl;
                     std::cout << "EventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << std::endl;
-                    std::cout << "Slice Origin = " << reco_sliceOrigin->at(slice) << ", Interaction Type = " << reco_sliceInteraction->at(slice) << std::endl;
+                    
+                    double recoSliceVXPurityLow = 0;
+                    double recoSliceVYPurityLow = 0;
+                    double recoSliceVZPurityLow = 0;
+                    
+                    for(size_t recoNeutrinoAA = 0; recoNeutrinoAA < reco_neutrinoID->size(); ++recoNeutrinoAA){
+                        if(reco_neutrinoSliceID->at(recoNeutrinoAA) == reco_sliceID->at(slice)){
+                            recoSliceVXPurityLow = reco_neutrinoVX->at(recoNeutrinoAA);
+                            recoSliceVYPurityLow = reco_neutrinoVY->at(recoNeutrinoAA);
+                            recoSliceVZPurityLow = reco_neutrinoVZ->at(recoNeutrinoAA);
+                        }
+                    }
 
+                    std::cout << "Slice ID = " << reco_sliceID->at(slice) << ", True recoil electron vertex = (" << truth_recoilElectronVX->at(0) << ", " << truth_recoilElectronVY->at(0) << ", " << truth_recoilElectronVZ->at(0) << "), reco slice true vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << "), slice reco vertex = (" << recoSliceVXPurityLow << ", " << recoSliceVYPurityLow << ", " << recoSliceVZPurityLow << ")" << std::endl;
+                    std::cout << "Slice Origin = " << reco_sliceOrigin->at(slice) << ", Interaction Type = " << reco_sliceInteraction->at(slice) << std::endl;
+                    std::cout << "Slice Purity = " << reco_slicePurity->at(slice) << ", Completeness = " << reco_sliceCompleteness->at(slice) << std::endl;
+            
                     printf("Num Hits in Slice = %f, Num Truth Matched Hits in Slice = %f, Num Truth Matched Hits = %f\n", reco_sliceNumHits->at(slice), reco_sliceNumHitsTruthMatched->at(slice), reco_sliceNumTruthHits->at(slice));
                     std::cout << "Number of PFPs in Slice = " << numPFPsSlice << std::endl;
                     std::cout << "" << std::endl;
@@ -2772,7 +2792,7 @@ void nuEBackgroundSignalWeighted_macro(){
                     for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                         if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                             pfpnumbertest++;
-                            printf("Particle %d: True PDG = %f, True Origin = %f, True Interaction Type = %f, Num Hits in PFP = %f, Num Truth Matched Hits in PFP = %f, Num Truth Matched Hits = %f\n", pfpnumbertest, reco_particleTruePDG->at(pfp), reco_particleTrueOrigin->at(pfp), reco_particleTrueInteractionType->at(pfp), reco_particleNumHits->at(pfp), reco_particleNumHitsTruthMatched->at(pfp), reco_particleNumTruthHits->at(pfp));
+                            printf("Particle %d: ID = %f, True PDG = %f, True Origin = %f, True Interaction Type = %f, Num Hits in PFP = %f, Num Truth Matched Hits in PFP = %f, Num Truth Matched Hits = %f\n", pfpnumbertest, reco_particleID->at(pfp), reco_particleTruePDG->at(pfp), reco_particleTrueOrigin->at(pfp), reco_particleTrueInteractionType->at(pfp), reco_particleNumHits->at(pfp), reco_particleNumHitsTruthMatched->at(pfp), reco_particleNumTruthHits->at(pfp));
                         }
                     }
 
@@ -4210,13 +4230,13 @@ void nuEBackgroundSignalWeighted_macro(){
     
     // DL Nu+E Vertexing
     styleDrawSplit(sliceCompleteness_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
-    styleDrawSplit(slicePurity_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(slicePurity_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScore_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawSplit(ERecoSumThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawSplit(ERecoHighestThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(ERecoSumThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
+    styleDrawSplit(ERecoHighestThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     
     styleDrawSplit(sliceCompletenessDist_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(slicePurityDist_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_dist_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
