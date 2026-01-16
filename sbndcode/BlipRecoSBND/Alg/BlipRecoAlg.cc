@@ -377,7 +377,7 @@ namespace blip {
       std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
-      unsigned int MaxTDCTick = 3401;
+      unsigned int MaxTDCTick = 4294967294; // 1 under 32 bit unsigned int max
       std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, MaxTDCTick);
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
