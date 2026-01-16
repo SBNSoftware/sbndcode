@@ -358,7 +358,7 @@ namespace blip {
       art::fill_ptr_vector(plist, pHandle);
  
     // -- SimEnergyDeposits 
-    art::Handle<std::vector<sim::EnergyDeposit> > sedHandle;
+    art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
     if (evt.getByLabel(fSimDepProducer,sedHandle)){
       art::fill_ptr_vector(sedlist, sedHandle);
