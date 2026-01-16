@@ -373,9 +373,11 @@ namespace blip {
       for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
 	    {
       std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
+      std::cout << " Got my wire for chIndex " << chIndex << " it has size " << wids.size() << " first entry string is " << wids[0].toString() << std::endl;
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
       std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
+      std::cout << " this channel has " << TempChIDE.size() << " IDEs"
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
 	        //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
