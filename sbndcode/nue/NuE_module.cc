@@ -411,7 +411,7 @@ void sbnd::NuE::analyze(art::Event const& e)
     Slices(e);
     MCParticles(e);
     PFPs(e);
-    Hits(e);
+    //Hits(e);
 
     NuETree->Fill();
 }
@@ -610,9 +610,31 @@ void sbnd::NuE::PFPs(art::Event const& e){
         art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
         art::FindOneP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceSCELabel);    
         art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
+                
+        std::vector<double> recoNeutrinoIDs;        
+        std::vector<double> recoNeutrinoSliceIDs;
 
         for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
             if(!(pfp->PdgCode() == std::numeric_limits<int>::max())){
+                const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
+                const art::Ptr<recob::Slice> pfpSlice(pfpSliceAssns.at(pfp.key()));
+                const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
+                
+                if(pfpVertexs.size() > 0){
+                    if(pfp->IsPrimary() && (pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
+                        // This is the reco neutrino
+                        // Add the reco neutrino to the vectors
+                        recoNeutrinoIDs.push_back(pfp->Self());
+                        recoNeutrinoSliceIDs.push_back(pfpSlice->ID());
+                        std::cout << "Reco Neutrino found in slice " << pfpSlice->ID() << ", with ID = " << pfp->Self() << std::endl;
+                    }
+                }
+            }
+        }
+
+        for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
+            if(!(pfp->PdgCode() == std::numeric_limits<int>::max())){
+                std::cout << "----" << std::endl;
                 const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
                 const art::Ptr<recob::Slice> pfpSlice(pfpSliceAssns.at(pfp.key()));
                 const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
@@ -649,8 +671,30 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             if(e.getByLabel(MCTruthLabel, truthParticleHandle))
                                 art::fill_ptr_vector(truthParticleVec, truthParticleHandle);
 
+                            double primary = 0;
+                            std::cout << "pfp->IsPrimary() = " << pfp->IsPrimary() << std::endl;
+                            if(pfp->IsPrimary() == 1){
+                                // This is a cosmic -> particle is primary
+                                primary = 1;
+                            } else{
+                                // This could still be a direct daughter of the neutrino = primary
+                                // Get the mother of the particle, if it equals the ID of the reco neutrino in the slice -> particle is primary
+                                for(std::size_t i = 0; i < recoNeutrinoIDs.size(); ++i){
+                                    if(recoNeutrinoSliceIDs[i] == pfpSlice->ID()){
+                                        // PFP is in the same slice as this reco neutrino
+                                        std::cout << "reco neutrino ID = " << recoNeutrinoIDs[i] << ", parent ID = " << pfp->Parent() << std::endl;
+                                        std::cout << "matched slice" << std::endl;
+                                        if(recoNeutrinoIDs[i] == pfp->Parent()){
+                                            // The PFPs parent is the reco neutrino -> particle is primary
+                                            primary = 1;
+                                        }
+                                    }
+                                }
+                            }
+                            std::cout << "is PFP Primary = " << primary << std::endl;
+
                             reco_particlePDG.push_back(pfp->PdgCode());
-                            reco_particleIsPrimary.push_back(pfp->IsPrimary());
+                            reco_particleIsPrimary.push_back(primary);
                             reco_particleVX.push_back(pfpVertex->position().X());
                             reco_particleVY.push_back(pfpVertex->position().Y());
                             reco_particleVZ.push_back(pfpVertex->position().Z());
