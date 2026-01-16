@@ -377,7 +377,7 @@ namespace blip {
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
       std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
-      std::cout << " this channel has " << TempChIDE.size() << " IDEs"
+      std::cout << " this channel has " << TempChIDE.size() << " IDEs" << std::endl;
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
 	        //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
