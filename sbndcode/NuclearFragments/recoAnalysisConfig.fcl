@@ -7,8 +7,13 @@ recoAnalysisParams:
     SliceLabel: "pandora"
     PFParticleLabel: "pandora"
     TrackLabel: "pandoraTrack"
+    ShowerLabel: "pandoraShower"
     CalorimetryLabel: "pandoraCalo"
     HitLabel: "gaushit"
+    VertexLabel: "pandora"
+    ClusterLabel: "pandora"
+    SpacePointLabel: "pandora"
+    RecoHitLabel: "pandora"
     LArGeantLabel: "largeant"
     NuGenLabel: "generator"
 }

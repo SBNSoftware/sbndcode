@@ -3,10 +3,11 @@
 // Plugin Type: analyzer (Unknown Unknown)
 // File:        RecoAnalysis_module.cc
 //
-// Generated on Wednesday 12th Feb 10:55:37 2025 by Anna Beever
+// Written on Monday 12th January 2026 by Anna Beever
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/FileBlock.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
@@ -20,12 +21,18 @@
 #include "art_root_io/TFileService.h"
 
 // Additional LArSoft includes
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
+#include "lardataobj/RecoBase/Cluster.h"
+#include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -54,6 +61,7 @@ public:
 
   // Required functions.
   void analyze(art::Event const& e) override;
+  void respondToOpenInputFile(const art::FileBlock& fb);
 
   // Selected optional functions.
   void beginJob() override;
@@ -61,54 +69,90 @@ public:
 
 private:
 
+  // Input file
+  std::string fInputFile;
+
   // Create output TTree
-  TTree *fTree;
+  TTree *fEventTree;
+  //TTree *fHitTree;
 
   // Tree variables
   unsigned int fEventID;
   unsigned int fReco_nPFParticles;
   unsigned int fReco_nPrimaryChildren;
-  bool fIsCCQE = 0;
-  bool fHasCluster = 0;
+  bool fIsClearCosmic = 0;
+  double fReco_nuVertexX = double_default;
+  double fReco_nuVertexY = double_default;
+  double fReco_nuVertexZ = double_default;
+  double fMC_nuVertexX = double_default;
+  double fMC_nuVertexY = double_default;
+  double fMC_nuVertexZ = double_default;
 
-  std::vector<double> fReco_childTrackLengths;
-  std::vector<double> fReco_childTrackCompleteness;
-  std::vector<double> fReco_childTrackPurity;
-  std::vector<std::vector<double>> fReco_childTrackdEdx;
-  std::vector<std::vector<double>> fReco_childTrackResRange;
-  std::vector<int> fReco_truthMatchedTrackID;
-  std::vector<int> fReco_truthMatchedPDG;
-  std::vector<double> fReco_truthMatchedKE;
-  std::vector<double> fReco_truthMatchedE;
-  std::vector<double> fReco_truthMatchedP;
-  std::vector<int> fMC_particlePDG;
-  std::vector<double> fMC_particleMass;
-  std::vector<double> fMC_particleE;
-  std::vector<double> fMC_particleP;
-  std::vector<double> fMC_particleKE;
-  std::vector<bool> fMC_isReconstructed;
-  std::vector<int> fMC_trackID;
+  std::vector<int> fRecoPFP_selfID;
+  std::vector<int> fRecoPFP_parentID;
+  std::vector<double> fReco_trackLength;
+  std::vector<double> fReco_trackCompleteness;
+  std::vector<double> fReco_trackPurity;
+  std::vector<double> fReco_trackStartX;
+  std::vector<double> fReco_trackStartY;
+  std::vector<double> fReco_trackStartZ;
+  std::vector<double> fReco_trackEndX;
+  std::vector<double> fReco_trackEndY;
+  std::vector<double> fReco_trackEndZ;
+  std::vector<double> fReco_showerLengths;
+  std::vector<double> fReco_showerCompleteness;
+  std::vector<double> fReco_showerPurity;
+  std::vector<int> fReco_pandoraPDG;
+  std::vector<int> fReco_truthMatchedShowerG4ID;
+  std::vector<int> fReco_truthMatchedTrackG4ID;
+  std::vector<int> fRecoPFP_truthMatchedG4ID;
+  std::vector<int> fMC_allParticleTrackG4ID;
+  std::vector<int> fMC_allParticlePDG;
+  std::vector<int> fMC_allParticleMotherID;
+  std::vector<double> fMC_allParticleP;
+  std::vector<double> fMC_allParticleEk;
+  std::vector<int> fMC_primaryParticleTrackG4ID;
+  std::vector<int> fMC_primaryParticleParentG4ID;
+  std::vector<double> fMC_primaryParticleVx;
+  std::vector<double> fMC_primaryParticleVy;
+  std::vector<double> fMC_primaryParticleVz;
+  std::vector<double> fMC_primaryParticleEndX;
+  std::vector<double> fMC_primaryParticleEndY;
+  std::vector<double> fMC_primaryParticleEndZ;
+  std::vector<bool> fMC_primaryIsReconstructedAsTrack;
+  std::vector<bool> fMC_primaryIsReconstructedAsShower;
+  std::vector<bool> fMC_primaryIsReconstructedAsPFP;  
+  std::vector<bool> fMC_allParticleIsReconstructedAsPFP;  
 
   // Define input labels
   std::string fSliceLabel;
   std::string fPFParticleLabel;
   std::string fTrackLabel;
+  std::string fShowerLabel;
+  //std::string fShowerLabel;
   std::string fCalorimetryLabel;
   std::string fHitLabel;
-  std::string fNuGenLabel;
+  std::string fVertexLabel;
+  std::string fClusterLabel;
+  std::string fSpacePointLabel;
+  std::string fRecoHitLabel;
   std::string fLArGeantLabel;
+  std::string fNuGenLabel;
 
   // Maps
   std::map<int,int> fTrackHitsMap;
-  std::map<int,int> fTrackIDtoTruthPDGMap;
-  std::map<int,double> fTrackIDtoTruthKEMap;
-  std::map<int,double> fTrackIDtoTruthEMap;
-  std::map<int,double> fTrackIDtoTruthPMap;
 
   // Functions 
   void ResetVariables();
   float Purity(std::vector< art::Ptr<recob::Hit> > const &objectHits, int const &trackID);
   float Completeness(std::vector< art::Ptr<recob::Hit> > const &objectHits, int const &trackID);
+  void AnalyseTrack(const art::Ptr<recob::Track> &track, art::FindManyP<recob::Hit> trackHitAssoc, art::FindManyP<anab::Calorimetry> trackCaloAssoc);
+  void AnalyseShower(const art::Ptr<recob::Shower> &shower, art::FindManyP<recob::Hit> showerHitAssoc, art::FindManyP<anab::Calorimetry> showerCaloAssoc);
+  void AnalyseTruNu(const art::Ptr<simb::MCTruth> &truNu, art::FindManyP<simb::MCParticle> truNuParticleAssoc);
+  void AnalyseMCTruth(art::ValidHandle<std::vector<simb::MCTruth>> truNuHandle, art::FindManyP<simb::MCParticle> truNuParticleAssoc);
+  void AnalyseReco(art::ValidHandle<std::vector<recob::Hit>> hitHandle, art::ValidHandle<std::vector<recob::Slice>> sliceHandle, art::ValidHandle<std::vector<recob::Track>> trackHandle, art::FindManyP<recob::PFParticle> slicePFPAssoc, art::FindManyP<recob::Track> pfpTrackAssoc, art::FindManyP<recob::Hit> trackHitAssoc, art::FindManyP<anab::Calorimetry> trackCaloAssoc, art::FindOneP<recob::Vertex> pfpVertexAssoc, art::ValidHandle<std::vector<recob::Shower>> showerHandle, art::FindManyP<recob::Shower> pfpShowerAssoc, art::FindManyP<recob::Hit> showerHitAssoc, art::FindManyP<anab::Calorimetry> showerCaloAssoc, art::FindManyP<recob::Cluster> pfpClusterAssoc, art::FindManyP<recob::Hit> clusterHitAssoc, art::FindManyP<recob::SpacePoint> pfpSpacePointAssoc);
+  void shout(std::string message);
+
   detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
 
 };
@@ -120,23 +164,104 @@ nuclearFragments::RecoAnalysis::RecoAnalysis(fhicl::ParameterSet const& p)
   fSliceLabel(p.get<std::string>("SliceLabel")),
   fPFParticleLabel(p.get<std::string>("PFParticleLabel")),
   fTrackLabel(p.get<std::string>("TrackLabel")),
+  fShowerLabel(p.get<std::string>("ShowerLabel")),
+  //fShowerLabel(p.get<std::string>("ShowerLabel")),
   fCalorimetryLabel(p.get<std::string>("CalorimetryLabel")),
   fHitLabel(p.get<std::string>("HitLabel")),
-  fNuGenLabel(p.get<std::string>("NuGenLabel")),
-  fLArGeantLabel(p.get<std::string>("LArGeantLabel"))
+  fVertexLabel(p.get<std::string>("VertexLabel")),
+  fClusterLabel(p.get<std::string>("ClusterLabel")),
+  fSpacePointLabel(p.get<std::string>("SpacePointLabel")),
+  fRecoHitLabel(p.get<std::string>("RecoHitLabel")),
+  fLArGeantLabel(p.get<std::string>("LArGeantLabel")),
+  fNuGenLabel(p.get<std::string>("NuGenLabel"))
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
 void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 {
-  // Set the event ID
-  fEventID = e.id().event();
 
   ResetVariables();
 
-  // Track-Hit map setup  
+  // Set the event ID
+  fEventID = e.id().event();
+
+  // ========================================================================
+  // Handles
+  // ========================================================================
+
+  // Get hit labelled objects for event
   art::ValidHandle<std::vector<recob::Hit>> hitHandle = e.getValidHandle<std::vector<recob::Hit>>(fHitLabel);
+
+  // Get spacepoint labelled objects for event
+  art::ValidHandle<std::vector<recob::SpacePoint>> spacepointHandle = e.getValidHandle<std::vector<recob::SpacePoint>>(fSpacePointLabel);
+
+  // Get nugen labelled objects
+  art::ValidHandle<std::vector<simb::MCTruth>> truNuHandle = e.getValidHandle<std::vector<simb::MCTruth>>(fNuGenLabel);
+
+  // Get track labelled objects
+  art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
+
+  // Get shower labelled objects
+  art::ValidHandle<std::vector<recob::Shower>> showerHandle = e.getValidHandle<std::vector<recob::Shower>>(fShowerLabel);
+
+  // Get PFP labelled objects
+  art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
+
+  // Get slice labelled objects
+  art::ValidHandle<std::vector<recob::Slice>> sliceHandle = e.getValidHandle<std::vector<recob::Slice>>(fSliceLabel);
+
+  // Get cluster labelled objects
+  art::ValidHandle<std::vector<recob::Cluster>> clusterHandle = e.getValidHandle<std::vector<recob::Cluster>>(fClusterLabel);
+
+  // ========================================================================
+  // Associations
+  // ========================================================================
+
+  // Get associations between slices and PFParticles
+  art::FindManyP<recob::PFParticle> slicePFPAssoc(sliceHandle, e, fSliceLabel);
+
+  // Get tracks associated with the PFPs
+  art::FindManyP<recob::Track> pfpTrackAssoc(pfpHandle, e, fTrackLabel);
+
+  // Associate tracks with hits
+  art::FindManyP<recob::Hit> trackHitAssoc(trackHandle,e,fTrackLabel);
+
+  // Associate calorimetry info with tracks
+  art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
+
+  // Get showers associated with the PFPs
+  art::FindManyP<recob::Shower> pfpShowerAssoc(pfpHandle, e, fShowerLabel);
+
+  // Associate showers with hits
+  art::FindManyP<recob::Hit> showerHitAssoc(showerHandle,e,fShowerLabel);
+
+  // Associate calorimetry info with showers
+  art::FindManyP<anab::Calorimetry> showerCaloAssoc(showerHandle, e, fCalorimetryLabel);
+
+  // Get associations between MC Particles and true neutrinos
+  art::FindManyP<simb::MCParticle> truNuParticleAssoc(truNuHandle, e, fLArGeantLabel);
+
+  // Get associations between PFPs and vertices
+  art::FindOneP<recob::Vertex>pfpVertexAssoc(pfpHandle, e, fVertexLabel);
+
+  // Get associations between PFPs and their clusters
+  art::FindManyP<recob::Cluster>pfpClusterAssoc(pfpHandle, e, fClusterLabel);
+
+  // Get associations between clusters and hits
+  art::FindManyP<recob::Hit>clusterHitAssoc(clusterHandle, e, fRecoHitLabel);
+
+  // Get associations between PFPs and spacepoints
+  art::FindManyP<recob::SpacePoint>pfpSpacePointAssoc(pfpHandle, e, fSpacePointLabel);
+
+  // Get associations between spacepoints and hits
+  art::FindManyP<recob::Hit>spacepointHitAssoc(spacepointHandle, e, fRecoHitLabel);
+
+  // ========================================================================
+  // Main analysis
+  // ========================================================================
+
+  // Fill hits
   std::vector<art::Ptr<recob::Hit>> hitVector;
 
   if(hitHandle.isValid())
@@ -144,12 +269,14 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
     art::fill_ptr_vector(hitVector,hitHandle);
   }
 
+  // Track-Hit map setup
+
   for(const art::Ptr<recob::Hit> &hit : hitVector){
     fTrackHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
   }
 
-  // Get event slices
-  art::ValidHandle<std::vector<recob::Slice>> sliceHandle = e.getValidHandle<std::vector<recob::Slice>>(fSliceLabel);
+  // Fill slices vector
+
   std::vector<art::Ptr<recob::Slice>> sliceVector;
 
   if(sliceHandle.isValid())
@@ -157,19 +284,23 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
     art::fill_ptr_vector(sliceVector,sliceHandle);
   }
 
-  // Get associations between slices and PFParticles
-  art::FindManyP<recob::PFParticle> slicePFPAssoc(sliceHandle, e, fSliceLabel);
-
   //Filling neutrino hierachy variables
+
   int nuID = -1;
   int nuSliceKey = -1;
+
+  // Loop over slices
 
   for(const art::Ptr<recob::Slice> &slice : sliceVector)
   {
     std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssoc.at(slice.key()));
 
+    // Loop over PFPs
+
     for(const art::Ptr<recob::PFParticle> &slicePFP : slicePFPs)
     {
+
+      // Find primary neutrino
       const bool isPrimary(slicePFP->IsPrimary());
       const bool isNeutrino((std::abs(slicePFP->PdgCode() == 12) || (std::abs(slicePFP->PdgCode() == 14))));
 
@@ -178,213 +309,157 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
         continue;
       }
 
+      const art::Ptr<recob::Vertex> vertex = pfpVertexAssoc.at(slicePFP.key());
+      geo::Point_t vertexPos = vertex.isNonnull() ? vertex->position() : geo::Point_t(double_default, double_default, double_default);
+      fReco_nuVertexX = vertexPos.X();
+      fReco_nuVertexY = vertexPos.Y();
+      fReco_nuVertexZ = vertexPos.Z();
+
       nuSliceKey = slice.key();
       nuID = slicePFP->Self();
+
       fReco_nPFParticles = slicePFPs.size();
       fReco_nPrimaryChildren = slicePFP->NumDaughters();
 
-      // Finding nu slices to loop through
-      art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
-      art::FindManyP<recob::Track> pfpTrackAssoc(pfpHandle, e, fTrackLabel);
+      // Get PFPs from the neutrino
 
       std::vector<art::Ptr<recob::PFParticle>> nuSlicePFPs(slicePFPAssoc.at(nuSliceKey));
-
-      int trackCounter = 0;
       
-      // Actual analysis loop
       for(const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
       {
-        if(nuSlicePFP->Parent() != static_cast<long unsigned int>(nuID))
+        fRecoPFP_selfID.push_back(nuSlicePFP->Self());
+        fRecoPFP_parentID.push_back(nuSlicePFP->Parent());
+        fRecoPFP_truthMatchedG4ID.push_back(-999);
+
+        //Get the clusters
+        std::vector<art::Ptr<recob::Cluster>> clusters(pfpClusterAssoc.at(nuSlicePFP.key()));
+
+        std::vector<art::Ptr<recob::Hit>> allHits;
+
+        //Loop over the clusters get the hits
+        for (const art::Ptr<recob::Cluster> &cluster : clusters) {
+
+          //Get the hits
+          std::vector<art::Ptr<recob::Hit>> hits = clusterHitAssoc.at(cluster.key());
+
+          allHits.insert(allHits.end(), hits.begin(), hits.end());
+
+        }
+
+        // Now work out G4ID of the hits 
+        
+        if(!allHits.empty())
         {
-          continue;
+
+          int PFPg4ID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,allHits,true);
+          fRecoPFP_truthMatchedG4ID.back() = PFPg4ID;
+  
         }
 
         // Get tracks associated with this PFParticle
         std::vector<art::Ptr<recob::Track>> tracks = pfpTrackAssoc.at(nuSlicePFP.key());
 
+        // Check is one track per PFP
         if(tracks.size() != 1)
         {
           continue;
         }
 
+        fReco_pandoraPDG.push_back(nuSlicePFP->PdgCode());
+
         art::Ptr<recob::Track> track = tracks.at(0);
+        
+        AnalyseTrack(track, trackHitAssoc, trackCaloAssoc);
 
-        trackCounter++;
+        // Get shower associated with this PFParticle
+        std::vector<art::Ptr<recob::Shower>> showers = pfpShowerAssoc.at(nuSlicePFP.key());
 
-        const art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
-        art::FindManyP<recob::Hit> trackHitAssoc(trackHandle,e,fTrackLabel);
-
-        std::vector<art::Ptr<recob::Hit>> trackHits = trackHitAssoc.at(track.key());
-        int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
-        fReco_truthMatchedTrackID.push_back(trackID);
-        fReco_childTrackCompleteness.push_back(Completeness(trackHits,trackID));
-        fReco_childTrackPurity.push_back(Purity(trackHits,trackID));
-        fReco_childTrackLengths.push_back(track->Length());
-
-        art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
-
-        // Get the calorimetry object
-        std::vector<art::Ptr<anab::Calorimetry>> calos = trackCaloAssoc.at(track.key());
-
-        for(const art::Ptr<anab::Calorimetry> &calo : calos)
+        // Check is one shower per PFP
+        if(showers.size() != 1)
         {
-          const int plane = calo->PlaneID().Plane;
-          if(plane != 2)
-          {
-            continue;
-          }
-          std::vector<double> dEdx (calo->dEdx().begin(), calo->dEdx().end());
-          std::vector<double> resRange (calo->ResidualRange().begin(), calo->ResidualRange().end());
-          fReco_childTrackdEdx.push_back(dEdx);
-          fReco_childTrackResRange.push_back(resRange);
+          continue;
         }
+
+        art::Ptr<recob::Shower> shower = showers.at(0);
+        
+        AnalyseShower(shower, showerHitAssoc, showerCaloAssoc);
 
       }
 
       break;
     }
 
-    // Assume only one neutrino per slice here
+    // Assume only one neutrino per slice here - meed to fix this!
     if(nuID >=0)
     {
       break;
     }
   }
 
-  //Truth level
-  art::ValidHandle<std::vector<simb::MCTruth>> truNuHandle = e.getValidHandle<std::vector<simb::MCTruth>>(fNuGenLabel);
-  std::vector<art::Ptr<simb::MCTruth>> truNuVector;
+  AnalyseMCTruth(truNuHandle, truNuParticleAssoc);
 
-  if(truNuHandle.isValid())
-  {
-    art::fill_ptr_vector(truNuVector,truNuHandle);
-  }
+  // Fill event tree
+  fEventTree->Fill();
 
-  art::FindManyP<simb::MCParticle> truNuParticleAssoc(truNuHandle, e, fLArGeantLabel);
+}
 
-  for(const art::Ptr<simb::MCTruth> &truNu : truNuVector){
-    if(truNu.isNull()){
-      continue;
-    }
-
-    const simb::MCNeutrino nu = truNu->GetNeutrino();
-    if(nu.InteractionType() == simb::kCCQE){
-      fIsCCQE = 1;
-      std::cout << "CCQE" << std::endl;
-    }
-
-    std::vector<art::Ptr<simb::MCParticle>> particles = truNuParticleAssoc.at(truNu.key());
-
-    for(const art::Ptr<simb::MCParticle> &particle : particles){
-      if(particle->Process() != "primary" || particle->StatusCode() != 1){
-        continue;
-      }
-
-      fMC_trackID.push_back(particle->TrackId());
-      fMC_particlePDG.push_back(particle->PdgCode());
-      fMC_particleMass.push_back(particle->Mass());
-      fMC_particleE.push_back(particle->E());
-      fMC_particleP.push_back(particle->P());
-      double KE = particle->E() - particle->Mass();
-      fMC_particleKE.push_back(KE);
-      fTrackIDtoTruthPDGMap.insert({particle->TrackId(), particle->PdgCode()});
-      fTrackIDtoTruthEMap.insert({particle->TrackId(), particle->E()});
-      fTrackIDtoTruthPMap.insert({particle->TrackId(), particle->P()});
-      fTrackIDtoTruthKEMap.insert({particle->TrackId(), KE});
-
-
-      int checkIfReconstructed = std::count(fReco_truthMatchedTrackID.begin(), fReco_truthMatchedTrackID.end(), particle->TrackId());
-      fMC_isReconstructed.push_back(checkIfReconstructed!=0);
-
-      //filter for clusters
-      if(particle->PdgCode() == 1000010020 || particle->PdgCode() == 1000010030 || particle->PdgCode() == 1000020030 || particle->PdgCode() == 1000020040){
-        fHasCluster = 1;
-      }
-
-    }
-  }
-
-  for(std::size_t i=0; i<fReco_truthMatchedTrackID.size(); i++){
-    fReco_truthMatchedPDG.push_back(fTrackIDtoTruthPDGMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedE.push_back(fTrackIDtoTruthEMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedP.push_back(fTrackIDtoTruthPMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedKE.push_back(fTrackIDtoTruthKEMap[fReco_truthMatchedTrackID[i]]);
-  }
-
-  //True event type
-  /*
-  std::vector<art::Handle<std::vector<simb::MCTruth>>> MCTruthHandles = e.getMany<std::vector<simb::MCTruth>>();
-  for(auto const& MCTruthHandle : MCTruthHandles)
-    {
-      std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
-      art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
-
-      for(auto const& mct : MCTruthVec)
-        {
-          if(mct->Origin() != 1)
-            continue;
-
-          ++_n_nu;
-        }
-    }
-
-    ResizeVectors(nuVars, _n_nu);
-
-    int nuCounter = 0;
-
-    for(auto const& MCTruthHandle : MCTruthHandles)
-      {
-        std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
-        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
-
-        for(auto const& mct : MCTruthVec)
-          {
-            if(mct->Origin() != 1)
-              continue;
-
-            AnalyseMCTruth(e, nuVars, mct, nuCounter, "nu");
-            AnalyseNuReco(nuCounter);
-
-            ++nuCounter;
-          }
-      }
-  }*/
-
-
-  // Fill tree
-  fTree->Fill();
-
+void nuclearFragments::RecoAnalysis::respondToOpenInputFile(const art::FileBlock& fb)
+{
+  fInputFile = fb.fileName();
 }
 
 void nuclearFragments::RecoAnalysis::beginJob()
 {
   // Get TFileService to create output TTree
   art::ServiceHandle<art::TFileService> tfs;
-  fTree = tfs->make<TTree>("tree", "Output TTree");
+  fEventTree = tfs->make<TTree>("eventTree", "Output TTree");
 
-  // Add branches to TTRee
-  fTree->Branch("eventID", &fEventID);
-  fTree->Branch("isCCQE", &fIsCCQE);
-  fTree->Branch("hasCluster", &fHasCluster);
-  fTree->Branch("reco_nPFParticles", &fReco_nPFParticles);
-  fTree->Branch("reco_nPrimaryChildren", &fReco_nPrimaryChildren);
-  fTree->Branch("reco_childTrackLengths", &fReco_childTrackLengths);
-  fTree->Branch("reco_childTrackCompleteness", &fReco_childTrackCompleteness);
-  fTree->Branch("reco_childTrackPurity", &fReco_childTrackPurity);
-  fTree->Branch("reco_childTrackdEdx", &fReco_childTrackdEdx);
-  fTree->Branch("reco_childTrackResRange", &fReco_childTrackResRange);
-  fTree->Branch("reco_truthMatchedTrackID", &fReco_truthMatchedTrackID);
-  fTree->Branch("reco_truthMatchedPDG", &fReco_truthMatchedPDG);
-  fTree->Branch("reco_truthMatchedE", &fReco_truthMatchedE);
-  fTree->Branch("reco_truthMatchedP", &fReco_truthMatchedP);
-  fTree->Branch("reco_truthMatchedKE", &fReco_truthMatchedKE);
-  fTree->Branch("MC_particlePDG", &fMC_particlePDG);
-  fTree->Branch("MC_particleMass", &fMC_particleMass);
-  fTree->Branch("MC_particleE", &fMC_particleE);
-  fTree->Branch("MC_particleP", &fMC_particleP);
-  fTree->Branch("MC_particleKE", &fMC_particleKE);
-  fTree->Branch("MC_isReconstructed", &fMC_isReconstructed);
-  fTree->Branch("MC_trackID", &fMC_trackID);
+  // Add branches to TTree
+  fEventTree->Branch("eventID", &fEventID);
+  fEventTree->Branch("inputFile", &fInputFile);
+  fEventTree->Branch("reco_nPFParticles", &fReco_nPFParticles);
+  fEventTree->Branch("reco_nPrimaryChildren", &fReco_nPrimaryChildren);
+  fEventTree->Branch("reco_trackLength", &fReco_trackLength);
+  fEventTree->Branch("reco_trackCompleteness", &fReco_trackCompleteness);
+  fEventTree->Branch("reco_trackPurity", &fReco_trackPurity);
+  fEventTree->Branch("reco_trackStartX", &fReco_trackStartX);
+  fEventTree->Branch("reco_trackStartY", &fReco_trackStartY);
+  fEventTree->Branch("reco_trackStartZ", &fReco_trackStartZ);
+  fEventTree->Branch("reco_trackEndX", &fReco_trackEndX);
+  fEventTree->Branch("reco_trackEndY", &fReco_trackEndY);
+  fEventTree->Branch("reco_trackEndZ", &fReco_trackEndZ);
+  fEventTree->Branch("reco_showerLengths", &fReco_showerLengths);
+  fEventTree->Branch("reco_showerCompleteness", &fReco_showerCompleteness);
+  fEventTree->Branch("reco_showerPurity", &fReco_showerPurity);
+  fEventTree->Branch("reco_pandoraPDG", &fReco_pandoraPDG);
+  fEventTree->Branch("reco_truthMatchedTrackG4ID", &fReco_truthMatchedTrackG4ID);
+  fEventTree->Branch("reco_truthMatchedShowerG4ID", &fReco_truthMatchedShowerG4ID);
+  fEventTree->Branch("recoPFP_truthMatchedG4ID", &fRecoPFP_truthMatchedG4ID);
+  fEventTree->Branch("recoPFP_selfID", &fRecoPFP_selfID);
+  fEventTree->Branch("recoPFP_parentID", &fRecoPFP_parentID);
+  fEventTree->Branch("reco_nuVertexX", &fReco_nuVertexX);
+  fEventTree->Branch("reco_nuVertexY", &fReco_nuVertexY);
+  fEventTree->Branch("reco_nuVertexZ", &fReco_nuVertexZ);
+  fEventTree->Branch("MC_nuVertexX", &fMC_nuVertexX);
+  fEventTree->Branch("MC_nuVertexY", &fMC_nuVertexY);
+  fEventTree->Branch("MC_nuVertexZ", &fMC_nuVertexZ);
+  fEventTree->Branch("MC_primaryParticleTrackG4ID", &fMC_primaryParticleTrackG4ID);
+  fEventTree->Branch("MC_allParticleTrackG4ID", &fMC_allParticleTrackG4ID);
+  fEventTree->Branch("MC_allParticlePDG", &fMC_allParticlePDG);
+  fEventTree->Branch("MC_allParticleMotherID", &fMC_allParticleMotherID);
+  fEventTree->Branch("MC_allParticleP", &fMC_allParticleP);
+  fEventTree->Branch("MC_allParticleEk", &fMC_allParticleEk);
+  fEventTree->Branch("MC_primaryParticleParentG4ID", &fMC_primaryParticleParentG4ID);
+  fEventTree->Branch("MC_primaryParticleVx", &fMC_primaryParticleVx);
+  fEventTree->Branch("MC_primaryParticleVy", &fMC_primaryParticleVy);
+  fEventTree->Branch("MC_primaryParticleVz", &fMC_primaryParticleVz);
+  fEventTree->Branch("MC_primaryParticleEndX", &fMC_primaryParticleEndX);
+  fEventTree->Branch("MC_primaryParticleEndY", &fMC_primaryParticleEndY);
+  fEventTree->Branch("MC_primaryParticleEndZ", &fMC_primaryParticleEndZ);
+  fEventTree->Branch("MC_primaryIsReconstructedAsTrack", &fMC_primaryIsReconstructedAsTrack);
+  fEventTree->Branch("MC_primaryIsReconstructedAsShower", &fMC_primaryIsReconstructedAsShower);
+  fEventTree->Branch("MC_primaryIsReconstructedAsPFP", &fMC_primaryIsReconstructedAsPFP);
+  fEventTree->Branch("MC_allParticleIsReconstructedAsPFP", &fMC_allParticleIsReconstructedAsPFP);
 }
 
 void nuclearFragments::RecoAnalysis::endJob()
@@ -394,31 +469,51 @@ void nuclearFragments::RecoAnalysis::endJob()
 
 void nuclearFragments::RecoAnalysis::ResetVariables()
 {
-  // Set all trackCounters to zero for the current event
-  fIsCCQE = 0;
-  fHasCluster = 0;
   fTrackHitsMap.clear();
-  fTrackIDtoTruthPDGMap.clear();
-  fTrackIDtoTruthKEMap.clear();
+  fEventID = 0;
+  fReco_nuVertexX = double_default;
+  fReco_nuVertexY = double_default;
+  fReco_nuVertexZ = double_default;
+  fMC_nuVertexX = double_default;
+  fMC_nuVertexY = double_default;
+  fMC_nuVertexZ = double_default;
   fReco_nPFParticles = 0;
   fReco_nPrimaryChildren = 0;
-  fReco_childTrackLengths.clear();
-  fReco_childTrackCompleteness.clear();
-  fReco_childTrackPurity.clear();
-  fReco_childTrackdEdx.clear();
-  fReco_childTrackResRange.clear();
-  fReco_truthMatchedTrackID.clear();
-  fReco_truthMatchedPDG.clear();
-  fReco_truthMatchedE.clear();
-  fReco_truthMatchedP.clear();
-  fReco_truthMatchedKE.clear();
-  fMC_particlePDG.clear();
-  fMC_particleMass.clear();
-  fMC_particleE.clear();
-  fMC_particleP.clear();
-  fMC_particleKE.clear();
-  fMC_isReconstructed.clear();
-  fMC_trackID.clear();
+  fReco_trackLength.clear();
+  fReco_trackCompleteness.clear();
+  fReco_trackPurity.clear();
+  fReco_trackStartX.clear();
+  fReco_trackStartY.clear();
+  fReco_trackStartZ.clear();
+  fReco_trackEndX.clear();
+  fReco_trackEndY.clear();
+  fReco_trackEndZ.clear();
+  fReco_showerLengths.clear();
+  fReco_showerCompleteness.clear();
+  fReco_showerPurity.clear();
+  fReco_pandoraPDG.clear();
+  fReco_truthMatchedTrackG4ID.clear();
+  fReco_truthMatchedShowerG4ID.clear();
+  fRecoPFP_truthMatchedG4ID.clear();
+  fRecoPFP_selfID.clear();
+  fRecoPFP_parentID.clear();
+  fMC_allParticleTrackG4ID.clear();
+  fMC_allParticlePDG.clear();
+  fMC_allParticleMotherID.clear();
+  fMC_allParticleP.clear();
+  fMC_allParticleEk.clear();
+  fMC_primaryParticleTrackG4ID.clear();
+  fMC_primaryParticleParentG4ID.clear();
+  fMC_primaryParticleVx.clear();
+  fMC_primaryParticleVy.clear();
+  fMC_primaryParticleVz.clear();
+  fMC_primaryParticleEndX.clear();
+  fMC_primaryParticleEndY.clear();
+  fMC_primaryParticleEndZ.clear();
+  fMC_primaryIsReconstructedAsTrack.clear();
+  fMC_primaryIsReconstructedAsShower.clear();
+  fMC_primaryIsReconstructedAsPFP.clear();
+  fMC_allParticleIsReconstructedAsPFP.clear();
 }
 
 float nuclearFragments::RecoAnalysis::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
@@ -444,5 +539,138 @@ float nuclearFragments::RecoAnalysis::Purity(std::vector<art::Ptr<recob::Hit>> c
 
   return (objectHits.size() == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(objectHits.size());
 }
+
+void nuclearFragments::RecoAnalysis::AnalyseTrack(const art::Ptr<recob::Track> &track, art::FindManyP<recob::Hit> trackHitAssoc, art::FindManyP<anab::Calorimetry> trackCaloAssoc)
+{
+  // Fill in track variables
+  fReco_trackStartX.push_back((track->Start()).X());
+  fReco_trackStartY.push_back((track->Start()).Y());
+  fReco_trackStartZ.push_back((track->Start()).Z());
+
+  fReco_trackEndX.push_back((track->End()).X());
+  fReco_trackEndY.push_back((track->End()).Y());
+  fReco_trackEndZ.push_back((track->End()).Z());
+
+  std::vector<art::Ptr<recob::Hit>> trackHits = trackHitAssoc.at(track.key());
+
+  int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
+
+  fReco_truthMatchedTrackG4ID.push_back(trackID);
+  fReco_trackCompleteness.push_back(Completeness(trackHits,trackID));
+  fReco_trackPurity.push_back(Purity(trackHits,trackID));
+  fReco_trackLength.push_back(track->Length());
+
+}
+
+
+void nuclearFragments::RecoAnalysis::AnalyseShower(const art::Ptr<recob::Shower> &shower, art::FindManyP<recob::Hit> showerHitAssoc, art::FindManyP<anab::Calorimetry> showerCaloAssoc)
+{
+
+  // Get hits associated with this shower
+  std::vector<art::Ptr<recob::Hit>> showerHits = showerHitAssoc.at(shower.key());
+
+  // Fill shower variables
+  int showerID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,showerHits,true);
+  fReco_truthMatchedShowerG4ID.push_back(showerID);
+  fReco_showerCompleteness.push_back(Completeness(showerHits,showerID));
+  fReco_showerPurity.push_back(Purity(showerHits,showerID));
+  fReco_showerLengths.push_back(shower->Length());
+  
+
+}
+
+void nuclearFragments::RecoAnalysis::AnalyseTruNu(const art::Ptr<simb::MCTruth> &truNu, art::FindManyP<simb::MCParticle> truNuParticleAssoc)
+{
+
+  // Get neutrino
+  const simb::MCNeutrino mcn = truNu->GetNeutrino();
+  const simb::MCParticle nu = mcn.Nu();
+
+  fMC_nuVertexX = nu.Vx();
+  fMC_nuVertexY = nu.Vy();
+  fMC_nuVertexZ = nu.Vz();
+
+  // Get particles associated with true neutrino
+  std::vector<art::Ptr<simb::MCParticle>> particles = truNuParticleAssoc.at(truNu.key());
+
+
+  // Loop over the neutrino's particles 
+  for(const art::Ptr<simb::MCParticle> &particle : particles){
+
+
+    if(particle->StatusCode() != 1){
+      continue;
+    }
+
+    //truth info on all particles propagated by Geant4
+    fMC_allParticleTrackG4ID.push_back(particle->TrackId());
+    fMC_allParticlePDG.push_back(particle->PdgCode());
+    fMC_allParticleMotherID.push_back(particle->Mother());
+    fMC_allParticleP.push_back(particle->P());
+    double Ek = particle->E() - particle->Mass();
+    fMC_allParticleEk.push_back(Ek);
+
+    int checkIfReconstructedAsPFP_allParticles = std::count(fRecoPFP_truthMatchedG4ID.begin(), fRecoPFP_truthMatchedG4ID.end(), particle->TrackId());
+    fMC_allParticleIsReconstructedAsPFP.push_back(checkIfReconstructedAsPFP_allParticles!=0);
+
+    // Only get primary particles - the ones leaving the nucleus (?)
+    if(particle->Process() != "primary" || particle->StatusCode() != 1){
+      continue;
+    }
+
+    //shout(("particle of G4ID " + std::to_string(particle->TrackId())).c_str());
+    //shout(("particle of PDG code " + std::to_string(particle->PdgCode())).c_str());
+
+    // Fill MC particle truth info
+
+    fMC_primaryParticleTrackG4ID.push_back(particle->TrackId());
+    fMC_primaryParticleParentG4ID.push_back(particle->Mother());
+    fMC_primaryParticleVx.push_back(particle->Vx());
+    fMC_primaryParticleVy.push_back(particle->Vy());
+    fMC_primaryParticleVz.push_back(particle->Vz());
+    fMC_primaryParticleEndX.push_back(particle->EndX());
+    fMC_primaryParticleEndY.push_back(particle->EndY());
+    fMC_primaryParticleEndZ.push_back(particle->EndZ());
+    
+    int checkIfReconstructedAsTrack = std::count(fReco_truthMatchedTrackG4ID.begin(), fReco_truthMatchedTrackG4ID.end(), particle->TrackId());
+    fMC_primaryIsReconstructedAsTrack.push_back(checkIfReconstructedAsTrack!=0);
+
+    int checkIfReconstructedAsShower = std::count(fReco_truthMatchedShowerG4ID.begin(), fReco_truthMatchedShowerG4ID.end(), particle->TrackId());
+    fMC_primaryIsReconstructedAsShower.push_back(checkIfReconstructedAsShower!=0);
+
+    int checkIfReconstructedAsPFP = std::count(fRecoPFP_truthMatchedG4ID.begin(), fRecoPFP_truthMatchedG4ID.end(), particle->TrackId());
+    fMC_primaryIsReconstructedAsPFP.push_back(checkIfReconstructedAsPFP!=0);
+
+  }
+  
+}
+
+void nuclearFragments::RecoAnalysis::AnalyseMCTruth(art::ValidHandle<std::vector<simb::MCTruth>> truNuHandle, art::FindManyP<simb::MCParticle> truNuParticleAssoc)
+{
+  // Get true neutrinos
+  std::vector<art::Ptr<simb::MCTruth>> truNuVector;
+
+  if(truNuHandle.isValid())
+  {
+    art::fill_ptr_vector(truNuVector,truNuHandle);
+  }
+
+  // Loop over the true neutrinos 
+
+  for(const art::Ptr<simb::MCTruth> &truNu : truNuVector){
+    if(truNu.isNull()){
+      continue;
+    }
+
+    AnalyseTruNu(truNu, truNuParticleAssoc);
+  }
+
+}
+
+void nuclearFragments::RecoAnalysis::shout(std::string message)
+{
+  std::cout << message << std::endl;
+}
+
 
 DEFINE_ART_MODULE(nuclearFragments::RecoAnalysis)
