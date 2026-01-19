@@ -1451,11 +1451,15 @@ void nuEBackgroundSignalCut_macro(){
     double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT - SignalScaledSpills_BDT) / cosmicSpillsSumCurrent);
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone - SignalScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE - SignalScaledSpills_NuE) / cosmicSpillsSumCurrent);
-    */
     double cosmicsWeights_BDT = ((targetSpills - BNBScaledSpills_BDT) / cosmicSpillsSumCurrent);
     double cosmicsWeights_Uboone = ((targetSpills - BNBScaledSpills_Uboone) / cosmicSpillsSumUboone);
     double cosmicsWeights_NuE = ((targetSpills - BNBScaledSpills_NuE) / cosmicSpillsSumCurrent);
+    */
 
+    double targetGates = ((1333568/6.293443e+18)*targetPOT);
+    double cosmicsWeights_BDT = (((1-0.0754) * targetGates)/cosmicSpillsSumCurrent);
+    double cosmicsWeights_Uboone = (((1-0.0754) * targetGates)/cosmicSpillsSumUboone);
+    double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
 
     weights_struct weights;
     weights.signalCurrent = targetPOT / POTSignalBDT_notMissing;
