@@ -104,7 +104,6 @@ public:
   double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
   void PFPs(art::Event const& e);
   int GetNumGenEvents(const art::Event &e); 
-  void Hits(art::Event const& e);
  
   // Selected optional functions.
   void beginJob() override;
@@ -201,17 +200,6 @@ private:
   std::vector<double>   reco_neutrinoVY;
   std::vector<double>   reco_neutrinoVZ;
   std::vector<double>   reco_neutrinoSliceID;
-
-  std::vector<double>   hit_plane;
-  std::vector<double>   hit_x;
-  std::vector<double>   hit_uvz;
-  std::vector<double>   hit_peakTime;
-  std::vector<double>   hit_RMS;
-  std::vector<double>   hit_integral;
-  std::vector<double>   hit_sliceID;
-  std::vector<double>   hit_PFPID;
-  std::vector<double>   hit_ny;
-  std::vector<double>   hit_nz;
 
   std::map<int,int> fHitsMap;
 
@@ -356,18 +344,7 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_neutrinoVY", &reco_neutrinoVY);
   NuETree->Branch("reco_neutrinoVZ", &reco_neutrinoVZ);
   NuETree->Branch("reco_neutrinoSliceID", &reco_neutrinoSliceID);
-  
-  NuETree->Branch("hit_plane", &hit_plane);
-  NuETree->Branch("hit_x", &hit_x);
-  NuETree->Branch("hit_uvz", &hit_uvz);
-  NuETree->Branch("hit_peakTime", &hit_peakTime);
-  NuETree->Branch("hit_RMS", &hit_RMS);
-  NuETree->Branch("hit_integral", &hit_integral);
-  NuETree->Branch("hit_sliceID", &hit_sliceID);
-  NuETree->Branch("hit_PFPID", &hit_PFPID);
-  NuETree->Branch("hit_ny", &hit_ny);
-  NuETree->Branch("hit_nz", &hit_nz);
-
+ 
 }
 
 void sbnd::NuE::beginSubRun(const art::SubRun &sr){
@@ -411,112 +388,8 @@ void sbnd::NuE::analyze(art::Event const& e)
     Slices(e);
     MCParticles(e);
     PFPs(e);
-    //Hits(e);
 
     NuETree->Fill();
-}
-
-void sbnd::NuE::Hits(art::Event const& e){
-    std::cout << "_________ Hits _________" << std::endl;
-    
-    detinfo::DetectorPropertiesData propD = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataFor(e);
-    
-    art::Handle<std::vector<recob::Hit>> hitHandle;
-    std::vector<art::Ptr<recob::Hit>> hitVec;
-
-    if(e.getByLabel(hitLabel, hitHandle))
-        art::fill_ptr_vector(hitVec, hitHandle);
-
-    std::cout << "Number of hits in event = " << hitVec.size() << std::endl;
-    if(!hitVec.empty()){
-        // There is a hit in the event
-        
-        // Get the slices
-        art::Handle<std::vector<recob::Slice>> sliceHandle;
-        std::vector<art::Ptr<recob::Slice>> sliceVec;
-        if(e.getByLabel(sliceLabel, sliceHandle))
-            art::fill_ptr_vector(sliceVec, sliceHandle);
-       
-        // Get the showers
-        art::Handle<std::vector<recob::Shower>> showerHandle;
-        std::vector<art::Ptr<recob::Shower>> showerVec;
-        if(e.getByLabel(showerLabel, showerHandle))
-            art::fill_ptr_vector(showerVec, showerHandle);
-
-        // Get the PFPs
-        art::Handle<std::vector<recob::PFParticle>> pfpHandle;
-        std::vector<art::Ptr<recob::PFParticle>> pfpVec;
-        if(e.getByLabel(PFParticleLabel, pfpHandle))
-            art::fill_ptr_vector(pfpVec, pfpHandle);
-
-        for(const art::Ptr<recob::Hit> &hit : hitVec){
-            // Fill Hit branches:
-            hit_plane.push_back(hit->View());
-            hit_peakTime.push_back(hit->PeakTime());
-            hit_RMS.push_back(hit->RMS());
-            hit_integral.push_back(hit->Integral());
-
-            if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
-                const geo::WireID& wireID(hit->WireID());
-                const double xpos = propD.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
-                auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
-                auto const wire = channelMapAlg.Plane(geo::PlaneID(wireID.Cryostat, wireID.TPC, wireID.Plane)).Wire(wireID);
-                geo::Point_t start = wire.GetStart();
-                geo::Point_t end = wire.GetEnd();
-
-                const double ay(start.Y());
-                const double az(start.Z());
-                const double by(end.Y());
-                const double bz(end.Z());
-
-                const double ny(by - ay);
-                const double nz(bz - az);
-                const double n2(ny * ny + nz * nz);
-
-                const double ry(ay - (ay * ny + az * nz) * ny / n2);
-                const double rz(az - (ay * ny + az * nz) * nz / n2);
-                const double sign((rz > 0.0) ? +1.0 : -1.0);
-                const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
-                
-                hit_x.push_back(xpos);
-                hit_uvz.push_back(uvz);
-                hit_ny.push_back(ny);
-                hit_nz.push_back(nz);
-            } else{
-                hit_x.push_back(-999999);
-                hit_uvz.push_back(-999999);
-                hit_ny.push_back(-999999);
-                hit_nz.push_back(-999999);
-            }
-            
-            // Getting the slice associated with the hit
-            art::FindManyP<recob::Slice> hitSliceAssns(hitVec, e, sliceLabel);
-            const std::vector<art::Ptr<recob::Slice>> hitSlices(hitSliceAssns.at(hit.key()));
-            if(hitSlices.size() != 0){
-                // There is a slice associated with the hit
-                art::Ptr<recob::Slice> slice = hitSlices.at(0);
-                hit_sliceID.push_back(slice->ID());
-            } else{
-                // There is no slice associated with the hit
-                hit_sliceID.push_back(-999999);
-            }
-
-            // Getting the shower associated with the hit
-            art::FindManyP<recob::Shower> hitShowerAssns(hitVec, e, showerLabel);
-            const std::vector<art::Ptr<recob::Shower>> hitShowers(hitShowerAssns.at(hit.key()));
-
-            if(hitShowers.size() != 0){
-                // Getting the PFP associated with the shower
-                art::FindManyP<recob::PFParticle> showerPFPAssns(hitShowers, e, showerLabel);
-                const std::vector<art::Ptr<recob::PFParticle>> showerPFP(showerPFPAssns.at(0));
-                art::Ptr<recob::PFParticle> pfp = showerPFP.at(0);
-                hit_PFPID.push_back(pfp->Self());
-            } else{
-                // There is no PFP associated with the hit
-                hit_PFPID.push_back(-999999);
-            }
-        }
-    }
 }
 
 int sbnd::NuE::GetNumGenEvents(const art::Event &e){
@@ -1258,16 +1131,6 @@ void sbnd::NuE::clearVectors(){
     reco_neutrinoVZ.clear();
     reco_neutrinoSliceID.clear();
 
-    hit_plane.clear();
-    hit_x.clear();
-    hit_uvz.clear();
-    hit_peakTime.clear();
-    hit_RMS.clear();
-    hit_integral.clear();
-    hit_sliceID.clear();
-    hit_PFPID.clear();
-    hit_ny.clear();
-    hit_nz.clear();
 }
 
 void sbnd::NuE::beginJob()
