@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+nuEHits:
+{
+    module_type:        "NuEHits"
+    SliceLabel:         "pandora"
+    SliceSCELabel:      "pandoraSCE"
+    PFParticleLabel:    "pandoraSCE"
+    VertexLabel:        "pandoraSCE"
+    HitLabel:           "gaushit"
+    ShowerLabel:        "pandoraSCEShower"
+    TruthLabel:         "generator"
+    DLCurrent:          2
+    Signal:             2
+}
+
+END_PROLOG
