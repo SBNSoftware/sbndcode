@@ -1123,7 +1123,7 @@ namespace blip {
             }
             for(int iclust=0; iclust<int(sizeof(newBlip.clusters)/sizeof(newBlip.clusters[0])); iclust++)
             {
-              newBlip.clusters[iclust].BlipID = newBlip.ID;
+              if(newBlip.clusters[iclust].ID>-1) newBlip.clusters[iclust].BlipID = newBlip.ID;
             }
             blips.push_back(newBlip);
 
