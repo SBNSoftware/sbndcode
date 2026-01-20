@@ -845,367 +845,548 @@ void styleDrawAll(histGroup_struct hists,
     hists.canvas->SaveAs(filename);
 }
 
-void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-  
-    purHist_struct purHists;
-    purHists.canvas = hists.canvas;
-    purHists.baseHist = hists.baseHist;
+TH1F* makeCumulative(const TH1F* h, bool keepRight)
+{
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_cumulative", h->GetName()));
+    hc->Reset();
 
-    purHist_struct effPurHists;
-    effPurHists.canvas = hists.canvas;
-    effPurHists.baseHist = hists.baseHist;
+    int n = h->GetNbinsX();
 
-    purHists.current = (TH1F*) hists.currentCosmic->Clone("pur_currentCosmic");
-    purHists.current->Reset();
-    purHists.current->GetYaxis()->SetTitle("Purity");
-    purHists.current->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-
-    purHists.uboone = (TH1F*) hists.ubooneCosmic->Clone("pur_ubooneCosmic");
-    purHists.uboone->Reset();
-    purHists.uboone->GetYaxis()->SetTitle("Purity");
-    purHists.uboone->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    purHists.nuE = (TH1F*) hists.nuECosmic->Clone("pur_nuECosmic");
-    purHists.nuE->Reset();
-    purHists.nuE->GetYaxis()->SetTitle("Purity");
-    purHists.nuE->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.current = (TH1F*) hists.currentCosmic->Clone("effPur_currentCosmic");
-    effPurHists.current->Reset();
-    effPurHists.current->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.current->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.uboone = (TH1F*) hists.ubooneCosmic->Clone("effPur_ubooneCosmic");
-    effPurHists.uboone->Reset();
-    effPurHists.uboone->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.uboone->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.nuE = (TH1F*) hists.nuECosmic->Clone("effPur_nuECosmic");
-    effPurHists.nuE->Reset();
-    effPurHists.nuE->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.nuE->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-
-    histGroup_struct effHists;
-    effHists.canvas = hists.canvas;
-    effHists.baseHist = hists.baseHist;
-
-    effHists.currentCosmic = (TH1F*) hists.currentCosmic->Clone("eff_currentCosmic");
-    effHists.currentCosmic->Reset();
-    effHists.currentCosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.currentCosmic->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
-    
-    effHists.currentSignal = (TH1F*) hists.currentSignal->Clone("eff_currentSignal");
-    effHists.currentSignal->Reset();
-    effHists.currentSignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.currentSignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-
-    effHists.currentSignalFuzzy = (TH1F*) hists.currentSignalFuzzy->Clone("eff_currentSignalFuzzy");
-    effHists.currentSignalFuzzy->Reset();
-    effHists.currentSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.currentSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    
-    effHists.currentBNB = (TH1F*) hists.currentBNB->Clone("eff_currentBNB");
-    effHists.currentBNB->Reset();
-    effHists.currentBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.currentBNB->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
-
-    effHists.currentBNBFuzzy = (TH1F*) hists.currentBNBFuzzy->Clone("eff_currentBNBFuzzy");
-    effHists.currentBNBFuzzy->Reset();
-    effHists.currentBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.currentBNBFuzzy->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
-
-    effHists.ubooneCosmic = (TH1F*) hists.ubooneCosmic->Clone("eff_ubooneCosmic");
-    effHists.ubooneCosmic->Reset();
-    effHists.ubooneCosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneCosmic->GetXaxis()->SetTitle(hists.ubooneCosmic->GetXaxis()->GetTitle());
-    
-    effHists.ubooneSignal = (TH1F*) hists.ubooneSignal->Clone("eff_ubooneSignal");
-    effHists.ubooneSignal->Reset();
-    effHists.ubooneSignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignal->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
-
-    effHists.ubooneSignalFuzzy = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff_ubooneSignalFuzzy");
-    effHists.ubooneSignalFuzzy->Reset();
-    effHists.ubooneSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignalFuzzy->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
-    
-    effHists.ubooneBNB = (TH1F*) hists.ubooneBNB->Clone("eff_ubooneBNB");
-    effHists.ubooneBNB->Reset();
-    effHists.ubooneBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneBNB->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
-
-    effHists.ubooneBNBFuzzy = (TH1F*) hists.ubooneBNBFuzzy->Clone("eff_ubooneBNBFuzzy");
-    effHists.ubooneBNBFuzzy->Reset();
-    effHists.ubooneBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneBNBFuzzy->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
-
-    effHists.nuECosmic = (TH1F*) hists.nuECosmic->Clone("eff_nuECosmic");
-    effHists.nuECosmic->Reset();
-    effHists.nuECosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.nuECosmic->GetXaxis()->SetTitle(hists.nuECosmic->GetXaxis()->GetTitle());
-    
-    effHists.nuESignal = (TH1F*) hists.nuESignal->Clone("eff_nuESignal");
-    effHists.nuESignal->Reset();
-    effHists.nuESignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignal->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
-
-    effHists.nuESignalFuzzy = (TH1F*) hists.nuESignalFuzzy->Clone("eff_nuESignalFuzzy");
-    effHists.nuESignalFuzzy->Reset();
-    effHists.nuESignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignalFuzzy->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
-    
-    effHists.nuEBNB = (TH1F*) hists.nuEBNB->Clone("eff_nuEBNB");
-    effHists.nuEBNB->Reset();
-    effHists.nuEBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.nuEBNB->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
-
-    effHists.nuEBNBFuzzy = (TH1F*) hists.nuEBNBFuzzy->Clone("eff_nuEBNBFuzzy");
-    effHists.nuEBNBFuzzy->Reset();
-    effHists.nuEBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.nuEBNBFuzzy->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
-
-    int numBins = hists.currentSignal->GetNbinsX();
-
-    double currentSignalSum = 0.0;
-    double currentSignalTotal = 0.0;
-    double currentSignalFuzzySum = 0.0;
-    double currentSignalFuzzyTotal = 0.0;
-    double ubooneSignalSum = 0.0;
-    double ubooneSignalTotal = 0.0;
-    double ubooneSignalFuzzySum = 0.0;
-    double ubooneSignalFuzzyTotal = 0.0;
-    double nuESignalSum = 0.0;
-    double nuESignalTotal = 0.0;
-    double nuESignalFuzzySum = 0.0;
-    double nuESignalFuzzyTotal = 0.0;
-
-    double currentCosmicSum = 0.0;
-    double currentCosmicTotal = 0.0;
-    double ubooneCosmicSum = 0.0;
-    double ubooneCosmicTotal = 0.0;
-    double nuECosmicSum = 0.0;
-    double nuECosmicTotal = 0.0;
-    double currentBNBSum = 0.0;
-    double currentBNBTotal = 0.0;
-    double ubooneBNBSum = 0.0;
-    double ubooneBNBTotal = 0.0;
-    double nuEBNBSum = 0.0;
-    double nuEBNBTotal = 0.0;
-    double currentBNBFuzzySum = 0.0;
-    double currentBNBFuzzyTotal = 0.0;
-    double ubooneBNBFuzzySum = 0.0;
-    double ubooneBNBFuzzyTotal = 0.0;
-    double nuEBNBFuzzySum = 0.0;
-    double nuEBNBFuzzyTotal = 0.0;
-
-    // efficiencyWay == -1 includes everything to the right of the cut
-    for(int i = 0; i <= numBins+1; ++i){
-        currentSignalTotal += hists.currentSignal->GetBinContent(i);
-        currentSignalFuzzyTotal += hists.currentSignalFuzzy->GetBinContent(i);
-        ubooneSignalTotal += hists.ubooneSignal->GetBinContent(i);
-        ubooneSignalFuzzyTotal += hists.ubooneSignalFuzzy->GetBinContent(i);
-        nuESignalTotal += hists.nuESignal->GetBinContent(i);
-        nuESignalFuzzyTotal += hists.nuESignalFuzzy->GetBinContent(i);
-    
-        currentCosmicTotal += hists.currentCosmic->GetBinContent(i);
-        ubooneCosmicTotal += hists.ubooneCosmic->GetBinContent(i);
-        nuECosmicTotal += hists.nuECosmic->GetBinContent(i);
-        currentBNBTotal += hists.currentBNB->GetBinContent(i);
-        ubooneBNBTotal += hists.ubooneBNB->GetBinContent(i);
-        nuEBNBTotal += hists.nuEBNB->GetBinContent(i);
-        currentBNBFuzzyTotal += hists.currentBNBFuzzy->GetBinContent(i);
-        ubooneBNBFuzzyTotal += hists.ubooneBNBFuzzy->GetBinContent(i);
-        nuEBNBFuzzyTotal += hists.nuEBNBFuzzy->GetBinContent(i);
-    }
-
-    printf("TOTALS:\n Signal: Current = %f, Uboone = %f, NuE = %f\nSignal Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentSignalTotal, ubooneSignalTotal, nuESignalTotal, currentSignalFuzzyTotal, ubooneSignalFuzzyTotal, nuESignalFuzzyTotal);
-    printf("BNB: Current = %f, Uboone = %f, NuE = %f\nBNB Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentBNBTotal, ubooneBNBTotal, nuEBNBTotal, currentBNBFuzzyTotal, ubooneBNBFuzzyTotal, nuEBNBFuzzyTotal);
-    printf("Cosmic: Current = %f, Uboone = %f, NuE = %f\n", currentCosmicTotal, ubooneCosmicTotal, nuECosmicTotal);
-    
-    for(int i = 0; i <= numBins+1; ++i){
-        printf("--------------------------\n");
-        if(i != 0 || i != numBins+1) std::cout << "Bin " << i << std::endl;
-        if(i == 0 || i == numBins+1) std::cout << "Under/Overflow bin" << std::endl;
-        currentSignalSum += hists.currentSignal->GetBinContent(i);
-        currentSignalFuzzySum += hists.currentSignalFuzzy->GetBinContent(i);
-        ubooneSignalSum += hists.ubooneSignal->GetBinContent(i);
-        ubooneSignalFuzzySum += hists.ubooneSignalFuzzy->GetBinContent(i);
-        nuESignalSum += hists.nuESignal->GetBinContent(i);
-        nuESignalFuzzySum += hists.nuESignalFuzzy->GetBinContent(i);
-
-        currentCosmicSum += hists.currentCosmic->GetBinContent(i);
-        ubooneCosmicSum += hists.ubooneCosmic->GetBinContent(i);
-        nuECosmicSum += hists.nuECosmic->GetBinContent(i);
-        currentBNBSum += hists.currentBNB->GetBinContent(i);
-        ubooneBNBSum += hists.ubooneBNB->GetBinContent(i);
-        nuEBNBSum += hists.nuEBNB->GetBinContent(i);
-        currentBNBFuzzySum += hists.currentBNBFuzzy->GetBinContent(i);
-        ubooneBNBFuzzySum += hists.ubooneBNBFuzzy->GetBinContent(i);
-        nuEBNBFuzzySum += hists.nuEBNBFuzzy->GetBinContent(i);
-
-        printf("Cosmic Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentCosmicSum, ubooneCosmicSum, nuECosmicSum);
-        printf("BNB Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBSum, ubooneBNBSum, nuEBNBSum);
-        printf("BNB Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBFuzzySum, ubooneBNBFuzzySum, nuEBNBFuzzySum);
-        printf("Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentSignalSum, ubooneSignalSum, nuESignalSum);
-        printf("Signal Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalFuzzySum, ubooneSignalFuzzySum, nuESignalFuzzySum);
-
-        double currentSignalEffVal = 0;
-        double currentSignalFuzzyEffVal = 0;
-        double ubooneSignalEffVal = 0;
-        double ubooneSignalFuzzyEffVal = 0;
-        double nuESignalEffVal = 0;
-        double nuESignalFuzzyEffVal = 0;
-
-        double currentAllSignalEffVal = 0.0;
-        double ubooneAllSignalEffVal = 0.0;
-        double nuEAllSignalEffVal = 0.0;
-
-        double currentCosmicRejVal = 0;
-        double ubooneCosmicRejVal = 0;
-        double nuECosmicRejVal = 0;
-        double currentBNBRejVal = 0;
-        double ubooneBNBRejVal = 0;
-        double nuEBNBRejVal = 0;
-        double currentBNBFuzzyRejVal = 0;
-        double ubooneBNBFuzzyRejVal = 0;
-        double nuEBNBFuzzyRejVal = 0;
-
-        double keptSignalCurrent = 0.0;
-        double keptBackgroundCurrent = 0.0;
-        double keptSignalUboone = 0.0;
-        double keptBackgroundUboone = 0.0;
-        double keptSignalNuE = 0.0;
-        double keptBackgroundNuE = 0.0;
-
-        double currentPurity = 0.0;
-        double uboonePurity = 0.0;
-        double nuEPurity = 0.0;
-       
-        double currentEffPur = 0.0;
-        double ubooneEffPur = 0.0;
-        double nuEEffPur = 0.0;
-        
-        if(efficiencyWay == -1){
-            // efficiencyWay == -1 includes everything to the right of the cut
-            currentSignalEffVal = (1 - (currentSignalSum/currentSignalTotal));
-            currentSignalFuzzyEffVal = (1 - (currentSignalFuzzySum/currentSignalFuzzyTotal));
-            ubooneSignalEffVal = (1 - (ubooneSignalSum/ubooneSignalTotal));
-            ubooneSignalFuzzyEffVal = (1 - (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal));
-            nuESignalEffVal = (1 - (nuESignalSum/nuESignalTotal));
-            nuESignalFuzzyEffVal = (1 - (nuESignalFuzzySum/nuESignalFuzzyTotal));
-            
-            currentCosmicRejVal = (currentCosmicSum/currentCosmicTotal);
-            ubooneCosmicRejVal = (ubooneCosmicSum/ubooneCosmicTotal);
-            nuECosmicRejVal = (nuECosmicSum/nuECosmicTotal);
-            currentBNBRejVal = (currentBNBSum/currentBNBTotal);
-            ubooneBNBRejVal = (ubooneBNBSum/ubooneBNBTotal);
-            nuEBNBRejVal = (nuEBNBSum/nuEBNBTotal);
-            currentBNBFuzzyRejVal = (currentBNBFuzzySum/currentBNBFuzzyTotal);
-            ubooneBNBFuzzyRejVal = (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal);
-            nuEBNBFuzzyRejVal = (nuEBNBFuzzySum/nuEBNBFuzzyTotal);
-
-            keptSignalCurrent = (currentSignalTotal - currentSignalSum); 
-            keptBackgroundCurrent = ((currentBNBTotal - currentBNBSum) + (currentBNBFuzzyTotal - currentBNBFuzzySum) + (currentCosmicTotal - currentCosmicSum) + (currentSignalFuzzyTotal - currentSignalFuzzySum));
-            keptSignalUboone = (ubooneSignalTotal - ubooneSignalSum); 
-            keptBackgroundUboone = ((ubooneBNBTotal - ubooneBNBSum) + (ubooneBNBFuzzyTotal - ubooneBNBFuzzySum) + (ubooneCosmicTotal - ubooneCosmicSum) + (ubooneSignalFuzzyTotal - ubooneSignalFuzzySum));
-            keptSignalNuE = (nuESignalTotal - nuESignalSum); 
-            keptBackgroundNuE = ((nuEBNBTotal - nuEBNBSum) + (nuEBNBFuzzyTotal - nuEBNBFuzzySum) + (nuECosmicTotal - nuECosmicSum) + (nuESignalFuzzyTotal - nuESignalFuzzySum));
-
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
-
-        } else if(efficiencyWay == 1){
-            // efficiencyWay == 1 includes everything to the left of the cut
-            currentSignalEffVal = (currentSignalSum/currentSignalTotal);
-            currentSignalFuzzyEffVal = (currentSignalFuzzySum/currentSignalFuzzyTotal);
-            ubooneSignalEffVal = (ubooneSignalSum/ubooneSignalTotal);
-            ubooneSignalFuzzyEffVal = (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal);
-            nuESignalEffVal = (nuESignalSum/nuESignalTotal);
-            nuESignalFuzzyEffVal = (nuESignalFuzzySum/nuESignalFuzzyTotal);
-            
-            currentCosmicRejVal = (1- (currentCosmicSum/currentCosmicTotal));
-            ubooneCosmicRejVal = (1 - (ubooneCosmicSum/ubooneCosmicTotal));
-            nuECosmicRejVal = (1 - (nuECosmicSum/nuECosmicTotal));
-            currentBNBRejVal = (1 - (currentBNBSum/currentBNBTotal));
-            ubooneBNBRejVal = (1 - (ubooneBNBSum/ubooneBNBTotal));
-            nuEBNBRejVal = (1 - (nuEBNBSum/nuEBNBTotal));
-            currentBNBFuzzyRejVal = (1 - (currentBNBFuzzySum/currentBNBFuzzyTotal));
-            ubooneBNBFuzzyRejVal = (1 - (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal));
-            nuEBNBFuzzyRejVal = (1 - (nuEBNBFuzzySum/nuEBNBFuzzyTotal));
-        
-            keptSignalCurrent = (currentSignalSum);
-            keptBackgroundCurrent = (currentCosmicSum + currentBNBSum + currentBNBFuzzySum + currentSignalFuzzySum);  
-            keptSignalUboone = (ubooneSignalSum);
-            keptBackgroundUboone = (ubooneCosmicSum + ubooneBNBSum + ubooneBNBFuzzySum + ubooneSignalFuzzySum);  
-            keptSignalNuE = (nuESignalSum);
-            keptBackgroundNuE = (nuECosmicSum + nuEBNBSum + nuEBNBFuzzySum + nuESignalFuzzySum);  
-            
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
+    if (keepRight) {
+        double sum = 0.0;
+        for (int i = n; i >= 1; --i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
         }
-
-        currentPurity = (keptSignalCurrent / (keptSignalCurrent + keptBackgroundCurrent));
-        uboonePurity = (keptSignalUboone / (keptSignalUboone + keptBackgroundUboone));
-        nuEPurity = (keptSignalNuE / (keptSignalNuE + keptBackgroundNuE));
-
-        currentEffPur = (currentAllSignalEffVal * currentPurity);
-        ubooneEffPur = (ubooneAllSignalEffVal * uboonePurity);
-        nuEEffPur = (nuEAllSignalEffVal * nuEPurity);
-        printf("All Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", keptSignalCurrent, keptSignalUboone, keptSignalNuE);
-
-        printf("Efficiency Values:\nSignal: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy Signal: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalEffVal, ubooneSignalEffVal, nuESignalEffVal, currentSignalFuzzyEffVal, ubooneSignalFuzzyEffVal, nuESignalFuzzyEffVal);
-        printf("Rejection Values:\nBNB: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy BNB: Current = %f, Uboone = %f, Nu+E = %f\nCosmics: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentBNBRejVal, ubooneBNBRejVal, nuEBNBRejVal, currentBNBFuzzyRejVal, ubooneBNBFuzzyRejVal, nuEBNBFuzzyRejVal, currentCosmicRejVal, ubooneCosmicRejVal, nuECosmicRejVal);
-        printf("Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentPurity, uboonePurity, nuEPurity);
-        printf("Eff x Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n", currentEffPur, ubooneEffPur, nuEEffPur);
-        printf("--------------------------\n");
-        if(!std::isnan(currentSignalEffVal)) effHists.currentSignal->SetBinContent(i, currentSignalEffVal);
-        if(!std::isnan(currentSignalFuzzyEffVal)) effHists.currentSignalFuzzy->SetBinContent(i, currentSignalFuzzyEffVal);
-        if(!std::isnan(ubooneSignalEffVal)) effHists.ubooneSignal->SetBinContent(i, ubooneSignalEffVal);
-        if(!std::isnan(ubooneSignalFuzzyEffVal)) effHists.ubooneSignalFuzzy->SetBinContent(i, ubooneSignalFuzzyEffVal);
-        if(!std::isnan(nuESignalEffVal)) effHists.nuESignal->SetBinContent(i, nuESignalEffVal);
-        if(!std::isnan(nuESignalFuzzyEffVal)) effHists.nuESignalFuzzy->SetBinContent(i, nuESignalFuzzyEffVal);
-    
-        if(!std::isnan(currentCosmicRejVal)) effHists.currentCosmic->SetBinContent(i, currentCosmicRejVal);
-        if(!std::isnan(ubooneCosmicRejVal)) effHists.ubooneCosmic->SetBinContent(i, ubooneCosmicRejVal);
-        if(!std::isnan(nuECosmicRejVal)) effHists.nuECosmic->SetBinContent(i, nuECosmicRejVal);
-        if(!std::isnan(currentBNBRejVal)) effHists.currentBNB->SetBinContent(i, currentBNBRejVal);
-        if(!std::isnan(ubooneBNBRejVal)) effHists.ubooneBNB->SetBinContent(i, ubooneBNBRejVal);
-        if(!std::isnan(nuEBNBRejVal)) effHists.nuEBNB->SetBinContent(i, nuEBNBRejVal);
-        if(!std::isnan(currentBNBFuzzyRejVal)) effHists.currentBNBFuzzy->SetBinContent(i, currentBNBFuzzyRejVal);
-        if(!std::isnan(ubooneBNBFuzzyRejVal)) effHists.ubooneBNBFuzzy->SetBinContent(i, ubooneBNBFuzzyRejVal);
-        if(!std::isnan(nuEBNBFuzzyRejVal)) effHists.nuEBNBFuzzy->SetBinContent(i, nuEBNBFuzzyRejVal);
-    
-        if(!std::isnan(currentPurity)) purHists.current->SetBinContent(i, currentPurity);
-        if(!std::isnan(uboonePurity)) purHists.uboone->SetBinContent(i, uboonePurity);
-        if(!std::isnan(nuEPurity)) purHists.nuE->SetBinContent(i, nuEPurity);
-        
-        if(!std::isnan(currentEffPur)){ effPurHists.current->SetBinContent(i, currentEffPur); std::cout << "Filled effPurHists.current with " << currentEffPur << std::endl;}
-        if(!std::isnan(ubooneEffPur)){ effPurHists.uboone->SetBinContent(i, ubooneEffPur); std::cout << "Filled effPurHists.uboone with " << ubooneEffPur << std::endl;}
-        if(!std::isnan(nuEEffPur)){ effPurHists.nuE->SetBinContent(i, nuEEffPur); std::cout << "Filled effPurHists.nuE with " << nuEEffPur << std::endl;}
-
+    } else {
+        double sum = 0.0;
+        for (int i = 1; i <= n; ++i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+        }
     }
 
-    purHists.current->SetMaximum(-1111);
-    purHists.uboone->SetMaximum(-1111);
-    purHists.nuE->SetMaximum(-1111);
-    effPurHists.current->SetMaximum(-1111);
-    effPurHists.uboone->SetMaximum(-1111);
-    effPurHists.nuE->SetMaximum(-1111);
+    return hc;
+}
+
+double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false){
+    double maxVal = 0.0;
+
+    int nBins = eff->GetTotalHistogram()->GetNbinsX();
+    for (int i = 1; i <= nBins; ++i) {
+        if (!eff->GetTotalHistogram()->GetBinContent(i)) continue;
+
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val += eff->GetEfficiencyErrorUp(i);
+
+        if (val > maxVal)
+            maxVal = val;
+    }
+    return maxVal;
+}
+
+void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation){
+    if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    plot_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    plot_BDT->SetMarkerSize(0.7); 
+    plot_BDT->SetLineWidth(1);
+    plot_BDT->SetLineColor(kBlack);
+    plot_BDT->SetMarkerStyle(20);
+
+    const TH1* hTotal_BDT = plot_BDT->GetTotalHistogram();
+    int nBins_BDT = hTotal_BDT->GetNbinsX();
+    TGraphAsymmErrors* gEff_BDT = new TGraphAsymmErrors(nBins_BDT);    
+
+    for(int i = 1; i <= nBins_BDT; ++i){
+        double xCenter = hTotal_BDT->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_BDT->GetXaxis()->GetBinUpEdge(i) - hTotal_BDT->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot_BDT->GetEfficiency(i);
+        double yErrLow  = plot_BDT->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_BDT->GetEfficiencyErrorUp(i);
+   
+        gEff_BDT->SetPoint(i-1, xCenter, yEff);
+        gEff_BDT->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+
+    gEff_BDT->SetLineColor(kBlack);
+    gEff_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    gEff_BDT->SetMarkerStyle(20);
+    gEff_BDT->SetMarkerSize(0.7);
+    gEff_BDT->SetLineWidth(1);
+    gEff_BDT->Draw("AP");
+
+    plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    plot_DLUboone->SetMarkerSize(0.7); 
+    plot_DLUboone->SetLineWidth(1);
+    plot_DLUboone->SetLineColor(kBlack);
+    plot_DLUboone->SetMarkerStyle(20);
+
+    const TH1* hTotal_DLUboone = plot_DLUboone->GetTotalHistogram();
+    int nBins_DLUboone = hTotal_DLUboone->GetNbinsX();
+    TGraphAsymmErrors* gEff_DLUboone = new TGraphAsymmErrors(nBins_DLUboone);    
+
+    for(int i = 1; i <= nBins_DLUboone; ++i){
+        double xCenter = hTotal_DLUboone->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_DLUboone->GetXaxis()->GetBinUpEdge(i) - hTotal_DLUboone->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot_DLUboone->GetEfficiency(i);
+        double yErrLow  = plot_DLUboone->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_DLUboone->GetEfficiencyErrorUp(i);
+   
+        gEff_DLUboone->SetPoint(i-1, xCenter, yEff);
+        gEff_DLUboone->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+    
+    gEff_DLUboone->SetLineColor(kBlack);
+    gEff_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    gEff_DLUboone->SetMarkerStyle(20);
+    gEff_DLUboone->SetMarkerSize(0.7);
+    gEff_DLUboone->SetLineWidth(1);
+    gEff_DLUboone->Draw("AP");
+
+    plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    plot_DLNuE->SetMarkerSize(0.7); 
+    plot_DLNuE->SetLineWidth(1);
+    plot_DLNuE->SetLineColor(kBlack);
+    plot_DLNuE->SetMarkerStyle(20);
+    
+    const TH1* hTotal_DLNuE = plot_DLNuE->GetTotalHistogram();
+    int nBins_DLNuE = hTotal_DLNuE->GetNbinsX();
+    TGraphAsymmErrors* gEff_DLNuE = new TGraphAsymmErrors(nBins_DLNuE);    
+
+    std::cout << "BIN 5: Low = " << plot_DLNuE->GetEfficiencyErrorLow(nBins_DLNuE/2) << ", " << plot_DLNuE->GetEfficiencyErrorUp(nBins_DLNuE/2) << std::endl;
+    
+    for(int i = 1; i <= nBins_DLNuE; ++i){
+        double xCenter = hTotal_DLNuE->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_DLNuE->GetXaxis()->GetBinUpEdge(i) - hTotal_DLNuE->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot_DLNuE->GetEfficiency(i);
+        double yErrLow  = plot_DLNuE->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_DLNuE->GetEfficiencyErrorUp(i);
+   
+        if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
+        
+        gEff_DLNuE->SetPoint(i-1, xCenter, yEff);
+        gEff_DLNuE->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+    
+    gEff_DLNuE->SetLineColor(kBlack);
+    gEff_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    gEff_DLNuE->SetMarkerStyle(20);
+    gEff_DLNuE->SetMarkerSize(0.7);
+    gEff_DLNuE->SetLineWidth(1);
+    gEff_DLNuE->Draw("AP");
+
+
+    plot_BDT->Draw("AP");
+    plot_DLUboone->Draw("SAME");
+    plot_DLNuE->Draw("SAME");
+    gPad->Update();
+
+    auto* gBDT      = plot_BDT->GetPaintedGraph();
+    auto* gDLUboone = plot_DLUboone->GetPaintedGraph();
+    auto* gDLNuE    = plot_DLNuE->GetPaintedGraph();
+
+    gBDT->SetMarkerSize(0.8);
+    gDLUboone->SetMarkerSize(0.8);
+    gDLNuE->SetMarkerSize(0.8);
+
+    gBDT->Draw("APE");
+    gDLUboone->Draw("PE SAME");
+    gDLNuE->Draw("PE SAME");
+
+    auto* g = plot_BDT->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, 1.05);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot_BDT,      "BDT",       "LEP");
+    leg->AddEntry(plot_DLUboone, "DL Uboone", "LEP");
+    leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "LEP");
+    leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, const std::string& vertex){
+    if (!plot) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    if(vertex == "BDT"){
+        plot->SetMarkerColor(TColor::GetColor("#e42536"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    } else if(vertex == "DLUboone"){
+        plot->SetMarkerColor(TColor::GetColor("#5790fc"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    } else if(vertex == "DLNuE"){
+        plot->SetMarkerColor(TColor::GetColor("#f89c20"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    }
+
+    const TH1* hTotal = plot->GetTotalHistogram();
+    int nBins = hTotal->GetNbinsX();
+    TGraphAsymmErrors* gEff = new TGraphAsymmErrors(nBins);    
+
+    for(int i = 1; i <= nBins; ++i){
+        double xCenter = hTotal->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal->GetXaxis()->GetBinUpEdge(i) - hTotal->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot->GetEfficiency(i);
+        double yErrLow  = plot->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot->GetEfficiencyErrorUp(i);
+   
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+
+    gEff->SetLineColor(kBlack);
+    gEff->SetMarkerColor(TColor::GetColor("#e42536"));
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.7);
+    gEff->SetLineWidth(1);
+    gEff->Draw("AP");
+
+    plot->Draw("AP");
+    gPad->Update();
+
+    auto* gBDT = plot->GetPaintedGraph();
+    gBDT->SetMarkerSize(0.8);
+    gBDT->Draw("APE");
+
+    auto* g = plot->GetPaintedGraph();
+    
+    double maxVal = getMaxValueEfficiency(plot, true);
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, maxVal*1.1);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    if(vertex == "BDT"){
+        leg->AddEntry(plot, "BDT", "LEP");
+    } else if(vertex == "DLUboone"){
+        leg->AddEntry(plot, "DL Uboone", "LEP");
+    } else if(vertex == "DLNuE"){
+        leg->AddEntry(plot, "DL Nu+E", "LEP");
+    }
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void drawEfficiency(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation){
+    if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    plot_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    plot_BDT->SetMarkerSize(0.7); 
+    plot_BDT->SetLineWidth(1);
+    plot_BDT->SetLineColor(kBlack);
+    plot_BDT->SetMarkerStyle(20);
+
+    plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    plot_DLUboone->SetMarkerSize(0.7); 
+    plot_DLUboone->SetLineWidth(1);
+    plot_DLUboone->SetLineColor(kBlack);
+    plot_DLUboone->SetMarkerStyle(20);
+
+    plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    plot_DLNuE->SetMarkerSize(0.7); 
+    plot_DLNuE->SetLineWidth(1);
+    plot_DLNuE->SetLineColor(kBlack);
+    plot_DLNuE->SetMarkerStyle(20);
+    
+    plot_BDT->Draw("AP");
+    plot_DLUboone->Draw("SAME");
+    plot_DLNuE->Draw("SAME");
+    gPad->Update();
+    
+    auto* g = plot_BDT->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, 1.05);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot_BDT,      "BDT",       "P");
+    leg->AddEntry(plot_DLUboone, "DL Uboone", "P");
+    leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "P");
+    leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+TH1F* makeTotalHist(const TH1F* h){
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_totalSum", h->GetName()));
+    hc->Reset();
+
+    double totalSum = h->Integral();
+    for(int i = 1; i < hc->GetNbinsX() + 1; ++i){
+        hc->SetBinContent(i, totalSum);
+    }
+
+    return hc;
+}
+
+void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
+    bool keepRight = (efficiencyWay == -1);
+    // Total signal
+    TH1F* hTotalSignal_BDT = (TH1F*)hists.currentSignal->Clone("hTotalSignal_BDT");
+    TH1F* hTotalSignal_DLUboone = (TH1F*)hists.ubooneSignal->Clone("hTotalSignal_DLUboone");
+    TH1F* hTotalSignal_DLNuE = (TH1F*)hists.nuESignal->Clone("hTotalSignal_DLNuE");
+
+    TH1F* hTotalSummedSignal_BDT = makeTotalHist(hTotalSignal_BDT);
+    TH1F* hTotalSummedSignal_DLUboone = makeTotalHist(hTotalSignal_DLUboone);
+    TH1F* hTotalSummedSignal_DLNuE = makeTotalHist(hTotalSignal_DLNuE);
+
+    // Total signal (cumulative)
+    TH1F* hPassedSignal_BDT = makeCumulative(hists.currentSignal, keepRight);
+    TH1F* hPassedSignal_DLUboone = makeCumulative(hists.ubooneSignal, keepRight);
+    TH1F* hPassedSignal_DLNuE = makeCumulative(hists.nuESignal, keepRight);
+
+    // Total background
+    TH1F* hTotalBackground_BDT = (TH1F*) hists.currentCosmic->Clone("hTotalBackground_BDT");
+    hTotalBackground_BDT->Reset();
+    hTotalBackground_BDT->Add(hists.currentCosmic);
+    hTotalBackground_BDT->Add(hists.currentSignalFuzzy);
+    hTotalBackground_BDT->Add(hists.currentBNB);
+    hTotalBackground_BDT->Add(hists.currentBNBFuzzy);
+    TH1F* hTotalSummedBackground_BDT = makeTotalHist(hTotalBackground_BDT);
+
+    TH1F* hTotalBackground_DLUboone = (TH1F*) hists.ubooneCosmic->Clone("hTotalBackground_DLUboone");
+    hTotalBackground_DLUboone->Reset();
+    hTotalBackground_DLUboone->Add(hists.ubooneCosmic);
+    hTotalBackground_DLUboone->Add(hists.ubooneSignalFuzzy);
+    hTotalBackground_DLUboone->Add(hists.ubooneBNB);
+    hTotalBackground_DLUboone->Add(hists.ubooneBNBFuzzy);
+    TH1F* hTotalSummedBackground_DLUboone = makeTotalHist(hTotalBackground_DLUboone);
+
+    TH1F* hTotalBackground_DLNuE = (TH1F*) hists.nuECosmic->Clone("hTotalBackground_DLNuE");
+    hTotalBackground_DLNuE->Reset();
+    hTotalBackground_DLNuE->Add(hists.nuECosmic);
+    hTotalBackground_DLNuE->Add(hists.nuESignalFuzzy);
+    hTotalBackground_DLNuE->Add(hists.nuEBNB);
+    hTotalBackground_DLNuE->Add(hists.nuEBNBFuzzy);
+    TH1F* hTotalSummedBackground_DLNuE = makeTotalHist(hTotalBackground_DLNuE);
+    
+    // Total background (cumulative)
+    TH1F* hPassedBackground_BDT = makeCumulative(hTotalBackground_BDT, keepRight);    
+    TH1F* hPassedBackground_DLUboone = makeCumulative(hTotalBackground_DLUboone, keepRight);    
+    TH1F* hPassedBackground_DLNuE = makeCumulative(hTotalBackground_DLNuE, keepRight);    
+    
+    // Total background (cumulative other way)
+    TH1F* hRejectedBackground_BDT = makeCumulative(hTotalBackground_BDT, !keepRight);    
+    TH1F* hRejectedBackground_DLUboone = makeCumulative(hTotalBackground_DLUboone, !keepRight);    
+    TH1F* hRejectedBackground_DLNuE = makeCumulative(hTotalBackground_DLNuE, !keepRight);    
+ 
+    // Total background + signal
+    TH1F* hTotalEverything_BDT = (TH1F*) hists.currentCosmic->Clone("hTotalEverything_BDT");
+    hTotalEverything_BDT->Reset();
+    hTotalEverything_BDT->Add(hists.currentCosmic);
+    hTotalEverything_BDT->Add(hists.currentSignal);
+    hTotalEverything_BDT->Add(hists.currentSignalFuzzy);
+    hTotalEverything_BDT->Add(hists.currentBNB);
+    hTotalEverything_BDT->Add(hists.currentBNBFuzzy);
+    TH1F* hTotalSummedEverything_BDT = makeTotalHist(hTotalEverything_BDT);
+
+    TH1F* hTotalEverything_DLUboone = (TH1F*) hists.ubooneCosmic->Clone("hTotalEverything_DLUboone");
+    hTotalEverything_DLUboone->Reset();
+    hTotalEverything_DLUboone->Add(hists.ubooneCosmic);
+    hTotalEverything_DLUboone->Add(hists.ubooneSignal);
+    hTotalEverything_DLUboone->Add(hists.ubooneSignalFuzzy);
+    hTotalEverything_DLUboone->Add(hists.ubooneBNB);
+    hTotalEverything_DLUboone->Add(hists.ubooneBNBFuzzy);
+    TH1F* hTotalSummedEverything_DLUboone = makeTotalHist(hTotalEverything_DLUboone);
+
+    TH1F* hTotalEverything_DLNuE = (TH1F*) hists.nuECosmic->Clone("hTotalEverything_DLNuE");
+    hTotalEverything_DLNuE->Reset();
+    hTotalEverything_DLNuE->Add(hists.nuECosmic);
+    hTotalEverything_DLNuE->Add(hists.nuESignal);
+    hTotalEverything_DLNuE->Add(hists.nuESignalFuzzy);
+    hTotalEverything_DLNuE->Add(hists.nuEBNB);
+    hTotalEverything_DLNuE->Add(hists.nuEBNBFuzzy);
+    TH1F* hTotalSummedEverything_DLNuE = makeTotalHist(hTotalEverything_DLNuE);
+
+    // Total background + signal (cumulative)
+    TH1F* hPassedEverything_BDT = makeCumulative(hTotalEverything_BDT, keepRight);
+    TH1F* hPassedEverything_DLUboone = makeCumulative(hTotalEverything_DLUboone, keepRight);
+    TH1F* hPassedEverything_DLNuE = makeCumulative(hTotalEverything_DLNuE, keepRight);
+
+    TEfficiency* eff_BDT = new TEfficiency(*hPassedSignal_BDT, *hTotalSummedSignal_BDT);
+    eff_BDT->SetTitle(Form("%s;%s;Signal Efficiency", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    eff_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* eff_DLUboone = new TEfficiency(*hPassedSignal_DLUboone, *hTotalSummedSignal_DLUboone);
+    eff_DLUboone->SetTitle(Form("%s;%s;Signal Efficiency", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    eff_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* eff_DLNuE = new TEfficiency(*hPassedSignal_DLNuE, *hTotalSummedSignal_DLNuE);
+    eff_DLNuE->SetTitle(Form("%s;%s;Signal Efficiency", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    eff_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TEfficiency* rej_BDT = new TEfficiency(*hRejectedBackground_BDT, *hTotalSummedBackground_BDT);
+    rej_BDT->SetTitle(Form("%s;%s;Background Rejection", hists.currentCosmic->GetTitle(), hists.currentCosmic->GetXaxis()->GetTitle()));     
+    rej_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* rej_DLUboone = new TEfficiency(*hRejectedBackground_DLUboone, *hTotalSummedBackground_DLUboone);
+    rej_DLUboone->SetTitle(Form("%s;%s;Background Rejection", hists.ubooneCosmic->GetTitle(), hists.ubooneCosmic->GetXaxis()->GetTitle()));     
+    rej_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* rej_DLNuE = new TEfficiency(*hRejectedBackground_DLNuE, *hTotalSummedBackground_DLNuE);
+    rej_DLNuE->SetTitle(Form("%s;%s;Background Rejection", hists.nuECosmic->GetTitle(), hists.nuECosmic->GetXaxis()->GetTitle()));     
+    rej_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TEfficiency* pur_BDT = new TEfficiency(*hPassedSignal_BDT, *hPassedEverything_BDT); 
+    pur_BDT->SetTitle(Form("%s;%s;Signal Purity", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    pur_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* pur_DLUboone = new TEfficiency(*hPassedSignal_DLUboone, *hPassedEverything_DLUboone); 
+    pur_DLUboone->SetTitle(Form("%s;%s;Signal Purity", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    pur_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* pur_DLNuE = new TEfficiency(*hPassedSignal_DLNuE, *hPassedEverything_DLNuE); 
+    pur_DLNuE->SetTitle(Form("%s;%s;Signal Purity", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    pur_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TH1F* hEffPurDenominator_BDT = (TH1F*) hTotalSummedSignal_BDT->Clone("hEffPurDenominator_BDT");
+    hEffPurDenominator_BDT->Multiply(hPassedEverything_BDT);
+    TH1F* hEffPurNumerator_BDT = (TH1F*) hPassedSignal_BDT->Clone("hEffPurNumerator_BDT");
+    hEffPurNumerator_BDT->Multiply(hPassedSignal_BDT);
+
+    TH1F* hEffPurDenominator_DLUboone = (TH1F*) hTotalSummedSignal_DLUboone->Clone("hEffPurDenominator_DLUboone");
+    hEffPurDenominator_DLUboone->Multiply(hPassedEverything_DLUboone);
+    TH1F* hEffPurNumerator_DLUboone = (TH1F*) hPassedSignal_DLUboone->Clone("hEffPurNumerator_DLUboone");
+    hEffPurNumerator_DLUboone->Multiply(hPassedSignal_DLUboone);
+
+    TH1F* hEffPurDenominator_DLNuE = (TH1F*) hTotalSummedSignal_DLNuE->Clone("hEffPurDenominator_DLNuE");
+    hEffPurDenominator_DLNuE->Multiply(hPassedEverything_DLNuE);
+    TH1F* hEffPurNumerator_DLNuE = (TH1F*) hPassedSignal_DLNuE->Clone("hEffPurNumerator_DLNuE");
+    hEffPurNumerator_DLNuE->Multiply(hPassedSignal_DLNuE);
+
+    TEfficiency* effPur_BDT = new TEfficiency(*hEffPurNumerator_BDT, *hEffPurDenominator_BDT);
+    effPur_BDT->SetTitle(Form("%s;%s;Efficiency x Purity", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    effPur_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* effPur_DLUboone = new TEfficiency(*hEffPurNumerator_DLUboone, *hEffPurDenominator_DLUboone);
+    effPur_DLUboone->SetTitle(Form("%s;%s;Efficiency x Purity", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    effPur_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* effPur_DLNuE = new TEfficiency(*hEffPurNumerator_DLNuE, *hEffPurDenominator_DLNuE);
+    effPur_DLNuE->SetTitle(Form("%s;%s;Efficiency x Purity", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    effPur_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
 
     std::string filenameEff = std::string(filename) + "_eff.pdf";
     std::string filenameRej = std::string(filename) + "_rej.pdf";
     std::string filenamePur = std::string(filename) + "_pur.pdf";
-    std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
+    double maxPurityVal = std::max({getMaxValueEfficiency(pur_BDT, true), getMaxValueEfficiency(pur_DLUboone, true), getMaxValueEfficiency(pur_DLNuE, true)});
+    std::string filenameEffPur = std::string(filename) + "_effpur.pdf";
+    double maxEffPurityVal = std::max({getMaxValueEfficiency(effPur_BDT, true), getMaxValueEfficiency(effPur_DLUboone, true), getMaxValueEfficiency(effPur_DLNuE, true)});
+    std::string filenameEffErrors = std::string(filename) + "_errors_eff.pdf";
+    std::string filenameRejErrors = std::string(filename) + "_errors_rej.pdf";
+    std::string filenamePurErrors = std::string(filename) + "_errors_pur.pdf";
+    std::string filenameEffPurErrors = std::string(filename) + "_errors_effpur.pdf";
+
+    drawEfficiency(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEff, -999999, -999999, legendLocation);
+    drawEfficiency(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRej, -999999, -999999, legendLocation);
+    drawEfficiency(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePur, 0, maxPurityVal*1.1, legendLocation);
+    drawEfficiency(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPur, 0, maxEffPurityVal*1.1, legendLocation);
+  
+    eff_BDT->SetUseWeightedEvents(false);
+    eff_DLUboone->SetUseWeightedEvents(false);
+    eff_DLNuE->SetUseWeightedEvents(false);
+    rej_BDT->SetUseWeightedEvents(false);
+    rej_DLUboone->SetUseWeightedEvents(false);
+    rej_DLNuE->SetUseWeightedEvents(false);
+    pur_BDT->SetUseWeightedEvents(false);
+    pur_DLUboone->SetUseWeightedEvents(false);
+    pur_DLNuE->SetUseWeightedEvents(false);
+    effPur_BDT->SetUseWeightedEvents(false);
+    effPur_DLUboone->SetUseWeightedEvents(false);
+    effPur_DLNuE->SetUseWeightedEvents(false);
     
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false);
-    styleDrawAll(effHists, 0, 1, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true);
-    styleDrawPur(purHists, 999, 999, 999, 999, filenamePur.c_str(), legendLocation, drawLine, linePos);
-    styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos, true);
+    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation);
+    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation);
+    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation);
+    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation);
+    
+    std::string filenameEffPurBDT = std::string(filename) + "_errors_BDT_effpur.pdf";
+    std::string filenameEffPurDLUboone = std::string(filename) + "_errors_DLUboone_effpur.pdf";
+    std::string filenameEffPurDLNuE = std::string(filename) + "_errors_DLNuE_effpur.pdf";
+    std::string filenameEffBDT = std::string(filename) + "_errors_BDT_eff.pdf";
+    std::string filenameEffDLUboone = std::string(filename) + "_errors_DLUboone_eff.pdf";
+    std::string filenameEffDLNuE = std::string(filename) + "_errors_DLNuE_eff.pdf";
+    std::string filenameRejBDT = std::string(filename) + "_errors_BDT_rej.pdf";
+    std::string filenameRejDLUboone = std::string(filename) + "_errors_DLUboone_rej.pdf";
+    std::string filenameRejDLNuE = std::string(filename) + "_errors_DLNuE_rej.pdf";
+    std::string filenamePurBDT = std::string(filename) + "_errors_BDT_pur.pdf";
+    std::string filenamePurDLUboone = std::string(filename) + "_errors_DLUboone_pur.pdf";
+    std::string filenamePurDLNuE = std::string(filename) + "_errors_DLNuE_pur.pdf";
+
+    drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT");
+    drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    drawEfficiencyErrorsIndividual(effPur_DLNuE, filenameEffPurDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    drawEfficiencyErrorsIndividual(eff_BDT, filenameEffBDT, -999999, -999999, legendLocation, "BDT");
+    drawEfficiencyErrorsIndividual(eff_DLUboone, filenameEffDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    drawEfficiencyErrorsIndividual(eff_DLNuE, filenameEffDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    drawEfficiencyErrorsIndividual(rej_BDT, filenameRejBDT, -999999, -999999, legendLocation, "BDT");
+    drawEfficiencyErrorsIndividual(rej_DLUboone, filenameRejDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    drawEfficiencyErrorsIndividual(rej_DLNuE, filenameRejDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    drawEfficiencyErrorsIndividual(pur_BDT, filenamePurBDT, -999999, -999999, legendLocation, "BDT");
+    drawEfficiencyErrorsIndividual(pur_DLUboone, filenamePurDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    drawEfficiencyErrorsIndividual(pur_DLNuE, filenamePurDLNuE, -999999, -999999, legendLocation, "DLNuE");
 }
 
 void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
@@ -1264,8 +1445,12 @@ void nuEBackgroundSignalWeighted_macro(){
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_11Dec.root");
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit/";
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/enuelastic_DLVertexingDLNu+E_26Dec_v10_06_00_gen_g4_detsim_reco1_reco2_analysed_DLNu+E_26Dec_25890928_2176_Analysed_DLNu+E_output-0f528a1f-2a9b-4b7f-b99e-7c2684cabb08.root");
-    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/output_16Jan.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_nuE/";
+    
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_11Dec.root");
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_TEST/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/output_16Jan.root");
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_nuE/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -1752,6 +1937,11 @@ void nuEBackgroundSignalWeighted_macro(){
     double xMin = -201.3; double xMax = 201.3;
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0; double zMax = 509.4;
+
+    double nuESlicePurityLow_DLNuE = 0;
+    double nuESlice_DLNuE = 0;
+    double nuESliceCompleteness_DLNuE = 0;
+    double nuESlicePurityLowHasPFP_DLNuE = 0;
 
     TH2D *xCoordAngleDifferenceBDT_low = new TH2D("xCoordAngleDifferenceBDT_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
     TH2D *yCoordAngleDifferenceBDT_low = new TH2D("yCoordAngleDifferenceBDT_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
@@ -2824,12 +3014,18 @@ void nuEBackgroundSignalWeighted_macro(){
                     }
                 }
 
-                if(reco_sliceOrigin->at(slice) == 1 && reco_slicePurity->at(slice) < 0.3 && DLCurrent == 5){
+                if(reco_sliceOrigin->at(slice) == 1 && DLCurrent == 5) nuESlice_DLNuE++;
+                
+                if(reco_sliceOrigin->at(slice) == 1 && reco_sliceCompleteness->at(slice) > 0.5 && DLCurrent == 5) nuESliceCompleteness_DLNuE++;
+
+                if(reco_sliceOrigin->at(slice) == 1 && reco_sliceCompleteness->at(slice) > 0.5 && reco_slicePurity->at(slice) < 0.3 && DLCurrent == 5){
                     std::cout << "______________________________" << std::endl;
-                    std::cout << "DL Nu+E, nu+e slice with purity < 0.3" << std::endl;
+                    std::cout << "DL Nu+E, nu+e slice with purity < 0.3 and completeness > 0.5" << std::endl;
                     std::cout << "signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl;
                     std::cout << "EventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << std::endl;
                     
+                    nuESlicePurityLow_DLNuE++;
+
                     double recoSliceVXPurityLow = 0;
                     double recoSliceVYPurityLow = 0;
                     double recoSliceVZPurityLow = 0;
@@ -2851,12 +3047,16 @@ void nuEBackgroundSignalWeighted_macro(){
                     std::cout << "" << std::endl;
 
                     int pfpnumbertest = 0;
+                    int numNuEPFPs = 0;
                     for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                         if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                             pfpnumbertest++;
                             printf("Particle %d: ID = %f, True PDG = %f, True Origin = %f, True Interaction Type = %f, Num Hits in PFP = %f, Num Truth Matched Hits in PFP = %f, Num Truth Matched Hits = %f\n", pfpnumbertest, reco_particleID->at(pfp), reco_particleTruePDG->at(pfp), reco_particleTrueOrigin->at(pfp), reco_particleTrueInteractionType->at(pfp), reco_particleNumHits->at(pfp), reco_particleNumHitsTruthMatched->at(pfp), reco_particleNumTruthHits->at(pfp));
+                            if(reco_particleTrueOrigin->at(pfp) == 1 && reco_particleTrueInteractionType->at(pfp) == 1098 && reco_particleTruePDG->at(pfp) == 11) numNuEPFPs++;
                         }
                     }
+
+                    if(numNuEPFPs > 0) nuESlicePurityLowHasPFP_DLNuE++;
 
                     std::cout << "______________________________" << std::endl;
                 }
@@ -4198,8 +4398,7 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
 
-    //Test
-    //efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
+    efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
     
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
@@ -4385,5 +4584,10 @@ void nuEBackgroundSignalWeighted_macro(){
     printf("BNB Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", BNBSpillsSumCurrent, BNBSpillsSumUboone, BNBSpillsSumNuE);
     printf("Nu+E Spills: Current = %f, DL Uboone = %f, DL Nu+E = %f\n", NuESpillsSumCurrent, NuESpillsSumUboone, NuESpillsSumNuE);
     printf("Target POT = %f\n", targetPOT);
-   
+
+    std::cout << "Number of nu+e truth matched slices = " << nuESlice_DLNuE << std::endl;
+    std::cout << "Number of nu+e truth matched slices with completeness > 0.5 = " << nuESliceCompleteness_DLNuE << std::endl;
+    std::cout << "Number of nu+e truth matched slices with completeness > 0.5 and purity < 0.3 = " << nuESlicePurityLow_DLNuE << std::endl;
+    std::cout << "Number of nu+e truth matched slices with completeness > 0.5 and purity < 0.3 and a PFP truth matched to nu+e = " << nuESlicePurityLowHasPFP_DLNuE << std::endl;
+
 }
