@@ -1121,9 +1121,9 @@ namespace blip {
               hitclust[hc.ID].BlipID = newBlip.ID;
               for( auto& h : hc.HitIDs ) hitinfo[h].blipid = newBlip.ID;
             }
-            for(auto hc : newBlip.clusters)
+            for(int iclust=0; iclust<int(sizeof(newBlip.clusters)/sizeof(newBlip.clusters[0])); iclust++)
             {
-              hc.BlipID = newBlip.ID;
+              newBlip.clusters[iclust].BlipID = newBlip.ID;
             }
             blips.push_back(newBlip);
 
