@@ -314,9 +314,6 @@ void nuclearFragments::RecoAnalysisIncShowers::analyze(art::Event const& e)
 void nuclearFragments::RecoAnalysisIncShowers::respondToOpenInputFile(const art::FileBlock& fb)
 {
   fInputFile = fb.fileName();
-  //shout("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  //shout(fInputFile);
-  //shout("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 
 void nuclearFragments::RecoAnalysisIncShowers::beginJob()
@@ -397,8 +394,6 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("MC_allParticlePDG", &fMC_allParticlePDG);
   fEventTree->Branch("MC_allParticleTrackID", &fMC_allParticleTrackID);
   fEventTree->Branch("MC_allParticleMotherID", &fMC_allParticleMotherID);
-  //fEventTree->Branch("MC_isShower", &fMC_isShower);
-  //fEventTree->Branch("MC_isTrack", &fMC_isTrack);
   fEventTree->Branch("MC_trackID", &fMC_trackID);
 }
 
