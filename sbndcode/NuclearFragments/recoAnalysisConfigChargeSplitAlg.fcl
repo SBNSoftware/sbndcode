@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+recoAnalysisParams:
+{
+    module_type: "RecoAnalysis"
+
+    SliceLabel: "pandoraNF"
+    PFParticleLabel: "pandoraNF"
+    TrackLabel: "pandoraTrackNF"
+    ShowerLabel: "pandoraShowerNF"
+    CalorimetryLabel: "pandoraCaloNF"
+    HitLabel: "gaushit"
+    VertexLabel: "pandoraNF"
+    ClusterLabel: "pandoraNF"
+    SpacePointLabel: "pandoraNF"
+    RecoHitLabel: "pandoraNF"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG
