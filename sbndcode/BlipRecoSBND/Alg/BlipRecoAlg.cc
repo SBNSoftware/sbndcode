@@ -376,6 +376,7 @@ namespace blip {
 	       }
 	    }
     }
+    std::cout <<"IDE SIZE " << sIDElist.size() << "  vs EDEP SIZE " << sedlist.size() << std::endl;
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
