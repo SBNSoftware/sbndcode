@@ -1,0 +1,34 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "pidAnalysisConfig.fcl"
+
+process_name: PidAnalysis
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_pidAnalysis.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::pidAnalysisParams
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+    trigger_paths: []
+}

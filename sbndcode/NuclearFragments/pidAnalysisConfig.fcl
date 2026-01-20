@@ -1,0 +1,22 @@
+BEGIN_PROLOG
+
+pidAnalysisParams:
+{
+    module_type: "PidAnalysis"
+
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    ChisqLabel: "pandoraPid"
+    ShowerLabel: "pandoraShower"
+    CalorimetryLabel: "pandoraCalo"
+    HitLabel: "gaushit"
+    VertexLabel: "pandora"
+    ClusterLabel: "pandora"
+    SpacePointLabel: "pandora"
+    RecoHitLabel: "pandora"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG

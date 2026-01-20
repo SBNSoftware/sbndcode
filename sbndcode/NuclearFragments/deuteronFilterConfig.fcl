@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+deuteronFilterParams:
+{
+    module_type: "DeuteronFilter"
+    
+    NuGenLabel: "generator"
+}
+
+END_PROLOG
