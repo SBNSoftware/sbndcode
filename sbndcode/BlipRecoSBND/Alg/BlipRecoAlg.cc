@@ -32,7 +32,6 @@ namespace blip {
       
 
     // Loop over cryostats
-    std::cout<<"NCryostats: "<<fGeom.Ncryostats()<<"\n";
     for(size_t cstat=0; cstat<fGeom.Ncryostats(); cstat++){
       auto const& cryoid = geo::CryostatID(cstat);
 
@@ -49,8 +48,6 @@ namespace blip {
           kNumChannels += planegeo.Nwires();
             
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
-          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<planegeo.Nwires()<<" wires\n";
-          std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
          
           kXTicksOffsets[cstat][tpc][pl] = 0;
 
@@ -68,10 +65,7 @@ namespace blip {
             const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
 	    float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
-	    std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
-
             kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
-
 	  } else {
           
             // for the case of 2D wirecell workflow, the plane-to-plane
@@ -85,9 +79,7 @@ namespace blip {
           }
           
           // additional ad-hoc corrections supplied by user
-          //kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
-          std::cout << " offsetting plane " << pl << " by " << fTimeOffset[pl] << " ticks " << std::endl;
-          
+          //kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];          
         }
       }
     }
@@ -361,7 +353,6 @@ namespace blip {
     art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
     if (evt.getByLabel(fSimDepProducer,sedHandle)){
-      std::cout << " in the sedlist filler " << std::endl;
       art::fill_ptr_vector(sedlist, sedHandle);
      }
     std::vector<sim::IDE > sIDElist;
@@ -385,8 +376,6 @@ namespace blip {
 	       }
 	    }
     }
-    std::cout << "sed list " << sedlist.size() << " IDElist " << sIDElist.size() << std::endl;
-
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
@@ -449,9 +438,7 @@ namespace blip {
     //===============================================================
     std::map< int, int > map_gh;
     // if input collection is already gaushit, this is trivial
-    std::cout << " About to fill in map with hitProducer " << fHitProducer << std::endl;
     if( fHitProducer == "gaushit" ||  fHitProducer == "specialblipgaushit") {
-      std::cout << " in special branch" << std::endl;
       for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     // ... but if not, find the matching gaushit. There's no convenient
     // hit ID, so we must loop through and compare channel/time (ugh)
@@ -465,9 +452,7 @@ namespace blip {
           break;
         }
       }
-    }
-    std::cout << "done with map" << std::endl;
-   
+    }   
     //=====================================================
     // Record PDG for every G4 Track ID
     //=====================================================
@@ -539,7 +524,6 @@ namespace blip {
         //use sim::EnergyDeposits by default. This is heavy and may be dropped
         if(sedlist.size()>0)
         {
-          std::cout << " filling particle info with sedlist" << std::endl;
           BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
         }
         else //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
@@ -552,8 +536,6 @@ namespace blip {
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
     }
-    std::cout << "end of true blips" << std::endl;
-
 
     //=======================================
     // Map track IDs to the index in the vector
@@ -684,9 +666,7 @@ namespace blip {
       if( hitinfo[i].trkid < 0 ) nhits_untracked++;
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
 
-    }//endloop over hits
-    std::cout << " Hit info filled in " << std::endl;
-    
+    }//endloop over hits    
     //for(auto& a : tpc_plane_hitsMap ) {
       //for(auto& b : a.second ) 
         //std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
@@ -752,7 +732,6 @@ namespace blip {
     // Hit clustering
     // ---------------------------------------------------
     std::map<int,std::map<int,std::vector<int>>> tpc_planeclustsMap;
-   std::cout << "Hit clustering processing" << std::endl;
     for(auto const& tpc_plane_hitsMap : cryo_tpc_plane_hitsMap ) {
     
     for(auto const& plane_hitsMap : tpc_plane_hitsMap.second ) {
@@ -895,7 +874,6 @@ namespace blip {
       }//loop over planes
     }//loop over TPCs
     }//loop over cryostats
-    std::cout << "Done Hit clustering processing" << std::endl;
     //std::cout<<"All done with clustering\n";
     
 
@@ -914,7 +892,6 @@ namespace blip {
     
     float _matchQDiffLimit= (fMatchQDiffLimit <= 0 ) ? std::numeric_limits<float>::max() : fMatchQDiffLimit;
     float _matchMaxQRatio = (fMatchMaxQRatio  <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxQRatio;
-     std::cout << "Plane matching " << std::endl;
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
       
       //std::cout
@@ -1121,9 +1098,14 @@ namespace blip {
               hitclust[hc.ID].BlipID = newBlip.ID;
               for( auto& h : hc.HitIDs ) hitinfo[h].blipid = newBlip.ID;
             }
+            //BLIPS HAVE A COPY OF HITCLUSTERS NOT A POINTER
+            //UPDATE THE HITCLUSTER VARS THAT HAVE CHANGED SINCE CONSTRUCTION
             for(int iclust=0; iclust<int(sizeof(newBlip.clusters)/sizeof(newBlip.clusters[0])); iclust++)
             {
-              if(newBlip.clusters[iclust].ID>-1) newBlip.clusters[iclust].BlipID = newBlip.ID;
+              if(newBlip.clusters[iclust].ID>-1){
+                newBlip.clusters[iclust].BlipID = newBlip.ID;
+                newBlip.clusters[iclust].isMatched = true;
+              }
             }
             blips.push_back(newBlip);
 
@@ -1132,8 +1114,6 @@ namespace blip {
         }//endloop over caloplane ("Plane A") clusters
       }//endif calo plane has clusters
     }//endloop over TPCs
-    std::cout << " done planematching " << std::endl;
-
     // Re-index the clusters after removing unmatched
     if( !keepAllClusts ) {
       std::vector<blip::HitClust> hitclust_filt;
