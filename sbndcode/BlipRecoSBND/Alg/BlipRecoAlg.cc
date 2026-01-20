@@ -1068,7 +1068,6 @@ namespace blip {
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].isMatched = true;
               for(auto hit : hitclust[hc.ID].HitIDs) hitinfo[hit].ismatch = true;
-              hitclust[hc.ID].BlipID = newBlip.ID;
               // Diagnostic plots for successful 3-plane matches
               //if( picky && hc.Plane != fCaloPlane ) {
                 //float q1 = (float)newBlip.clusters[fCaloPlane].Charge;
@@ -1122,6 +1121,10 @@ namespace blip {
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].BlipID = newBlip.ID;
               for( auto& h : hc.HitIDs ) hitinfo[h].blipid = newBlip.ID;
+            }
+            for(auto hc : newBlip.clusters)
+            {
+              hc.BlipID = newBlip.ID;
             }
 
   
