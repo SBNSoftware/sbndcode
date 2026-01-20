@@ -1117,7 +1117,6 @@ namespace blip {
             // if we made it this far, the blip is good!
             // associate this blip with the hits and clusters within it
             newBlip.ID = blips.size();
-            blips.push_back(newBlip);
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].BlipID = newBlip.ID;
               for( auto& h : hc.HitIDs ) hitinfo[h].blipid = newBlip.ID;
@@ -1126,6 +1125,7 @@ namespace blip {
             {
               hc.BlipID = newBlip.ID;
             }
+            blips.push_back(newBlip);
 
   
           }//endif ncands > 0
