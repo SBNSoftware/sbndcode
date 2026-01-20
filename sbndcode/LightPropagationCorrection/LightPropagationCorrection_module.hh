@@ -145,7 +145,7 @@ private:
 
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
-
+    opdet::sbndPDMapAlg fPDSMap;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
@@ -162,6 +162,7 @@ private:
     std::vector<double> fOpDetX;
     std::vector<double> fOpDetY;
     std::vector<double> fOpDetZ;
+    std::vector<int> fOpDetType;
 
     std::string fReco2Label;
     std::string fOpT0FinderModuleLabel;
