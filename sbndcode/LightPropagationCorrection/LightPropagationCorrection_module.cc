@@ -449,7 +449,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
             double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
             double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
-
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
@@ -458,7 +457,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             else if(fOpDetType[opdet]==1)
                 lightPropTime = lightPropTimeVIS;
             else
-                throw art::Exception(art::errors::LogicError) << " OpDet Type " <<  fOpDetType[opdet] << " not supported ." << std::endl;
+                continue;    
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;
