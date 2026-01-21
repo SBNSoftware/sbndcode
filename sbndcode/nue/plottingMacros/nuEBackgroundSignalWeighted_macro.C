@@ -886,7 +886,7 @@ double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false)
     return maxVal;
 }
 
-void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation){
+void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation, bool effPurPlots, double xmin, double xmax){
     if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
         std::cerr << "drawEfficiency: null TEfficiency pointer\n";
         return;
@@ -905,6 +905,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     int nBins_BDT = hTotal_BDT->GetNbinsX();
     TGraphAsymmErrors* gEff_BDT = new TGraphAsymmErrors(nBins_BDT);    
 
+    double maxEff_BDT = 0;
+    double maxEffBin_BDT = 0;
     for(int i = 1; i <= nBins_BDT; ++i){
         double xCenter = hTotal_BDT->GetXaxis()->GetBinCenter(i);
         double xErr = (hTotal_BDT->GetXaxis()->GetBinUpEdge(i) - hTotal_BDT->GetXaxis()->GetBinLowEdge(i)) / 2.0;
@@ -913,6 +915,11 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         double yErrLow  = plot_BDT->GetEfficiencyErrorLow(i);
         double yErrUp   = plot_BDT->GetEfficiencyErrorUp(i);
    
+        if(yEff > maxEff_BDT){
+            maxEff_BDT = yEff;
+            maxEffBin_BDT = xCenter;
+        }
+
         gEff_BDT->SetPoint(i-1, xCenter, yEff);
         gEff_BDT->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
     }
@@ -924,6 +931,12 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_BDT->SetLineWidth(1);
     gEff_BDT->Draw("AP");
 
+    if(xmin != 999){
+        gPad->Update();
+        gEff_BDT->GetXaxis()->SetLimits(xmin, xmax);
+        //gEff_BDT->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
+
     plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
     plot_DLUboone->SetMarkerSize(0.7); 
     plot_DLUboone->SetLineWidth(1);
@@ -934,6 +947,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     int nBins_DLUboone = hTotal_DLUboone->GetNbinsX();
     TGraphAsymmErrors* gEff_DLUboone = new TGraphAsymmErrors(nBins_DLUboone);    
 
+    double maxEff_DLUboone = 0;
+    double maxEffBin_DLUboone = 0;
     for(int i = 1; i <= nBins_DLUboone; ++i){
         double xCenter = hTotal_DLUboone->GetXaxis()->GetBinCenter(i);
         double xErr = (hTotal_DLUboone->GetXaxis()->GetBinUpEdge(i) - hTotal_DLUboone->GetXaxis()->GetBinLowEdge(i)) / 2.0;
@@ -941,6 +956,11 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         double yEff = plot_DLUboone->GetEfficiency(i);
         double yErrLow  = plot_DLUboone->GetEfficiencyErrorLow(i);
         double yErrUp   = plot_DLUboone->GetEfficiencyErrorUp(i);
+        
+        if(yEff > maxEff_DLUboone){
+            maxEff_DLUboone = yEff;
+            maxEffBin_DLUboone = xCenter;
+        }
    
         gEff_DLUboone->SetPoint(i-1, xCenter, yEff);
         gEff_DLUboone->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
@@ -952,6 +972,12 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLUboone->SetMarkerSize(0.7);
     gEff_DLUboone->SetLineWidth(1);
     gEff_DLUboone->Draw("AP");
+    
+    if(xmin != 999){
+        gPad->Update();
+        gEff_DLUboone->GetXaxis()->SetLimits(xmin, xmax);
+        //gEff_DLUboone->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
     plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
     plot_DLNuE->SetMarkerSize(0.7); 
@@ -964,7 +990,9 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     TGraphAsymmErrors* gEff_DLNuE = new TGraphAsymmErrors(nBins_DLNuE);    
 
     std::cout << "BIN 5: Low = " << plot_DLNuE->GetEfficiencyErrorLow(nBins_DLNuE/2) << ", " << plot_DLNuE->GetEfficiencyErrorUp(nBins_DLNuE/2) << std::endl;
-    
+   
+    double maxEff_DLNuE = 0;
+    double maxEffBin_DLNuE = 0; 
     for(int i = 1; i <= nBins_DLNuE; ++i){
         double xCenter = hTotal_DLNuE->GetXaxis()->GetBinCenter(i);
         double xErr = (hTotal_DLNuE->GetXaxis()->GetBinUpEdge(i) - hTotal_DLNuE->GetXaxis()->GetBinLowEdge(i)) / 2.0;
@@ -972,6 +1000,11 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         double yEff = plot_DLNuE->GetEfficiency(i);
         double yErrLow  = plot_DLNuE->GetEfficiencyErrorLow(i);
         double yErrUp   = plot_DLNuE->GetEfficiencyErrorUp(i);
+        
+        if(yEff > maxEff_DLNuE){
+            maxEff_DLNuE = yEff;
+            maxEffBin_DLNuE = xCenter;
+        }
    
         if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
         
@@ -985,7 +1018,18 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLNuE->SetMarkerSize(0.7);
     gEff_DLNuE->SetLineWidth(1);
     gEff_DLNuE->Draw("AP");
+    
+    if(xmin != 999){
+        gPad->Update();
+        gEff_DLNuE->GetXaxis()->SetLimits(xmin, xmax);
+        //gEff_DLNuE->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
+    if(xmin != 999){
+        //plot_BDT->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        //plot_DLUboone->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        //plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
     plot_BDT->Draw("AP");
     plot_DLUboone->Draw("SAME");
@@ -1025,6 +1069,13 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     leg->AddEntry(plot_DLUboone, "DL Uboone", "LEP");
     leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "LEP");
     leg->Draw();
+
+    if(effPurPlots){
+        std::cout << filename << ":" << std::endl;
+        std::cout << "BDT: Max Eff x Pur = " << maxEff_BDT << ", Bin Value = " << maxEffBin_BDT << std::endl;
+        std::cout << "DLUboone: Max Eff x Pur = " << maxEff_DLUboone << ", Bin Value = " << maxEffBin_DLUboone << std::endl;
+        std::cout << "DLNuE: Max Eff x Pur = " << maxEff_DLNuE << ", Bin Value = " << maxEffBin_DLNuE << std::endl;
+    }
 
     c->SaveAs(filename.c_str());
     delete c;
@@ -1070,7 +1121,8 @@ void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filena
         double yEff = plot->GetEfficiency(i);
         double yErrLow  = plot->GetEfficiencyErrorLow(i);
         double yErrUp   = plot->GetEfficiencyErrorUp(i);
-   
+  
+        std::cout << "Bin " << i << ": yEff = " << yEff << ", yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl; 
         gEff->SetPoint(i-1, xCenter, yEff);
         gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
     }
@@ -1114,6 +1166,8 @@ void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filena
     } else if(vertex == "DLNuE"){
         leg->AddEntry(plot, "DL Nu+E", "LEP");
     }
+
+    leg->Draw();
 
     c->SaveAs(filename.c_str());
     delete c;
@@ -1334,10 +1388,10 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     double maxPurityVal = std::max({getMaxValueEfficiency(pur_BDT, true), getMaxValueEfficiency(pur_DLUboone, true), getMaxValueEfficiency(pur_DLNuE, true)});
     std::string filenameEffPur = std::string(filename) + "_effpur.pdf";
     double maxEffPurityVal = std::max({getMaxValueEfficiency(effPur_BDT, true), getMaxValueEfficiency(effPur_DLUboone, true), getMaxValueEfficiency(effPur_DLNuE, true)});
-    std::string filenameEffErrors = std::string(filename) + "_errors_eff.pdf";
-    std::string filenameRejErrors = std::string(filename) + "_errors_rej.pdf";
-    std::string filenamePurErrors = std::string(filename) + "_errors_pur.pdf";
-    std::string filenameEffPurErrors = std::string(filename) + "_errors_effpur.pdf";
+    std::string filenameEffErrors = std::string(filename) + "_errorseff.pdf";
+    std::string filenameRejErrors = std::string(filename) + "_errorsrej.pdf";
+    std::string filenamePurErrors = std::string(filename) + "_errorspur.pdf";
+    std::string filenameEffPurErrors = std::string(filename) + "_errorseffpur.pdf";
 
     drawEfficiency(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEff, -999999, -999999, legendLocation);
     drawEfficiency(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRej, -999999, -999999, legendLocation);
@@ -1357,23 +1411,23 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     effPur_DLUboone->SetUseWeightedEvents(false);
     effPur_DLNuE->SetUseWeightedEvents(false);
     
-    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation);
-    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation);
-    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation);
-    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation);
+    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation, 0, xmin, xmax);
+    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation, 0, xmin, xmax);
+    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation, 0, xmin, xmax);
+    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation, 1, xmin, xmax);
     
-    std::string filenameEffPurBDT = std::string(filename) + "_errors_BDT_effpur.pdf";
-    std::string filenameEffPurDLUboone = std::string(filename) + "_errors_DLUboone_effpur.pdf";
-    std::string filenameEffPurDLNuE = std::string(filename) + "_errors_DLNuE_effpur.pdf";
-    std::string filenameEffBDT = std::string(filename) + "_errors_BDT_eff.pdf";
-    std::string filenameEffDLUboone = std::string(filename) + "_errors_DLUboone_eff.pdf";
-    std::string filenameEffDLNuE = std::string(filename) + "_errors_DLNuE_eff.pdf";
-    std::string filenameRejBDT = std::string(filename) + "_errors_BDT_rej.pdf";
-    std::string filenameRejDLUboone = std::string(filename) + "_errors_DLUboone_rej.pdf";
-    std::string filenameRejDLNuE = std::string(filename) + "_errors_DLNuE_rej.pdf";
-    std::string filenamePurBDT = std::string(filename) + "_errors_BDT_pur.pdf";
-    std::string filenamePurDLUboone = std::string(filename) + "_errors_DLUboone_pur.pdf";
-    std::string filenamePurDLNuE = std::string(filename) + "_errors_DLNuE_pur.pdf";
+    std::string filenameEffPurBDT = std::string(filename) + "_errorsBDT_effpur.pdf";
+    std::string filenameEffPurDLUboone = std::string(filename) + "_errorsDLUboone_effpur.pdf";
+    std::string filenameEffPurDLNuE = std::string(filename) + "_errorsDLNuE_effpur.pdf";
+    std::string filenameEffBDT = std::string(filename) + "_errorsBDT_eff.pdf";
+    std::string filenameEffDLUboone = std::string(filename) + "_errorsDLUboone_eff.pdf";
+    std::string filenameEffDLNuE = std::string(filename) + "_errorsDLNuE_eff.pdf";
+    std::string filenameRejBDT = std::string(filename) + "_errorsBDT_rej.pdf";
+    std::string filenameRejDLUboone = std::string(filename) + "_errorsDLUboone_rej.pdf";
+    std::string filenameRejDLNuE = std::string(filename) + "_errorsDLNuE_rej.pdf";
+    std::string filenamePurBDT = std::string(filename) + "_errorsBDT_pur.pdf";
+    std::string filenamePurDLUboone = std::string(filename) + "_errorsDLUboone_pur.pdf";
+    std::string filenamePurDLNuE = std::string(filename) + "_errorsDLNuE_pur.pdf";
 
     drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT");
     drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone");
@@ -4402,9 +4456,11 @@ void nuEBackgroundSignalWeighted_macro(){
     
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
+    efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1, -1.2, 0.7);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1);
+    std::cout << "HERE!!!!!!!!!!!!" << std::endl;
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1);
+    std::cout << "TO HERE!!!!!!!!!!!!" << std::endl;
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1);
     efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "bottomRight", nullptr, &right, 1);
