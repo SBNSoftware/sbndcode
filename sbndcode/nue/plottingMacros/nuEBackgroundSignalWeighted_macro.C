@@ -892,6 +892,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         return;
     }
 
+    double maxVal = std::max({getMaxValueEfficiency(plot_BDT, false), getMaxValueEfficiency(plot_DLUboone, false), getMaxValueEfficiency(plot_DLNuE, false)});
+
     TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
     c->SetTicks();
 
@@ -932,6 +934,14 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     if (xmin != 999) {
         gEff_BDT->GetXaxis()->SetLimits(xmin, xmax);
     }
+
+    std::cout << "MAX VAL HERE = " << maxVal << ", *1.1 = " << maxVal*1.1 << std::endl;
+    gEff_BDT->GetYaxis()->SetRangeUser(0, maxVal*1.1);
+
+    const TH1* hAxis = plot_BDT->GetTotalHistogram();
+    gEff_BDT->SetTitle(plot_BDT->GetTitle());
+    gEff_BDT->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff_BDT->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
     gEff_BDT->Draw("AP");
 
     plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
@@ -980,8 +990,6 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     int nBins_DLNuE = hTotal_DLNuE->GetNbinsX();
     TGraphAsymmErrors* gEff_DLNuE = new TGraphAsymmErrors(nBins_DLNuE);    
 
-    std::cout << "BIN 5: Low = " << plot_DLNuE->GetEfficiencyErrorLow(nBins_DLNuE/2) << ", " << plot_DLNuE->GetEfficiencyErrorUp(nBins_DLNuE/2) << std::endl;
-   
     double maxEff_DLNuE = 0;
     double maxEffBin_DLNuE = 0; 
     for(int i = 1; i <= nBins_DLNuE; ++i){
@@ -997,7 +1005,7 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
             maxEffBin_DLNuE = xCenter;
         }
    
-        if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
+        //if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
         
         gEff_DLNuE->SetPoint(i-1, xCenter, yEff);
         gEff_DLNuE->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
@@ -1055,12 +1063,14 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "LEP");
     leg->Draw();
 
+    /*
     if(effPurPlots){
         std::cout << filename << ":" << std::endl;
         std::cout << "BDT: Max Eff x Pur = " << maxEff_BDT << ", Bin Value = " << maxEffBin_BDT << std::endl;
         std::cout << "DLUboone: Max Eff x Pur = " << maxEff_DLUboone << ", Bin Value = " << maxEffBin_DLUboone << std::endl;
         std::cout << "DLNuE: Max Eff x Pur = " << maxEff_DLNuE << ", Bin Value = " << maxEffBin_DLNuE << std::endl;
     }
+    */
 
     c->SaveAs(filename.c_str());
     delete c;
@@ -1243,7 +1253,7 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     TH1F* hPassedSignal_BDT = makeCumulative(hists.currentSignal, keepRight);
     TH1F* hPassedSignal_DLUboone = makeCumulative(hists.ubooneSignal, keepRight);
     TH1F* hPassedSignal_DLNuE = makeCumulative(hists.nuESignal, keepRight);
-
+    
     // Total background
     TH1F* hTotalBackground_BDT = (TH1F*) hists.currentCosmic->Clone("hTotalBackground_BDT");
     hTotalBackground_BDT->Reset();
@@ -1311,6 +1321,15 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     TH1F* hPassedEverything_BDT = makeCumulative(hTotalEverything_BDT, keepRight);
     TH1F* hPassedEverything_DLUboone = makeCumulative(hTotalEverything_DLUboone, keepRight);
     TH1F* hPassedEverything_DLNuE = makeCumulative(hTotalEverything_DLNuE, keepRight);
+
+    /*
+    std::cout << "Total num of signal events = " << hTotalSummedSignal_DLNuE->GetBinContent(3) << ", total num of background events = " << hTotalSummedBackground_DLNuE->GetBinContent(3) << ", total num of events = " << hTotalSummedEverything_DLNuE->GetBinContent(3) << std::endl;
+    for(int i = 1; i < hTotalSummedSignal_BDT->GetNbinsX()+1; ++i){
+        std::cout << "Bin " << i << ": passed signal = " << hPassedSignal_DLNuE->GetBinContent(i) << ", passed background = " << hPassedBackground_DLNuE->GetBinContent(i) << ", passed everything = " << hPassedEverything_DLNuE->GetBinContent(i) << std::endl;
+        std::cout << "Efficiency = " << hPassedSignal_DLNuE->GetBinContent(i)/hTotalSummedSignal_DLNuE->GetBinContent(i) << ", Purity = " << hPassedSignal_DLNuE->GetBinContent(i)/(hPassedSignal_DLNuE->GetBinContent(i) + hPassedBackground_DLNuE->GetBinContent(i)) << ", background rejection = " << 1-(hPassedBackground_DLNuE->GetBinContent(i)/hTotalSummedBackground_DLNuE->GetBinContent(i)) << ", Efficiency x Purity = " << (hPassedSignal_DLNuE->GetBinContent(i)/hTotalSummedSignal_DLNuE->GetBinContent(i))*(hPassedSignal_DLNuE->GetBinContent(i)/hPassedEverything_DLNuE->GetBinContent(i)) << std::endl;
+    }
+    */
+   
 
     TEfficiency* eff_BDT = new TEfficiency(*hPassedSignal_BDT, *hTotalSummedSignal_BDT);
     eff_BDT->SetTitle(Form("%s;%s;Signal Efficiency", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
@@ -1414,17 +1433,25 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     std::string filenamePurDLUboone = std::string(filename) + "_errorsDLUboone_pur.pdf";
     std::string filenamePurDLNuE = std::string(filename) + "_errorsDLNuE_pur.pdf";
 
+    /*
     drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT");
     drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    */
     drawEfficiencyErrorsIndividual(effPur_DLNuE, filenameEffPurDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    /*
     drawEfficiencyErrorsIndividual(eff_BDT, filenameEffBDT, -999999, -999999, legendLocation, "BDT");
     drawEfficiencyErrorsIndividual(eff_DLUboone, filenameEffDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    */
     drawEfficiencyErrorsIndividual(eff_DLNuE, filenameEffDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    /*
     drawEfficiencyErrorsIndividual(rej_BDT, filenameRejBDT, -999999, -999999, legendLocation, "BDT");
     drawEfficiencyErrorsIndividual(rej_DLUboone, filenameRejDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    */
     drawEfficiencyErrorsIndividual(rej_DLNuE, filenameRejDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    /*
     drawEfficiencyErrorsIndividual(pur_BDT, filenamePurBDT, -999999, -999999, legendLocation, "BDT");
     drawEfficiencyErrorsIndividual(pur_DLUboone, filenamePurDLUboone, -999999, -999999, legendLocation, "DLUboone");
+    */
     drawEfficiencyErrorsIndividual(pur_DLNuE, filenamePurDLNuE, -999999, -999999, legendLocation, "DLNuE");
 }
 
@@ -4439,9 +4466,9 @@ void nuEBackgroundSignalWeighted_macro(){
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
     
-    efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(sliceCRUMBSScore, 0, 1e-4, -1, 0.7, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
+    efficiency(sliceCompleteness, 0, 1, 0, 1, (base_path + "sliceCompleteness").c_str(), "bottomRight", nullptr, &right, -1);
+    efficiency(slicePurity, 0, 1, 0, 1, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
+    efficiency(sliceCRUMBSScore, 0, 1e-4, -1, 0.7, (base_path + "sliceCRUMBSScore").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1);
     std::cout << "HERE!!!!!!!!!!!!" << std::endl;
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1);
@@ -4461,7 +4488,9 @@ void nuEBackgroundSignalWeighted_macro(){
     efficiency(recoY_high, 0, 1, 999, 999, (base_path + "recoY_high").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(recoZ_high, 0, 1, 999, 999, (base_path + "recoZ_high").c_str(), "bottomRight", nullptr, &right, 1);
 
+    std::cout << "QSQUARED HERE" << std::endl;
     efficiency(QSquaredHighest, 0, 1, 999, 999, (base_path + "QSquared_highest_lower").c_str(), "bottomRight", nullptr, &right, 1);
+    std::cout << "QSQUARED ENDS HERE" << std::endl;
     efficiency(QSquaredSum, 0, 1, 999, 999, (base_path + "QSquared_sum_lower").c_str(), "bottomRight", nullptr, &right, 1);
 
     TwoDHistDraw(xCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
