@@ -80,7 +80,7 @@ namespace BlipUtils {
   //bool    G4IdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
   double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
   double  PathLength(const simb::MCParticle&);
-  bool    IsAncestorOf(int, int, bool);
+  bool    IsAncestorOf(int, int, bool, bool);
   double  DistToBoundary(const recob::Track::Point_t&);
   double  DistToLine(TVector3&, TVector3&, TVector3&);
   double  DistToLine2D(TVector2&, TVector2&, TVector2&);

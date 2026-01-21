@@ -115,7 +115,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
           simb::MCParticle& p = pinfo[j].particle;
           std::string pr = p.Process();
           if( p.PdgCode() != 2112 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){
-            if( IsAncestorOf(p.TrackId(),part.TrackId(),true) ) GrowTrueBlip(pinfo[j],tb);
+            if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ) GrowTrueBlip(pinfo[j],tb);
           }
         }
       }
@@ -485,7 +485,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
   //====================================================================
   // Function to determine if a particle descended from another particle.
   // Allows option to break lineage at photons for contiguous parentage.
-  bool IsAncestorOf(int particleID, int ancestorID, bool breakAtPhots = false){
+  bool IsAncestorOf(int particleID, int ancestorID, bool breakAtPhots = false, bool breakAtNeutrons = false){
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
     const sim::ParticleList& plist = pi_serv->ParticleList();
     if( particleID == ancestorID  )       return true;
@@ -499,6 +499,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       simb::MCParticle pM = pi_serv->TrackIdToParticle(p.Mother());
       if      ( pM.TrackId() == ancestorID )                      { return true;  }
       else if ( breakAtPhots == true && pM.PdgCode() == 22 )      { return false; }
+      else if ( breakAtNeutrons && pM.PdgCode() == 2112 )           { return false; }
       else if ( pM.Process() == "primary" || pM.TrackId() == 1 )  { return false; }
       else if ( pM.Mother() == 0 )                                { return false; }
       else    { particleID = pM.TrackId(); }              
