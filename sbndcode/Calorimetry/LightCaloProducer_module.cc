@@ -103,6 +103,8 @@ private:
                       std::vector<art::Ptr<recob::OpFlash>> &match_op1,
                       CheckFunc check);
 
+  art::Ptr<recob::OpFlash> FindMatchingFlash(const std::vector<art::Ptr<recob::OpFlash>> &flash_v,
+                                             double ref_time);                      
   // Returns visibility vector for all opdets given charge/position information 
   std::vector<std::vector<double>> CalcVisibility(std::vector<geo::Point_t> xyz_v, 
                                                   std::vector<double> charge_v);
@@ -140,7 +142,7 @@ private:
   float fopflash_max;
   float fopt0_frac_diff_cut;
 
-  float fpmt_ara_offset; 
+  float fflash_offset; 
   std::vector<float> fnoise_thresh;
   std::vector<float> fupper_thresh; 
 
@@ -202,7 +204,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   fopflash_min = p.get<float>("OpFlashMin");
   fopflash_max = p.get<float>("OpFlashMax");
 
-  fpmt_ara_offset  = p.get<float>("PMTARAFlashOffset");
+  fflash_offset    = p.get<float>("FlashOffset");
   fnoise_thresh    = p.get<std::vector<float>>("FlashNoiseThreshold");
   fupper_thresh    = p.get<std::vector<float>>("OpDetMaxPEThreshold");
 
@@ -287,12 +289,17 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     std::cout << "don't have good SpacePoints!" << std::endl;
     return;
   }
+  
+  std::vector<art::Ptr<recob::OpFlash>> flash0_v;
+  std::vector<art::Ptr<recob::OpFlash>> flash1_v;
 
-  auto const & flash0_h = e.getValidHandle<std::vector<recob::OpFlash>>(fopflash_producer_v[0]);
-  auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(fopflash_producer_v[1]);
-  if( (!flash0_h.isValid() || flash0_h->empty()) && (!flash1_h.isValid() || flash1_h->empty())) {
-    std::cout << "don't have good PMT flashes from producer " << fopflash_producer_v[0] << " or "  << fopflash_producer_v[1] << std::endl;
-    return;
+  for (size_t i=0; i<2; i++){
+    ::art::Handle<std::vector<recob::OpFlash>> flash_h;
+    e.getByLabel(fopflash_producer_v[i], flash_h);
+    if (!flash_h.isValid() || flash_h->empty()) {
+      std::cout << "don't have good PMT flashes from producer " << fopflash_producer_v[i] << std::endl;
+    }
+    else art::fill_ptr_vector((i==0)? flash0_v : flash1_v, flash_h);
   }
 
   art::FindManyP<recob::PFParticle> slice_to_pfp (slice_h, e, fslice_producer);
@@ -385,28 +392,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
 
     std::vector<geo::Point_t> sp_xyz;
     std::vector<double> sp_charge; // vector of charge info for charge-weighting
- 
-    double flash_time = -999;
-    auto opflash0 = (match_op0.at(n_slice));
-    auto opflash1 = (match_op1.at(n_slice));
-    bool flash_in_0 = false;
-    bool flash_in_1 = false;
-    // set threshold above noise PE levels for the flash 
-    float noise_thresh = (!use_arapucas)? fnoise_thresh[0] : fnoise_thresh[1]; 
-
-    if (!opflash0.isNull() && opflash0->TotalPE() > noise_thresh){
-      flash_in_0 = true;
-      flash_time = opflash0->Time();
-    }
-    if (!opflash1.isNull() && opflash1->TotalPE() > noise_thresh){
-      flash_in_1 = true; 
-      flash_time = opflash1->Time(); 
-    }
-
-    if (flash_in_0==false && flash_in_1==false && fverbose){
-      std::cout << "No usable opflashes (none above threshold)." << std::endl;
-      return;
-    }
 
     auto slice = match_slices_v[n_slice];
     // sum charge information (without position info) for Q 
@@ -414,6 +399,9 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     std::vector<art::Ptr<recob::Hit>> slice_hits_v = slice_to_hit.at(slice.key());
     std::vector<double> plane_charge{0.,0.,0.};
     std::vector<int>    plane_hits{0,0,0};
+    bool has_sp0 = false;
+    bool has_sp1 = false;
+
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
       auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
@@ -447,11 +435,41 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
           double charge = (1/fcal_area_const.at(hit->View()))*atten_correction*hit->Integral();
+          if (xyz.X() < 0) has_sp0 = true;
+          else             has_sp1 = true;
+
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
         }
       } // end spacepoint loop 
     } // end pfp loop
+
+    double flash_time = -999;
+    auto opflash0 = (match_op0.at(n_slice));
+    auto opflash1 = (match_op1.at(n_slice));
+    bool flash_in_0 = false;
+    bool flash_in_1 = false;
+    // find matching flashes if slice has reco spacepoints in both TPCs
+    if ((has_sp0 && has_sp1) && (opflash0.isNull() || opflash1.isNull())){
+      if (opflash0.isNull() && opflash1.isNull()){
+        if (fverbose) std::cout << "No opflashes found for slice with spacepoints in both TPCs." << std::endl;
+        return;
+      }
+      else if (opflash0.isNull()) opflash0 = FindMatchingFlash(flash0_v, opflash1->Time());
+      else if (opflash1.isNull()) opflash1 = FindMatchingFlash(flash1_v, opflash0->Time());
+    }
+
+    if (!opflash0.isNull() && opflash0->TotalPE() > fnoise_thresh[0]){
+      flash_in_0 = true;
+      flash_time = opflash0->Time();
+    }
+    if (!opflash1.isNull() && opflash1->TotalPE() > fnoise_thresh[0]){
+      flash_in_1 = true; 
+      flash_time = opflash1->Time(); 
+    }
+
+    if (flash_in_0==false && flash_in_1==false && fverbose)
+      return;
 
     // get total L count
     std::vector<std::vector<double>> visibility_maps = CalcVisibility(sp_xyz,sp_charge);
@@ -472,14 +490,13 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           auto flash_ara_v = (tpc==0)? flash0_ara_v : flash1_ara_v;
           // for PMT flashes, the PE vector is shortened and don't include the last 6 entries for ARAPUCAs 
           if (flash_pe_v.size()!= nchan) flash_pe_v.resize(nchan,0);
-          for (size_t nara=0; nara < flash_ara_v.size(); nara++){
-            auto const &flash_ara = *flash_ara_v[nara];
-            if (abs(flash_time-flash_ara.Time()) < fpmt_ara_offset){
-              if (fverbose) std::cout << "Combining PMT+XARA Flashes with PMT time: " << flash_time << ", ARA time: " << flash_ara.Time() << std::endl;            
-              for (size_t ich=0; ich < (flash_ara.PEs()).size(); ich++)
-                flash_pe_v.at(ich) += (flash_ara.PEs()).at(ich);
-              break;
-            }     
+          // find matching xarapuca flash
+          auto flash_ara = FindMatchingFlash(flash_ara_v, flash_time);
+          if (flash_ara.isNull()) continue;
+          // add arapuca PEs to the main vector
+          for (size_t ich=0; ich < (flash_ara->PEs()).size(); ich++){
+            if ( (flash_ara->PEs()).at(ich) > fupper_thresh[1]) continue; // skip if above max PE threshold
+            flash_pe_v.at(ich) += (flash_ara->PEs()).at(ich);
           }
         } // end of arapuca if 
         for (size_t ich=0; ich<flash_pe_v.size(); ich++){
@@ -603,6 +620,19 @@ void sbnd::LightCaloProducer::CollectMatches(const art::Handle<std::vector<Match
   }
 }
 
+art::Ptr<recob::OpFlash> sbnd::LightCaloProducer::FindMatchingFlash(const std::vector<art::Ptr<recob::OpFlash>> &flash_v,
+                                                                    double ref_time)
+{
+  double best_dt = 1.e9;
+  art::Ptr<recob::OpFlash> best;
+  for (size_t i = 0; i < flash_v.size(); ++i) {
+    art::Ptr<recob::OpFlash> cand = flash_v[i];
+    double dt = std::abs(cand->Time() - ref_time);
+    if (dt < best_dt && dt < fflash_offset) { best_dt = dt; best = cand; }
+  }
+  return best;
+}
+
 
 std::vector<std::vector<double>> sbnd::LightCaloProducer::CalcVisibility(std::vector<geo::Point_t> xyz_v,
                                                                          std::vector<double> charge_v){
@@ -679,29 +709,35 @@ double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
 double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::vector<double> total_err){
   // calculates a weighted average, loops over per tpc and then per channel
   double total_mean=0;
-  double wgt_num = 0;
-  double wgt_denom = 0;
+  for (int tpc=0; tpc<2; tpc++){
+    double wgt_num = 0;
+    double wgt_denom = 0;
 
-  for (size_t ich=0; ich<total_gamma.size(); ich++){
-    if (total_gamma[ich]<=0) continue;
-    wgt_num   += total_gamma[ich]*(1./total_err[ich]);
-    wgt_denom += (1./total_err[ich]);
+    for (size_t ich=0; ich<total_gamma.size(); ich++){
+      if (int(ich%2) != tpc) continue;
+      if (total_gamma[ich]<=0) continue;
+      wgt_num   += total_gamma[ich]*(1./total_err[ich]);
+      wgt_denom += (1./total_err[ich]);
+    }
+    if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   }
-  if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   return total_mean; 
 }
 
 double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
   double total_mean=0;
-  double wgt_num = 0;
-  double wgt_denom = 0;
-
-  for (size_t ich=0; ich<total_gamma.size(); ich++){
-    if (total_gamma[ich]<=0) continue;
-    wgt_num   += total_gamma[ich];
-    wgt_denom += 1.;
+  for (int tpc=0; tpc<2; tpc++){
+    double wgt_num = 0;
+    double wgt_denom = 0;
+    
+    for (size_t ich=0; ich<total_gamma.size(); ich++){
+      if (int(ich%2) != tpc) continue;
+      if (total_gamma[ich]<=0) continue;
+      wgt_num   += total_gamma[ich];
+      wgt_denom += 1.;
+    }
+    if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   }
-  if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   return total_mean; 
 }
 
