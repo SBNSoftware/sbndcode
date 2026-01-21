@@ -934,12 +934,6 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     }
     gEff_BDT->Draw("AP");
 
-    if(xmin != 999){
-        gPad->Update();
-        gEff_BDT->GetXaxis()->SetLimits(xmin, xmax);
-        //gEff_BDT->GetXaxis()->SetRangeUser(xmin, xmax);
-    }
-
     plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
     plot_DLUboone->SetMarkerSize(0.7); 
     plot_DLUboone->SetLineWidth(1);
@@ -975,12 +969,6 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLUboone->SetMarkerSize(0.7);
     gEff_DLUboone->SetLineWidth(1);
     gEff_DLUboone->Draw("P SAME");
-    
-    if(xmin != 999){
-        gPad->Update();
-        gEff_DLUboone->GetXaxis()->SetLimits(xmin, xmax);
-        //gEff_DLUboone->GetXaxis()->SetRangeUser(xmin, xmax);
-    }
 
     plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
     plot_DLNuE->SetMarkerSize(0.7); 
@@ -1023,12 +1011,6 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLNuE->Draw("P SAME");
     
     if(xmin != 999){
-        gPad->Update();
-        gEff_DLNuE->GetXaxis()->SetLimits(xmin, xmax);
-        //gEff_DLNuE->GetXaxis()->SetRangeUser(xmin, xmax);
-    }
-
-    if(xmin != 999){
         //plot_BDT->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
         //plot_DLUboone->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
         //plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
@@ -1047,7 +1029,7 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gDLUboone->SetMarkerSize(0.8);
     gDLNuE->SetMarkerSize(0.8);
 
-    gBDT->Draw("APE");
+    gBDT->Draw("PE SAME");
     gDLUboone->Draw("PE SAME");
     gDLNuE->Draw("PE SAME");
 
@@ -4459,7 +4441,7 @@ void nuEBackgroundSignalWeighted_macro(){
     
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(sliceCRUMBSScore, 0, 1, -1.2, 0.7, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
+    efficiency(sliceCRUMBSScore, 0, 1e-4, -1, 0.7, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1);
     std::cout << "HERE!!!!!!!!!!!!" << std::endl;
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1);
