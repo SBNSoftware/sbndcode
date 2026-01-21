@@ -929,6 +929,9 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_BDT->SetMarkerStyle(20);
     gEff_BDT->SetMarkerSize(0.7);
     gEff_BDT->SetLineWidth(1);
+    if (xmin != 999) {
+        gEff_BDT->GetXaxis()->SetLimits(xmin, xmax);
+    }
     gEff_BDT->Draw("AP");
 
     if(xmin != 999){
@@ -971,7 +974,7 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLUboone->SetMarkerStyle(20);
     gEff_DLUboone->SetMarkerSize(0.7);
     gEff_DLUboone->SetLineWidth(1);
-    gEff_DLUboone->Draw("AP");
+    gEff_DLUboone->Draw("P SAME");
     
     if(xmin != 999){
         gPad->Update();
@@ -1017,7 +1020,7 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLNuE->SetMarkerStyle(20);
     gEff_DLNuE->SetMarkerSize(0.7);
     gEff_DLNuE->SetLineWidth(1);
-    gEff_DLNuE->Draw("AP");
+    gEff_DLNuE->Draw("P SAME");
     
     if(xmin != 999){
         gPad->Update();
@@ -1031,7 +1034,7 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         //plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
     }
 
-    plot_BDT->Draw("AP");
+    plot_BDT->Draw("SAME");
     plot_DLUboone->Draw("SAME");
     plot_DLNuE->Draw("SAME");
     gPad->Update();
@@ -4456,7 +4459,7 @@ void nuEBackgroundSignalWeighted_macro(){
     
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1);
-    efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1, -1.2, 0.7);
+    efficiency(sliceCRUMBSScore, 0, 1, -1.2, 0.7, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1);
     std::cout << "HERE!!!!!!!!!!!!" << std::endl;
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1);
