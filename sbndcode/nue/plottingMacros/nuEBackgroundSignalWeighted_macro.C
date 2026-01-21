@@ -1019,9 +1019,11 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     gEff_DLNuE->Draw("P SAME");
     
     if(xmin != 999){
-        //plot_BDT->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
-        //plot_DLUboone->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
-        //plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        /*  
+        plot_BDT->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        plot_DLUboone->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        */
     }
 
     plot_BDT->Draw("SAME");
@@ -1063,24 +1065,24 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "LEP");
     leg->Draw();
 
-    /*
     if(effPurPlots){
         std::cout << filename << ":" << std::endl;
         std::cout << "BDT: Max Eff x Pur = " << maxEff_BDT << ", Bin Value = " << maxEffBin_BDT << std::endl;
         std::cout << "DLUboone: Max Eff x Pur = " << maxEff_DLUboone << ", Bin Value = " << maxEffBin_DLUboone << std::endl;
         std::cout << "DLNuE: Max Eff x Pur = " << maxEff_DLNuE << ", Bin Value = " << maxEffBin_DLNuE << std::endl;
     }
-    */
 
     c->SaveAs(filename.c_str());
     delete c;
 }
 
-void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, const std::string& vertex){
+void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, const std::string& vertex, double xmin, double xmax){
     if (!plot) {
         std::cerr << "drawEfficiency: null TEfficiency pointer\n";
         return;
     }
+
+    double maxVal = getMaxValueEfficiency(plot, false);
 
     TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
     c->SetTicks();
@@ -1127,18 +1129,26 @@ void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filena
     gEff->SetMarkerStyle(20);
     gEff->SetMarkerSize(0.7);
     gEff->SetLineWidth(1);
+    if(xmin != 999){
+        gEff->GetXaxis()->SetLimits(xmin, xmax);
+    }
+    gEff->GetYaxis()->SetRangeUser(0, maxVal*1.1);
+
+    const TH1* hAxis = plot->GetTotalHistogram();
+    gEff->SetTitle(plot->GetTitle());
+    gEff->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
     gEff->Draw("AP");
 
-    plot->Draw("AP");
+    plot->Draw("SAME");
     gPad->Update();
 
     auto* gBDT = plot->GetPaintedGraph();
     gBDT->SetMarkerSize(0.8);
-    gBDT->Draw("APE");
+    gBDT->Draw("PE SAME");
 
     auto* g = plot->GetPaintedGraph();
     
-    double maxVal = getMaxValueEfficiency(plot, true);
     if(lowY == -999999 && highY == -999999){
         g->GetYaxis()->SetRangeUser(0.0, maxVal*1.1);
     } else{
@@ -1433,26 +1443,18 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     std::string filenamePurDLUboone = std::string(filename) + "_errorsDLUboone_pur.pdf";
     std::string filenamePurDLNuE = std::string(filename) + "_errorsDLNuE_pur.pdf";
 
-    /*
-    drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT");
-    drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone");
-    */
-    drawEfficiencyErrorsIndividual(effPur_DLNuE, filenameEffPurDLNuE, -999999, -999999, legendLocation, "DLNuE");
-    /*
-    drawEfficiencyErrorsIndividual(eff_BDT, filenameEffBDT, -999999, -999999, legendLocation, "BDT");
-    drawEfficiencyErrorsIndividual(eff_DLUboone, filenameEffDLUboone, -999999, -999999, legendLocation, "DLUboone");
-    */
-    drawEfficiencyErrorsIndividual(eff_DLNuE, filenameEffDLNuE, -999999, -999999, legendLocation, "DLNuE");
-    /*
-    drawEfficiencyErrorsIndividual(rej_BDT, filenameRejBDT, -999999, -999999, legendLocation, "BDT");
-    drawEfficiencyErrorsIndividual(rej_DLUboone, filenameRejDLUboone, -999999, -999999, legendLocation, "DLUboone");
-    */
-    drawEfficiencyErrorsIndividual(rej_DLNuE, filenameRejDLNuE, -999999, -999999, legendLocation, "DLNuE");
-    /*
-    drawEfficiencyErrorsIndividual(pur_BDT, filenamePurBDT, -999999, -999999, legendLocation, "BDT");
-    drawEfficiencyErrorsIndividual(pur_DLUboone, filenamePurDLUboone, -999999, -999999, legendLocation, "DLUboone");
-    */
-    drawEfficiencyErrorsIndividual(pur_DLNuE, filenamePurDLNuE, -999999, -999999, legendLocation, "DLNuE");
+    drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(effPur_DLNuE, filenameEffPurDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_BDT, filenameEffBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_DLUboone, filenameEffDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_DLNuE, filenameEffDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_BDT, filenameRejBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_DLUboone, filenameRejDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_DLNuE, filenameRejDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_BDT, filenamePurBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_DLUboone, filenamePurDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_DLNuE, filenamePurDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
 }
 
 void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
@@ -2023,11 +2025,11 @@ void nuEBackgroundSignalWeighted_macro(){
     TH2D *yCoordAngleDifferenceDLUboone_high = new TH2D("yCoordAngleDifferenceDLUboone_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLUboone_high = new TH2D("zCoordAngleDifferenceDLUboone_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
     
-    TH2D *xCoordAngleDifferenceDLNuE_low = new TH2D("xCoordAngleDifferenceDLNuE_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLNuE_low = new TH2D("yCoordAngleDifferenceDLNuE_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
-    TH2D *zCoordAngleDifferenceDLNuE_low = new TH2D("zCoordAngleDifferenceDLNuE_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
-    TH2D *xCoordAngleDifferenceDLNuE_high = new TH2D("xCoordAngleDifferenceDLNuE_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLNuE_high = new TH2D("yCoordAngleDifferenceDLNuE_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLNuE_low = new TH2D("xCoordAngleDifferenceDLNuE_low", "", 20, xMin, (xMin + 20), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_low = new TH2D("yCoordAngleDifferenceDLNuE_low", "", 20, yMin, (yMin + 20), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLNuE_low = new TH2D("zCoordAngleDifferenceDLNuE_low", "", 20, zMin, (zMin + 20), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLNuE_high = new TH2D("xCoordAngleDifferenceDLNuE_high", "", 20, (xMax - 20), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_high = new TH2D("yCoordAngleDifferenceDLNuE_high", "", 20, (yMax - 20), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLNuE_high = new TH2D("zCoordAngleDifferenceDLNuE_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
     
     TH2D *xCoordAngleDifferenceBDT = new TH2D("xCoordAngleDifferenceBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
