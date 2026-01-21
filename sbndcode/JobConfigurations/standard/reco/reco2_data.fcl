@@ -3,7 +3,7 @@
 #include "sbnd_lightpropagationcorrection_config.fcl"
 #include "frameshift_sbnd_data.fcl"
 #include "standard_reco2_sbnd.fcl"
-#include "lightcalo.fcl"
+#include "lightcalo_sbnd_data.fcl"
 
 services:
 {
@@ -35,7 +35,7 @@ physics.producers:
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreationData
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
 
-    lightcaloSCE: @local::sbnd_lightcalo
+    lightcaloSCE: @local::sbnd_lightcalo_data_sce
     frameshift: @local::frameshift_data
 }
 

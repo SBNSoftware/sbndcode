@@ -20,7 +20,7 @@
 
 #include "SBNDCVNMapper.fcl"
 #include "blipreco_configs.fcl"
-#include "lightcalo.fcl"
+#include "lightcalo_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -97,7 +97,7 @@ sbnd_reco2_producers:{
     }
 
     ### light calorimtery 
-    lightcaloSCE : @local::sbnd_lightcalo
+    lightcaloSCE : @local::sbnd_lightcalo_sce
 }
 
 sbnd_reco2_producer_sequence: [  
