@@ -134,7 +134,6 @@ private:
   bool fuse_opt0;
   bool fverbose;
 
-  float fnuscore_cut; 
   float fbcfmscore_cut; 
   float fopt0score_cut;
 
@@ -196,7 +195,6 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 
   fverbose = p.get<bool>("Verbose");
 
-  fnuscore_cut = p.get<float>("nuScoreCut");
   fbcfmscore_cut = p.get<float>("bcfmScoreCut");
   fopt0score_cut = p.get<float>("opt0ScoreCut");
   fopt0_frac_diff_cut = p.get<float>("opt0FractionalCut");
