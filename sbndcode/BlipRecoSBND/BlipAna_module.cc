@@ -1583,7 +1583,7 @@ void BlipAna::PrintClusterInfo(const blip::HitClust& hc){
     hc.isMatched
   );
   printf("G4 IDs contib");
-  for(g4ID : hc.G4IDs) printf("%i", g4ID);
+  for(int g4ID : hc.G4IDs) printf("%i", g4ID);
 }
 
 void BlipAna::PrintBlipInfo(const blip::Blip& bl){
