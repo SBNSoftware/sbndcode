@@ -149,7 +149,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     simb::MCParticle& part = pinfo.particle;
 
     // Skip neutrons, photons
-     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
+    // if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
     
     // Check that path length isn't zero
     if( !pinfo.pathLength ) return;
