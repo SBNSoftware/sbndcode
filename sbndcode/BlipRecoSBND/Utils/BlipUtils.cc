@@ -117,7 +117,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
           if( p.PdgCode() != 2112 && p.PdgCode() != 22 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){ //neutron and photons leave track
             if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ){
               GrowTrueBlip(pinfo[j],tb);
-              std::cout << " \t growing it with " << pinfo[j].TrackID() << " with code " << pinfo[j].PdgCode() << std::endl;
+              std::cout << " \t growing it with " << pinfo[j].particle.TrackID() << " with code " << pinfo[j].particle.PdgCode() << std::endl;
             }
           }
         }
