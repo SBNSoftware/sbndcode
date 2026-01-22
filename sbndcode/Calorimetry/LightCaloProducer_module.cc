@@ -54,6 +54,10 @@
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
+// Calibration database includes
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+
 // ROOT includes
 #include "TFile.h"
 #include "TTree.h"
@@ -155,6 +159,8 @@ private:
   fhicl::ParameterSet fvis_params;
   std::shared_ptr<phot::OpticalPath> foptical_path_tool;
 
+  sbndDB::PMTCalibrationDatabase const* fpmt_calib_db;
+
   opdet::sbndPDMapAlg opdetmap; //map for photon detector types
   unsigned int nchan = opdetmap.size();
 
@@ -183,6 +189,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   fvis_params = p.get<fhicl::ParameterSet>("VIVHits");
   foptical_path_tool = std::shared_ptr<phot::OpticalPath>(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool")));
   fsemi_model = std::make_unique<phot::SemiAnalyticalModel>(fvuv_params, fvis_params, foptical_path_tool, true, false);
+  fpmt_calib_db = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
 
   fopflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   fopflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
@@ -508,6 +515,11 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     // error is proportional to the amount of light
     // that actually reached the optical detector 
     for (size_t ich=0; ich<total_pe.size(); ich++){
+      // if pmt channel is not on or reconstructable, set to zero
+      if (opdetmap.pdType(ich) == "pmt_coated" || opdetmap.pdType(ich) == "pmt_uncoated"){
+        if(!fpmt_calib_db->getReconstructChannel(ich) || !fpmt_calib_db->getOnPMT(ich))
+          total_pe.at(ich) = 0;
+      }
       // # if ich is in fopdet_mask, set to zero 
       if (fopdet_mask.end() != std::find(fopdet_mask.begin(), fopdet_mask.end(), ich))
         total_pe.at(ich) = 0;
