@@ -62,7 +62,6 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     FillParticleInfo( part, pinfo);
     for(auto& sed : sedvec ) {
       if( -1*sed->TrackID() == part.TrackId() || sed->TrackID() == part.TrackId() ) {
-        std::cout << " recording some edep information" << std::endl;
         pinfo.depEnergy     += sed->Energy();
         pinfo.depElectrons  += sed->NumElectrons();
       }
@@ -114,7 +113,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
         for(size_t j=0; j<pinfo.size(); j++){
           simb::MCParticle& p = pinfo[j].particle;
           std::string pr = p.Process();
-          if( p.PdgCode() != 2112 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){
+          if( p.PdgCode() != 2112 && p.PdgCode()!=22 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){ //neutron and photons leave track
             if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ) GrowTrueBlip(pinfo[j],tb);
           }
         }
