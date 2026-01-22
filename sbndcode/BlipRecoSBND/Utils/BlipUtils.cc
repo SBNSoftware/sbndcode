@@ -105,7 +105,8 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       // Create the new blip
       blip::TrueBlip tb;
       GrowTrueBlip(pinfo[i],tb);
-      std::cout << "Made a true blip out of " << pinfo[i].particle.TrackId() << " with code " << pinfo[i].particle.PdgCode() << 
+      std::cout << "Made a true blip out of " << pinfo[i].particle.TrackId() << " with code " << pinfo[i].particle.PdgCode() << " and daughters " 
+      << pinfo[i].particle.NumberDaughters() << 
       " total electrons " << tb.DepElectrons << " total energy " << tb.Energy << std::endl;
       if( !tb.Energy ) continue;  
 
@@ -119,7 +120,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
             if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ){
               GrowTrueBlip(pinfo[j],tb);
               std::cout << " \t growing it with " << pinfo[j].particle.TrackId() << " with code " << pinfo[j].particle.PdgCode()<< 
-              " total electrons " << tb.DepElectrons << " total energy " << tb.Energy << std::endl;
+              " total electrons " << tb.DepElectrons << " total energy " << tb.Energy << std::endl; //literally never seems to be called?
             }
           }
         }
