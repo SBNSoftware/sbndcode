@@ -95,7 +95,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       //std::cout<<"Making true blip for "<<part.TrackId()<<" (PDG "<<part.PdgCode()<<", which deposited "<<pinfo[i].depEnergy<<"\n";
 
       // If this is a photon or neutron, don't even bother!
-      //if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
+      if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
 
       // If this is an electron that came from another electron, it would 
       // have already been grouped as part of the contiguous "blip" previously.
@@ -148,7 +148,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     simb::MCParticle& part = pinfo.particle;
 
     // Skip neutrons, photons
-    // if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
+     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
     
     // Check that path length isn't zero
     if( !pinfo.pathLength ) return;
