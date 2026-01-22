@@ -105,7 +105,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       // Create the new blip
       blip::TrueBlip tb;
       GrowTrueBlip(pinfo[i],tb);
-      std::cout << "Made a true blip out of " << pinfo[i].TrackID() << " with code " << pinfo[i].PdgCode() << std::endl;
+      std::cout << "Made a true blip out of " << pinfo[i].particle.TrackID() << " with code " << pinfo[i].particle.PdgCode() << std::endl;
       if( !tb.Energy ) continue;  
 
       // We want to loop through any contiguous electrons (produced
