@@ -693,6 +693,7 @@ namespace blip {
     
     
     // Basic track inclusion cut: exclude hits that were tracked
+    int Tracked=0;
     for(size_t i=0; i<hitlist.size(); i++){
       if( hitinfo[i].trkid < 0 ) continue;
       auto it = map_trkid_index.find(hitinfo[i].trkid);
@@ -701,8 +702,10 @@ namespace blip {
       if( tracklist[trkindex]->Length() > fMaxHitTrkLength ) {
         hitIsTracked[i] = true;
         hitIsGood[i] = false;
+        Tracked++;
       }
     }
+    std::cout << Tracked << " hits were in tracks from pandora " << std::endl;
         
 
     // Filter based on hit properties. For hits that are a part of
