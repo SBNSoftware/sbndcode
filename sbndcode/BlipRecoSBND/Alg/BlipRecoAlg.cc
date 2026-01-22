@@ -534,7 +534,9 @@ namespace blip {
         pinfo[i].index = i;
       }
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
+      std::cout << "True blip size after make " << trueblips.size() << std::endl; 
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
+      std::cout << "True blip size after merge " << trueblips.size() << std::endl; 
     }
 
     //=======================================

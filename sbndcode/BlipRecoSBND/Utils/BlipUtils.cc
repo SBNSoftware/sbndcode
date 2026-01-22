@@ -113,7 +113,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
         for(size_t j=0; j<pinfo.size(); j++){
           simb::MCParticle& p = pinfo[j].particle;
           std::string pr = p.Process();
-          if( p.PdgCode() != 2112 && p.PdgCode()!=22 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){ //neutron and photons leave track
+          if( p.PdgCode() != 2112 && p.PdgCode() != 22 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){ //neutron and photons leave track
             if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ) GrowTrueBlip(pinfo[j],tb);
           }
         }
@@ -161,7 +161,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // .. otherwise, check that the new particle
     // creation time is comparable to existing blip.
     // then calculate new energy-weighted position.
-    } else if ( fabs(tblip.Time-pinfo.time) < 3 ) {
+    } else if ( fabs(tblip.Time-pinfo.time) < 3) {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
