@@ -385,12 +385,8 @@ namespace blip {
     // -- hits (from gaushit), these are used in truth-matching of hits
     art::Handle< std::vector<recob::Hit> > hitHandleGH;
     std::vector<art::Ptr<recob::Hit> > hitlistGH;
-    if(fHitProducer == "specialblipgaushit")
-    {
-      if(evt.getByLabel("specialblipgaushit",hitHandleGH)) art::fill_ptr_vector(hitlistGH, hitHandleGH);
-    }
-    else if(evt.getByLabel("gaushit",hitHandleGH))
-      art::fill_ptr_vector(hitlistGH, hitHandleGH);
+    if(evt.getByLabel("specialblipgaushit",hitHandleGH)) art::fill_ptr_vector(hitlistGH, hitHandleGH);
+    else if(evt.getByLabel("gaushit",hitHandleGH))       art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
     art::Handle< std::vector<recob::Track> > tracklistHandle;
@@ -531,6 +527,7 @@ namespace blip {
           BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sIDElist, fCaloPlane);
         }
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
+        else pinfo[i].numElectrons = pinfo[i].depElectrons; // JACOB ADDITION Jan22, 2026 for strange channel IDE results
         pinfo[i].index = i;
       }
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
