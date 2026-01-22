@@ -61,7 +61,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo){
 void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
     FillParticleInfo( part, pinfo);
     for(auto& sed : sedvec ) {
-      if( -1*sed.trackID() == part.TrackId() || sed.trackID() == part.TrackId() ) {
+      if( -1*sed.TrackID() == part.TrackId() || sed.TrackID() == part.TrackId() ) {
         pinfo.depEnergy     += sed->Energy();
         pinfo.depElectrons  += sed->NumElectrons();
       }
