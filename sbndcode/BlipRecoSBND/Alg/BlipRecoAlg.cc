@@ -616,6 +616,15 @@ namespace blip {
           hitinfo[i].g4charge = 0;
           float maxQ = -9;
           for(size_t j=0; j<pvec.size(); j++){
+            if(igh==10235 || igh==10237)
+            {
+              if(j==0)
+              {
+                std::cout << " on hit " << igh << std::endl;
+                std::cout << " its got pvec size " << pvec.size() << std::endl;
+              }
+              std::cout << "pvec " << j << " has code " << pvec.at(j)->PdgCode() << " and contribtues " << btvec.at(j)->numElectrons << std::endl;
+            }
             hitinfo[i].g4energy += btvec.at(j)->energy;
             hitinfo[i].g4charge += btvec.at(j)->numElectrons;
             if( btvec.at(j)->numElectrons <= maxQ ) continue;
