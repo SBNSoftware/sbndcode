@@ -611,7 +611,7 @@ namespace blip {
         if( fmhh.at(igh).size() ) {
           std::vector<simb::MCParticle const*> pvec;
           std::vector<anab::BackTrackerHitMatchingData const*> btvec;
-          fmhh.get(pvec,igh,btvec);
+          fmhh.get(igh,btvec,pvec);
           hitinfo[i].g4energy = 0;
           hitinfo[i].g4charge = 0;
           float maxQ = -9;
