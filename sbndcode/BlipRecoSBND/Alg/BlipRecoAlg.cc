@@ -397,7 +397,7 @@ namespace blip {
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"blipgaushitTruthMatch");
+    art::FindMany<simb::MCParticle,recob::Hit, anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"blipgaushitTruthMatch");
     /*
     //====================================================
     // Update map of bad channels for this event
