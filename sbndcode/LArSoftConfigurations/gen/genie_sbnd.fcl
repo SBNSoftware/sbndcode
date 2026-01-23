@@ -241,7 +241,7 @@ sbnd_flux_g4bnb_1_1_1_fhc: {
 }
 
 sbnd_flux_g4bnb_1_1_1_fhc_test1: {
-  @table::sbnd_flux_g4bnb_1_0_0_fhc
+  @table::sbnd_flux_g4bnb_1_1_1_fhc
   FluxFiles: [ "NuBeam_production_BooNE_50m_I174000A_9998.dk2nu.root" ]
 }
 
