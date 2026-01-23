@@ -5,31 +5,16 @@ pmtdecoder:
     module_type: "SBNDPMTDecoder"
     debug: 0 # 0=no output, 1=standard, 2=verbose
 
-    # output timing system configuration
-    ## priority system
-    ## SPEC TDC ETT [0] -> PTB ETT [1] -> CAEN-only [2]
-    timing_type: 0 # default is SPEC TDC ETT
-
-
     # configure CAEN inputs 
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
+    frameshift_module_label: "frameshift"
     ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # expected waveform length
-    raw_ts_correction: 367000 # ns, correction to the rawheader timestamp
-
-    # configure SPEC TDC inputs 
-    spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
-    spectdc_ftrig_ch: 3 # channel number of the spec tdc that stores the flash trigger 
-    spectdc_etrig_ch: 4 # channel number of the spec tdc that stores the event trigger
-
-    # configure PTB inputs; used in case spec etrig is missing
-    ptb_product_name: "ptbdecoder"
-    ptb_allowed_hlts: [1,2,3,4,5,14,15] # beam, offbeam, and crossing muon hlts
-    ptb_trig_raw_diff_max: 3000000 # the maximum allowed time difference in ns
 
     # configure output options
     # use time difference between reference + CAEN used to determine rollover and/or weirdness
     allowed_time_diff: 3000 # us!! not nanoseconds
+
     # configure the output data product instance names
     pmtInstanceName: "PMTChannels"
     ftrigInstanceName: "FTrigChannels"
