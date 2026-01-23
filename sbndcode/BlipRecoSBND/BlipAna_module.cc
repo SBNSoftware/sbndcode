@@ -1326,7 +1326,6 @@ void BlipAna::analyze(const art::Event& evt)
       }
     
     }
-      
     if( fDebugMode ) PrintClusterInfo(clust);
     
   }//endloop over 2D hit clusters

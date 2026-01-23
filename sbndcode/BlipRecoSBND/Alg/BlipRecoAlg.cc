@@ -386,7 +386,7 @@ namespace blip {
     art::Handle< std::vector<recob::Hit> > hitHandleGH;
     std::vector<art::Ptr<recob::Hit> > hitlistGH;
     if(evt.getByLabel("specialblipgaushit",hitHandleGH)) art::fill_ptr_vector(hitlistGH, hitHandleGH);
-    else if(evt.getByLabel("gaushit",hitHandleGH))       art::fill_ptr_vector(hitlistGH, hitHandleGH);
+    //else if(evt.getByLabel("gaushit",hitHandleGH))       art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
     art::Handle< std::vector<recob::Track> > tracklistHandle;

@@ -124,7 +124,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
               " total electrons " << tb.DepElectrons << " total energy " << tb.Energy << std::endl; //literally never seems to be called?
             }
           }
-          else if(IsAncestorOf(p.TrackId(),part.TrackId(),true,true)) excludedDaughters++;
+          else if(IsAncestorOf(p.TrackId(),part.TrackId(),true,true)) excludedDaughters++; 
         }
         std::cout << " \t " << excludedDaughters << " were of the special types" << std::endl;
       }
