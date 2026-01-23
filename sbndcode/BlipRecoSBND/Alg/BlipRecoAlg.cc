@@ -622,6 +622,8 @@ namespace blip {
               {
                 std::cout << " on hit " << igh << std::endl;
                 std::cout << " its got pvec size " << pvec.size() << std::endl;
+                std::cout << "hit is on wire " << hitinfo[i].wire <<" in tpc " << hitinfo[i].tpc << " on plane " << hitinfo[i].plane << 
+                " at time " << hitinfo[i].peakTime << std::endl;
               }
               std::cout << "pvec " << j << " has code " << pvec.at(j)->PdgCode() << " and contribtues " << btvec.at(j)->numElectrons << std::endl;
             }
