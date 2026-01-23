@@ -397,7 +397,7 @@ namespace blip {
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    art::FindMany<simb::MCParticle,recob::Hit, anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"blipgaushitTruthMatch");
+    art::FindMany<simb::MCParticle, anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"blipgaushitTruthMatch");
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -611,7 +611,7 @@ namespace blip {
         if( fmhh.at(igh).size() ) {
           std::vector<simb::MCParticle const*> pvec;
           std::vector<anab::BackTrackerHitMatchingData const*> btvec;
-          fmhh.get(igh,pvec,btvec);
+          fmhh.get(pvec,igh,btvec);
           hitinfo[i].g4energy = 0;
           hitinfo[i].g4charge = 0;
           float maxQ = -9;
