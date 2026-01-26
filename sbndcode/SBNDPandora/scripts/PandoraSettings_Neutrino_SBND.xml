@@ -457,6 +457,39 @@
     <VertexListName>DaughterVertices3D</VertexListName>
   </algorithm>
 
+  <!-- Shower Merging -->
+  <algorithm type = "LArShowerMergingPfoMopUp">
+    <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+    <DaughterListNames>TrackParticles3D ShowerParticles3D DaughterVertices3D ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+  </algorithm>
+
+  <!-- Re-run the PFO Characterisation to recalculate the scores after primary electron merging -->
+  <algorithm type = "LArBdtPfoCharacterisation">
+    <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+    <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+    <UseThreeDInformation>true</UseThreeDInformation>
+    <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
+    <MvaName>PfoCharBDT2</MvaName>
+    <MvaFileNameNoChargeInfo>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileNameNoChargeInfo>
+    <MvaNameNoChargeInfo>PfoCharBDTNoChargeInfo2</MvaNameNoChargeInfo>
+    <MinProbabilityCut>0.51</MinProbabilityCut>
+    <PersistFeatures>true</PersistFeatures>
+    <FeatureTools>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+      <tool type = "LArThreeDChargeFeatureTool"/>
+      <tool type = "LArConeChargeFeatureTool"/>
+    </FeatureTools>
+    <FeatureToolsNoChargeInfo>
+      <tool type = "LArThreeDLinearFitFeatureTool"/>
+      <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+      <tool type = "LArThreeDPCAFeatureTool"/>
+      <tool type = "LArThreeDOpeningAngleFeatureTool"/>
+    </FeatureToolsNoChargeInfo>
+  </algorithm>
+
   <!-- Output list management -->
   <algorithm type = "LArPostProcessing">
     <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
