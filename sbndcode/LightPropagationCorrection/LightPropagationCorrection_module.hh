@@ -162,7 +162,6 @@ private:
     std::vector<double> fOpDetX;
     std::vector<double> fOpDetY;
     std::vector<double> fOpDetZ;
-    std::vector<int> fOpDetType;
 
     std::string fReco2Label;
     std::string fOpT0FinderModuleLabel;

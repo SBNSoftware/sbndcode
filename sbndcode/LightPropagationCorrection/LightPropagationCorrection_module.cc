@@ -36,11 +36,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
         fOpDetX.push_back(pdCenter.X());
         fOpDetY.push_back(pdCenter.Y());
         fOpDetZ.push_back(pdCenter.Z());
-        if(fPDSMap.pdType(opch)=="pmt_coated") fOpDetType.push_back(0);
-        else if(fPDSMap.pdType(opch)=="pmt_uncoated") fOpDetType.push_back(1);
-        else if(fPDSMap.pdType(opch)=="xarapuca_vuv") fOpDetType.push_back(2);
-        else if(fPDSMap.pdType(opch)=="xarapuca_vis") fOpDetType.push_back(3);
-        else fOpDetType.push_back(-1);
     }
 
     auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
@@ -449,15 +444,14 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
             double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
             double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
+
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
-            if(fOpDetType[opdet]==0)
+            if(fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
-            else if(fOpDetType[opdet]==1)
+            else if(fPDSMap.pdType(opch)=="pmt_uncoated" || fPDSMap.pdType(opch)=="xarapuca_vis")
                 lightPropTime = lightPropTimeVIS;
-            else
-                continue;    
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;
