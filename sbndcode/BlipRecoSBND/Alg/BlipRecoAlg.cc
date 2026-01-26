@@ -531,9 +531,7 @@ namespace blip {
         pinfo[i].index = i;
       }
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
-      std::cout << "True blip size after make " << trueblips.size() << std::endl; 
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
-      std::cout << "True blip size after merge " << trueblips.size() << std::endl; 
     }
 
     //=======================================
@@ -616,17 +614,6 @@ namespace blip {
           hitinfo[i].g4charge = 0;
           float maxQ = -9;
           for(size_t j=0; j<pvec.size(); j++){
-            if(igh==10235 || igh==10237)
-            {
-              if(j==0)
-              {
-                std::cout << " on hit " << igh << std::endl;
-                std::cout << " its got pvec size " << pvec.size() << " and btvec size " << btvec.size() << std::endl;
-                std::cout << "hit is on wire " << hitinfo[i].wire <<" in tpc " << hitinfo[i].tpc << " on plane " << hitinfo[i].plane << 
-                " at time " << hitinfo[i].peakTime << std::endl;
-              }
-              std::cout << "pvec " << j << " has code " << pvec.at(j)->PdgCode() << " and contribtues " << btvec.at(j)->numElectrons << std::endl;
-            }
             hitinfo[i].g4energy += btvec.at(j)->energy;
             hitinfo[i].g4charge += btvec.at(j)->numElectrons;
             if( btvec.at(j)->numElectrons <= maxQ ) continue;
@@ -712,9 +699,7 @@ namespace blip {
         hitIsGood[i] = false;
         Tracked++;
       }
-    }
-    std::cout << Tracked << " hits were in tracks from pandora " << std::endl;
-        
+    }        
 
     // Filter based on hit properties. For hits that are a part of
     // multi-gaussian fits (multiplicity > 1), need to re-think this.

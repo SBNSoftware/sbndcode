@@ -110,7 +110,6 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       // We want to loop through any contiguous electrons (produced
       // with process "eIoni") and add the energy they deposit into this blip.
       if( part.NumberDaughters() ) { //particles have daughters but they must all be neutron, gamma, or one of the special processes?
-        int excludedDaughters=0;
         for(size_t j=0; j<pinfo.size(); j++){
           simb::MCParticle& p = pinfo[j].particle;
           std::string pr = p.Process();
@@ -119,7 +118,6 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
               GrowTrueBlip(pinfo[j],tb);
             }
           }
-          else if(IsAncestorOf(p.TrackId(),part.TrackId(),true,true)) excludedDaughters++; 
         }
       }
       
