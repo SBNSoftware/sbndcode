@@ -21,7 +21,6 @@
 #include <set>
 #include <utility>
 
-
 #include "TLegend.h"
 #include "THStack.h"
 #include "TLine.h"
@@ -2114,9 +2113,12 @@ void nuEBackgroundSignalWeighted_macro(){
     TH2D *slicePurityDeltaRDLUboone = new TH2D("slicePurityDeltaRDLUboone", "", 102, 0, 1.02, 80, 0, 40);
     TH2D *slicePurityDeltaRDLNuE = new TH2D("slicePurityDeltaRDLNuE", "", 102, 0, 1.02, 80, 0, 40);
     
-    TH2D *trackscoreEnergyBDT = new TH2D("trackscoreEnergyBDT", "", 20, 0, 1, 100, 0, 1000);
-    TH2D *trackscoreEnergyDLUboone = new TH2D("trackscoreEnergyDLUboone", "", 20, 0, 1, 100, 0, 1000);
-    TH2D *trackscoreEnergyDLNuE = new TH2D("trackscoreEnergyDLNuE", "", 20, 0, 1, 100, 0, 1000);
+    TH2D *trackscoreHighestEnergyPFPEnergyBDT = new TH2D("trackscoreHighestEnergyPFPEnergyBDT", "", 200, 0, 2000, 20, 0, 1);
+    TH2D *trackscoreHighestEnergyPFPEnergyDLUboone = new TH2D("trackscoreHighestEnergyPFPEnergyDLUboone", "", 200, 0, 2000, 20, 0, 1);
+    TH2D *trackscoreHighestEnergyPFPEnergyDLNuE = new TH2D("trackscoreHighestEnergyPFPEnergyDLNuE", "", 200, 0, 2000, 20, 0, 1);
+    TH2D *trackscoreAllPFPsEnergyBDT = new TH2D("trackscoreAllPFPsEnergyBDT", "", 200, 0, 2000, 20, 0, 1);
+    TH2D *trackscoreAllPFPsEnergyDLUboone = new TH2D("trackscoreAllPFPsEnergyDLUboone", "", 200, 0, 2000, 20, 0, 1);
+    TH2D *trackscoreAllPFPsEnergyDLNuE = new TH2D("trackscoreAllPFPsEnergyDLNuE", "", 200, 0, 2000, 20, 0, 1);
 
     double numEvents_BDTCosmic = 0;
     double numEvents_BDTBNB = 0;
@@ -3742,12 +3744,15 @@ void nuEBackgroundSignalWeighted_macro(){
 
                             trackscoreHighestEnergyPFP.currentSignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignal->Fill(highestEnergy_trackscore);
-                            
+                           
+                            trackscoreHighestEnergyPFPEnergyBDT->Fill(highestEnergy_energy, highestEnergy_trackscore);
+
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfpTrack) != -999999){
                                         trackscoreAllPFPs.currentSignal->Fill(reco_particleTrackScore->at(pfpTrack), weight);
                                         trackscoreAllPFPsDist.currentSignal->Fill(reco_particleTrackScore->at(pfpTrack));
+                                        trackscoreAllPFPsEnergyBDT->Fill(reco_particleBestPlaneEnergy->at(pfpTrack), reco_particleTrackScore->at(pfpTrack));
                                     }
                                 }
                             }
@@ -3862,12 +3867,14 @@ void nuEBackgroundSignalWeighted_macro(){
                             
                             trackscoreHighestEnergyPFP.ubooneSignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneSignal->Fill(highestEnergy_trackscore);
-                            
+                            trackscoreHighestEnergyPFPEnergyDLUboone->Fill(highestEnergy_energy, highestEnergy_trackscore);
+
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfpTrack) != -999999){
                                         trackscoreAllPFPs.ubooneSignal->Fill(reco_particleTrackScore->at(pfpTrack), weight);
                                         trackscoreAllPFPsDist.ubooneSignal->Fill(reco_particleTrackScore->at(pfpTrack));
+                                        trackscoreAllPFPsEnergyDLUboone->Fill(reco_particleBestPlaneEnergy->at(pfpTrack), reco_particleTrackScore->at(pfpTrack));
                                     }
                                 }
                             }
@@ -3983,12 +3990,14 @@ void nuEBackgroundSignalWeighted_macro(){
                             
                             trackscoreHighestEnergyPFP.nuESignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignal->Fill(highestEnergy_trackscore);
-                            
+                            trackscoreHighestEnergyPFPEnergyDLNuE->Fill(highestEnergy_energy, highestEnergy_trackscore);
+
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfpTrack) != -999999){
                                         trackscoreAllPFPs.nuESignal->Fill(reco_particleTrackScore->at(pfpTrack), weight);
                                         trackscoreAllPFPsDist.nuESignal->Fill(reco_particleTrackScore->at(pfpTrack));
+                                        trackscoreAllPFPsEnergyDLNuE->Fill(reco_particleBestPlaneEnergy->at(pfpTrack), reco_particleTrackScore->at(pfpTrack));
                                     }
                                 }
                             }
@@ -5065,7 +5074,15 @@ void nuEBackgroundSignalWeighted_macro(){
     TwoDHistDraw(slicePurityERecoHighestThetaRecoBDT, (base_path + "ERecoHighestThetaRecoPurity_BDT.pdf").c_str(), "Purity of the Slice vs E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Slice Purity;E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
     TwoDHistDraw(slicePurityERecoHighestThetaRecoDLUboone, (base_path + "ERecoHighestThetaRecoPurity_DLUboone.pdf").c_str(), "Purity of the Slice vs E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Uboone Vertexing;Slice Purity;E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
     TwoDHistDraw(slicePurityERecoHighestThetaRecoDLNuE, (base_path + "ERecoHighestThetaRecoPurity_DLNuE.pdf").c_str(), "Purity of the Slice vs E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Nu+E Vertexing;Slice Purity;E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
+   
+    TwoDHistDraw(trackscoreHighestEnergyPFPEnergyBDT, (base_path + "trackscoreHighestEnergyPFPEnergy_BDT.pdf").c_str(), "Trackscore of the Highest Energy PFP in the Slice vs PFP Energy: BDT Vertexing;Energy (MeV);Trackscore");
+    TwoDHistDraw(trackscoreHighestEnergyPFPEnergyDLUboone, (base_path + "trackscoreHighestEnergyPFPEnergy_DLUboone.pdf").c_str(), "Trackscore of the Highest Energy PFP in the Slice vs PFP Energy: DL Uboone Vertexing;Energy (MeV);Trackscore");
+    TwoDHistDraw(trackscoreHighestEnergyPFPEnergyDLNuE, (base_path + "trackscoreHighestEnergyPFPEnergy_DLNuE.pdf").c_str(), "Trackscore of the Highest Energy PFP in the Slice vs PFP Energy: DL Nu+E Vertexing;Energy (MeV);Trackscore");
     
+    TwoDHistDraw(trackscoreAllPFPsEnergyBDT, (base_path + "trackscoreAllPFPsEnergy_BDT.pdf").c_str(), "Trackscore of All PFPs in the Slice vs PFP Energy: BDT Vertexing;Energy (MeV);Trackscore");
+    TwoDHistDraw(trackscoreAllPFPsEnergyDLUboone, (base_path + "trackscoreAllPFPsEnergy_DLUboone.pdf").c_str(), "Trackscore of All PFPs in the Slice vs PFP Energy: DL Uboone Vertexing;Energy (MeV);Trackscore");
+    TwoDHistDraw(trackscoreAllPFPsEnergyDLNuE, (base_path + "trackscoreAllPFPsEnergy_DLNuE.pdf").c_str(), "Trackscore of All PFPs in the Slice vs PFP Energy: DL Nu+E Vertexing;Energy (MeV);Trackscore");
+
     TwoDHistDraw(slicePurityDeltaXBDT, (base_path + "deltaXPurity_BDT.pdf").c_str(), "Purity of the Slice vs #Deltax of Neutrino Vertex in Slice: BDT Vertexing;Slice Purity;x_{Reco} - x_{True} (cm)");
     TwoDHistDraw(slicePurityDeltaXDLUboone, (base_path + "deltaXPurity_DLUboone.pdf").c_str(), "Purity of the Slice vs #Deltax of Neutrino Vertex in Slice: DL Uboone Vertexing;Slice Purity;x_{Reco} - x_{True} (cm)");
     TwoDHistDraw(slicePurityDeltaXDLNuE, (base_path + "deltaXPurity_DLNuE.pdf").c_str(), "Purity of the Slice vs #Deltax of Neutrino Vertex in Slice: DL Nu+E Vertexing;Slice Purity;x_{Reco} - x_{True} (cm)");
