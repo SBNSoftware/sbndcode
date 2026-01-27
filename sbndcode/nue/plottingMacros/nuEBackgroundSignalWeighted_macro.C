@@ -76,6 +76,7 @@ typedef struct{
     TH1F* dirt;
     TH1F* nu_eDirt;
     TH1F* cosmic;
+    TH1F* other;
 } splitHistGroup_struct;
 
 struct weights_struct{
@@ -157,7 +158,8 @@ splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const st
         (TH1F*) base->Clone((baseName + "_CCnue").c_str()),
         (TH1F*) base->Clone((baseName + "_dirt").c_str()),
         (TH1F*) base->Clone((baseName + "_nu_eDirt").c_str()),
-        (TH1F*) base->Clone((baseName + "_cosmic").c_str())
+        (TH1F*) base->Clone((baseName + "_cosmic").c_str()),
+        (TH1F*) base->Clone((baseName + "_other").c_str())
     };
 }
 
@@ -473,7 +475,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     else
         hists.canvas->SetLogy(0);
 
-    std::vector<TH1F*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic};
+    std::vector<TH1F*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic, hists.other};
 
     if (useLogScale) {
         for (auto* hist : allHists) {
@@ -505,6 +507,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.dirt->SetLineWidth(2);        hists.dirt->SetLineColor(TColor::GetColor("#ff5e02"));
     hists.nu_eDirt->SetLineWidth(2);    hists.nu_eDirt->SetLineColor(TColor::GetColor("#1845fb"));
     hists.cosmic->SetLineWidth(2);      hists.cosmic->SetLineColor(TColor::GetColor("#c849a9"));
+    hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
 
     if((ymin != 999) && (ymax != 999)){
         for(auto* hist : allHists)
@@ -538,8 +541,9 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.dirt->Draw("histsame");
     hists.nu_eDirt->Draw("histsame");
     hists.cosmic->Draw("histsame");
+    hists.other->Draw("histsame");
 
-    int nEntries = 8;
+    int nEntries = 9;
     double height = std::max(0.03 * nEntries, 0.03);
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
 
@@ -558,6 +562,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->AddEntry(hists.dirt, "Dirt", "f");
     legend->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legend->AddEntry(hists.cosmic, "Cosmic", "f");
+    legend->AddEntry(hists.other, "Other", "f");
     legend->SetTextSize(0.0225);
 
     legend->SetMargin(0.13);
@@ -581,6 +586,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     stack->Add(hists.dirt);
     stack->Add(hists.nu_eDirt);
     stack->Add(hists.cosmic);
+    stack->Add(hists.other);
 
     hists.canvas->cd();
     hists.canvas->Clear();
@@ -625,6 +631,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legendStack->AddEntry(hists.dirt, "Dirt", "f");
     legendStack->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legendStack->AddEntry(hists.cosmic, "Cosmic", "f");
+    legendStack->AddEntry(hists.other, "Other", "f");
     legendStack->SetTextSize(0.0225);
     legendStack->SetMargin(0.13);
     legendStack->Draw();
@@ -1532,8 +1539,9 @@ void nuEBackgroundSignalWeighted_macro(){
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit/";
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/enuelastic_DLVertexingDLNu+E_26Dec_v10_06_00_gen_g4_detsim_reco1_reco2_analysed_DLNu+E_26Dec_25890928_2176_Analysed_DLNu+E_output-0f528a1f-2a9b-4b7f-b99e-7c2684cabb08.root");
     
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_19Jan.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_TEST/";
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_19Jan.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_TEST_highStats/";
     
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/output_16Jan.root");
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_nuE/";
@@ -2120,6 +2128,67 @@ void nuEBackgroundSignalWeighted_macro(){
     TH2D *trackscoreAllPFPsEnergyDLUboone = new TH2D("trackscoreAllPFPsEnergyDLUboone", "", 200, 0, 2000, 20, 0, 1);
     TH2D *trackscoreAllPFPsEnergyDLNuE = new TH2D("trackscoreAllPFPsEnergyDLNuE", "", 200, 0, 2000, 20, 0, 1);
 
+    TH2D *xCoordEnergyAsymmetryHighestBDT = new TH2D("xCoordEnergyAsymmetryHighestBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestBDT = new TH2D("yCoordEnergyAsymmetryHighestBDT", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestBDT = new TH2D("zCoordEnergyAsymmetryHighestBDT", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestBDT_low = new TH2D("xCoordEnergyAsymmetryHighestBDT_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestBDT_low = new TH2D("yCoordEnergyAsymmetryHighestBDT_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestBDT_low = new TH2D("zCoordEnergyAsymmetryHighestBDT_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestBDT_high = new TH2D("xCoordEnergyAsymmetryHighestBDT_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestBDT_high = new TH2D("yCoordEnergyAsymmetryHighestBDT_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestBDT_high = new TH2D("zCoordEnergyAsymmetryHighestBDT_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetryHighestDLUboone = new TH2D("xCoordEnergyAsymmetryHighestDLUboone", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLUboone = new TH2D("yCoordEnergyAsymmetryHighestDLUboone", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLUboone = new TH2D("zCoordEnergyAsymmetryHighestDLUboone", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetryHighestDLNuE = new TH2D("xCoordEnergyAsymmetryHighestDLNuE", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLNuE = new TH2D("yCoordEnergyAsymmetryHighestDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLNuE = new TH2D("zCoordEnergyAsymmetryHighestDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    
+    
+    TH2D *xCoordEnergyAsymmetrySummedBDT = new TH2D("xCoordEnergyAsymmetrySummedBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedBDT = new TH2D("yCoordEnergyAsymmetrySummedBDT", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedBDT = new TH2D("zCoordEnergyAsymmetrySummedBDT", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedBDT_low = new TH2D("xCoordEnergyAsymmetrySummedBDT_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedBDT_low = new TH2D("yCoordEnergyAsymmetrySummedBDT_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedBDT_low = new TH2D("zCoordEnergyAsymmetrySummedBDT_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedBDT_high = new TH2D("xCoordEnergyAsymmetrySummedBDT_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedBDT_high = new TH2D("yCoordEnergyAsymmetrySummedBDT_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedBDT_high = new TH2D("zCoordEnergyAsymmetrySummedBDT_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetrySummedDLUboone = new TH2D("xCoordEnergyAsymmetrySummedDLUboone", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLUboone = new TH2D("yCoordEnergyAsymmetrySummedDLUboone", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLUboone = new TH2D("zCoordEnergyAsymmetrySummedDLUboone", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetrySummedDLNuE = new TH2D("xCoordEnergyAsymmetrySummedDLNuE", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLNuE = new TH2D("yCoordEnergyAsymmetrySummedDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLNuE = new TH2D("zCoordEnergyAsymmetrySummedDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+
     double numEvents_BDTCosmic = 0;
     double numEvents_BDTBNB = 0;
     double numEvents_BDTNuE = 0;
@@ -2391,8 +2460,11 @@ void nuEBackgroundSignalWeighted_macro(){
                 else if(sliceEventType == 5) std::cout << "Event type = CC nue" << std::endl;
                 else if(sliceEventType == 6) std::cout << "Event type = Dirt" << std::endl;
                 else if(sliceEventType == 7) std::cout << "Event type = Dirt nu+e" << std::endl;
-                else std::cout << "No event type assigned" << std::endl;
-                
+                else{
+                    std::cout << "No event type assigned" << std::endl;
+                    sliceEventType = 8;
+                }
+
                 // Filling Split Histograms
                 if(sliceEventType == 0){
                     if(DLCurrent == 2){
@@ -3418,6 +3490,134 @@ void nuEBackgroundSignalWeighted_macro(){
                             QSquaredSumDist_splitDLNuE.nu_eDirt->Fill(Q2SumValue);
                         }
                     }
+                } else if(sliceEventType == 8){
+                    if(DLCurrent == 2){
+                        sliceCompleteness_splitBDT.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitBDT.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitBDT.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitBDT.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.other->Fill(numPrimaryPFPsSlice, weight);
+                        
+                        sliceCompletenessDist_splitBDT.other->Fill(reco_sliceCompleteness->at(slice));
+                        slicePurityDist_splitBDT.other->Fill(reco_slicePurity->at(slice));
+                        sliceCRUMBSScoreDist_splitBDT.other->Fill(reco_sliceScore->at(slice));
+                        sliceNumPFPsDist_splitBDT.other->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPsDist_splitBDT.other->Fill(numPrimaryPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitBDT.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            
+                            ERecoSumThetaRecoDist_splitBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaRecoDist_splitBDT.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            trackscoreHighestEnergyPFP_splitBDT.other->Fill(highestEnergy_trackscore, weight); 
+                            trackscoreHighestEnergyPFPDist_splitBDT.other->Fill(highestEnergy_trackscore); 
+                            
+                            for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
+                                if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfpTrack) != -999999){
+                                        trackscoreAllPFPs_splitBDT.other->Fill(reco_particleTrackScore->at(pfpTrack), weight);
+                                        trackscoreAllPFPsDist_splitBDT.other->Fill(reco_particleTrackScore->at(pfpTrack));
+                                    }
+                                }
+                            }
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitBDT.other->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist_splitBDT.other->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitBDT.other->Fill(Q2SumValue, weight);
+                            QSquaredSumDist_splitBDT.other->Fill(Q2SumValue);
+                        }
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness_splitDLUboone.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitDLUboone.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitDLUboone.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitDLUboone.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.other->Fill(numPrimaryPFPsSlice, weight);
+
+                        sliceCompletenessDist_splitDLUboone.other->Fill(reco_sliceCompleteness->at(slice));
+                        slicePurityDist_splitDLUboone.other->Fill(reco_slicePurity->at(slice));
+                        sliceCRUMBSScoreDist_splitDLUboone.other->Fill(reco_sliceScore->at(slice));
+                        sliceNumPFPsDist_splitDLUboone.other->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPsDist_splitDLUboone.other->Fill(numPrimaryPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitDLUboone.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            
+                            ERecoSumThetaRecoDist_splitDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaRecoDist_splitDLUboone.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            trackscoreHighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_trackscore, weight); 
+                            trackscoreHighestEnergyPFPDist_splitDLUboone.other->Fill(highestEnergy_trackscore); 
+                            
+                            for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
+                                if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfpTrack) != -999999){
+                                        trackscoreAllPFPs_splitDLUboone.other->Fill(reco_particleTrackScore->at(pfpTrack), weight);
+                                        trackscoreAllPFPsDist_splitDLUboone.other->Fill(reco_particleTrackScore->at(pfpTrack));
+                                    }
+                                }
+                            }
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitDLUboone.other->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist_splitDLUboone.other->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitDLUboone.other->Fill(Q2SumValue, weight);
+                            QSquaredSumDist_splitDLUboone.other->Fill(Q2SumValue);
+                        }
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness_splitDLNuE.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitDLNuE.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitDLNuE.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitDLNuE.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.other->Fill(numPrimaryPFPsSlice, weight);
+
+                        sliceCompletenessDist_splitDLNuE.other->Fill(reco_sliceCompleteness->at(slice));
+                        slicePurityDist_splitDLNuE.other->Fill(reco_slicePurity->at(slice));
+                        sliceCRUMBSScoreDist_splitDLNuE.other->Fill(reco_sliceScore->at(slice));
+                        sliceNumPFPsDist_splitDLNuE.other->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPsDist_splitDLNuE.other->Fill(numPrimaryPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitDLNuE.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            
+                            ERecoSumThetaRecoDist_splitDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaRecoDist_splitDLNuE.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                            
+                            trackscoreHighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_trackscore, weight); 
+                            trackscoreHighestEnergyPFPDist_splitDLNuE.other->Fill(highestEnergy_trackscore); 
+                            
+                            for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
+                                if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
+                                    if(reco_particleTrackScore->at(pfpTrack) != -999999){
+                                        trackscoreAllPFPs_splitDLNuE.other->Fill(reco_particleTrackScore->at(pfpTrack), weight);
+                                        trackscoreAllPFPsDist_splitDLNuE.other->Fill(reco_particleTrackScore->at(pfpTrack));
+                                    }
+                                }
+                            }
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitDLNuE.other->Fill(Q2HighestValue, weight);
+                            QSquaredHighestDist_splitDLNuE.other->Fill(Q2HighestValue);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitDLNuE.other->Fill(Q2SumValue, weight);
+                            QSquaredSumDist_splitDLNuE.other->Fill(Q2SumValue);
+                        }
+                    }
                 }
 
                 if(reco_sliceOrigin->at(slice) == 1 && DLCurrent == 5) nuESlice_DLNuE++;
@@ -3763,15 +3963,43 @@ void nuEBackgroundSignalWeighted_macro(){
                                 xCoordAngleDifferenceBDT->Fill(recoVX, angleDifference);
                                 yCoordAngleDifferenceBDT->Fill(recoVY, angleDifference);
                                 zCoordAngleDifferenceBDT->Fill(recoVZ, angleDifference);
-                                
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference); 
+                               
+                                xCoordEnergyAsymmetryHighestBDT->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                xCoordEnergyAsymmetrySummedBDT->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                yCoordEnergyAsymmetryHighestBDT->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                yCoordEnergyAsymmetrySummedBDT->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                zCoordEnergyAsymmetryHighestBDT->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                zCoordEnergyAsymmetrySummedBDT->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+
+                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                    xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
+                                    xCoordEnergyAsymmetryHighestBDT_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedBDT_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                    xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference);
+                                    xCoordEnergyAsymmetryHighestBDT_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedBDT_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                }
+
+                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                    yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
+                                    yCoordEnergyAsymmetryHighestBDT_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedBDT_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                    yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference);
+                                    yCoordEnergyAsymmetryHighestBDT_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedBDT_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                }
+
+                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                    zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
+                                    zCoordEnergyAsymmetryHighestBDT_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedBDT_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                    zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference);
+                                    zCoordEnergyAsymmetryHighestBDT_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedBDT_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                }
                             }                        
                         }
                         
@@ -3886,15 +4114,43 @@ void nuEBackgroundSignalWeighted_macro(){
                                 xCoordAngleDifferenceDLUboone->Fill(recoVX, angleDifference);
                                 yCoordAngleDifferenceDLUboone->Fill(recoVY, angleDifference);
                                 zCoordAngleDifferenceDLUboone->Fill(recoVZ, angleDifference);
-                                
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference); 
+                               
+                                xCoordEnergyAsymmetryHighestDLUboone->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                yCoordEnergyAsymmetryHighestDLUboone->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                zCoordEnergyAsymmetryHighestDLUboone->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                xCoordEnergyAsymmetrySummedDLUboone->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                yCoordEnergyAsymmetrySummedDLUboone->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                zCoordEnergyAsymmetrySummedDLUboone->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+
+                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                    xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
+                                    xCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                    xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
+                                    xCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                }
+
+                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                    yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
+                                    yCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                    yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference); 
+                                    yCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                }
+
+                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                    zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
+                                    zCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                    zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference);
+                                    zCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
+                                }
                             }                        
                         }
                         
@@ -4010,14 +4266,42 @@ void nuEBackgroundSignalWeighted_macro(){
                                 yCoordAngleDifferenceDLNuE->Fill(recoVY, angleDifference);
                                 zCoordAngleDifferenceDLNuE->Fill(recoVZ, angleDifference);
 
-                                if(recoVX >= xMin && recoVX <= xMin+20) xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
-                                else if(recoVX <= xMax && recoVX >= xMax-20) xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
-                            
-                                if(recoVY >= yMin && recoVY <= yMin+20) yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
-                                else if(recoVY <= yMax && recoVY >= yMax-20) yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
-                                
-                                if(recoVZ >= zMin && recoVZ <= zMin+20) zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
-                                else if(recoVZ <= zMax && recoVZ >= zMax-40) zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
+                                xCoordEnergyAsymmetryHighestDLNuE->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                yCoordEnergyAsymmetryHighestDLNuE->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                zCoordEnergyAsymmetryHighestDLNuE->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                xCoordEnergyAsymmetrySummedDLNuE->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                yCoordEnergyAsymmetrySummedDLNuE->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                zCoordEnergyAsymmetrySummedDLNuE->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+
+                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                    xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
+                                    xCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                    xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
+                                    xCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    xCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                }
+
+                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                    yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
+                                    yCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                    yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
+                                    yCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    yCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                }
+
+                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                    zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
+                                    zCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                    zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference); 
+                                    zCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
+                                    zCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
+                                }
                             }                        
                         }
                             
@@ -5098,6 +5382,63 @@ void nuEBackgroundSignalWeighted_macro(){
     TwoDHistDraw(slicePurityDeltaRBDT, (base_path + "deltaRPurity_BDT.pdf").c_str(), "Purity of the Slice vs #DeltaR of Neutrino Vertex in Slice: BDT Vertexing;Slice Purity;|#bar{r}_{Reco} - #bar{r}_{True}| (cm)");
     TwoDHistDraw(slicePurityDeltaRDLUboone, (base_path + "deltaRPurity_DLUboone.pdf").c_str(), "Purity of the Slice vs #DeltaR of Neutrino Vertex in Slice: DL Uboone Vertexing;Slice Purity;|#bar{r}_{Reco} - #bar{r}_{True}| (cm)");
     TwoDHistDraw(slicePurityDeltaRDLNuE, (base_path + "deltaRPurity_DLNuE.pdf").c_str(), "Purity of the Slice vs #DeltaR of Neutrino Vertex in Slice: DL Nu+E Vertexing;Slice Purity;|#bar{r}_{Reco} - #bar{r}_{True}| (cm)");
+
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestBDT, (base_path + "energyAsym_Highest_x_BDT.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestBDT, (base_path + "energyAsym_Highest_y_BDT.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestBDT, (base_path + "energyAsym_Highest_z_BDT.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestBDT_low, (base_path + "energyAsym_Highest_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestBDT_low, (base_path + "energyAsym_Highest_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestBDT_low, (base_path + "energyAsym_Highest_z_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestBDT_high, (base_path + "energyAsym_Highest_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestBDT_high, (base_path + "energyAsym_Highest_y_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestBDT_high, (base_path + "energyAsym_Highest_z_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedBDT, (base_path + "energyAsym_Summed_x_BDT.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedBDT, (base_path + "energyAsym_Summed_y_BDT.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedBDT, (base_path + "energyAsym_Summed_z_BDT.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedBDT_low, (base_path + "energyAsym_Summed_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedBDT_low, (base_path + "energyAsym_Summed_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedBDT_low, (base_path + "energyAsym_Summed_z_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedBDT_high, (base_path + "energyAsym_Summed_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedBDT_high, (base_path + "energyAsym_Summed_y_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedBDT_high, (base_path + "energyAsym_Summed_z_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLUboone, (base_path + "energyAsym_Highest_x_DLUboone.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLUboone, (base_path + "energyAsym_Highest_y_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLUboone, (base_path + "energyAsym_Highest_z_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLUboone_low, (base_path + "energyAsym_Highest_x_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLUboone_low, (base_path + "energyAsym_Highest_y_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLUboone_low, (base_path + "energyAsym_Highest_z_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLUboone_high, (base_path + "energyAsym_Highest_x_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLUboone_high, (base_path + "energyAsym_Highest_y_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLUboone_high, (base_path + "energyAsym_Highest_z_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLUboone, (base_path + "energyAsym_Summed_x_DLUboone.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLUboone, (base_path + "energyAsym_Summed_y_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLUboone, (base_path + "energyAsym_Summed_z_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLUboone_low, (base_path + "energyAsym_Summed_x_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLUboone_low, (base_path + "energyAsym_Summed_y_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLUboone_low, (base_path + "energyAsym_Summed_z_DLUboone_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLUboone_high, (base_path + "energyAsym_Summed_x_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLUboone_high, (base_path + "energyAsym_Summed_y_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLUboone_high, (base_path + "energyAsym_Summed_z_DLUboone_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLNuE, (base_path + "energyAsym_Highest_x_DLNuE.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLNuE, (base_path + "energyAsym_Highest_y_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLNuE, (base_path + "energyAsym_Highest_z_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLNuE_low, (base_path + "energyAsym_Highest_x_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLNuE_low, (base_path + "energyAsym_Highest_y_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLNuE_low, (base_path + "energyAsym_Highest_z_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetryHighestDLNuE_high, (base_path + "energyAsym_Highest_x_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetryHighestDLNuE_high, (base_path + "energyAsym_Highest_y_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetryHighestDLNuE_high, (base_path + "energyAsym_Highest_z_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLNuE, (base_path + "energyAsym_Summed_x_DLNuE.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLNuE, (base_path + "energyAsym_Summed_y_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLNuE, (base_path + "energyAsym_Summed_z_DLNuE.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLNuE_low, (base_path + "energyAsym_Summed_x_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLNuE_low, (base_path + "energyAsym_Summed_y_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLNuE_low, (base_path + "energyAsym_Summed_z_DLNuE_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(xCoordEnergyAsymmetrySummedDLNuE_high, (base_path + "energyAsym_Summed_x_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetrySummedDLNuE_high, (base_path + "energyAsym_Summed_y_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetrySummedDLNuE_high, (base_path + "energyAsym_Summed_z_DLNuE_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Summed PFP Energy: DL Nu+E Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
 
     // Plotting Split Histograms
     // BDT Vertexing
