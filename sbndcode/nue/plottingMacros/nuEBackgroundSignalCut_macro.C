@@ -58,7 +58,20 @@ typedef struct{
     TH1F* dirt;
     TH1F* nu_eDirt;
     TH1F* cosmic;
+    TH1F* other;
 } splitHistGroup_struct;
+
+struct eventCounter_struct{
+    double nuE = 0;
+    double NCNPi0 = 0;
+    double otherNC = 0;
+    double CCnumu = 0;
+    double CCnue = 0;
+    double dirt = 0;
+    double nuEDirt = 0;
+    double cosmic = 0;
+    double other = 0;
+};
 
 struct weights_struct{
     double signalCurrent = 0;
@@ -140,7 +153,8 @@ splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const st
         (TH1F*) base->Clone((baseName + "_CCnue").c_str()),
         (TH1F*) base->Clone((baseName + "_dirt").c_str()),
         (TH1F*) base->Clone((baseName + "_nu_eDirt").c_str()),
-        (TH1F*) base->Clone((baseName + "_cosmic").c_str())
+        (TH1F*) base->Clone((baseName + "_cosmic").c_str()),
+        (TH1F*) base->Clone((baseName + "_other").c_str())
     };
 }
 
@@ -225,7 +239,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     else
         hists.canvas->SetLogy(0);
 
-    std::vector<TH1F*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic};
+    std::vector<TH1F*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic, hists.other};
 
     if (useLogScale) {
         for (auto* hist : allHists) {
@@ -257,6 +271,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.dirt->SetLineWidth(2);        hists.dirt->SetLineColor(TColor::GetColor("#ff5e02"));
     hists.nu_eDirt->SetLineWidth(2);    hists.nu_eDirt->SetLineColor(TColor::GetColor("#1845fb"));
     hists.cosmic->SetLineWidth(2);      hists.cosmic->SetLineColor(TColor::GetColor("#c849a9"));
+    hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
 
     if((ymin != 999) && (ymax != 999)){
         for(auto* hist : allHists)
@@ -290,6 +305,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.dirt->Draw("histsame");
     hists.nu_eDirt->Draw("histsame");
     hists.cosmic->Draw("histsame");
+    hists.other->Draw("histsame");
 
     int nEntries = 8;
     double height = std::max(0.03 * nEntries, 0.03);
@@ -310,6 +326,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->AddEntry(hists.dirt, "Dirt", "f");
     legend->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legend->AddEntry(hists.cosmic, "Cosmic", "f");
+    legend->AddEntry(hists.other, "Other", "f");
     legend->SetTextSize(0.0225);
 
     legend->SetMargin(0.13);
@@ -333,6 +350,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     stack->Add(hists.dirt);
     stack->Add(hists.nu_eDirt);
     stack->Add(hists.cosmic);
+    stack->Add(hists.other);
 
     hists.canvas->cd();
     hists.canvas->Clear();
@@ -377,6 +395,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legendStack->AddEntry(hists.dirt, "Dirt", "f");
     legendStack->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legendStack->AddEntry(hists.cosmic, "Cosmic", "f");
+    legendStack->AddEntry(hists.other, "Other", "f");
     legendStack->SetTextSize(0.0225);
     legendStack->SetMargin(0.13);
     legendStack->Draw();
@@ -847,367 +866,632 @@ void styleDrawAll(histGroup_struct hists,
     hists.canvas->SaveAs(filename);
 }
 
-void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0, const std::string& text_filename = ""){
-    hists.canvas->cd();
-    hists.canvas->SetTickx();
-    hists.canvas->SetTicky();
-  
-    purHist_struct purHists;
-    purHists.canvas = hists.canvas;
-    purHists.baseHist = hists.baseHist;
+TH1F* makeCumulative(const TH1F* h, bool keepRight)
+{
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_cumulative", h->GetName()));
+    hc->Reset();
 
-    purHist_struct effPurHists;
-    effPurHists.canvas = hists.canvas;
-    effPurHists.baseHist = hists.baseHist;
+    int n = h->GetNbinsX();
 
-    purHists.current = (TH1F*) hists.currentCosmic->Clone("pur_currentCosmic");
-    purHists.current->Reset();
-    purHists.current->GetYaxis()->SetTitle("Purity");
-    purHists.current->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-
-    purHists.uboone = (TH1F*) hists.ubooneCosmic->Clone("pur_ubooneCosmic");
-    purHists.uboone->Reset();
-    purHists.uboone->GetYaxis()->SetTitle("Purity");
-    purHists.uboone->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    purHists.nuE = (TH1F*) hists.nuECosmic->Clone("pur_nuECosmic");
-    purHists.nuE->Reset();
-    purHists.nuE->GetYaxis()->SetTitle("Purity");
-    purHists.nuE->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.current = (TH1F*) hists.currentCosmic->Clone("effPur_currentCosmic");
-    effPurHists.current->Reset();
-    effPurHists.current->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.current->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.uboone = (TH1F*) hists.ubooneCosmic->Clone("effPur_ubooneCosmic");
-    effPurHists.uboone->Reset();
-    effPurHists.uboone->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.uboone->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-    
-    effPurHists.nuE = (TH1F*) hists.nuECosmic->Clone("effPur_nuECosmic");
-    effPurHists.nuE->Reset();
-    effPurHists.nuE->GetYaxis()->SetTitle("Efficiency x Purity");
-    effPurHists.nuE->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle()); 
-
-    histGroup_struct effHists;
-    effHists.canvas = hists.canvas;
-    effHists.baseHist = hists.baseHist;
-
-    effHists.currentCosmic = (TH1F*) hists.currentCosmic->Clone("eff_currentCosmic");
-    effHists.currentCosmic->Reset();
-    effHists.currentCosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.currentCosmic->GetXaxis()->SetTitle(hists.currentCosmic->GetXaxis()->GetTitle());
-    
-    effHists.currentSignal = (TH1F*) hists.currentSignal->Clone("eff_currentSignal");
-    effHists.currentSignal->Reset();
-    effHists.currentSignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.currentSignal->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-
-    effHists.currentSignalFuzzy = (TH1F*) hists.currentSignalFuzzy->Clone("eff_currentSignalFuzzy");
-    effHists.currentSignalFuzzy->Reset();
-    effHists.currentSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.currentSignalFuzzy->GetXaxis()->SetTitle(hists.currentSignal->GetXaxis()->GetTitle());
-    
-    effHists.currentBNB = (TH1F*) hists.currentBNB->Clone("eff_currentBNB");
-    effHists.currentBNB->Reset();
-    effHists.currentBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.currentBNB->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
-
-    effHists.currentBNBFuzzy = (TH1F*) hists.currentBNBFuzzy->Clone("eff_currentBNBFuzzy");
-    effHists.currentBNBFuzzy->Reset();
-    effHists.currentBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.currentBNBFuzzy->GetXaxis()->SetTitle(hists.currentBNB->GetXaxis()->GetTitle());
-
-    effHists.ubooneCosmic = (TH1F*) hists.ubooneCosmic->Clone("eff_ubooneCosmic");
-    effHists.ubooneCosmic->Reset();
-    effHists.ubooneCosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneCosmic->GetXaxis()->SetTitle(hists.ubooneCosmic->GetXaxis()->GetTitle());
-    
-    effHists.ubooneSignal = (TH1F*) hists.ubooneSignal->Clone("eff_ubooneSignal");
-    effHists.ubooneSignal->Reset();
-    effHists.ubooneSignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignal->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
-
-    effHists.ubooneSignalFuzzy = (TH1F*) hists.ubooneSignalFuzzy->Clone("eff_ubooneSignalFuzzy");
-    effHists.ubooneSignalFuzzy->Reset();
-    effHists.ubooneSignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.ubooneSignalFuzzy->GetXaxis()->SetTitle(hists.ubooneSignal->GetXaxis()->GetTitle());
-    
-    effHists.ubooneBNB = (TH1F*) hists.ubooneBNB->Clone("eff_ubooneBNB");
-    effHists.ubooneBNB->Reset();
-    effHists.ubooneBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneBNB->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
-
-    effHists.ubooneBNBFuzzy = (TH1F*) hists.ubooneBNBFuzzy->Clone("eff_ubooneBNBFuzzy");
-    effHists.ubooneBNBFuzzy->Reset();
-    effHists.ubooneBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.ubooneBNBFuzzy->GetXaxis()->SetTitle(hists.ubooneBNB->GetXaxis()->GetTitle());
-
-    effHists.nuECosmic = (TH1F*) hists.nuECosmic->Clone("eff_nuECosmic");
-    effHists.nuECosmic->Reset();
-    effHists.nuECosmic->GetYaxis()->SetTitle("Rejection");
-    effHists.nuECosmic->GetXaxis()->SetTitle(hists.nuECosmic->GetXaxis()->GetTitle());
-    
-    effHists.nuESignal = (TH1F*) hists.nuESignal->Clone("eff_nuESignal");
-    effHists.nuESignal->Reset();
-    effHists.nuESignal->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignal->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
-
-    effHists.nuESignalFuzzy = (TH1F*) hists.nuESignalFuzzy->Clone("eff_nuESignalFuzzy");
-    effHists.nuESignalFuzzy->Reset();
-    effHists.nuESignalFuzzy->GetYaxis()->SetTitle("Efficiency");
-    effHists.nuESignalFuzzy->GetXaxis()->SetTitle(hists.nuESignal->GetXaxis()->GetTitle());
-    
-    effHists.nuEBNB = (TH1F*) hists.nuEBNB->Clone("eff_nuEBNB");
-    effHists.nuEBNB->Reset();
-    effHists.nuEBNB->GetYaxis()->SetTitle("Rejection");
-    effHists.nuEBNB->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
-
-    effHists.nuEBNBFuzzy = (TH1F*) hists.nuEBNBFuzzy->Clone("eff_nuEBNBFuzzy");
-    effHists.nuEBNBFuzzy->Reset();
-    effHists.nuEBNBFuzzy->GetYaxis()->SetTitle("Rejection");
-    effHists.nuEBNBFuzzy->GetXaxis()->SetTitle(hists.nuEBNB->GetXaxis()->GetTitle());
-
-    int numBins = hists.currentSignal->GetNbinsX();
-
-    double currentSignalSum = 0.0;
-    double currentSignalTotal = 0.0;
-    double currentSignalFuzzySum = 0.0;
-    double currentSignalFuzzyTotal = 0.0;
-    double ubooneSignalSum = 0.0;
-    double ubooneSignalTotal = 0.0;
-    double ubooneSignalFuzzySum = 0.0;
-    double ubooneSignalFuzzyTotal = 0.0;
-    double nuESignalSum = 0.0;
-    double nuESignalTotal = 0.0;
-    double nuESignalFuzzySum = 0.0;
-    double nuESignalFuzzyTotal = 0.0;
-
-    double currentCosmicSum = 0.0;
-    double currentCosmicTotal = 0.0;
-    double ubooneCosmicSum = 0.0;
-    double ubooneCosmicTotal = 0.0;
-    double nuECosmicSum = 0.0;
-    double nuECosmicTotal = 0.0;
-    double currentBNBSum = 0.0;
-    double currentBNBTotal = 0.0;
-    double ubooneBNBSum = 0.0;
-    double ubooneBNBTotal = 0.0;
-    double nuEBNBSum = 0.0;
-    double nuEBNBTotal = 0.0;
-    double currentBNBFuzzySum = 0.0;
-    double currentBNBFuzzyTotal = 0.0;
-    double ubooneBNBFuzzySum = 0.0;
-    double ubooneBNBFuzzyTotal = 0.0;
-    double nuEBNBFuzzySum = 0.0;
-    double nuEBNBFuzzyTotal = 0.0;
-
-    // efficiencyWay == -1 includes everything to the right of the cut
-    for(int i = 0; i <= numBins+1; ++i){
-        currentSignalTotal += hists.currentSignal->GetBinContent(i);
-        currentSignalFuzzyTotal += hists.currentSignalFuzzy->GetBinContent(i);
-        ubooneSignalTotal += hists.ubooneSignal->GetBinContent(i);
-        ubooneSignalFuzzyTotal += hists.ubooneSignalFuzzy->GetBinContent(i);
-        nuESignalTotal += hists.nuESignal->GetBinContent(i);
-        nuESignalFuzzyTotal += hists.nuESignalFuzzy->GetBinContent(i);
-    
-        currentCosmicTotal += hists.currentCosmic->GetBinContent(i);
-        ubooneCosmicTotal += hists.ubooneCosmic->GetBinContent(i);
-        nuECosmicTotal += hists.nuECosmic->GetBinContent(i);
-        currentBNBTotal += hists.currentBNB->GetBinContent(i);
-        ubooneBNBTotal += hists.ubooneBNB->GetBinContent(i);
-        nuEBNBTotal += hists.nuEBNB->GetBinContent(i);
-        currentBNBFuzzyTotal += hists.currentBNBFuzzy->GetBinContent(i);
-        ubooneBNBFuzzyTotal += hists.ubooneBNBFuzzy->GetBinContent(i);
-        nuEBNBFuzzyTotal += hists.nuEBNBFuzzy->GetBinContent(i);
+    if (keepRight) {
+        double sum = 0.0;
+        for (int i = n; i >= 1; --i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+        }
+    } else {
+        double sum = 0.0;
+        for (int i = 1; i <= n; ++i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+        }
     }
 
-    printf("TOTALS:\n Signal: Current = %f, Uboone = %f, NuE = %f\nSignal Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentSignalTotal, ubooneSignalTotal, nuESignalTotal, currentSignalFuzzyTotal, ubooneSignalFuzzyTotal, nuESignalFuzzyTotal);
-    printf("BNB: Current = %f, Uboone = %f, NuE = %f\nBNB Fuzzy: Current = %f, Uboone = %f, NuE = %f\n", currentBNBTotal, ubooneBNBTotal, nuEBNBTotal, currentBNBFuzzyTotal, ubooneBNBFuzzyTotal, nuEBNBFuzzyTotal);
-    printf("Cosmic: Current = %f, Uboone = %f, NuE = %f\n", currentCosmicTotal, ubooneCosmicTotal, nuECosmicTotal);
-    
-    for(int i = 0; i <= numBins+1; ++i){
-        printf("--------------------------\n");
-        if(i != 0 || i != numBins+1) std::cout << "Bin " << i << std::endl;
-        if(i == 0 || i == numBins+1) std::cout << "Under/Overflow bin" << std::endl;
-        currentSignalSum += hists.currentSignal->GetBinContent(i);
-        currentSignalFuzzySum += hists.currentSignalFuzzy->GetBinContent(i);
-        ubooneSignalSum += hists.ubooneSignal->GetBinContent(i);
-        ubooneSignalFuzzySum += hists.ubooneSignalFuzzy->GetBinContent(i);
-        nuESignalSum += hists.nuESignal->GetBinContent(i);
-        nuESignalFuzzySum += hists.nuESignalFuzzy->GetBinContent(i);
+    return hc;
+}
 
-        currentCosmicSum += hists.currentCosmic->GetBinContent(i);
-        ubooneCosmicSum += hists.ubooneCosmic->GetBinContent(i);
-        nuECosmicSum += hists.nuECosmic->GetBinContent(i);
-        currentBNBSum += hists.currentBNB->GetBinContent(i);
-        ubooneBNBSum += hists.ubooneBNB->GetBinContent(i);
-        nuEBNBSum += hists.nuEBNB->GetBinContent(i);
-        currentBNBFuzzySum += hists.currentBNBFuzzy->GetBinContent(i);
-        ubooneBNBFuzzySum += hists.ubooneBNBFuzzy->GetBinContent(i);
-        nuEBNBFuzzySum += hists.nuEBNBFuzzy->GetBinContent(i);
+double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false){
+    double maxVal = 0.0;
 
-        printf("Cosmic Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentCosmicSum, ubooneCosmicSum, nuECosmicSum);
-        printf("BNB Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBSum, ubooneBNBSum, nuEBNBSum);
-        printf("BNB Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentBNBFuzzySum, ubooneBNBFuzzySum, nuEBNBFuzzySum);
-        printf("Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n", currentSignalSum, ubooneSignalSum, nuESignalSum);
-        printf("Signal Fuzzy Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalFuzzySum, ubooneSignalFuzzySum, nuESignalFuzzySum);
+    int nBins = eff->GetTotalHistogram()->GetNbinsX();
+    for (int i = 1; i <= nBins; ++i) {
+        if (!eff->GetTotalHistogram()->GetBinContent(i)) continue;
 
-        double currentSignalEffVal = 0;
-        double currentSignalFuzzyEffVal = 0;
-        double ubooneSignalEffVal = 0;
-        double ubooneSignalFuzzyEffVal = 0;
-        double nuESignalEffVal = 0;
-        double nuESignalFuzzyEffVal = 0;
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val += eff->GetEfficiencyErrorUp(i);
 
-        double currentAllSignalEffVal = 0.0;
-        double ubooneAllSignalEffVal = 0.0;
-        double nuEAllSignalEffVal = 0.0;
+        if (val > maxVal)
+            maxVal = val;
+    }
+    return maxVal;
+}
 
-        double currentCosmicRejVal = 0;
-        double ubooneCosmicRejVal = 0;
-        double nuECosmicRejVal = 0;
-        double currentBNBRejVal = 0;
-        double ubooneBNBRejVal = 0;
-        double nuEBNBRejVal = 0;
-        double currentBNBFuzzyRejVal = 0;
-        double ubooneBNBFuzzyRejVal = 0;
-        double nuEBNBFuzzyRejVal = 0;
+void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation, bool effPurPlots, double xmin, double xmax, bool writeMaxValues = false, const std::string& textfilename = ""){
+    if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
 
-        double keptSignalCurrent = 0.0;
-        double keptBackgroundCurrent = 0.0;
-        double keptSignalUboone = 0.0;
-        double keptBackgroundUboone = 0.0;
-        double keptSignalNuE = 0.0;
-        double keptBackgroundNuE = 0.0;
+    double maxVal = std::max({getMaxValueEfficiency(plot_BDT, false), getMaxValueEfficiency(plot_DLUboone, false), getMaxValueEfficiency(plot_DLNuE, false)});
 
-        double currentPurity = 0.0;
-        double uboonePurity = 0.0;
-        double nuEPurity = 0.0;
-       
-        double currentEffPur = 0.0;
-        double ubooneEffPur = 0.0;
-        double nuEEffPur = 0.0;
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    plot_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    plot_BDT->SetMarkerSize(0.7); 
+    plot_BDT->SetLineWidth(1);
+    plot_BDT->SetLineColor(kBlack);
+    plot_BDT->SetMarkerStyle(20);
+
+    const TH1* hTotal_BDT = plot_BDT->GetTotalHistogram();
+    int nBins_BDT = hTotal_BDT->GetNbinsX();
+    TGraphAsymmErrors* gEff_BDT = new TGraphAsymmErrors(nBins_BDT);    
+
+    double maxEff_BDT = 0;
+    double maxEffBin_BDT = 0;
+    for(int i = 1; i <= nBins_BDT; ++i){
+        double xCenter = hTotal_BDT->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_BDT->GetXaxis()->GetBinUpEdge(i) - hTotal_BDT->GetXaxis()->GetBinLowEdge(i)) / 2.0;
         
-        if(efficiencyWay == -1){
-            // efficiencyWay == -1 includes everything to the right of the cut
-            currentSignalEffVal = (1 - (currentSignalSum/currentSignalTotal));
-            currentSignalFuzzyEffVal = (1 - (currentSignalFuzzySum/currentSignalFuzzyTotal));
-            ubooneSignalEffVal = (1 - (ubooneSignalSum/ubooneSignalTotal));
-            ubooneSignalFuzzyEffVal = (1 - (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal));
-            nuESignalEffVal = (1 - (nuESignalSum/nuESignalTotal));
-            nuESignalFuzzyEffVal = (1 - (nuESignalFuzzySum/nuESignalFuzzyTotal));
-            
-            currentCosmicRejVal = (currentCosmicSum/currentCosmicTotal);
-            ubooneCosmicRejVal = (ubooneCosmicSum/ubooneCosmicTotal);
-            nuECosmicRejVal = (nuECosmicSum/nuECosmicTotal);
-            currentBNBRejVal = (currentBNBSum/currentBNBTotal);
-            ubooneBNBRejVal = (ubooneBNBSum/ubooneBNBTotal);
-            nuEBNBRejVal = (nuEBNBSum/nuEBNBTotal);
-            currentBNBFuzzyRejVal = (currentBNBFuzzySum/currentBNBFuzzyTotal);
-            ubooneBNBFuzzyRejVal = (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal);
-            nuEBNBFuzzyRejVal = (nuEBNBFuzzySum/nuEBNBFuzzyTotal);
-
-            keptSignalCurrent = (currentSignalTotal - currentSignalSum); 
-            keptBackgroundCurrent = ((currentBNBTotal - currentBNBSum) + (currentBNBFuzzyTotal - currentBNBFuzzySum) + (currentCosmicTotal - currentCosmicSum) + (currentSignalFuzzyTotal - currentSignalFuzzySum));
-            keptSignalUboone = (ubooneSignalTotal - ubooneSignalSum); 
-            keptBackgroundUboone = ((ubooneBNBTotal - ubooneBNBSum) + (ubooneBNBFuzzyTotal - ubooneBNBFuzzySum) + (ubooneCosmicTotal - ubooneCosmicSum) + (ubooneSignalFuzzyTotal - ubooneSignalFuzzySum));
-            keptSignalNuE = (nuESignalTotal - nuESignalSum); 
-            keptBackgroundNuE = ((nuEBNBTotal - nuEBNBSum) + (nuEBNBFuzzyTotal - nuEBNBFuzzySum) + (nuECosmicTotal - nuECosmicSum) + (nuESignalFuzzyTotal - nuESignalFuzzySum));
-
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
-
-        } else if(efficiencyWay == 1){
-            // efficiencyWay == 1 includes everything to the left of the cut
-            currentSignalEffVal = (currentSignalSum/currentSignalTotal);
-            currentSignalFuzzyEffVal = (currentSignalFuzzySum/currentSignalFuzzyTotal);
-            ubooneSignalEffVal = (ubooneSignalSum/ubooneSignalTotal);
-            ubooneSignalFuzzyEffVal = (ubooneSignalFuzzySum/ubooneSignalFuzzyTotal);
-            nuESignalEffVal = (nuESignalSum/nuESignalTotal);
-            nuESignalFuzzyEffVal = (nuESignalFuzzySum/nuESignalFuzzyTotal);
-            
-            currentCosmicRejVal = (1- (currentCosmicSum/currentCosmicTotal));
-            ubooneCosmicRejVal = (1 - (ubooneCosmicSum/ubooneCosmicTotal));
-            nuECosmicRejVal = (1 - (nuECosmicSum/nuECosmicTotal));
-            currentBNBRejVal = (1 - (currentBNBSum/currentBNBTotal));
-            ubooneBNBRejVal = (1 - (ubooneBNBSum/ubooneBNBTotal));
-            nuEBNBRejVal = (1 - (nuEBNBSum/nuEBNBTotal));
-            currentBNBFuzzyRejVal = (1 - (currentBNBFuzzySum/currentBNBFuzzyTotal));
-            ubooneBNBFuzzyRejVal = (1 - (ubooneBNBFuzzySum/ubooneBNBFuzzyTotal));
-            nuEBNBFuzzyRejVal = (1 - (nuEBNBFuzzySum/nuEBNBFuzzyTotal));
-        
-            keptSignalCurrent = (currentSignalSum);
-            keptBackgroundCurrent = (currentCosmicSum + currentBNBSum + currentBNBFuzzySum + currentSignalFuzzySum);  
-            keptSignalUboone = (ubooneSignalSum);
-            keptBackgroundUboone = (ubooneCosmicSum + ubooneBNBSum + ubooneBNBFuzzySum + ubooneSignalFuzzySum);  
-            keptSignalNuE = (nuESignalSum);
-            keptBackgroundNuE = (nuECosmicSum + nuEBNBSum + nuEBNBFuzzySum + nuESignalFuzzySum);  
-            
-            currentAllSignalEffVal = (keptSignalCurrent / (currentSignalTotal));
-            ubooneAllSignalEffVal = (keptSignalUboone / (ubooneSignalTotal));
-            nuEAllSignalEffVal = (keptSignalNuE / (nuESignalTotal));
+        double yEff = plot_BDT->GetEfficiency(i);
+        double yErrLow  = plot_BDT->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_BDT->GetEfficiencyErrorUp(i);
+   
+        if(yEff > maxEff_BDT){
+            maxEff_BDT = yEff;
+            maxEffBin_BDT = xCenter;
         }
 
-        currentPurity = (keptSignalCurrent / (keptSignalCurrent + keptBackgroundCurrent));
-        uboonePurity = (keptSignalUboone / (keptSignalUboone + keptBackgroundUboone));
-        nuEPurity = (keptSignalNuE / (keptSignalNuE + keptBackgroundNuE));
-
-        currentEffPur = (currentAllSignalEffVal * currentPurity);
-        ubooneEffPur = (ubooneAllSignalEffVal * uboonePurity);
-        nuEEffPur = (nuEAllSignalEffVal * nuEPurity);
-        printf("All Signal Sums: Current = %f, Uboone = %f, Nu+E = %f\n\n", keptSignalCurrent, keptSignalUboone, keptSignalNuE);
-
-        printf("Efficiency Values:\nSignal: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy Signal: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentSignalEffVal, ubooneSignalEffVal, nuESignalEffVal, currentSignalFuzzyEffVal, ubooneSignalFuzzyEffVal, nuESignalFuzzyEffVal);
-        printf("Rejection Values:\nBNB: Current = %f, Uboone = %f, Nu+E = %f\nFuzzy BNB: Current = %f, Uboone = %f, Nu+E = %f\nCosmics: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentBNBRejVal, ubooneBNBRejVal, nuEBNBRejVal, currentBNBFuzzyRejVal, ubooneBNBFuzzyRejVal, nuEBNBFuzzyRejVal, currentCosmicRejVal, ubooneCosmicRejVal, nuECosmicRejVal);
-        printf("Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n\n", currentPurity, uboonePurity, nuEPurity);
-        printf("Eff x Purity Values: Current = %f, Uboone = %f, Nu+E = %f\n", currentEffPur, ubooneEffPur, nuEEffPur);
-        printf("--------------------------\n");
-        if(!std::isnan(currentSignalEffVal)) effHists.currentSignal->SetBinContent(i, currentSignalEffVal);
-        if(!std::isnan(currentSignalFuzzyEffVal)) effHists.currentSignalFuzzy->SetBinContent(i, currentSignalFuzzyEffVal);
-        if(!std::isnan(ubooneSignalEffVal)) effHists.ubooneSignal->SetBinContent(i, ubooneSignalEffVal);
-        if(!std::isnan(ubooneSignalFuzzyEffVal)) effHists.ubooneSignalFuzzy->SetBinContent(i, ubooneSignalFuzzyEffVal);
-        if(!std::isnan(nuESignalEffVal)) effHists.nuESignal->SetBinContent(i, nuESignalEffVal);
-        if(!std::isnan(nuESignalFuzzyEffVal)) effHists.nuESignalFuzzy->SetBinContent(i, nuESignalFuzzyEffVal);
-    
-        if(!std::isnan(currentCosmicRejVal)) effHists.currentCosmic->SetBinContent(i, currentCosmicRejVal);
-        if(!std::isnan(ubooneCosmicRejVal)) effHists.ubooneCosmic->SetBinContent(i, ubooneCosmicRejVal);
-        if(!std::isnan(nuECosmicRejVal)) effHists.nuECosmic->SetBinContent(i, nuECosmicRejVal);
-        if(!std::isnan(currentBNBRejVal)) effHists.currentBNB->SetBinContent(i, currentBNBRejVal);
-        if(!std::isnan(ubooneBNBRejVal)) effHists.ubooneBNB->SetBinContent(i, ubooneBNBRejVal);
-        if(!std::isnan(nuEBNBRejVal)) effHists.nuEBNB->SetBinContent(i, nuEBNBRejVal);
-        if(!std::isnan(currentBNBFuzzyRejVal)) effHists.currentBNBFuzzy->SetBinContent(i, currentBNBFuzzyRejVal);
-        if(!std::isnan(ubooneBNBFuzzyRejVal)) effHists.ubooneBNBFuzzy->SetBinContent(i, ubooneBNBFuzzyRejVal);
-        if(!std::isnan(nuEBNBFuzzyRejVal)) effHists.nuEBNBFuzzy->SetBinContent(i, nuEBNBFuzzyRejVal);
-    
-        if(!std::isnan(currentPurity)) purHists.current->SetBinContent(i, currentPurity);
-        if(!std::isnan(uboonePurity)) purHists.uboone->SetBinContent(i, uboonePurity);
-        if(!std::isnan(nuEPurity)) purHists.nuE->SetBinContent(i, nuEPurity);
-        
-        if(!std::isnan(currentEffPur)){ effPurHists.current->SetBinContent(i, currentEffPur); std::cout << "Filled effPurHists.current with " << currentEffPur << std::endl;}
-        if(!std::isnan(ubooneEffPur)){ effPurHists.uboone->SetBinContent(i, ubooneEffPur); std::cout << "Filled effPurHists.uboone with " << ubooneEffPur << std::endl;}
-        if(!std::isnan(nuEEffPur)){ effPurHists.nuE->SetBinContent(i, nuEEffPur); std::cout << "Filled effPurHists.nuE with " << nuEEffPur << std::endl;}
-
+        gEff_BDT->SetPoint(i-1, xCenter, yEff);
+        gEff_BDT->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
     }
 
-    purHists.current->SetMaximum(-1111);
-    purHists.uboone->SetMaximum(-1111);
-    purHists.nuE->SetMaximum(-1111);
-    effPurHists.current->SetMaximum(-1111);
-    effPurHists.uboone->SetMaximum(-1111);
-    effPurHists.nuE->SetMaximum(-1111);
+    gEff_BDT->SetLineColor(kBlack);
+    gEff_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    gEff_BDT->SetMarkerStyle(20);
+    gEff_BDT->SetMarkerSize(0.7);
+    gEff_BDT->SetLineWidth(1);
+    if (xmin != 999) {
+        gEff_BDT->GetXaxis()->SetLimits(xmin, xmax);
+    }
+
+    std::cout << "MAX VAL HERE = " << maxVal << ", *1.1 = " << maxVal*1.1 << std::endl;
+    gEff_BDT->GetYaxis()->SetRangeUser(0, maxVal*1.1);
+
+    const TH1* hAxis = plot_BDT->GetTotalHistogram();
+    gEff_BDT->SetTitle(plot_BDT->GetTitle());
+    gEff_BDT->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff_BDT->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
+    gEff_BDT->Draw("AP");
+
+    plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    plot_DLUboone->SetMarkerSize(0.7); 
+    plot_DLUboone->SetLineWidth(1);
+    plot_DLUboone->SetLineColor(kBlack);
+    plot_DLUboone->SetMarkerStyle(20);
+
+    const TH1* hTotal_DLUboone = plot_DLUboone->GetTotalHistogram();
+    int nBins_DLUboone = hTotal_DLUboone->GetNbinsX();
+    TGraphAsymmErrors* gEff_DLUboone = new TGraphAsymmErrors(nBins_DLUboone);    
+
+    double maxEff_DLUboone = 0;
+    double maxEffBin_DLUboone = 0;
+    for(int i = 1; i <= nBins_DLUboone; ++i){
+        double xCenter = hTotal_DLUboone->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_DLUboone->GetXaxis()->GetBinUpEdge(i) - hTotal_DLUboone->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot_DLUboone->GetEfficiency(i);
+        double yErrLow  = plot_DLUboone->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_DLUboone->GetEfficiencyErrorUp(i);
+        
+        if(yEff > maxEff_DLUboone){
+            maxEff_DLUboone = yEff;
+            maxEffBin_DLUboone = xCenter;
+        }
+   
+        gEff_DLUboone->SetPoint(i-1, xCenter, yEff);
+        gEff_DLUboone->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+    
+    gEff_DLUboone->SetLineColor(kBlack);
+    gEff_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    gEff_DLUboone->SetMarkerStyle(20);
+    gEff_DLUboone->SetMarkerSize(0.7);
+    gEff_DLUboone->SetLineWidth(1);
+    gEff_DLUboone->Draw("P SAME");
+
+    plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    plot_DLNuE->SetMarkerSize(0.7); 
+    plot_DLNuE->SetLineWidth(1);
+    plot_DLNuE->SetLineColor(kBlack);
+    plot_DLNuE->SetMarkerStyle(20);
+    
+    const TH1* hTotal_DLNuE = plot_DLNuE->GetTotalHistogram();
+    int nBins_DLNuE = hTotal_DLNuE->GetNbinsX();
+    TGraphAsymmErrors* gEff_DLNuE = new TGraphAsymmErrors(nBins_DLNuE);    
+
+    double maxEff_DLNuE = 0;
+    double maxEffBin_DLNuE = 0; 
+    for(int i = 1; i <= nBins_DLNuE; ++i){
+        double xCenter = hTotal_DLNuE->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal_DLNuE->GetXaxis()->GetBinUpEdge(i) - hTotal_DLNuE->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot_DLNuE->GetEfficiency(i);
+        double yErrLow  = plot_DLNuE->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot_DLNuE->GetEfficiencyErrorUp(i);
+        
+        if(yEff > maxEff_DLNuE){
+            maxEff_DLNuE = yEff;
+            maxEffBin_DLNuE = xCenter;
+        }
+   
+        //if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
+        
+        gEff_DLNuE->SetPoint(i-1, xCenter, yEff);
+        gEff_DLNuE->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+    
+    gEff_DLNuE->SetLineColor(kBlack);
+    gEff_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    gEff_DLNuE->SetMarkerStyle(20);
+    gEff_DLNuE->SetMarkerSize(0.7);
+    gEff_DLNuE->SetLineWidth(1);
+    gEff_DLNuE->Draw("P SAME");
+    
+    if(xmin != 999){
+        /*  
+        plot_BDT->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        plot_DLUboone->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        plot_DLNuE->GetTotalHistogram()->GetXaxis()->SetRangeUser(xmin, xmax);
+        */
+    }
+
+    plot_BDT->Draw("SAME");
+    plot_DLUboone->Draw("SAME");
+    plot_DLNuE->Draw("SAME");
+    gPad->Update();
+
+    auto* gBDT      = plot_BDT->GetPaintedGraph();
+    auto* gDLUboone = plot_DLUboone->GetPaintedGraph();
+    auto* gDLNuE    = plot_DLNuE->GetPaintedGraph();
+
+    gBDT->SetMarkerSize(0.8);
+    gDLUboone->SetMarkerSize(0.8);
+    gDLNuE->SetMarkerSize(0.8);
+
+    gBDT->Draw("PE SAME");
+    gDLUboone->Draw("PE SAME");
+    gDLNuE->Draw("PE SAME");
+
+    auto* g = plot_BDT->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, 1.05);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot_BDT,      "BDT",       "LEP");
+    leg->AddEntry(plot_DLUboone, "DL Uboone", "LEP");
+    leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "LEP");
+    leg->Draw();
+
+    if(effPurPlots){
+        std::cout << filename << ":" << std::endl;
+        std::cout << "BDT: Max Eff x Pur = " << maxEff_BDT << ", Bin Value = " << maxEffBin_BDT << std::endl;
+        std::cout << "DLUboone: Max Eff x Pur = " << maxEff_DLUboone << ", Bin Value = " << maxEffBin_DLUboone << std::endl;
+        std::cout << "DLNuE: Max Eff x Pur = " << maxEff_DLNuE << ", Bin Value = " << maxEffBin_DLNuE << std::endl;
+        
+        if (writeMaxValues){
+            std::ofstream outfile(textfilename, std::ios::app);
+            if(outfile.is_open()) {
+                outfile << "================" << std::endl;
+                outfile << filename << std::endl;
+
+                outfile << "BDT: Max Eff x Pur = " << maxEff_BDT << ", Bin Value = " << maxEffBin_BDT << std::endl;
+                outfile << "DLUboone: Max Eff x Pur = " << maxEff_DLUboone << ", Bin Value = " << maxEffBin_DLUboone << std::endl;
+                outfile << "DLNuE: Max Eff x Pur = " << maxEff_DLNuE << ", Bin Value = " << maxEffBin_DLNuE << std::endl; 
+                outfile << "================" << std::endl;
+                outfile.close();
+            } else{
+                std::cerr << "Error: could not open " << textfilename << " for writing." << std::endl;
+            }
+        } 
+    }
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, const std::string& vertex, double xmin, double xmax){
+    if (!plot) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    double maxVal = getMaxValueEfficiency(plot, false);
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    if(vertex == "BDT"){
+        plot->SetMarkerColor(TColor::GetColor("#e42536"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    } else if(vertex == "DLUboone"){
+        plot->SetMarkerColor(TColor::GetColor("#5790fc"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    } else if(vertex == "DLNuE"){
+        plot->SetMarkerColor(TColor::GetColor("#f89c20"));
+        plot->SetMarkerSize(0.7); 
+        plot->SetLineWidth(1);
+        plot->SetLineColor(kBlack);
+        plot->SetMarkerStyle(20);
+    }
+
+    const TH1* hTotal = plot->GetTotalHistogram();
+    int nBins = hTotal->GetNbinsX();
+    TGraphAsymmErrors* gEff = new TGraphAsymmErrors(nBins);    
+
+    for(int i = 1; i <= nBins; ++i){
+        double xCenter = hTotal->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal->GetXaxis()->GetBinUpEdge(i) - hTotal->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot->GetEfficiency(i);
+        double yErrLow  = plot->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot->GetEfficiencyErrorUp(i);
+  
+        std::cout << "Bin " << i << ": yEff = " << yEff << ", yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl; 
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+
+    gEff->SetLineColor(kBlack);
+    gEff->SetMarkerColor(TColor::GetColor("#e42536"));
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.7);
+    gEff->SetLineWidth(1);
+    if(xmin != 999){
+        gEff->GetXaxis()->SetLimits(xmin, xmax);
+    }
+    gEff->GetYaxis()->SetRangeUser(0, maxVal*1.1);
+
+    const TH1* hAxis = plot->GetTotalHistogram();
+    gEff->SetTitle(plot->GetTitle());
+    gEff->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
+    gEff->Draw("AP");
+
+    plot->Draw("SAME");
+    gPad->Update();
+
+    auto* gBDT = plot->GetPaintedGraph();
+    gBDT->SetMarkerSize(0.8);
+    gBDT->Draw("PE SAME");
+
+    auto* g = plot->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, maxVal*1.1);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    if(vertex == "BDT"){
+        leg->AddEntry(plot, "BDT", "LEP");
+    } else if(vertex == "DLUboone"){
+        leg->AddEntry(plot, "DL Uboone", "LEP");
+    } else if(vertex == "DLNuE"){
+        leg->AddEntry(plot, "DL Nu+E", "LEP");
+    }
+
+    leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void drawEfficiency(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation){
+    if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+
+    plot_BDT->SetMarkerColor(TColor::GetColor("#e42536"));
+    plot_BDT->SetMarkerSize(0.7); 
+    plot_BDT->SetLineWidth(1);
+    plot_BDT->SetLineColor(kBlack);
+    plot_BDT->SetMarkerStyle(20);
+
+    plot_DLUboone->SetMarkerColor(TColor::GetColor("#5790fc"));
+    plot_DLUboone->SetMarkerSize(0.7); 
+    plot_DLUboone->SetLineWidth(1);
+    plot_DLUboone->SetLineColor(kBlack);
+    plot_DLUboone->SetMarkerStyle(20);
+
+    plot_DLNuE->SetMarkerColor(TColor::GetColor("#f89c20"));
+    plot_DLNuE->SetMarkerSize(0.7); 
+    plot_DLNuE->SetLineWidth(1);
+    plot_DLNuE->SetLineColor(kBlack);
+    plot_DLNuE->SetMarkerStyle(20);
+    
+    plot_BDT->Draw("AP");
+    plot_DLUboone->Draw("SAME");
+    plot_DLNuE->Draw("SAME");
+    gPad->Update();
+    
+    auto* g = plot_BDT->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(0.0, 1.05);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot_BDT,      "BDT",       "P");
+    leg->AddEntry(plot_DLUboone, "DL Uboone", "P");
+    leg->AddEntry(plot_DLNuE,    "DL Nu+E",   "P");
+    leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+TH1F* makeTotalHist(const TH1F* h){
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_totalSum", h->GetName()));
+    hc->Reset();
+
+    double totalSum = h->Integral();
+    for(int i = 1; i < hc->GetNbinsX() + 1; ++i){
+        hc->SetBinContent(i, totalSum);
+    }
+
+    return hc;
+}
+
+void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0, const std::string& text_filename = ""){
+    bool keepRight = (efficiencyWay == -1);
+    // Total signal
+    TH1F* hTotalSignal_BDT = (TH1F*)hists.currentSignal->Clone("hTotalSignal_BDT");
+    TH1F* hTotalSignal_DLUboone = (TH1F*)hists.ubooneSignal->Clone("hTotalSignal_DLUboone");
+    TH1F* hTotalSignal_DLNuE = (TH1F*)hists.nuESignal->Clone("hTotalSignal_DLNuE");
+
+    TH1F* hTotalSummedSignal_BDT = makeTotalHist(hTotalSignal_BDT);
+    TH1F* hTotalSummedSignal_DLUboone = makeTotalHist(hTotalSignal_DLUboone);
+    TH1F* hTotalSummedSignal_DLNuE = makeTotalHist(hTotalSignal_DLNuE);
+
+    // Total signal (cumulative)
+    TH1F* hPassedSignal_BDT = makeCumulative(hists.currentSignal, keepRight);
+    TH1F* hPassedSignal_DLUboone = makeCumulative(hists.ubooneSignal, keepRight);
+    TH1F* hPassedSignal_DLNuE = makeCumulative(hists.nuESignal, keepRight);
+    
+    // Total background
+    TH1F* hTotalBackground_BDT = (TH1F*) hists.currentCosmic->Clone("hTotalBackground_BDT");
+    hTotalBackground_BDT->Reset();
+    hTotalBackground_BDT->Add(hists.currentCosmic);
+    hTotalBackground_BDT->Add(hists.currentSignalFuzzy);
+    hTotalBackground_BDT->Add(hists.currentBNB);
+    hTotalBackground_BDT->Add(hists.currentBNBFuzzy);
+    TH1F* hTotalSummedBackground_BDT = makeTotalHist(hTotalBackground_BDT);
+
+    TH1F* hTotalBackground_DLUboone = (TH1F*) hists.ubooneCosmic->Clone("hTotalBackground_DLUboone");
+    hTotalBackground_DLUboone->Reset();
+    hTotalBackground_DLUboone->Add(hists.ubooneCosmic);
+    hTotalBackground_DLUboone->Add(hists.ubooneSignalFuzzy);
+    hTotalBackground_DLUboone->Add(hists.ubooneBNB);
+    hTotalBackground_DLUboone->Add(hists.ubooneBNBFuzzy);
+    TH1F* hTotalSummedBackground_DLUboone = makeTotalHist(hTotalBackground_DLUboone);
+
+    TH1F* hTotalBackground_DLNuE = (TH1F*) hists.nuECosmic->Clone("hTotalBackground_DLNuE");
+    hTotalBackground_DLNuE->Reset();
+    hTotalBackground_DLNuE->Add(hists.nuECosmic);
+    hTotalBackground_DLNuE->Add(hists.nuESignalFuzzy);
+    hTotalBackground_DLNuE->Add(hists.nuEBNB);
+    hTotalBackground_DLNuE->Add(hists.nuEBNBFuzzy);
+    TH1F* hTotalSummedBackground_DLNuE = makeTotalHist(hTotalBackground_DLNuE);
+    
+    // Total background (cumulative)
+    TH1F* hPassedBackground_BDT = makeCumulative(hTotalBackground_BDT, keepRight);    
+    TH1F* hPassedBackground_DLUboone = makeCumulative(hTotalBackground_DLUboone, keepRight);    
+    TH1F* hPassedBackground_DLNuE = makeCumulative(hTotalBackground_DLNuE, keepRight);    
+    
+    // Total background (cumulative other way)
+    TH1F* hRejectedBackground_BDT = makeCumulative(hTotalBackground_BDT, !keepRight);    
+    TH1F* hRejectedBackground_DLUboone = makeCumulative(hTotalBackground_DLUboone, !keepRight);    
+    TH1F* hRejectedBackground_DLNuE = makeCumulative(hTotalBackground_DLNuE, !keepRight);    
+ 
+    // Total background + signal
+    TH1F* hTotalEverything_BDT = (TH1F*) hists.currentCosmic->Clone("hTotalEverything_BDT");
+    hTotalEverything_BDT->Reset();
+    hTotalEverything_BDT->Add(hists.currentCosmic);
+    hTotalEverything_BDT->Add(hists.currentSignal);
+    hTotalEverything_BDT->Add(hists.currentSignalFuzzy);
+    hTotalEverything_BDT->Add(hists.currentBNB);
+    hTotalEverything_BDT->Add(hists.currentBNBFuzzy);
+    TH1F* hTotalSummedEverything_BDT = makeTotalHist(hTotalEverything_BDT);
+
+    TH1F* hTotalEverything_DLUboone = (TH1F*) hists.ubooneCosmic->Clone("hTotalEverything_DLUboone");
+    hTotalEverything_DLUboone->Reset();
+    hTotalEverything_DLUboone->Add(hists.ubooneCosmic);
+    hTotalEverything_DLUboone->Add(hists.ubooneSignal);
+    hTotalEverything_DLUboone->Add(hists.ubooneSignalFuzzy);
+    hTotalEverything_DLUboone->Add(hists.ubooneBNB);
+    hTotalEverything_DLUboone->Add(hists.ubooneBNBFuzzy);
+    TH1F* hTotalSummedEverything_DLUboone = makeTotalHist(hTotalEverything_DLUboone);
+
+    TH1F* hTotalEverything_DLNuE = (TH1F*) hists.nuECosmic->Clone("hTotalEverything_DLNuE");
+    hTotalEverything_DLNuE->Reset();
+    hTotalEverything_DLNuE->Add(hists.nuECosmic);
+    hTotalEverything_DLNuE->Add(hists.nuESignal);
+    hTotalEverything_DLNuE->Add(hists.nuESignalFuzzy);
+    hTotalEverything_DLNuE->Add(hists.nuEBNB);
+    hTotalEverything_DLNuE->Add(hists.nuEBNBFuzzy);
+    TH1F* hTotalSummedEverything_DLNuE = makeTotalHist(hTotalEverything_DLNuE);
+
+    // Total background + signal (cumulative)
+    TH1F* hPassedEverything_BDT = makeCumulative(hTotalEverything_BDT, keepRight);
+    TH1F* hPassedEverything_DLUboone = makeCumulative(hTotalEverything_DLUboone, keepRight);
+    TH1F* hPassedEverything_DLNuE = makeCumulative(hTotalEverything_DLNuE, keepRight);
+
+    /*
+    std::cout << "Total num of signal events = " << hTotalSummedSignal_DLNuE->GetBinContent(3) << ", total num of background events = " << hTotalSummedBackground_DLNuE->GetBinContent(3) << ", total num of events = " << hTotalSummedEverything_DLNuE->GetBinContent(3) << std::endl;
+    for(int i = 1; i < hTotalSummedSignal_BDT->GetNbinsX()+1; ++i){
+        std::cout << "Bin " << i << ": passed signal = " << hPassedSignal_DLNuE->GetBinContent(i) << ", passed background = " << hPassedBackground_DLNuE->GetBinContent(i) << ", passed everything = " << hPassedEverything_DLNuE->GetBinContent(i) << std::endl;
+        std::cout << "Efficiency = " << hPassedSignal_DLNuE->GetBinContent(i)/hTotalSummedSignal_DLNuE->GetBinContent(i) << ", Purity = " << hPassedSignal_DLNuE->GetBinContent(i)/(hPassedSignal_DLNuE->GetBinContent(i) + hPassedBackground_DLNuE->GetBinContent(i)) << ", background rejection = " << 1-(hPassedBackground_DLNuE->GetBinContent(i)/hTotalSummedBackground_DLNuE->GetBinContent(i)) << ", Efficiency x Purity = " << (hPassedSignal_DLNuE->GetBinContent(i)/hTotalSummedSignal_DLNuE->GetBinContent(i))*(hPassedSignal_DLNuE->GetBinContent(i)/hPassedEverything_DLNuE->GetBinContent(i)) << std::endl;
+    }
+    */
+   
+
+    TEfficiency* eff_BDT = new TEfficiency(*hPassedSignal_BDT, *hTotalSummedSignal_BDT);
+    eff_BDT->SetTitle(Form("%s;%s;Signal Efficiency", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    eff_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* eff_DLUboone = new TEfficiency(*hPassedSignal_DLUboone, *hTotalSummedSignal_DLUboone);
+    eff_DLUboone->SetTitle(Form("%s;%s;Signal Efficiency", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    eff_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* eff_DLNuE = new TEfficiency(*hPassedSignal_DLNuE, *hTotalSummedSignal_DLNuE);
+    eff_DLNuE->SetTitle(Form("%s;%s;Signal Efficiency", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    eff_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TEfficiency* rej_BDT = new TEfficiency(*hRejectedBackground_BDT, *hTotalSummedBackground_BDT);
+    rej_BDT->SetTitle(Form("%s;%s;Background Rejection", hists.currentCosmic->GetTitle(), hists.currentCosmic->GetXaxis()->GetTitle()));     
+    rej_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* rej_DLUboone = new TEfficiency(*hRejectedBackground_DLUboone, *hTotalSummedBackground_DLUboone);
+    rej_DLUboone->SetTitle(Form("%s;%s;Background Rejection", hists.ubooneCosmic->GetTitle(), hists.ubooneCosmic->GetXaxis()->GetTitle()));     
+    rej_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* rej_DLNuE = new TEfficiency(*hRejectedBackground_DLNuE, *hTotalSummedBackground_DLNuE);
+    rej_DLNuE->SetTitle(Form("%s;%s;Background Rejection", hists.nuECosmic->GetTitle(), hists.nuECosmic->GetXaxis()->GetTitle()));     
+    rej_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TEfficiency* pur_BDT = new TEfficiency(*hPassedSignal_BDT, *hPassedEverything_BDT); 
+    pur_BDT->SetTitle(Form("%s;%s;Signal Purity", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    pur_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* pur_DLUboone = new TEfficiency(*hPassedSignal_DLUboone, *hPassedEverything_DLUboone); 
+    pur_DLUboone->SetTitle(Form("%s;%s;Signal Purity", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    pur_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* pur_DLNuE = new TEfficiency(*hPassedSignal_DLNuE, *hPassedEverything_DLNuE); 
+    pur_DLNuE->SetTitle(Form("%s;%s;Signal Purity", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    pur_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
+
+    TH1F* hEffPurDenominator_BDT = (TH1F*) hTotalSummedSignal_BDT->Clone("hEffPurDenominator_BDT");
+    hEffPurDenominator_BDT->Multiply(hPassedEverything_BDT);
+    TH1F* hEffPurNumerator_BDT = (TH1F*) hPassedSignal_BDT->Clone("hEffPurNumerator_BDT");
+    hEffPurNumerator_BDT->Multiply(hPassedSignal_BDT);
+
+    TH1F* hEffPurDenominator_DLUboone = (TH1F*) hTotalSummedSignal_DLUboone->Clone("hEffPurDenominator_DLUboone");
+    hEffPurDenominator_DLUboone->Multiply(hPassedEverything_DLUboone);
+    TH1F* hEffPurNumerator_DLUboone = (TH1F*) hPassedSignal_DLUboone->Clone("hEffPurNumerator_DLUboone");
+    hEffPurNumerator_DLUboone->Multiply(hPassedSignal_DLUboone);
+
+    TH1F* hEffPurDenominator_DLNuE = (TH1F*) hTotalSummedSignal_DLNuE->Clone("hEffPurDenominator_DLNuE");
+    hEffPurDenominator_DLNuE->Multiply(hPassedEverything_DLNuE);
+    TH1F* hEffPurNumerator_DLNuE = (TH1F*) hPassedSignal_DLNuE->Clone("hEffPurNumerator_DLNuE");
+    hEffPurNumerator_DLNuE->Multiply(hPassedSignal_DLNuE);
+
+    TEfficiency* effPur_BDT = new TEfficiency(*hEffPurNumerator_BDT, *hEffPurDenominator_BDT);
+    effPur_BDT->SetTitle(Form("%s;%s;Efficiency x Purity", hists.currentSignal->GetTitle(), hists.currentSignal->GetXaxis()->GetTitle()));     
+    effPur_BDT->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* effPur_DLUboone = new TEfficiency(*hEffPurNumerator_DLUboone, *hEffPurDenominator_DLUboone);
+    effPur_DLUboone->SetTitle(Form("%s;%s;Efficiency x Purity", hists.ubooneSignal->GetTitle(), hists.ubooneSignal->GetXaxis()->GetTitle()));     
+    effPur_DLUboone->SetStatisticOption(TEfficiency::kFNormal);
+    TEfficiency* effPur_DLNuE = new TEfficiency(*hEffPurNumerator_DLNuE, *hEffPurDenominator_DLNuE);
+    effPur_DLNuE->SetTitle(Form("%s;%s;Efficiency x Purity", hists.nuESignal->GetTitle(), hists.nuESignal->GetXaxis()->GetTitle()));     
+    effPur_DLNuE->SetStatisticOption(TEfficiency::kFNormal);
 
     std::string filenameEff = std::string(filename) + "_eff.pdf";
     std::string filenameRej = std::string(filename) + "_rej.pdf";
     std::string filenamePur = std::string(filename) + "_pur.pdf";
-    std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
+    double maxPurityVal = std::max({getMaxValueEfficiency(pur_BDT, true), getMaxValueEfficiency(pur_DLUboone, true), getMaxValueEfficiency(pur_DLNuE, true)});
+    std::string filenameEffPur = std::string(filename) + "_effpur.pdf";
+    double maxEffPurityVal = std::max({getMaxValueEfficiency(effPur_BDT, true), getMaxValueEfficiency(effPur_DLUboone, true), getMaxValueEfficiency(effPur_DLNuE, true)});
+    std::string filenameEffErrors = std::string(filename) + "_errorseff.pdf";
+    std::string filenameRejErrors = std::string(filename) + "_errorsrej.pdf";
+    std::string filenamePurErrors = std::string(filename) + "_errorspur.pdf";
+    std::string filenameEffPurErrors = std::string(filename) + "_errorseffpur.pdf";
+
+    drawEfficiency(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEff, -999999, -999999, legendLocation);
+    drawEfficiency(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRej, -999999, -999999, legendLocation);
+    drawEfficiency(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePur, 0, maxPurityVal*1.1, legendLocation);
+    drawEfficiency(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPur, 0, maxEffPurityVal*1.1, legendLocation);
+  
+    eff_BDT->SetUseWeightedEvents(false);
+    eff_DLUboone->SetUseWeightedEvents(false);
+    eff_DLNuE->SetUseWeightedEvents(false);
+    rej_BDT->SetUseWeightedEvents(false);
+    rej_DLUboone->SetUseWeightedEvents(false);
+    rej_DLNuE->SetUseWeightedEvents(false);
+    pur_BDT->SetUseWeightedEvents(false);
+    pur_DLUboone->SetUseWeightedEvents(false);
+    pur_DLNuE->SetUseWeightedEvents(false);
+    effPur_BDT->SetUseWeightedEvents(false);
+    effPur_DLUboone->SetUseWeightedEvents(false);
+    effPur_DLNuE->SetUseWeightedEvents(false);
     
-    styleDrawAll(effHists, ymin, ymax, xmin, xmax, filenameEff.c_str(), legendLocation, drawLine, linePos, true, true, false, false, false, true, true, true);
-    styleDrawAll(effHists, 0, 1, xmin, xmax, filenameRej.c_str(), legendLocation, drawLine, linePos, false, false, true, true, true, true, true, true);
-    styleDrawPur(purHists, 999, 999, 999, 999, filenamePur.c_str(), legendLocation, drawLine, linePos, false, text_filename);
-    styleDrawPur(effPurHists, 999, 999, 999, 999, filenameEffPur.c_str(), legendLocation, drawLine, linePos, true, text_filename);
+    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, text_filename);
+    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, text_filename);
+    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation, 0, xmin, xmax, false, text_filename);
+    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation, 1, xmin, xmax, true, text_filename);
+    
+    std::string filenameEffPurBDT = std::string(filename) + "_errorsBDT_effpur.pdf";
+    std::string filenameEffPurDLUboone = std::string(filename) + "_errorsDLUboone_effpur.pdf";
+    std::string filenameEffPurDLNuE = std::string(filename) + "_errorsDLNuE_effpur.pdf";
+    std::string filenameEffBDT = std::string(filename) + "_errorsBDT_eff.pdf";
+    std::string filenameEffDLUboone = std::string(filename) + "_errorsDLUboone_eff.pdf";
+    std::string filenameEffDLNuE = std::string(filename) + "_errorsDLNuE_eff.pdf";
+    std::string filenameRejBDT = std::string(filename) + "_errorsBDT_rej.pdf";
+    std::string filenameRejDLUboone = std::string(filename) + "_errorsDLUboone_rej.pdf";
+    std::string filenameRejDLNuE = std::string(filename) + "_errorsDLNuE_rej.pdf";
+    std::string filenamePurBDT = std::string(filename) + "_errorsBDT_pur.pdf";
+    std::string filenamePurDLUboone = std::string(filename) + "_errorsDLUboone_pur.pdf";
+    std::string filenamePurDLNuE = std::string(filename) + "_errorsDLNuE_pur.pdf";
+
+    drawEfficiencyErrorsIndividual(effPur_BDT, filenameEffPurBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(effPur_DLUboone, filenameEffPurDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(effPur_DLNuE, filenameEffPurDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_BDT, filenameEffBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_DLUboone, filenameEffDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(eff_DLNuE, filenameEffDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_BDT, filenameRejBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_DLUboone, filenameRejDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(rej_DLNuE, filenameRejDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_BDT, filenamePurBDT, -999999, -999999, legendLocation, "BDT", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_DLUboone, filenamePurDLUboone, -999999, -999999, legendLocation, "DLUboone", xmin, xmax);
+    drawEfficiencyErrorsIndividual(pur_DLNuE, filenamePurDLNuE, -999999, -999999, legendLocation, "DLNuE", xmin, xmax);
 }
 
 void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
@@ -1264,7 +1548,7 @@ void nuEBackgroundSignalCut_macro(){
 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/mergedAll.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_23Nov.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_11Dec.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_19Jan.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT/";
 
     // If clearCosmicCut == 1 -> cut all PFPs with clearCosmic score of 1. If clearCosmicCut == 0 -> keep all PFPs
@@ -1273,9 +1557,11 @@ void nuEBackgroundSignalCut_macro(){
     int numRecoNeutrinosCut = 1;
     int FVCut = 1;
     int CRUMBSCut = 1;
-    int numPFPsCut = 1;
+    int numPFPsCut = 0;
     int ETheta2Cut = 1;
-    int QSquaredCut = 1;
+    int upperCRUMBSCut = 1;
+    int upperPFPCut = 1;
+    int QSquaredCut = 0;
 
     if(clearCosmicCut == 1 && numPFPs0Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_cuts/";
@@ -1289,15 +1575,27 @@ void nuEBackgroundSignalCut_macro(){
     } else if(FVCut == 1 && CRUMBSCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts.txt";
-    } else if(CRUMBSCut == 1 && numPFPsCut == 0){
+    } else if(CRUMBSCut == 1 && numPFPsCut == 0 && ETheta2Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs.txt";
     } else if(numPFPsCut == 1 && ETheta2Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs.txt";
-    } else if(ETheta2Cut == 1 && QSquaredCut == 0){
+    } else if(numPFPsCut == 0 && ETheta2Cut == 1 && upperCRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta.txt";
+    } else if(numPFPsCut == 0 && upperCRUMBSCut == 1 && upperPFPCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_upperCRUMBS_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta_upperCRUMBS.txt";
+    } else if(numPFPsCut == 0 && upperCRUMBSCut == 1 && QSquaredCut == 0 && upperPFPCut == 1){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_upperCRUMBS_upperPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta_upperCRUMBS_upperPFP.txt";
+    } else if(ETheta2Cut == 1 && upperCRUMBSCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta.txt";
+    } else if(upperCRUMBSCut == 1 && QSquaredCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_upperCRUMBS_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta_upperCRUMBS.txt";
     } else if(QSquaredCut == 1){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_cuts_QSquared/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta_QSquared.txt";
@@ -1643,6 +1941,8 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceCRUMBSScoreDist = createHistGroup("sliceCRUMBSScoreDist", "CRUMBS Score of the Slice (Not Weighted)", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs = createHistGroup("sliceNumPFPs", "Number of PFPs in the Slice", "Number of PFPs", 20, 0, 20);
     auto sliceNumPFPsDist = createHistGroup("sliceNumPFPsDist", "Number of PFPs in the Slice (Not Weighted)", "Number of PFPs", 20, 0, 20); 
+    auto sliceNumPrimaryPFPs = createHistGroup("sliceNumPrimaryPFPs", "Number of Primary PFPs in the Slice", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPsDist = createHistGroup("sliceNumPrimaryPFPsDist", "Number of Primary PFPs in the Slice (Not Weighted)", "Number of Primary PFPs", 20, 0, 20); 
 
     auto ERecoSumThetaReco = createHistGroup("ERecoSumThetaReco", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoSumThetaRecoDist = createHistGroup("ERecoSumThetaRecoDist", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice (Not Weighted)", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -1714,6 +2014,7 @@ void nuEBackgroundSignalCut_macro(){
     auto slicePurity_splitBDT = createSplitHistGroup("slicePurity_splitBDT", "Slice Purity: BDT Vertexing", "Purity", 102, 0, 1.02);
     auto sliceCRUMBSScore_splitBDT = createSplitHistGroup("sliceCRUMBSScore_splitBDT", "CRUMBS Score of the Slice: BDT Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitBDT = createSplitHistGroup("sliceNumPFPs_splitBDT", "Number of PFPs in the Slice: BDT Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitBDT = createSplitHistGroup("sliceNumPrimaryPFPs_splitBDT", "Number of Primary PFPs in the Slice: BDT Vertexing", "Number of Primary PFPs", 20, 0, 20);
 
     auto ERecoSumThetaReco_splitBDT = createSplitHistGroup("ERecoSumThetaReco_splitBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitBDT = createSplitHistGroup("ERecoHighestThetaReco_splitBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -1726,6 +2027,7 @@ void nuEBackgroundSignalCut_macro(){
     auto slicePurity_splitDLUboone = createSplitHistGroup("slicePurity_splitDLUboone", "Slice Purity: DL Uboone Vertexing", "Purity", 102, 0, 1.02);
     auto sliceCRUMBSScore_splitDLUboone = createSplitHistGroup("sliceCRUMBSScore_splitDLUboone", "CRUMBS Score of the Slice: DL Uboone Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitDLUboone = createSplitHistGroup("sliceNumPFPs_splitDLUboone", "Number of PFPs in the Slice: DL Uboone Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitDLUboone = createSplitHistGroup("sliceNumPrimaryPFPs_splitDLUboone", "Number of Primary PFPs in the Slice: DL Uboone Vertexing", "Number of Primary PFPs", 20, 0, 20);
 
     auto ERecoSumThetaReco_splitDLUboone = createSplitHistGroup("ERecoSumThetaReco_splitDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitDLUboone = createSplitHistGroup("ERecoHighestThetaReco_splitDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -1738,6 +2040,7 @@ void nuEBackgroundSignalCut_macro(){
     auto slicePurity_splitDLNuE = createSplitHistGroup("slicePurity_splitDLNuE", "Slice Purity: DL Nu+E Vertexing", "Purity", 102, 0, 1.02);
     auto sliceCRUMBSScore_splitDLNuE = createSplitHistGroup("sliceCRUMBSScore_splitDLNuE", "CRUMBS Score of the Slice: DL Nu+E Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitDLNuE = createSplitHistGroup("sliceNumPFPs_splitDLNuE", "Number of PFPs in the Slice: DL Nu+E Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitDLNuE = createSplitHistGroup("sliceNumPrimaryPFPs_splitDLNuE", "Number of Primary PFPs in the Slice: DL Nu+E Vertexing", "Number of Primary PFPs", 20, 0, 20);
 
     auto ERecoSumThetaReco_splitDLNuE = createSplitHistGroup("ERecoSumThetaReco_splitDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitDLNuE = createSplitHistGroup("ERecoHighestThetaReco_splitDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -1745,6 +2048,12 @@ void nuEBackgroundSignalCut_macro(){
     auto QSquaredHighest_splitDLNuE = createSplitHistGroup("QSquaredHighest_splitDLNuE", "Q^{2} Using Highest Energy PFP in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
     auto QSquaredSum_splitDLNuE = createSplitHistGroup("QSquaredSum_splitDLNuE", "Q^{2} Using Sum of PFP Energies in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
 
+    auto recoX_low_splitDLNuE = createSplitHistGroup("recoX_low_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
+    auto recoX_high_splitDLNuE = createSplitHistGroup("recoX_high_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
+    auto recoY_low_splitDLNuE = createSplitHistGroup("recoY_low_splitDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 68, -204, -170);
+    auto recoY_high_splitDLNuE = createSplitHistGroup("recoY_high_splitDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 128, 140, 204);
+    auto recoZ_low_splitDLNuE = createSplitHistGroup("recoZ_low_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 0, 50);
+    auto recoZ_high_splitDLNuE = createSplitHistGroup("recoZ_high_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 460, 510);
 
     double xMin = -201.3; double xMax = 201.3;
     double yMin = -203.8; double yMax = 203.8;
@@ -1783,6 +2092,11 @@ void nuEBackgroundSignalCut_macro(){
     TH2D *yCoordAngleDifferenceDLNuE = new TH2D("yCoordAngleDifferenceDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLNuE = new TH2D("zCoordAngleDifferenceDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
 
+    double numNuESliceCategory_DLNuE = 0;
+    double numNuESliceCategoryPassed_DLNuE = 0;
+    double numNuESliceCategoryElse_DLNuE = 0;
+    double numNuEIntType_DLNuE = 0;
+
     double numEvents_BDTCosmic = 0;
     double numEvents_BDTBNB = 0;
     double numEvents_BDTNuE = 0;
@@ -1820,6 +2134,11 @@ void nuEBackgroundSignalCut_macro(){
     double numBNB_beforeCut_DLNuE = 0;
     double numBNBFuzzy_beforeCut_DLNuE = 0;
     double numCosmic_beforeCut_DLNuE = 0;
+
+    eventCounter_struct numEventCutDLNuE;
+    eventCounter_struct numEventBeforeCutDLNuE;
+    eventCounter_struct numEventCutWithoutWeightingDLNuE;
+    eventCounter_struct numEventBeforeCutWithoutWeightingDLNuE;
 
     double numSignal_afterCut_DLNuE = 0;
     double numSignalFuzzy_afterCut_DLNuE = 0;
@@ -1885,6 +2204,7 @@ void nuEBackgroundSignalCut_macro(){
                 // Loop through all the reco neutrinos in the event          
                 int PFPcounter = 0;
                 int numPFPsSlice = 0;
+                int numPrimaryPFPsSlice = 0;
 
                 double summedEnergy = 0;
                 double highestEnergy_PFPID = -999999;
@@ -1898,43 +2218,51 @@ void nuEBackgroundSignalCut_macro(){
 
                 double sliceCategoryPlottingMacro = -999999;
 
-                double FVCut_xLow_BDT = -199;
+                double FVCut_xLow_BDT = -196;
                 double FVCut_xHigh_BDT = 199;
-                double FVCut_yLow_BDT = -199;
-                double FVCut_yHigh_BDT = 185;
-                double FVCut_zLow_BDT = 5;
-                double FVCut_zHigh_BDT = 490;
+                double FVCut_yLow_BDT = -198;
+                double FVCut_yHigh_BDT = 156;
+                double FVCut_zLow_BDT = 7;
+                double FVCut_zHigh_BDT = 495;
 
-                double FVCut_xLow_DLNuE = -198;
+                double FVCut_xLow_DLNuE = -196;
                 double FVCut_xHigh_DLNuE = 199;
                 double FVCut_yLow_DLNuE = -198;
-                double FVCut_yHigh_DLNuE = 184;
-                double FVCut_zLow_DLNuE = 6;
-                double FVCut_zHigh_DLNuE = 490;
+                double FVCut_yHigh_DLNuE = 156;
+                double FVCut_zLow_DLNuE = 7;
+                double FVCut_zHigh_DLNuE = 495;
 
-                double FVCut_xLow_DLUboone = -197;
-                double FVCut_xHigh_DLUboone = 194;
-                double FVCut_yLow_DLUboone = -199;
-                double FVCut_yHigh_DLUboone = 184;
-                double FVCut_zLow_DLUboone = 10;
-                double FVCut_zHigh_DLUboone = 491;
+                double FVCut_xLow_DLUboone = -196;
+                double FVCut_xHigh_DLUboone = 199;
+                double FVCut_yLow_DLUboone = -198;
+                double FVCut_yHigh_DLUboone = 156;
+                double FVCut_zLow_DLUboone = 7;
+                double FVCut_zHigh_DLUboone = 495;
                
                 double crumbsScoreCut_BDT = -0.08;
-                double crumbsScoreCut_DLUboone = -0.08;
-                double crumbsScoreCut_DLNuE = 0.08;
+                double crumbsScoreCut_DLUboone = 0;
+                double crumbsScoreCut_DLNuE = 0.16;
                 
                 double numPFPsCut_BDT = 100;
                 double numPFPsCut_DLUboone = 100;
                 double numPFPsCut_DLNuE = 100;
                 
-                double EThetaCut_highestPFP_BDT = 2.3;
-                double EThetaCut_highestPFP_DLUboone = 2.81;
+                double EThetaCut_highestPFP_BDT = 1.79;
+                double EThetaCut_highestPFP_DLUboone = 1.79;
                 double EThetaCut_highestPFP_DLNuE = 1.79;
                 
                 double EThetaCut_sum_BDT = 3.32;
                 double EThetaCut_sum_DLUboone = 3.32;
                 double EThetaCut_sum_DLNuE = 3.32;
-                
+               
+                double upperCrumbsScoreCut_BDT = 0.64;
+                double upperCrumbsScoreCut_DLUboone = 0.56;
+                double upperCrumbsScoreCut_DLNuE = 0.56;
+
+                double numPFPsUpperCut_BDT = 5;
+                double numPFPsUpperCut_DLUboone = 5;
+                double numPFPsUpperCut_DLNuE = 4;
+
                 double QSquared_highest_BDT = 0.0005;
                 double QSquared_highest_DLUboone = 0.0005;
                 double QSquared_highest_DLNuE = 0.0005;
@@ -1954,7 +2282,12 @@ void nuEBackgroundSignalCut_macro(){
                                 // This is a PFP that isn't a clear cosmic
                                 numPFPsSlice++;
                                 //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
-                                
+                               
+                                if(reco_particleIsPrimary->at(pfp) == 1){
+                                    // This PFP is a primary PFP
+                                    numPrimaryPFPsSlice++;
+                                }
+
                                 summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                                 if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                                     highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -1971,7 +2304,12 @@ void nuEBackgroundSignalCut_macro(){
                             // Don't apply a cut that PFPs must not be a clear cosmic
                             numPFPsSlice++;
                             //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
-                            
+
+                            if(reco_particleIsPrimary->at(pfp) == 1){
+                                // This PFP is a primary PFP
+                                numPrimaryPFPsSlice++;
+                            }                           
+ 
                             summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                             if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                                 highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -2039,10 +2377,13 @@ void nuEBackgroundSignalCut_macro(){
                     sliceCategoryPlottingMacro = 0;
                 } else if(reco_sliceOrigin->at(slice) == 1){
                     // This is a nu+e elastic scatter slice
+                    if(DLCurrent == 5) numNuESliceCategory_DLNuE++;
                     if(reco_sliceCompleteness->at(slice) > 0.5){
                         sliceCategoryPlottingMacro = 1;
+                        if(DLCurrent == 5) numNuESliceCategoryPassed_DLNuE++;
                     } else{
                         sliceCategoryPlottingMacro = 2;
+                        if(DLCurrent == 5) numNuESliceCategoryElse_DLNuE++;
                     }
                 } else if(reco_sliceOrigin->at(slice) == 3){
                     // This is a BNB slice
@@ -2061,6 +2402,7 @@ void nuEBackgroundSignalCut_macro(){
                     // This is a slice that isn't truth-matched to a cosmic
                     if(reco_sliceOrigin->at(slice) == 1){
                         // This is a slice that is truth-matched to a nu+e elastic scatter
+                        if(DLCurrent == 5) numNuEIntType_DLNuE++;
                         if(reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 &&
                            reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 &&
                            reco_sliceTrueVZ->at(slice) > 0      && reco_sliceTrueVZ->at(slice) < 509.5){
@@ -2130,8 +2472,10 @@ void nuEBackgroundSignalCut_macro(){
                 else if(sliceEventType == 5) std::cout << "Event type = CC nue" << std::endl;
                 else if(sliceEventType == 6) std::cout << "Event type = Dirt" << std::endl;
                 else if(sliceEventType == 7) std::cout << "Event type = Dirt nu+e" << std::endl;
-                else std::cout << "No event type assigned" << std::endl;                
-
+                else{
+                    std::cout << "No event type assigned" << std::endl;                
+                    sliceEventType = 8;
+                }
 
                 // Applying cuts here
                 if(DLCurrent == 2){
@@ -2178,6 +2522,18 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
 
+                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+
                     if(QSquaredCut == 1 && (Q2HighestValue > QSquared_highest_BDT)){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH QSQUARED = " << Q2HighestValue << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
@@ -2196,7 +2552,36 @@ void nuEBackgroundSignalCut_macro(){
                     if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_beforeCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_DLNuE += weight;
-                    
+                   
+                    if(sliceEventType == 0){
+                        numEventBeforeCutDLNuE.cosmic += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.cosmic++;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        numEventBeforeCutDLNuE.nuE += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.nuE++;
+                    } else if(sliceEventType == 2){
+                        numEventBeforeCutDLNuE.NCNPi0 += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.NCNPi0++;
+                    } else if(sliceEventType == 3){
+                        numEventBeforeCutDLNuE.otherNC += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.otherNC++;
+                    } else if(sliceEventType == 4){
+                        numEventBeforeCutDLNuE.CCnumu += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.CCnumu++;
+                    } else if(sliceEventType == 5){
+                        numEventBeforeCutDLNuE.CCnue += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.CCnue++;
+                    } else if(sliceEventType == 6){
+                        numEventBeforeCutDLNuE.dirt += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.dirt++;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        numEventBeforeCutDLNuE.nuEDirt += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.nuEDirt++;
+                    } else if(sliceEventType == 8){
+                        numEventBeforeCutDLNuE.other += weight; 
+                        numEventBeforeCutWithoutWeightingDLNuE.other++;
+                    }
+
                     if(numPFPs0Cut == 1 && numPFPsSlice == 0){
                         // This is a slice with 0 PFPs in it
                         continue;
@@ -2229,6 +2614,18 @@ void nuEBackgroundSignalCut_macro(){
                     
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+
+                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
@@ -2288,6 +2685,18 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
 
+                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+
                     if(QSquaredCut == 1 && Q2HighestValue > QSquared_highest_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH QSQUARED = " << Q2HighestValue << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
@@ -2309,6 +2718,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.cosmic->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.cosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.cosmic->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2327,6 +2737,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.cosmic->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.cosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.cosmic->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2341,10 +2752,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.cosmic->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.cosmic += weight;
+                        numEventCutWithoutWeightingDLNuE.cosmic++;
                         sliceCompleteness_splitDLNuE.cosmic->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.cosmic->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.cosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.cosmic->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2358,6 +2772,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.cosmic->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.cosmic->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.cosmic->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.cosmic->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.cosmic->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.cosmic->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.cosmic->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 1 && signal == 1){
                     if(DLCurrent == 2){
@@ -2365,6 +2788,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.nu_e->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.nu_e->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.nu_e->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2383,6 +2807,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.nu_e->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.nu_e->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.nu_e->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2397,10 +2822,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.nu_e->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.nuE += weight;
+                        numEventCutWithoutWeightingDLNuE.nuE++;
                         sliceCompleteness_splitDLNuE.nu_e->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.nu_e->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.nu_e->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.nu_e->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2414,6 +2842,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.nu_e->Fill(Q2SumValue, weight);
                         }
+                        
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.nu_e->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.nu_e->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.nu_e->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.nu_e->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.nu_e->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.nu_e->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 2){
                     if(DLCurrent == 2){
@@ -2421,6 +2858,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.NCNpi0->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.NCNpi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2439,6 +2877,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.NCNpi0->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.NCNpi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2453,10 +2892,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.NCNpi0->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.NCNPi0 += weight;
+                        numEventCutWithoutWeightingDLNuE.NCNPi0++;
                         sliceCompleteness_splitDLNuE.NCNpi0->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.NCNpi0->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.NCNpi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2470,6 +2912,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.NCNpi0->Fill(Q2SumValue, weight);
                         }
+                        
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.NCNpi0->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.NCNpi0->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.NCNpi0->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.NCNpi0->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.NCNpi0->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.NCNpi0->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 3){
                     if(DLCurrent == 2){
@@ -2477,6 +2928,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.otherNC->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.otherNC->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.otherNC->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2495,6 +2947,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.otherNC->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.otherNC->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.otherNC->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2509,10 +2962,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.otherNC->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.otherNC += weight;
+                        numEventCutWithoutWeightingDLNuE.otherNC++;
                         sliceCompleteness_splitDLNuE.otherNC->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.otherNC->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.otherNC->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.otherNC->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2526,6 +2982,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.otherNC->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.otherNC->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.otherNC->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.otherNC->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.otherNC->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.otherNC->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.otherNC->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 4){
                     if(DLCurrent == 2){
@@ -2533,6 +2998,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.CCnumu->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.CCnumu->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.CCnumu->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2551,6 +3017,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.CCnumu->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.CCnumu->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.CCnumu->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2565,10 +3032,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.CCnumu->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.CCnumu += weight;
+                        numEventCutWithoutWeightingDLNuE.CCnumu++;
                         sliceCompleteness_splitDLNuE.CCnumu->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.CCnumu->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.CCnumu->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.CCnumu->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2582,6 +3052,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.CCnumu->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.CCnumu->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.CCnumu->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.CCnumu->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.CCnumu->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.CCnumu->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.CCnumu->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 5){
                     if(DLCurrent == 2){
@@ -2589,6 +3068,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.CCnue->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.CCnue->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.CCnue->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2607,6 +3087,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.CCnue->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.CCnue->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.CCnue->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2621,10 +3102,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.CCnue->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.CCnue += weight;
+                        numEventCutWithoutWeightingDLNuE.CCnue++;
                         sliceCompleteness_splitDLNuE.CCnue->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.CCnue->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.CCnue->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.CCnue->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2638,6 +3122,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.CCnue->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.CCnue->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.CCnue->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.CCnue->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.CCnue->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.CCnue->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.CCnue->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 6){
                     if(DLCurrent == 2){
@@ -2645,6 +3138,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.dirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.dirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.dirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2663,6 +3157,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.dirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.dirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.dirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2677,10 +3172,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.dirt->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.dirt += weight;
+                        numEventCutWithoutWeightingDLNuE.dirt++;
                         sliceCompleteness_splitDLNuE.dirt->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.dirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.dirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.dirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2694,6 +3192,15 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.dirt->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.dirt->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.dirt->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.dirt->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.dirt->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.dirt->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.dirt->Fill(recoVZ, weight);
+                        }
                     }
                 } else if(sliceEventType == 7 && signal == 1){
                     if(DLCurrent == 2){
@@ -2701,6 +3208,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitBDT.nu_eDirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitBDT.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.nu_eDirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2719,6 +3227,7 @@ void nuEBackgroundSignalCut_macro(){
                         slicePurity_splitDLUboone.nu_eDirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLUboone.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.nu_eDirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2733,10 +3242,13 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitDLUboone.nu_eDirt->Fill(Q2SumValue, weight);
                         }
                     } else if(DLCurrent == 5){
+                        numEventCutDLNuE.nuEDirt += weight;
+                        numEventCutWithoutWeightingDLNuE.nuEDirt++;
                         sliceCompleteness_splitDLNuE.nu_eDirt->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitDLNuE.nu_eDirt->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitDLNuE.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.nu_eDirt->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2749,6 +3261,85 @@ void nuEBackgroundSignalCut_macro(){
 
                         if(Q2SumValue != -999999){    
                             QSquaredSum_splitDLNuE.nu_eDirt->Fill(Q2SumValue, weight);
+                        }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.nu_eDirt->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.nu_eDirt->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.nu_eDirt->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.nu_eDirt->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.nu_eDirt->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.nu_eDirt->Fill(recoVZ, weight);
+                        }
+                    }
+                } else if(sliceEventType == 8){
+                    if(DLCurrent == 2){
+                        sliceCompleteness_splitBDT.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitBDT.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitBDT.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitBDT.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitBDT.other->Fill(numPrimaryPFPsSlice, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitBDT.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitBDT.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitBDT.other->Fill(Q2SumValue, weight);
+                        }
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness_splitDLUboone.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitDLUboone.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitDLUboone.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitDLUboone.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLUboone.other->Fill(numPrimaryPFPsSlice, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitDLUboone.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitDLUboone.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitDLUboone.other->Fill(Q2SumValue, weight);
+                        }
+                    } else if(DLCurrent == 5){
+                        numEventCutDLNuE.other += weight;
+                        numEventCutWithoutWeightingDLNuE.other++;
+                        sliceCompleteness_splitDLNuE.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitDLNuE.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitDLNuE.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitDLNuE.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitDLNuE.other->Fill(numPrimaryPFPsSlice, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitDLNuE.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitDLNuE.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){    
+                            QSquaredSum_splitDLNuE.other->Fill(Q2SumValue, weight);
+                        }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitDLNuE.other->Fill(recoVX, weight);
+                            recoX_high_splitDLNuE.other->Fill(recoVX, weight);
+                            recoY_low_splitDLNuE.other->Fill(recoVY, weight);
+                            recoY_high_splitDLNuE.other->Fill(recoVY, weight);
+                            recoZ_low_splitDLNuE.other->Fill(recoVZ, weight);
+                            recoZ_high_splitDLNuE.other->Fill(recoVZ, weight);
                         }
                     }
                 }
@@ -2766,6 +3357,8 @@ void nuEBackgroundSignalCut_macro(){
 
                         sliceNumPFPs.currentCosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentCosmic->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.currentCosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.currentCosmic->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentCosmic->Fill(Q2HighestValue, weight);
@@ -2832,6 +3425,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.ubooneCosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneCosmic->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.ubooneCosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.ubooneCosmic->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneCosmic->Fill(Q2HighestValue, weight);
@@ -2898,6 +3493,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.nuECosmic->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuECosmic->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.nuECosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.nuECosmic->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuECosmic->Fill(Q2HighestValue, weight);
@@ -2967,6 +3564,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.currentSignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentSignal->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.currentSignal->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.currentSignal->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentSignal->Fill(Q2HighestValue, weight);
@@ -3078,6 +3677,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.ubooneSignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneSignal->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.ubooneSignal->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.ubooneSignal->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneSignal->Fill(Q2HighestValue, weight);
@@ -3187,6 +3788,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.nuESignal->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuESignal->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.nuESignal->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.nuESignal->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuESignal->Fill(Q2HighestValue, weight);
@@ -3298,6 +3901,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.currentSignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentSignalFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.currentSignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.currentSignalFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentSignalFuzzy->Fill(Q2HighestValue, weight);
@@ -3406,6 +4011,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.ubooneSignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneSignalFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.ubooneSignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.ubooneSignalFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneSignalFuzzy->Fill(Q2HighestValue, weight);
@@ -3514,6 +4121,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.nuESignalFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuESignalFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.nuESignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.nuESignalFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuESignalFuzzy->Fill(Q2HighestValue, weight);
@@ -3626,6 +4235,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.currentBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentBNB->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.currentBNB->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.currentBNB->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentBNB->Fill(Q2HighestValue, weight);
@@ -3702,6 +4313,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.ubooneBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneBNB->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.ubooneBNB->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.ubooneBNB->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneBNB->Fill(Q2HighestValue, weight);
@@ -3778,6 +4391,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.nuEBNB->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuEBNB->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.nuEBNB->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.nuEBNB->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuEBNB->Fill(Q2HighestValue, weight);
@@ -3856,6 +4471,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.currentBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.currentBNBFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.currentBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.currentBNBFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -3931,6 +4548,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.ubooneBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.ubooneBNBFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.ubooneBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.ubooneBNBFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -4006,6 +4625,8 @@ void nuEBackgroundSignalCut_macro(){
                         
                         sliceNumPFPs.nuEBNBFuzzy->Fill(numPFPsSlice, weight);
                         sliceNumPFPsDist.nuEBNBFuzzy->Fill(numPFPsSlice);
+                        sliceNumPrimaryPFPs.nuEBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumPrimaryPFPsDist.nuEBNBFuzzy->Fill(numPrimaryPFPsSlice);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuEBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -4102,6 +4723,9 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumPrimaryPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
     styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(QSquaredHighestDist, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
@@ -4213,8 +4837,11 @@ void nuEBackgroundSignalCut_macro(){
     
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1, txtFileName);
-    efficiency(sliceCRUMBSScore, 0, 1, 999, 999, (base_path + "sliceCRUMBSScore").c_str(), "topRight", nullptr, &right, -1, txtFileName);
-    efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPs").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
+    efficiency(sliceCRUMBSScore, 0, 1, -1, 0.8, (base_path + "sliceCRUMBSScoreNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(sliceCRUMBSScore, 0, 1, 0.1, 0.8, (base_path + "sliceCRUMBSScorePositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
+    efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
+    efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
@@ -4273,6 +4900,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(slicePurity_splitBDT, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScore_splitBDT, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitBDT, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumPrimaryPFPs_splitBDT, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitBDT, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitBDT, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitBDT, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -4283,6 +4911,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(slicePurity_splitDLUboone, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScore_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumPrimaryPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitDLUboone, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitDLUboone, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitDLUboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -4293,10 +4922,17 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(slicePurity_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScore_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumPrimaryPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoHighestThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(recoX_low_splitDLNuE, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(recoX_high_splitDLNuE, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
+    styleDrawSplit(recoY_low_splitDLNuE, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(recoY_high_splitDLNuE, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
+    styleDrawSplit(recoZ_low_splitDLNuE, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(recoZ_high_splitDLNuE, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
 
     printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, numEvents_BDTBNB, numEvents_BDTNuE);
     printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
@@ -4343,4 +4979,17 @@ void nuEBackgroundSignalCut_macro(){
     printf("\nBDT: Signal Eff = %f, Signal Pur = %f, Signal Eff x Pur = %f\n", signalEff_BDT, signalPur_BDT, signalEff_BDT*signalPur_BDT);
     printf("DLUboone: Signal Eff = %f, Signal Pur = %f, Signal Eff x Pur = %f\n", signalEff_DLUboone, signalPur_DLUboone, signalEff_DLUboone*signalPur_DLUboone);
     printf("DLNuE: Signal Eff = %f, Signal Pur = %f, Signal Eff x Pur = %f\n", signalEff_DLNuE, signalPur_DLNuE, signalEff_DLNuE*signalPur_DLNuE);
+
+    printf("\n\n============ With Weighting ============\n");
+    printf("Before Cuts:\nnu+e = %f, NCNpi0 = %f, Other NC = %f, CCnumu = %f\nCCnue = %f, Dirt = %f, nu+e Dirt = %f, Cosmic = %f, Other = %f\n\n", numEventBeforeCutDLNuE.nuE, numEventBeforeCutDLNuE.NCNPi0, numEventBeforeCutDLNuE.otherNC, numEventBeforeCutDLNuE.CCnumu, numEventBeforeCutDLNuE.CCnue, numEventBeforeCutDLNuE.dirt, numEventBeforeCutDLNuE.nuEDirt, numEventBeforeCutDLNuE.cosmic, numEventBeforeCutDLNuE.other);
+    printf("After Cut:\nnu+e = %f (%f%%), NCNpi0 = %f (%f%%), Other NC = %f (%f%%), CCnumu = %f (%f%%)\n", numEventCutDLNuE.nuE, (100.0*numEventCutDLNuE.nuE/numEventBeforeCutDLNuE.nuE), numEventCutDLNuE.NCNPi0, (100.0*numEventCutDLNuE.NCNPi0/numEventBeforeCutDLNuE.NCNPi0), numEventCutDLNuE.otherNC, (100.0*numEventCutDLNuE.otherNC/numEventBeforeCutDLNuE.otherNC), numEventCutDLNuE.CCnumu, (100.0*numEventCutDLNuE.CCnumu/numEventBeforeCutDLNuE.CCnumu));
+    printf("CCnue = %f (%f%%), Dirt = %f (%f%%), nu+e Dirt = %f (%f%%), Cosmic = %f (%f%%), Other = %f (%f%%)\n", numEventCutDLNuE.CCnue, (100.0*numEventCutDLNuE.CCnue/numEventBeforeCutDLNuE.CCnue), numEventCutDLNuE.dirt, (100.0*numEventCutDLNuE.dirt/numEventBeforeCutDLNuE.dirt), numEventCutDLNuE.nuEDirt, (100.0*numEventCutDLNuE.nuEDirt/numEventBeforeCutDLNuE.nuEDirt), numEventCutDLNuE.cosmic, (100.0*numEventCutDLNuE.cosmic/numEventBeforeCutDLNuE.cosmic), numEventCutDLNuE.other, (100.0*numEventCutDLNuE.other/numEventBeforeCutDLNuE.other));
+
+    printf("\n\n============ Without Weighting ============\n");
+    printf("Before Cuts:\nnu+e = %f, NCNpi0 = %f, Other NC = %f, CCnumu = %f\nCCnue = %f, Dirt = %f, nu+e Dirt = %f, Cosmic = %f, Other = %f\n\n", numEventBeforeCutWithoutWeightingDLNuE.nuE, numEventBeforeCutWithoutWeightingDLNuE.NCNPi0, numEventBeforeCutWithoutWeightingDLNuE.otherNC, numEventBeforeCutWithoutWeightingDLNuE.CCnumu, numEventBeforeCutWithoutWeightingDLNuE.CCnue, numEventBeforeCutWithoutWeightingDLNuE.dirt, numEventBeforeCutWithoutWeightingDLNuE.nuEDirt, numEventBeforeCutWithoutWeightingDLNuE.cosmic, numEventBeforeCutWithoutWeightingDLNuE.other);
+    printf("After Cut:\nnu+e = %f (%f%%), NCNpi0 = %f (%f%%), Other NC = %f (%f%%), CCnumu = %f (%f%%)\n", numEventCutWithoutWeightingDLNuE.nuE, (100.0*numEventCutWithoutWeightingDLNuE.nuE/numEventBeforeCutWithoutWeightingDLNuE.nuE), numEventCutWithoutWeightingDLNuE.NCNPi0, (100.0*numEventCutWithoutWeightingDLNuE.NCNPi0/numEventBeforeCutWithoutWeightingDLNuE.NCNPi0), numEventCutWithoutWeightingDLNuE.otherNC, (100.0*numEventCutWithoutWeightingDLNuE.otherNC/numEventBeforeCutWithoutWeightingDLNuE.otherNC), numEventCutWithoutWeightingDLNuE.CCnumu, (100.0*numEventCutWithoutWeightingDLNuE.CCnumu/numEventBeforeCutWithoutWeightingDLNuE.CCnumu));
+    printf("CCnue = %f (%f%%), Dirt = %f (%f%%), nu+e Dirt = %f (%f%%), Cosmic = %f (%f%%), Other = %f (%f%%)\n", numEventCutWithoutWeightingDLNuE.CCnue, (100.0*numEventCutWithoutWeightingDLNuE.CCnue/numEventBeforeCutWithoutWeightingDLNuE.CCnue), numEventCutWithoutWeightingDLNuE.dirt, (100.0*numEventCutWithoutWeightingDLNuE.dirt/numEventBeforeCutWithoutWeightingDLNuE.dirt), numEventCutWithoutWeightingDLNuE.nuEDirt, (100.0*numEventCutWithoutWeightingDLNuE.nuEDirt/numEventBeforeCutWithoutWeightingDLNuE.nuEDirt), numEventCutWithoutWeightingDLNuE.cosmic, (100.0*numEventCutWithoutWeightingDLNuE.cosmic/numEventBeforeCutWithoutWeightingDLNuE.cosmic), numEventCutWithoutWeightingDLNuE.other, (100.0*numEventCutWithoutWeightingDLNuE.other/numEventBeforeCutWithoutWeightingDLNuE.other));
+
+    //printf("\nNum Nu+E from slice category = %f, num Nu+E from int type = %f\n", numNuESliceCategory_DLNuE, numNuEIntType_DLNuE);
+    //printf("Num nu+e with completeness > 0.5 = %f, num nu+e in else = %f\n", numNuESliceCategoryPassed_DLNuE, numNuESliceCategoryElse_DLNuE);
 }
