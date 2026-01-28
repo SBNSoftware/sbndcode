@@ -76,10 +76,7 @@ namespace blip {
             // we still want to correct for global trigger offset though:
             kXTicksOffsets[cstat][tpc][pl] = clockData.TriggerTime()/kTickPeriod;
 
-          }
-          
-          // additional ad-hoc corrections supplied by user
-          //kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];          
+          }          
         }
       }
     }
@@ -231,6 +228,7 @@ namespace blip {
   void BlipRecoAlg::reconfigure( fhicl::ParameterSet const& pset ){
     
     fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
+    fHitTruthMatcher    = pset.get<std::string>   ("HitTruthMatcher",   "blipgaushitTruthMatch");
     fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
     fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
@@ -368,7 +366,7 @@ namespace blip {
       std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
       const geo::PlaneID&      planeID = wids[0].planeID();
       if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
-      unsigned int MaxTDCTick = 4294967294; // 1 under 32 bit unsigned int max
+      unsigned int MaxTDCTick = UINT_MAX;
       std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, MaxTDCTick);
       for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
 	        {
@@ -382,12 +380,6 @@ namespace blip {
     if (evt.getByLabel(fHitProducer,hitHandle))
       art::fill_ptr_vector(hitlist, hitHandle);
 
-    // -- hits (from gaushit), these are used in truth-matching of hits
-    art::Handle< std::vector<recob::Hit> > hitHandleGH;
-    std::vector<art::Ptr<recob::Hit> > hitlistGH;
-    if(evt.getByLabel("specialblipgaushit",hitHandleGH)) art::fill_ptr_vector(hitlistGH, hitHandleGH);
-    else if(evt.getByLabel("gaushit",hitHandleGH))       art::fill_ptr_vector(hitlistGH, hitHandleGH);
-
     // -- tracks
     art::Handle< std::vector<recob::Track> > tracklistHandle;
     std::vector<art::Ptr<recob::Track> > tracklist;
@@ -396,8 +388,8 @@ namespace blip {
   
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
-    art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    art::FindMany<simb::MCParticle, anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"blipgaushitTruthMatch");
+    art::FindManyP<recob::Track> fmtrkGH(hitHandle,evt,fTrkProducer);
+    art::FindMany<simb::MCParticle, anab::BackTrackerHitMatchingData> fmhh(hitHandle,evt,fHitTruthMatcher);
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -433,22 +425,7 @@ namespace blip {
     // use gaushitTruthMatch later on)
     //===============================================================
     std::map< int, int > map_gh;
-    // if input collection is already gaushit, this is trivial
-    if( fHitProducer == "gaushit" ||  fHitProducer == "specialblipgaushit") {
-      for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
-    // ... but if not, find the matching gaushit. There's no convenient
-    // hit ID, so we must loop through and compare channel/time (ugh)
-    } else {
-      std::map<int,std::vector<int>> map_chan_ghid;
-      for(auto& gh : hitlistGH ) map_chan_ghid[gh->Channel()].push_back(gh.key());
-      for(auto& h : hitlist ) {
-        for(auto& igh : map_chan_ghid[h->Channel()]){
-          if( hitlistGH[igh]->PeakTime() != h->PeakTime() ) continue;
-          map_gh[h.key()] = igh;
-          break;
-        }
-      }
-    }   
+    for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     //=====================================================
     // Record PDG for every G4 Track ID
     //=====================================================
@@ -646,14 +623,8 @@ namespace blip {
       
 
       // find associated track
-      if( fHitProducer == "specialblipgaushit" && fmtrk.isValid() ) {
+      if( fmtrk.isValid() ) {
         if(fmtrk.at(i).size()) hitinfo[i].trkid = fmtrk.at(i)[0]->ID();
-      
-      // if the hit collection didn't have associations made
-      // to the tracks, try gaushit instead
-      } else if ( fmtrkGH.isValid() && map_gh.size() ) {
-        int gi = map_gh[i];
-        if (fmtrkGH.at(gi).size()) hitinfo[i].trkid= fmtrkGH.at(gi)[0]->ID(); 
       }
 
       // add to the map
