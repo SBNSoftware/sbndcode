@@ -36,10 +36,6 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 
-// LArSoft MC includes 
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "lardataobj/Simulation/sim.h"
-
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
