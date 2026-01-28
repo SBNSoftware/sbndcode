@@ -5480,7 +5480,7 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(sliceNumPrimaryPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
-    styleDrawAll(hitRatioLowCompletenessSlices, 999, 999, 999, 999, (base_path + "hitRatioLowCompletenessSlices_dist.pdf").c_str(), "bottomRight", &drawLine, &right, true, false, false, false, false, false, true, false);
+    styleDrawAll(hitRatioLowCompletenessSlices, 999, 999, 999, 999, (base_path + "hitRatioLowCompletenessSlices_dist.pdf").c_str(), "bottomRight", nullptr, &right, true, false, false, false, false, false, true, false);
 
     styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(QSquaredHighestDist, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
