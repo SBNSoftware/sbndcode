@@ -69,6 +69,7 @@
 #include <cmath>
 #include <functional>
 #include <map>
+#include <string> 
 
 namespace sbnd {
   class LightCaloProducer;
@@ -345,13 +346,18 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
   std::vector<art::Ptr<recob::OpFlash>> flash0_v;
   std::vector<art::Ptr<recob::OpFlash>> flash1_v;
 
-  for (size_t i=0; i<2; i++){
+  for (size_t i=0; i<fopflash_producer_v.size(); i++){
     ::art::Handle<std::vector<recob::OpFlash>> flash_h;
     e.getByLabel(fopflash_producer_v[i], flash_h);
     if (!flash_h.isValid() || flash_h->empty()) {
       std::cout << "don't have good PMT flashes from producer " << fopflash_producer_v[i] << std::endl;
     }
-    else art::fill_ptr_vector((i==0)? flash0_v : flash1_v, flash_h);
+    else{
+      if (fopflash_producer_v[i].find("tpc0") != std::string::npos)
+        art::fill_ptr_vector(flash0_v, flash_h);
+      else if (fopflash_producer_v[i].find("tpc1") != std::string::npos)
+        art::fill_ptr_vector(flash1_v, flash_h);
+    }
   }
 
   art::FindManyP<recob::PFParticle> slice_to_pfp (slice_h, e, fslice_producer);
@@ -420,13 +426,18 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     ::art::Handle<std::vector<recob::OpFlash>> flash0_ara_h;
     ::art::Handle<std::vector<recob::OpFlash>> flash1_ara_h;
 
-    for (size_t i=0; i<2; i++){
+    for (size_t i=0; i<fopflash_ara_producer_v.size(); i++){
       ::art::Handle<std::vector<recob::OpFlash>> flash_ara_h;
       e.getByLabel(fopflash_ara_producer_v[i], flash_ara_h);
       if (!flash_ara_h.isValid() || flash_ara_h->empty()) {
         std::cout << "don't have good X-ARAPUCA flashes from producer " << fopflash_ara_producer_v[i] << std::endl;
       }
-      else art::fill_ptr_vector((i==0)? flash0_ara_v : flash1_ara_v, flash_ara_h);
+      else{
+        if (fopflash_ara_producer_v[i].find("tpc0") != std::string::npos)
+          art::fill_ptr_vector(flash0_ara_v, flash_ara_h);
+        else if (fopflash_ara_producer_v[i].find("tpc1") != std::string::npos)
+          art::fill_ptr_vector(flash1_ara_v, flash_ara_h);
+      }
     }
   }
 
