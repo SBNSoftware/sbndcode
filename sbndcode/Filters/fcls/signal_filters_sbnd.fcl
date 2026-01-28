@@ -1,0 +1,60 @@
+BEGIN_PROLOG
+
+sbnd_ccnue_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            NuPDGs: [ 12, -12 ]
+            IsCC: true
+            InTPC: true
+        }
+    ]
+}
+
+sbnd_cohpi_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            KEThresholds: [
+                [ 13, 27 ],
+                [ 211, 30 ],
+                [ 2212, 20 ]
+            ]
+            RequiredPDGs: [ 13, 211 ]
+            DisallowedPDGs: [ 111, 2212, 2112 ]
+            InTPC: true
+            Exclusive: true
+        }
+    ]
+}
+
+sbnd_eta_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 221 ]
+            DisallowedPDGs: [ 111 ]
+            InTPC: true
+        }
+    ]
+}
+
+sbnd_pi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 111 ]
+            InTPC: true
+        }
+    ]
+}
+
+END_PROLOG

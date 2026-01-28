@@ -1,8 +1,8 @@
 /*
  * Filter module for common true signal definition options
- * - True nu flavor
+ * - True nu flavors
  * - CC/NC
- * - GENIE mode
+ * - Modes
  * - Fiducial vertex
  * - Final state primary PDG
  * - Final state primary KE
@@ -41,13 +41,16 @@
 #include "nusimdata/SimulationBase/MCNeutrino.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
 
+#include "messagefacility/MessageLogger/MessageLogger.h"
+
+
 namespace filt{
 
 // All optional. Empty block config will pass all events
 struct FilterBlockConfig {
-    fhicl::OptionalAtom<int> NuPDG {
-        fhicl::Name("NuPDG"),
-        fhicl::Comment("PDG code of the neutrino")
+    fhicl::OptionalSequence<int> NuPDGs {
+        fhicl::Name("NuPDGs"),
+        fhicl::Comment("PDG codes of the neutrino")
     };
 
     fhicl::OptionalAtom<bool> InTPC {
@@ -56,14 +59,14 @@ struct FilterBlockConfig {
     };
 
 
-    fhicl::OptionalAtom<bool> CCNC {
-        fhicl::Name("CCNC"),
+    fhicl::OptionalAtom<bool> IsCC {
+        fhicl::Name("IsCC"),
         fhicl::Comment("If true, only CC events are accepted. If false, only NC events are accepted. If ommitted, no requirement")
     };
 
-    fhicl::OptionalSequence<int> GenieModes {
-        fhicl::Name("GENIEModes"),
-        fhicl::Comment("List of GENIE interaction modes")
+    fhicl::OptionalSequence<int> Modes {
+        fhicl::Name("Modes"),
+        fhicl::Comment("List of interaction modes")
     };
 
     fhicl::OptionalSequence<int> RequiredPDGs {
@@ -89,10 +92,10 @@ struct FilterBlockConfig {
 
 
 struct FilterBlock { 
-    std::optional<int> nu_pdg;
+    std::optional<std::vector<int>> nu_pdgs;
     std::optional<bool> in_tpc;
-    std::optional<bool> ccnc; 
-    std::optional<std::vector<int>> genie_modes;
+    std::optional<bool> iscc; 
+    std::optional<std::vector<int>> modes;
     std::optional<std::vector<int>> required_pdgs;
     std::optional<std::vector<int>> disallowed_pdgs;
     std::optional<std::map<int, float>> ke_thresholds;
@@ -124,6 +127,7 @@ public:
 
 protected:
     bool PassBlock(const art::Ptr<simb::MCTruth>, const FilterBlock&) const;
+    void PrintBlock(const FilterBlock&) const;
 
 private:
     art::InputTag fGenieModuleLabel; 
@@ -142,9 +146,9 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
         auto const& cfg = cfg_blocks.at(i);
         FilterBlock block;
 
-        int nu_pdg;
-        if (cfg.NuPDG(nu_pdg)) {
-            block.nu_pdg = nu_pdg;
+        std::vector<int> nu_pdgs;
+        if (cfg.NuPDGs(nu_pdgs)) {
+            block.nu_pdgs = nu_pdgs;
         }
 
         bool in_tpc; 
@@ -152,14 +156,14 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
             block.in_tpc = in_tpc;
         }
 
-        bool ccnc; 
-        if (cfg.CCNC(ccnc)) {
-            block.ccnc = ccnc;
+        bool iscc; 
+        if (cfg.IsCC(iscc)) {
+            block.iscc = iscc;
         }
 
-        std::vector<int> genie_modes; 
-        if (cfg.GenieModes(genie_modes)) {
-            block.genie_modes = genie_modes;
+        std::vector<int> modes; 
+        if (cfg.Modes(modes)) {
+            block.modes = modes;
         }
 
         std::vector<int> required_pdgs; 
@@ -173,7 +177,7 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
         }
 
         std::vector<int> disallowed_pdgs; 
-        if (cfg.RequiredPDGs(disallowed_pdgs)) {
+        if (cfg.DisallowedPDGs(disallowed_pdgs)) {
             block.disallowed_pdgs = disallowed_pdgs;
         }
 
@@ -201,6 +205,7 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
             block.exclusive = exclusive;
         }
 
+        PrintBlock(block);
         fFilterBlocks.push_back(std::move(block));
     }
 }
@@ -211,8 +216,14 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
 
     const auto& nu = mc->GetNeutrino();
 
-    if (block.nu_pdg) {
-        if (nu.Nu().PdgCode() != block.nu_pdg.value()) return false;
+    if (block.nu_pdgs) {
+        if (std::find(block.nu_pdgs->begin(), block.nu_pdgs->end(), nu.Nu().PdgCode())
+                == block.nu_pdgs->end()) return false;
+    }
+
+    if (block.modes) {
+        if (std::find(block.modes->begin(), block.modes->end(), nu.Mode())
+                == block.modes->end()) return false;
     }
 
     if (block.in_tpc) {
@@ -221,9 +232,9 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
         if (RecoUtils::IsInsideTPC(vtx, 0) != block.in_tpc.value()) return false;
     }
 
-    if (block.ccnc) {
-        if (block.ccnc.value() && (nu.CCNC() != simb::kCC)) return false;
-        if (!block.ccnc.value() && (nu.CCNC() != simb::kNC)) return false;
+    if (block.iscc) {
+        if (block.iscc.value() && (nu.CCNC() != simb::kCC)) return false;
+        if (!block.iscc.value() && (nu.CCNC() != simb::kNC)) return false;
     }
 
     //get a vector of final state particles for the next few checks
@@ -297,6 +308,44 @@ bool TrueSignalFilter::filter(art::Event & e) {
     return false;
 }
 
+
+void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
+    const std::string kNotSet("<not set>");
+
+    // print helpers
+    mf::LogInfo log{"TrueSignalFilter"};
+    log << "Filter configuration:\n";
+    auto print_int_vec = [&](const std::string& name, std::optional<std::vector<int>> const& val) {
+        log << " - " << name << ": ";
+        if (!val) {
+            log << kNotSet << "\n";
+        }
+        else {
+            log << "{ ";
+            for (int i : val.value()) {
+                log << i << ", ";
+            }
+            log << " }\n";
+        }
+    };
+    auto print_bool = [&](const std::string& name, std::optional<bool> const& val) {
+        log << " - " << name << ": ";
+        if (!val) {
+            log << kNotSet << "\n";
+        }
+        else {
+            log << (val.value() ? "True" : "False") << "\n";
+        }
+    };
+
+    print_int_vec("NuPDGs", block.nu_pdgs);
+    print_bool("InTPC", block.in_tpc);
+    print_bool("IsCC", block.iscc);
+    print_int_vec("Modes", block.modes);
+    print_int_vec("RequiredPDGs", block.required_pdgs);
+    print_int_vec("DisallowedPDGs", block.disallowed_pdgs);
+    print_bool("Exclusive", block.exclusive);
+}
 
 DEFINE_ART_MODULE(TrueSignalFilter)
 
