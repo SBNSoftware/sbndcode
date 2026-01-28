@@ -63,11 +63,9 @@
 #include "TTree.h"
 
 // C++ includes
-#include <numeric>
 #include <memory>
 #include <algorithm> // sort 
 #include <cmath>
-#include <functional>
 #include <map>
 #include <string> 
 
@@ -98,6 +96,9 @@ private:
                             std::unique_ptr< art::Assns<recob::Slice, sbn::LightCalo> >& slice_assn_v,
                             std::unique_ptr< art::Assns<recob::OpFlash, sbn::LightCalo> >& flash_assn_v);
 
+  // Templated member function to collect matched slices and opflashes
+  // The CheckFunc is a callable that takes a Ptr<MatchT> and returns bool
+  // to determine if the match passes selection criteria
   template <typename MatchT, typename CheckFunc>
   void CollectMatches(const art::Handle<std::vector<MatchT>> &handle,
                       const std::vector<art::Ptr<MatchT>> &fm_v,
@@ -108,6 +109,7 @@ private:
                       std::vector<art::Ptr<recob::OpFlash>> &match_op1,
                       CheckFunc check);
 
+  // Finds the opflash in flash_v that is closest in time to ref_time                      
   art::Ptr<recob::OpFlash> FindMatchingFlash(const std::vector<art::Ptr<recob::OpFlash>> &flash_v,
                                              double ref_time);                      
   // Returns visibility vector for all opdets given charge/position information 
@@ -134,6 +136,7 @@ private:
   bool fuse_bcfm;
   bool fuse_opt0;
   bool fverbose;
+  bool ffill_tree;
 
   float fbcfmscore_cut; 
   float fopt0score_cut;
@@ -211,6 +214,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   fuse_bcfm     = p.get<bool>("UseBCFM");
 
   fverbose = p.get<bool>("Verbose");
+  ffill_tree = p.get<bool>("FillTree");
 
   fbcfmscore_cut = p.get<float>("bcfmScoreCut");
   fopt0score_cut = p.get<float>("opt0ScoreCut");
@@ -608,7 +612,8 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     util::CreateAssn(*this, e, *lightcalo_v, opflash0, *flash_assn_v);
     util::CreateAssn(*this, e, *lightcalo_v, opflash1, *flash_assn_v);
 
-    _tree->Fill();
+    if (ffill_tree)
+      _tree->Fill();
   } // end slice loop
 } // end produce 
 
