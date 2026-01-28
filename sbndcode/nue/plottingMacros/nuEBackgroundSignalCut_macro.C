@@ -1556,10 +1556,10 @@ void nuEBackgroundSignalCut_macro(){
     int numRecoNeutrinosCut = 1;
     int FVCut = 1;
     int CRUMBSCut = 1;
-    int numPFPsCut = 0;
     int ETheta2Cut = 1;
-    int upperCRUMBSCut = 1;
-    int upperPFPCut = 1;
+    int trackscoreCut = 1;
+    int upperCRUMBSCut = 0;
+    int upperPFPCut = 0;
     int QSquaredCut = 0;
 
     if(clearCosmicCut == 1 && numPFPs0Cut == 0){
@@ -1574,30 +1574,24 @@ void nuEBackgroundSignalCut_macro(){
     } else if(FVCut == 1 && CRUMBSCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts.txt";
-    } else if(CRUMBSCut == 1 && numPFPsCut == 0 && ETheta2Cut == 0){
+    } else if(CRUMBSCut == 1 && ETheta2Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs.txt";
-    } else if(numPFPsCut == 1 && ETheta2Cut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs.txt";
-    } else if(numPFPsCut == 0 && ETheta2Cut == 1 && upperCRUMBSCut == 0){
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbsCuts.txt";
+    } else if(ETheta2Cut == 1 && trackscoreCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta.txt";
-    } else if(numPFPsCut == 0 && upperCRUMBSCut == 1 && upperPFPCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_upperCRUMBS_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta_upperCRUMBS.txt";
-    } else if(numPFPsCut == 0 && upperCRUMBSCut == 1 && QSquaredCut == 0 && upperPFPCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_upperCRUMBS_upperPFP_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_ETheta_upperCRUMBS_upperPFP.txt";
-    } else if(ETheta2Cut == 1 && upperCRUMBSCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta.txt";
-    } else if(upperCRUMBSCut == 1 && QSquaredCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_upperCRUMBS_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta_upperCRUMBS.txt";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_EThetaCuts.txt";
+    } else if(trackscoreCut == 1 && upperCRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreCuts.txt";
+    } else if(upperCRUMBSCut == 1 && upperPFPCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBSCuts.txt";
+    } else if(upperPFPCut == 1 && QSquaredCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFPCuts.txt";
     } else if(QSquaredCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_numPFPs_ETheta_cuts_QSquared/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts_crumbs_numPFPs_ETheta_QSquared.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_QSquared_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_QSquaredCuts.txt";
     }
     
     std::ofstream clearFile(txtFileName, std::ios::trunc);
