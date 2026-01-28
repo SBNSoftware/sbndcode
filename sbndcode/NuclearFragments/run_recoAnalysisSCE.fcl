@@ -1,0 +1,34 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "recoAnalysisSCEConfig.fcl"
+
+process_name: RecoAnalysis
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "hists_recoAnalysisSCE_%ifb_%p-%tc.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::recoAnalysisParams
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+    trigger_paths: []
+}
