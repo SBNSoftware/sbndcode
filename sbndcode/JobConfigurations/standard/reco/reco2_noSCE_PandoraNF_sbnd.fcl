@@ -1,0 +1,41 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:   reco2_noSCE_sbnd.fcl
+
+#include "standard_reco2_sbnd.fcl"
+
+services.SpaceCharge.EnableCalSpatialSCE: false
+services.SpaceCharge.EnableSimSpatialSCE: false
+services.SpaceCharge.EnableSimEfieldSCE: false
+services.SpaceCharge.EnableCalEfieldSCE: false
+services.SpaceCharge.is2DdriftSimHack: false
+
+process_name: PandoraNF
+
+physics.producers.pandoraNF: @local::physics.producers.pandora
+physics.producers.pandoraCaloNF: @local::physics.producers.pandoraCalo
+physics.producers.pandoraTrackNF: @local::physics.producers.pandoraTrack
+physics.producers.pandoraShowerNF: @local::physics.producers.pandoraShower
+physics.producers.pandoraShowerSBNNF: @local::physics.producers.pandoraShowerSBN
+physics.producers.pandoraCaloNF: @local::physics.producers.pandoraCalo
+physics.producers.pandoraPidNF: @local::physics.producers.pandoraPid
+
+physics.reco2: [  
+    rns
+    , pandoraNF
+    , pandoraTrackNF
+    , pandoraShowerNF
+    , pandoraShowerSBNNF
+    , pandoraCaloNF
+    , pandoraPidNF
+]
+
+physics.producers.pandoraNF.ConfigFile: "PandoraSettings_Master_SBND_chargeSplit.xml"
+physics.producers.pandoraTrackNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraShowerNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraShowerSBNNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraCaloNF.TrackModuleLabel: "pandoraTrackNF"
+physics.producers.pandoraPidNF.CalorimetryModuleLabel: "pandoraCaloNF"
+physics.producers.pandoraPidNF.TrackModuleLabel: "pandoraTrackNF"
+
+physics.ana: [
+]

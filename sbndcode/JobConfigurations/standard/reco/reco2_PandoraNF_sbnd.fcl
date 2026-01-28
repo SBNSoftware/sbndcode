@@ -1,0 +1,56 @@
+# Author: Anna Beever albeever1@sheffield.ac.uk
+# File:   reco2_PandoraNF_sbnd.fcl
+
+#include "standard_reco2_sbnd.fcl"
+
+process_name: PandoraNF
+
+physics.producers.pandoraNF: @local::physics.producers.pandora
+physics.producers.pandoraCaloNF: @local::physics.producers.pandoraCalo
+physics.producers.pandoraTrackNF: @local::physics.producers.pandoraTrack
+physics.producers.pandoraShowerNF: @local::physics.producers.pandoraShower
+physics.producers.pandoraShowerSBNNF: @local::physics.producers.pandoraShowerSBN
+physics.producers.pandoraPidNF: @local::physics.producers.pandoraPid
+
+physics.producers.pandoraSCENF: @local::physics.producers.pandoraSCE
+physics.producers.pandoraSCECaloNF: @local::physics.producers.pandoraSCECalo
+physics.producers.pandoraSCETrackNF: @local::physics.producers.pandoraSCETrack
+physics.producers.pandoraSCEShowerNF: @local::physics.producers.pandoraSCEShower
+physics.producers.pandoraSCEShowerSBNNF: @local::physics.producers.pandoraSCEShowerSBN
+physics.producers.pandoraSCEPidNF: @local::physics.producers.pandoraSCEPid
+
+physics.reco2: [  
+    rns
+    , pandoraNF
+    , pandoraTrackNF
+    , pandoraShowerNF
+    , pandoraShowerSBNNF
+    , pandoraCaloNF
+    , pandoraPidNF
+    , pandoraSCENF
+    , pandoraSCETrackNF
+    , pandoraSCEShowerNF
+    , pandoraSCEShowerSBNNF
+    , pandoraSCECaloNF
+    , pandoraSCEPidNF
+]
+
+physics.producers.pandoraNF.ConfigFile: "PandoraSettings_Master_SBND_chargeSplit.xml"
+physics.producers.pandoraTrackNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraShowerNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraShowerSBNNF.PFParticleLabel: "pandoraNF"
+physics.producers.pandoraCaloNF.TrackModuleLabel: "pandoraTrackNF"
+physics.producers.pandoraPidNF.CalorimetryModuleLabel: "pandoraCaloNF"
+physics.producers.pandoraPidNF.TrackModuleLabel: "pandoraTrackNF"
+
+physics.producers.pandoraSCENF.PFPLabel: "pandoraNF"
+physics.producers.pandoraSCENF.TrackLabel: "pandoraTrackNF"
+physics.producers.pandoraSCETrackNF.PFParticleLabel: "pandoraSCENF"
+physics.producers.pandoraSCEShowerNF.PFParticleLabel: "pandoraSCENF" 
+physics.producers.pandoraSCEShowerSBNNF.PFParticleLabel: "pandoraSCENF"
+physics.producers.pandoraSCECaloNF.TrackModuleLabel: "pandoraSCETrackNF"
+physics.producers.pandoraSCEPidNF.CalorimetryModuleLabel: "pandoraSCECaloNF"
+physics.producers.pandoraSCEPidNF.TrackModuleLabel: "pandoraSCETrackNF"
+
+physics.ana: [
+]
