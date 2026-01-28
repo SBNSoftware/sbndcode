@@ -34,6 +34,8 @@
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+#include "sbndcode/OpDetSim/TriggerEmulationService.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "art_root_io/TFileService.h"
 #include "TH1D.h"
@@ -50,8 +52,7 @@
 #include <iostream>
 #include <bitset>
 #include <memory>
-
-#include "sbndcode/OpDetSim/TriggerEmulationService.h"
+#include <string>
 
 namespace sbndaq {
     class SBNDPMTDecoder;
@@ -80,6 +81,8 @@ public:
     uint32_t get_boardid(artdaq::Fragment & frag);
     void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
+    void     fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db, std::vector<uint> & ch_map);
+
 private:
     uint fdebug;
 
@@ -105,6 +108,8 @@ private:
 
     int fn_maxflashes;
     uint fn_caenboards;
+    uint fn_caenchannels;
+    uint ftiming_caen_offset;
     uint16_t fthreshold_ftrig;
     uint16_t fdefault_postpercent; // should be a number between 0 and 100
 
@@ -113,9 +118,6 @@ private:
 
     std::vector<uint> fset_fragid_map;
     bool fuse_set_map;
-
-    std::vector<uint> fch_map;
-
     int fmon_threshold;
 
     // histogram info  
@@ -124,6 +126,7 @@ private:
     uint evt_counter = 0;
 
     sbndDB::PMTCalibrationDatabase const* fpmt_calib_db;
+    opdet::sbndPDMapAlg opdetmap; //map for photon detector types
 };
 
 
@@ -154,6 +157,8 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<uint>("n_caenboards",8);
+    fn_caenchannels  = p.get<uint>("n_caenchannels",15);
+    ftiming_caen_offset = p.get<uint>("timing_caen_offset",900);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     fdefault_postpercent = p.get<uint16_t>("default_postpercent",80);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
@@ -163,8 +168,6 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fuse_set_map    = p.get<bool>("use_set_map",false);
 
     fpmt_calib_db    = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
-    fch_map          = p.get<std::vector<uint>>("ch_map",{});
-
     fmon_threshold   = p.get<int>("mon_threshold", 15);
  
     produces< std::vector< raw::OpDetWaveform > >(fpmt_instance_name); 
@@ -206,6 +209,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
+    std::vector<uint> ch_map{fn_caenboards*fn_caenchannels,9999};
+    fill_chmap(fpmt_calib_db, ch_map);
+
     uint ncont = 0; // counter for number of containers
 
     bool found_caen = false;
@@ -429,18 +435,16 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     else if (fdebug>1)
                         std::cout << "WARNING: TIME DIFFERENCE IS GREATER THAN " << fallowed_time_diff << " us. Event timestamp: " << event_trigger_time << ", waveform timestamp: " << iwvfm_start << std::endl;
                 }
-                uint ch;
-                if (i == 15)
-                    ch = fragid;
-                else
-                    ch = fch_map.at(fragid*15 + i);
-                raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
                 if ((i == 15) && (foutput_ftrig_wvfm)){
+                    // for the timing ch of each board, the opdetwaveform channel is equal to the board id
+                    raw::OpDetWaveform waveform(time_diff, fragid, combined_wvfm);
                     fltwvfmVec->push_back(waveform);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
                     fltTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                 }
                 else if ((fragid == 8)){ // fyi: this hardcodes the timing caen board index
+                    // for the timing caen, the opdetwaveform channel is offset (900) + chidx 
+                    raw::OpDetWaveform waveform(time_diff, ftiming_caen_offset + i, combined_wvfm);
                     if ((foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end())){
                         timwvfmVec->push_back(waveform);
                         art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
@@ -448,6 +452,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     }
                 }
                 else{
+                    // for normal pmt chs, the opdetwaveform channel is from the ch_map
+                    raw::OpDetWaveform waveform(time_diff, ch_map.at(fragid*15+i), combined_wvfm);
                     pmtwvfmVec->push_back(waveform);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_pmtwvfm_ptr(pmtwvfmVec->size()-1);
                     pmtTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
@@ -657,6 +663,21 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
     CAENV1730EventHeader header = event_ptr->Header;
     uint32_t boardid = header.boardID;
     return boardid;
+}
+
+void sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db, std::vector<uint> & ch_map){
+    if (pmt_calib_db==nullptr){
+        throw std::runtime_error("PMT Calibration Database pointer is null.");
+    }
+    auto nopdets = opdetmap.size();
+    for (size_t idet=0; idet<nopdets; idet++){
+        std::string pd_type = opdetmap.pdType(idet);
+
+        if (pd_type.find("pmt") == std::string::npos) continue;
+        int board = pmt_calib_db->getCAENDigitizer(idet);
+        int channel = pmt_calib_db->getCAENDigitizerChannel(idet);
+        ch_map[board*15 + channel] = idet;
+    }
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDPMTDecoder)
