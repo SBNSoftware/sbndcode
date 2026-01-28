@@ -1558,6 +1558,7 @@ void nuEBackgroundSignalCut_macro(){
     int CRUMBSCut = 1;
     int ETheta2Cut = 1;
     int trackscoreCut = 1;
+    int trackscoreHighestCut = 1;
     int upperCRUMBSCut = 0;
     int upperPFPCut = 0;
     int QSquaredCut = 0;
@@ -1580,18 +1581,21 @@ void nuEBackgroundSignalCut_macro(){
     } else if(ETheta2Cut == 1 && trackscoreCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_EThetaCuts.txt";
-    } else if(trackscoreCut == 1 && upperCRUMBSCut == 0){
+    } else if(trackscoreCut == 1 && trackscoreHighestCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreCuts.txt";
+    } else if(trackscoreHighestCut == 1 && upperCRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscoreCuts.txt";
     } else if(upperCRUMBSCut == 1 && upperPFPCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBSCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBSCuts.txt";
     } else if(upperPFPCut == 1 && QSquaredCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFPCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFPCuts.txt";
     } else if(QSquaredCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_QSquared_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_upperCRUMBS_upperPFP_QSquaredCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_QSquared_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_QSquaredCuts.txt";
     }
     
     std::ofstream clearFile(txtFileName, std::ios::trunc);
@@ -2229,6 +2233,8 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_purity = -999999;
                 double highestEnergy_trackscore = -999999;
 
+                double highestTrackscore = -999999;
+
                 double sliceCategoryPlottingMacro = -999999;
 
                 double FVCut_xLow_BDT = -196;
@@ -2256,10 +2262,6 @@ void nuEBackgroundSignalCut_macro(){
                 double crumbsScoreCut_DLUboone = 0;
                 double crumbsScoreCut_DLNuE = 0.16;
                 
-                double numPFPsCut_BDT = 100;
-                double numPFPsCut_DLUboone = 100;
-                double numPFPsCut_DLNuE = 100;
-                
                 double EThetaCut_highestPFP_BDT = 1.79;
                 double EThetaCut_highestPFP_DLUboone = 1.79;
                 double EThetaCut_highestPFP_DLNuE = 1.79;
@@ -2267,7 +2269,15 @@ void nuEBackgroundSignalCut_macro(){
                 double EThetaCut_sum_BDT = 3.32;
                 double EThetaCut_sum_DLUboone = 3.32;
                 double EThetaCut_sum_DLNuE = 3.32;
-               
+              
+                double trackscore_highestPFP_BDT = 0.425;
+                double trackscore_highestPFP_DLUboone = 0.425;
+                double trackscore_highestPFP_DLNuE = 0.375;
+
+                double trackscore_highestScore_BDT = 0.375;
+                double trackscore_highestScore_DLUboone = 0.375;
+                double trackscore_highestScore_DLNuE = 0.375;
+                
                 double upperCrumbsScoreCut_BDT = 0.64;
                 double upperCrumbsScoreCut_DLUboone = 0.56;
                 double upperCrumbsScoreCut_DLNuE = 0.56;
@@ -2313,6 +2323,8 @@ void nuEBackgroundSignalCut_macro(){
                                     highestEnergy_purity = reco_particlePurity->at(pfp);
                                     highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
                                 }
+
+                                if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
                             }
                         } else if(clearCosmicCut == 0){
                             // Don't apply a cut that PFPs must not be a clear cosmic
@@ -2524,14 +2536,20 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                    
-                    if(numPFPsCut == 1 && numPFPsSlice > numPFPsCut_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
-
-                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                    
+                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
@@ -2620,14 +2638,20 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
-                    if(numPFPsCut == 1 && numPFPsSlice > numPFPsCut_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
+                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
+                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLNuE << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
@@ -2687,18 +2711,24 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
-                    if(numPFPsCut == 1 && numPFPsSlice > numPFPsCut_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue;
-                    }
-                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
 
+                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLUboone << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
                     if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
@@ -5512,9 +5542,9 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(pfpCompleteness, 0, 1, 999, 999, (base_path + "pfpCompleteness").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
     efficiency(pfpPurity, 0, 1, 999, 999, (base_path + "pfpPurity").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
 
-    efficiency(trackscoreHighestEnergyPFP, 0, 1, 999, 999, (base_path + "trackscoreHighestEnergyPFP").c_str(), "bottomLeft", nullptr, &right, 1);
-    efficiency(trackscoreAllPFPs, 0, 1, 999, 999, (base_path + "trackscoreAllPFPs").c_str(), "bottomLeft", nullptr, &right, 1);
-    efficiency(trackscoreHighestScorePFPs, 0, 1, 999, 999, (base_path + "trackscoreHighestScorePFPs").c_str(), "bottomLeft", nullptr, &right, 1);
+    efficiency(trackscoreHighestEnergyPFP, 0, 1, 999, 999, (base_path + "trackscoreHighestEnergyPFP").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(trackscoreAllPFPs, 0, 1, 999, 999, (base_path + "trackscoreAllPFPs").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(trackscoreHighestScorePFPs, 0, 1, 999, 999, (base_path + "trackscoreHighestScorePFPs").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
 
     efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
     efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
