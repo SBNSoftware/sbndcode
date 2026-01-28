@@ -55,3 +55,5 @@ physics:
     # ie analyzers and output streams.  these all run simultaneously
     end_paths: [stream1]
 }
+
+physics.producers.lightcalo.FillTree: true
