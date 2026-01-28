@@ -395,7 +395,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       // use view with the maximal wire extent to calculate transverse (YZ) length
       if( hcs[i].NWires > newblip.MaxWireSpan ) {
         newblip.MaxWireSpan = hcs[i].NWires;
-	newblip.dYZ         = hcs[i].NWires * wirepitch;
+	      newblip.dYZ         = hcs[i].NWires * wirepitch;
       }
   
       for(size_t j=i+1; j<hcs.size(); j++){
@@ -409,9 +409,8 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
           intsec_p.SetY(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Y());
           intsec_p.SetZ(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Z());
         } else {
-	  std::vector<geo::WireID> i_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[i].CenterChan);
-	  std::vector<geo::WireID> j_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[j].CenterChan);
-
+	        std::vector<geo::WireID> i_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[i].CenterChan);
+	        std::vector<geo::WireID> j_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[j].CenterChan);
           match3d = wireReadoutGeom->Get().WireIDsIntersect(i_wireids.at(0), j_wireids.at(0), intsec_p);
         }
 

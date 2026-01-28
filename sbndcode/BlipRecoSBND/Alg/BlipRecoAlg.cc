@@ -40,8 +40,8 @@ namespace blip {
         auto const& tpcid = geo::TPCID(cryoid,tpc);
 
         // Loop planes in TPC 'tpc'
-	auto const& plane0id = geo::PlaneID(cstat,tpc,0);
-	auto const& plane0geo = wireReadoutGeom->Get().Plane(plane0id);
+        auto const& plane0id = geo::PlaneID(cstat,tpc,0);
+        auto const& plane0geo = wireReadoutGeom->Get().Plane(plane0id);
         for(size_t pl=0; pl<wireReadoutGeom->Get().Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
           auto const& planegeo = wireReadoutGeom->Get().Plane(planeid);
@@ -63,7 +63,7 @@ namespace blip {
             auto const& tpcgeom   = cryostat.TPC(tpc);
             auto const xyz        = plane0geo.GetCenter();
             const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
-	    float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
+            float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
             kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
 	  } else {
@@ -156,18 +156,18 @@ namespace blip {
       for(int i=0; i<kNplanes; i++) {
         if( i == fCaloPlane ) continue;
         h_clust_overlap[iTPC][i]           = hdir.make<TH1D>(Form("t%i_p%i_clust_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
-	h_clust_dt[iTPC][i]                = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
+        h_clust_dt[iTPC][i]                = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
         h_clust_dtfrac[iTPC][i]            = hdir.make<TH1D>(Form("t%i_p%i_clust_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),150,-1.5,1.5);
         
         h_clust_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge",iTPC,i),  
 						 Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
 						 qbins,0,qmax,qbins,0,qmax);
-	h_clust_q[iTPC][i]->SetOption("colz");
+        h_clust_q[iTPC][i]->SetOption("colz");
         
         h_clust_q_cut[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge_cut",iTPC,i),  
 						     Form("Post-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",iTPC,fCaloPlane,i),
 						     qbins,0,qmax,qbins,0,qmax);
-	h_clust_q_cut[iTPC][i]->SetOption("colz");
+        h_clust_q_cut[iTPC][i]->SetOption("colz");
       
         h_clust_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
        
@@ -181,7 +181,7 @@ namespace blip {
         h_clust_truematch_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_truematch_charge",iTPC,i),  
           Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
           qbins,0,qmax,qbins,0,qmax);
-          h_clust_truematch_q[iTPC][i]->SetOption("colz");
+        h_clust_truematch_q[iTPC][i]->SetOption("colz");
         
         h_clust_truematch_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
 
@@ -932,15 +932,15 @@ namespace blip {
               // Check that the two central wires intersect
               // *******************************************
               double y, z;
-	      geo::Point_t intsec_p;
-	      std::vector<geo::WireID> A_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcA.CenterChan);
-	      std::vector<geo::WireID> B_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcB.CenterChan);
+	            geo::Point_t intsec_p;
+	            std::vector<geo::WireID> A_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcA.CenterChan);
+	            std::vector<geo::WireID> B_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcB.CenterChan);
 
-	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireids.at(0),B_wireids.at(0),intsec_p)) continue;
-	      // Save intersect location, so we don't have to
+	            if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireids.at(0),B_wireids.at(0),intsec_p)) continue;
+	            // Save intersect location, so we don't have to
               // make another call to the Geometry service later
-	      y = intsec_p.Y();
-	      z = intsec_p.Z();
+	            y = intsec_p.Y();
+	            z = intsec_p.Z();
               TVector3 xloc(0,y,z);
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;

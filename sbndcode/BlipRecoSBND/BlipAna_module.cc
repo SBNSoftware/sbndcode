@@ -456,10 +456,10 @@ class BlipAnaTreeDataStruct
       evtTree->Branch("hit_ismatch",hit_ismatch,"hit_ismatch[nhits]/I");
       evtTree->Branch("hit_trkid",hit_trkid,"hit_trkid[nhits]/I"); 
       if( saveTruthInfo ) {
-      evtTree->Branch("hit_g4trkid",hit_g4trkid,"hit_g4trkid[nhits]/I");
-      evtTree->Branch("hit_g4frac",hit_g4frac,"hit_g4frac[nhits]/F"); 
-      evtTree->Branch("hit_g4energy",hit_g4energy,"hit_g4energy[nhits]/F"); 
-      evtTree->Branch("hit_g4charge",hit_g4charge,"hit_g4charge[nhits]/F"); 
+        evtTree->Branch("hit_g4trkid",hit_g4trkid,"hit_g4trkid[nhits]/I");
+        evtTree->Branch("hit_g4frac",hit_g4frac,"hit_g4frac[nhits]/F"); 
+        evtTree->Branch("hit_g4energy",hit_g4energy,"hit_g4energy[nhits]/F"); 
+        evtTree->Branch("hit_g4charge",hit_g4charge,"hit_g4charge[nhits]/F"); 
       }
       evtTree->Branch("hit_clustid",hit_clustid,"hit_clustid[nhits]/I"); 
       evtTree->Branch("hit_blipid",hit_blipid,"hit_blipid[nhits]/I");
@@ -745,22 +745,22 @@ class BlipAna : public art::EDAnalyzer
     
     h_part_process    = dir_truth.make<TH1D>("part_process","MCParticle->Process()",5,0,5);
     auto xa = h_part_process->GetXaxis();
-      xa->SetBinLabel(1,"primary");
-      xa->SetBinLabel(2,"compt");
-      xa->SetBinLabel(3,"phot");
-      xa->SetBinLabel(4,"conv");
-      xa->SetBinLabel(5,"other");
+    xa->SetBinLabel(1,"primary");
+    xa->SetBinLabel(2,"compt");
+    xa->SetBinLabel(3,"phot");
+    xa->SetBinLabel(4,"conv");
+    xa->SetBinLabel(5,"other");
     
     h_nblips_tm    = dir_truth.make<TH1D>("nblips_tm","Truth-matched 3D blips per event",blipBins,0,blipMax);
     h_blip_qcomp   = dir_truth.make<TH1D>("blip_qcomp","Fraction of true charge (at anode) reconstructed into 3D blips",202,0,1.01);
     h_blip_reszy   = dir_truth.make<TH2D>("blip_res_zy","Blip position resolution;Z_{reco} - Z_{true} [cm];Y_{reco} - Y_{true} [cm]",150,-15,15,150,-15,15);
-      h_blip_reszy ->SetOption("colz");
+    h_blip_reszy ->SetOption("colz");
     h_blip_resx    = dir_truth.make<TH1D>("blip_res_x","Blip position resolution;X_{reco} - X_{true} [cm]",200,-10,10);
     h_blip_resE   = dir_truth.make<TH1D>("blip_res_E","Blip energy resolution;(E_{reco} - E_{true})/E_{true} [cm]",200,-1.,1.);
     h_blip_E_vs_resE    = dir_truth.make<TH2D>("blip_res_energy","Energy resolution of 3D blips;Energy [MeV];#deltaE/E_{true}",100,0,5,200,-1.,1.);
-        h_blip_E_vs_resE ->SetOption("colz");
+    h_blip_E_vs_resE ->SetOption("colz");
     h_clust_qres_vs_q       = dir_truth.make<TH2D>("qres_vs_q","Clusters on collection plane;True charge deposited [ #times 10^{3} e- ];Reco resolution",160,0,80,200,-1,1);
-      h_clust_qres_vs_q     ->SetOption("colz");
+    h_clust_qres_vs_q     ->SetOption("colz");
     h_clust_qres_anode      = dir_truth.make<TH1D>("qres_anode","Reco charge vs true charge collected;( reco-true ) / true;Area-normalized entries",200,-1.,1.);
     h_clust_qres_dep        = dir_truth.make<TH1D>("qres_dep","Reco charge vs true charge deposited;( reco-true ) / true;Area-normalized entries",200,-1.,1.);
     h_qratio_vs_time_sim  = dir_truth.make<TH2D>("qratio_vs_time_sim",";Drift time [#mus]; Q_{anode} / Q_{dep}",44,100,2300, 1000,0.50,1.50);
@@ -801,10 +801,10 @@ class BlipAna : public art::EDAnalyzer
       h_hitqres[i]      = dir_truth.make<TH1D>(Form("pl%i_hit_q_res",i),     Form("Plane %i hits;charge resolution: (reco-true)/true",i),    400,-1,1);
       h_hitqres_scatter[i] = dir_truth.make<TH2D>( Form("pl%i_hit_qres_scatter",i), 
         Form("Plane %i;true hit charge [#times 10^{3} e-];Reconstructed hit charge [#times 10^{3} e-]",i),qBins,0,qMax/1e3,qBins,0,qMax/1e3);
-        h_hitqres_scatter[i]  ->SetOption("colz");
+      h_hitqres_scatter[i]  ->SetOption("colz");
       h_hitqres_vs_q[i] = dir_truth.make<TH2D>( Form("pl%i_hit_qres_vs_q",i),
         Form("Plane %i;true hit charge [#times 10^{3} e-];hit charge resolution: (reco-true)/true",i),qBins,0,qMax/1e3, 400,-2,2);
-        h_hitqres_vs_q[i]     ->SetOption("colz");
+      h_hitqres_vs_q[i]     ->SetOption("colz");
     
       h_chargecomp[i] = dir_truth.make<TH1D>(Form("pl%i_hit_charge_completeness",i),Form("charge completness, plane %i",i),101,0,1.01);
       h_hitpur[i]     = dir_truth.make<TH1D>(Form("pl%i_hit_purity",i),Form("hit purity, plane %i",i),101,0,1.01);
@@ -1385,7 +1385,7 @@ void BlipAna::analyze(const art::Event& evt)
       nblips_picky++;
       fNum3DBlipsPicky++;
       h_blip_charge_picky ->Fill(blp.clusters[fCaloPlane].Charge);
-       h_blip_zy_picky     ->Fill(blp.Position.Z(), blp.Position.Y());
+      h_blip_zy_picky     ->Fill(blp.Position.Z(), blp.Position.Y());
       h_blip_charge_YU_picky->Fill( 0.001*blp.clusters[2].Charge, 0.001*blp.clusters[0].Charge );
       h_blip_charge_YV_picky->Fill( 0.001*blp.clusters[2].Charge, 0.001*blp.clusters[1].Charge );
       h_blip_charge_UV_picky->Fill( 0.001*blp.clusters[0].Charge, 0.001*blp.clusters[1].Charge );
@@ -1488,27 +1488,27 @@ void BlipAna::endJob(){
   //printf("                 picky frac   : %5.3f\n",     fNum3DBlipsPicky/float(fNum3DBlips));
   
   if(fIsMC){
-  printf("  MC-matched blips per evt    : %.3f\n",       fNum3DBlipsTrue/nEvents);
-  printf("  MC blip purity              : %.3f\n",       fNum3DBlipsTrue/float(fNum3DBlips));
-  printf("  MC blip purity, 3 planes    : %.3f\n",      fNum3DBlipsTrue3P/float(fNum3DBlips3Plane));
-  if( h_blip_qcomp->GetMean() > 0 ) 
-  printf("  Charge completeness, total  : %.4f +/- %.4f\n", h_blip_qcomp->GetMean(), h_blip_qcomp->GetStdDev()/sqrt(fNumEvents));
-  //printf("                       < 2MeV : %.4f +/- %.4f\n", h_blip_qcomp_2MeV->GetMean(), h_blip_qcomp_2MeV->GetStdDev()/sqrt(fNumEvents));
-  //printf("  Blip purity                 : %.4f\n",       h_blip_pur->GetMean());
+    printf("  MC-matched blips per evt    : %.3f\n",       fNum3DBlipsTrue/nEvents);
+    printf("  MC blip purity              : %.3f\n",       fNum3DBlipsTrue/float(fNum3DBlips));
+    printf("  MC blip purity, 3 planes    : %.3f\n",      fNum3DBlipsTrue3P/float(fNum3DBlips3Plane));
+    if( h_blip_qcomp->GetMean() > 0 ) 
+    printf("  Charge completeness, total  : %.4f +/- %.4f\n", h_blip_qcomp->GetMean(), h_blip_qcomp->GetStdDev()/sqrt(fNumEvents));
+    //printf("                       < 2MeV : %.4f +/- %.4f\n", h_blip_qcomp_2MeV->GetMean(), h_blip_qcomp_2MeV->GetStdDev()/sqrt(fNumEvents));
+    //printf("  Blip purity                 : %.4f\n",       h_blip_pur->GetMean());
   }
   printf("  Mean blip charge            : %.0f e-\n",      h_blip_charge->GetMean());
   printf("\n");
   for(size_t i=0; i<kNplanes; i++){
-  printf("  Plane %lu -------------------------\n",i);
-  printf("   * total hits/evt           : %.2f\n",fNumHits[i]/(float)fNumEvents);
-  printf("   * untracked hits/evt       : %.2f (%.2f plane-matched)\n",fNumHitsUntracked[i]/(float)fNumEvents, fNumHitsMatched[i]/(float)fNumEvents);
-  //printf("   * plane-matched hits/evt   : %.2f\n",fNumHitsMatched[i]/(float)fNumEvents);
-  if(fIsMC) {
-  printf("   * true-matched hits/evt    : %.2f (%.2f plane-matched)\n",fNumHitsTrue[i]/(float)fNumEvents, fNumHitsMatchedTrue[i]/(float)fNumEvents);
-  if( h_chargecomp[i]->GetMean() > 0 ) 
-  printf("   * charge completeness      : %.4f\n",h_chargecomp[i]->GetMean());
-  printf("   * hit purity               : %.4f\n",h_hitpur[i]->GetMean());
-  }
+    printf("  Plane %lu -------------------------\n",i);
+    printf("   * total hits/evt           : %.2f\n",fNumHits[i]/(float)fNumEvents);
+    printf("   * untracked hits/evt       : %.2f (%.2f plane-matched)\n",fNumHitsUntracked[i]/(float)fNumEvents, fNumHitsMatched[i]/(float)fNumEvents);
+    //printf("   * plane-matched hits/evt   : %.2f\n",fNumHitsMatched[i]/(float)fNumEvents);
+    if(fIsMC) {
+      printf("   * true-matched hits/evt    : %.2f (%.2f plane-matched)\n",fNumHitsTrue[i]/(float)fNumEvents, fNumHitsMatchedTrue[i]/(float)fNumEvents);
+      if( h_chargecomp[i]->GetMean() > 0 ) 
+      printf("   * charge completeness      : %.4f\n",h_chargecomp[i]->GetMean());
+      printf("   * hit purity               : %.4f\n",h_hitpur[i]->GetMean());
+    }
   } 
   printf("\n***********************************************\n");
 
