@@ -37,6 +37,7 @@ cet_build_plugin(LArG4CRTFilter art::module SOURCE LArG4CRTFilter_module.cc LIBR
 cet_build_plugin(LArG4FakeTriggerFilter art::module SOURCE LArG4FakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SimEnergyDepFakeTriggerFilter art::module SOURCE SimEnergyDepFakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(NumberOfHitsFilter art::module SOURCE NumberOfHitsFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(TrueSignalFilter art::module SOURCE TrueSignalFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
