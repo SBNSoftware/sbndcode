@@ -9,7 +9,7 @@ pmtdecoder:
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
     frameshift_module_label: "frameshift"
     ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
-    nominal_length: 5000     # expected waveform length
+    nominal_length: 5000     # ticks, expected waveform length
 
     # configure output options
     # use time difference between reference + CAEN used to determine rollover and/or weirdness
