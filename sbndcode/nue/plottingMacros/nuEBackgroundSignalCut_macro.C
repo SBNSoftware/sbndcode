@@ -2755,7 +2755,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.cosmic->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.cosmic->Fill(highestTrackscore, weight);
 
                         }
 
@@ -2789,7 +2789,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
                             
-                            trackscoreHighestScorePFPs_splitDLUboone.cosmic->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.cosmic->Fill(highestTrackscore, weight);
     
                         }
 
@@ -2824,7 +2824,8 @@ void nuEBackgroundSignalCut_macro(){
                                     }
                                 }
                             }
-                            trackscoreHighestScorePFPs_splitDLNuE.cosmic->Fill(highestTrackscore);
+
+                            trackscoreHighestScorePFPs_splitDLNuE.cosmic->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -2867,7 +2868,8 @@ void nuEBackgroundSignalCut_macro(){
                                     }
                                 }
                             }
-                            trackscoreHighestScorePFPs_splitBDT.nu_e->Fill(highestTrackscore);
+
+                            trackscoreHighestScorePFPs_splitBDT.nu_e->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -2899,7 +2901,8 @@ void nuEBackgroundSignalCut_macro(){
                                     }
                                 }
                             }
-                            trackscoreHighestScorePFPs_splitDLUboone.nu_e->Fill(highestTrackscore);
+
+                            trackscoreHighestScorePFPs_splitDLUboone.nu_e->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -2934,7 +2937,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.nu_e->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.nu_e->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -2977,7 +2980,8 @@ void nuEBackgroundSignalCut_macro(){
                                     }
                                 }
                             }
-                            trackscoreHighestScorePFPs_splitBDT.NCNpi0->Fill(highestTrackscore);
+
+                            trackscoreHighestScorePFPs_splitBDT.NCNpi0->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3010,7 +3014,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.NCNpi0->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.NCNpi0->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3045,7 +3049,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.NCNpi0->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.NCNpi0->Fill(highestTrackscore, weight);
 
                         }
 
@@ -3090,7 +3094,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.otherNC->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.otherNC->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3123,7 +3127,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.otherNC->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.otherNC->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3158,7 +3162,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.otherNC->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.otherNC->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3202,7 +3206,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.CCnumu->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.CCnumu->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3235,7 +3239,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.CCnumu->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.CCnumu->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3270,7 +3274,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.CCnumu->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.CCnumu->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3314,7 +3318,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.CCnue->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.CCnue->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3347,7 +3351,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.CCnue->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.CCnue->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3382,7 +3386,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.CCnue->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.CCnue->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3426,7 +3430,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.dirt->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.dirt->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3459,7 +3463,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.dirt->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.dirt->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3494,7 +3498,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.dirt->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.dirt->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3538,7 +3542,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.nu_eDirt->Fill(highestTrackscore); 
+                            trackscoreHighestScorePFPs_splitBDT.nu_eDirt->Fill(highestTrackscore, weight); 
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3571,7 +3575,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.nu_eDirt->Fill(highestTrackscore); 
+                            trackscoreHighestScorePFPs_splitDLUboone.nu_eDirt->Fill(highestTrackscore, weight); 
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3606,7 +3610,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.nu_eDirt->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.nu_eDirt->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3650,7 +3654,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitBDT.other->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitBDT.other->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3683,7 +3687,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLUboone.other->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLUboone.other->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -3718,7 +3722,7 @@ void nuEBackgroundSignalCut_macro(){
                                 }
                             }
 
-                            trackscoreHighestScorePFPs_splitDLNuE.other->Fill(highestTrackscore);
+                            trackscoreHighestScorePFPs_splitDLNuE.other->Fill(highestTrackscore, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5516,6 +5520,7 @@ void nuEBackgroundSignalCut_macro(){
 
     efficiency(trackscoreHighestEnergyPFP, 0, 1, 999, 999, (base_path + "trackscoreHighestEnergyPFP").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(trackscoreAllPFPs, 0, 1, 999, 999, (base_path + "trackscoreAllPFPs").c_str(), "bottomLeft", nullptr, &right, 1);
+    efficiency(trackscoreHighestScorePFPs, 0, 1, 999, 999, (base_path + "trackscoreHighestScorePFPs").c_str(), "bottomLeft", nullptr, &right, 1);
 
     efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
     efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
