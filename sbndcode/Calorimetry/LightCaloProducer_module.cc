@@ -35,10 +35,6 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 
-// LArSoft MC includes 
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "lardataobj/Simulation/sim.h"
-
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
