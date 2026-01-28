@@ -81,7 +81,7 @@ public:
     uint32_t get_boardid(artdaq::Fragment & frag);
     void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
-    void     fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db, std::vector<uint> & ch_map);
+    std::vector<uint> fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db);
 
 private:
     uint fdebug;
@@ -209,8 +209,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
-    std::vector<uint> ch_map{fn_caenboards*fn_caenchannels,9999};
-    fill_chmap(fpmt_calib_db, ch_map);
+    std::vector<uint> ch_map = fill_chmap(fpmt_calib_db);
 
     uint ncont = 0; // counter for number of containers
 
@@ -665,19 +664,21 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
     return boardid;
 }
 
-void sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db, std::vector<uint> & ch_map){
+std::vector<uint> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
+    std::vector<uint> ch_map(fn_caenboards*fn_caenchannels,9999);
     if (pmt_calib_db==nullptr){
         throw std::runtime_error("PMT Calibration Database pointer is null.");
     }
     auto nopdets = opdetmap.size();
     for (size_t idet=0; idet<nopdets; idet++){
         std::string pd_type = opdetmap.pdType(idet);
-
         if (pd_type.find("pmt") == std::string::npos) continue;
-        int board = pmt_calib_db->getCAENDigitizer(idet);
+        // the boards in the database are 1-indexed, need to convert to 0-indexed
+        int board = pmt_calib_db->getCAENDigitizer(idet) - 1;
         int channel = pmt_calib_db->getCAENDigitizerChannel(idet);
         ch_map[board*15 + channel] = idet;
     }
+    return ch_map;
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDPMTDecoder)
