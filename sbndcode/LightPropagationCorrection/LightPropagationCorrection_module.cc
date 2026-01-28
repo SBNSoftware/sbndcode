@@ -448,9 +448,9 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
-            if(fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="xarapuca_vuv")
+            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
-            else if(fPDSMap.pdType(opch)=="pmt_uncoated" || fPDSMap.pdType(opch)=="xarapuca_vis")
+            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
                 lightPropTime = lightPropTimeVIS;
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
