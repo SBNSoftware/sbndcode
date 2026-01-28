@@ -119,11 +119,7 @@ private:
                  std::vector<double>  ref_visibility, 
                  std::vector<double> &total_gamma_v);
 
-  // Returns the median of the light vector 
-  double CalcMedian(std::vector<double> total_light);
-
-  // Returns the mean of the light vector 
-  double CalcMean(std::vector<double> total_light);
+  // Returns the weighted mean of the light vector 
   double CalcMean(std::vector<double> total_light, std::vector<double> total_err);
 
   // fcl parameters 
@@ -150,6 +146,19 @@ private:
   std::vector<float> fupper_thresh; 
 
   std::vector<float> fcal_area_const; 
+
+  double fpmtcoated_vuveff_tpc0; 
+  double fpmtcoated_viseff_tpc0;
+  double fpmtuncoated_eff_tpc0;
+
+  double fpmtcoated_vuveff_tpc1; 
+  double fpmtcoated_viseff_tpc1;
+  double fpmtuncoated_eff_tpc1;
+
+  double fxarapucavuv_vuveff;
+  double fxarapucavuv_viseff;
+  double fxarapucavis_eff; 
+
   std::vector<float> fopdet_vuv_eff;
   std::vector<float> fopdet_vis_eff;
   std::vector<int>   fopdet_mask;
@@ -214,9 +223,47 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   fupper_thresh    = p.get<std::vector<float>>("OpDetMaxPEThreshold");
 
   fcal_area_const  = p.get<std::vector<float>>("CalAreaConstants");
-  fopdet_vuv_eff   = p.get<std::vector<float>>("OpDetVUVEfficiencies");
-  fopdet_vis_eff   = p.get<std::vector<float>>("OpDetVISEfficiencies");
   fopdet_mask      = p.get<std::vector<int>>("OpDetMask");
+
+  fpmtcoated_viseff_tpc0  = p.get<double>("PMTCoatedVISEff_tpc0");
+  fpmtcoated_vuveff_tpc0  = p.get<double>("PMTCoatedVUVEff_tpc0");
+  fpmtuncoated_eff_tpc0   = p.get<double>("PMTUncoatedEff_tpc0");
+  fpmtcoated_viseff_tpc1  = p.get<double>("PMTCoatedVISEff_tpc1");
+  fpmtcoated_vuveff_tpc1  = p.get<double>("PMTCoatedVUVEff_tpc1");
+  fpmtuncoated_eff_tpc1   = p.get<double>("PMTUncoatedEff_tpc1");
+
+  fxarapucavuv_vuveff = p.get<double>("XArapucaVUVVUVEff");
+  fxarapucavuv_viseff = p.get<double>("XArapucaVUVVISEff");
+  fxarapucavis_eff    = p.get<double>("XArapucaVISEff");
+
+  // fill efficiency vectors 
+  fopdet_vuv_eff.resize(nchan,0.);
+  fopdet_vis_eff.resize(nchan,0.);
+  for (unsigned int ch = 0; ch < nchan; ++ch) {
+    std::string pd_type = opdetmap.pdType(ch);
+    if (pd_type == "pmt_coated") {
+      if (ch%2==0){
+        fopdet_vuv_eff[ch] = fpmtcoated_vuveff_tpc0;
+        fopdet_vis_eff[ch] = fpmtcoated_viseff_tpc0;
+      }
+      else{
+        fopdet_vuv_eff[ch] = fpmtcoated_vuveff_tpc1;
+        fopdet_vis_eff[ch] = fpmtcoated_viseff_tpc1;
+      }
+    } else if (pd_type == "pmt_uncoated") {
+      if (ch%2==0)
+        fopdet_vis_eff[ch] = fpmtuncoated_eff_tpc0;
+      else
+        fopdet_vis_eff[ch] = fpmtuncoated_eff_tpc1;
+    }
+    else if (pd_type == "xarapuca_vuv") {
+      fopdet_vuv_eff[ch] = fxarapucavuv_vuveff;
+      fopdet_vis_eff[ch] = fxarapucavuv_viseff;
+    }
+    else if (pd_type == "xarapuca_vis") {
+      fopdet_vis_eff[ch] = fxarapucavis_eff;
+    }
+  }
 
   geom = lar::providerFrom<geo::Geometry>();
 
@@ -701,21 +748,6 @@ void sbnd::LightCaloProducer::CalcLight(std::vector<double> flash_pe_v,
   }
 }
 
-double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
-  std::vector<double> gamma_nonzero; 
-  for (size_t i=0; i<total_gamma.size(); i++){
-    if (total_gamma[i] <=0) continue;
-    gamma_nonzero.push_back(total_gamma[i]);
-  }
-  double median_gamma=0; 
-  const auto median_it = gamma_nonzero.begin() + gamma_nonzero.size() / 2;
-  std::nth_element(gamma_nonzero.begin(), median_it , gamma_nonzero.end());
-  auto median = *median_it;
-  median_gamma+=median;
-
-  return median_gamma;
-}
-
 double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::vector<double> total_err){
   // calculates a weighted average, loops over per tpc and then per channel
   double total_mean=0;
@@ -728,23 +760,6 @@ double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::v
       if (total_gamma[ich]<=0) continue;
       wgt_num   += total_gamma[ich]*(1./total_err[ich]);
       wgt_denom += (1./total_err[ich]);
-    }
-    if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
-  }
-  return total_mean; 
-}
-
-double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
-  double total_mean=0;
-  for (int tpc=0; tpc<2; tpc++){
-    double wgt_num = 0;
-    double wgt_denom = 0;
-    
-    for (size_t ich=0; ich<total_gamma.size(); ich++){
-      if (int(ich%2) != tpc) continue;
-      if (total_gamma[ich]<=0) continue;
-      wgt_num   += total_gamma[ich];
-      wgt_denom += 1.;
     }
     if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   }

@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 sbnd_lightcalo_data: @local::sbnd_lightcalo
-sbnd_lightcalo_data.CalAreaConstants: [ 0.02172 , 0.02150, 0.02103 ]  # calibration constants for wire planes, found in sbndcode/LArSoftConfigurations/calorimetry_sbnd.fcl 
+sbnd_lightcalo_data.CalAreaConstants: @local::sbnd_calorimetryalgdata.CalAreaConstants
 sbnd_lightcalo_data.OpFlashMin: -0.8 # assumption is light-triggered data
 sbnd_lightcalo_data.OpFlashMax: 2.0  # assumption is light-triggered data
 

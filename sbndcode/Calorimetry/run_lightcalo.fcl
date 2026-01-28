@@ -2,7 +2,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
-#include "lightcalo.fcl"
+#include "lightcalo_sbnd.fcl"
 
 process_name: LightCaloProducer
 
