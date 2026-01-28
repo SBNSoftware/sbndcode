@@ -29,7 +29,7 @@ physics:
         anaNF: @local::recoAnalysisParamsNF
     }
 
-    path0: [ ana, ana2 ]
+    path0: [ ana, anaNF ]
     end_paths: [ path0 ]
     trigger_paths: []
 }
