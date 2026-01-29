@@ -469,6 +469,17 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     }
   }
 
+  // Get electron lifetime (from database if enabled, otherwise from detector properties)
+  double elifetime_tpc0, elifetime_tpc1;
+  if (fuse_elifetime_db) {
+    ELifetimeInfo elife_info = GetELifetimeFromDB(e.id().run());
+    elifetime_tpc0 = elife_info.tau_tpc0;
+    elifetime_tpc1 = elife_info.tau_tpc1;
+  } else {
+    elifetime_tpc0 = det_prop.ElectronLifetime();
+    elifetime_tpc1 = det_prop.ElectronLifetime();
+  }
+
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
     // initialize tree variables 
     _pfpid = -1;
@@ -492,17 +503,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     std::vector<int>    plane_hits{0,0,0};
     bool has_sp0 = false;
     bool has_sp1 = false;
-
-    // Get electron lifetime (from database if enabled, otherwise from detector properties)
-    double elifetime_tpc0, elifetime_tpc1;
-    if (fuse_elifetime_db) {
-      ELifetimeInfo elife_info = GetELifetimeFromDB(e.id().run());
-      elifetime_tpc0 = elife_info.tau_tpc0;
-      elifetime_tpc1 = elife_info.tau_tpc1;
-    } else {
-      elifetime_tpc0 = det_prop.ElectronLifetime();
-      elifetime_tpc1 = det_prop.ElectronLifetime();
-    }
 
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
