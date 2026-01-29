@@ -2,8 +2,8 @@
 #include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "sbnd_lightpropagationcorrection_config.fcl"
 #include "frameshift_sbnd_data.fcl"
-#include "standard_reco2_sbnd.fcl"
 #include "lightcalo_sbnd_data.fcl"
+#include "standard_reco2_sbnd.fcl"
 
 services:
 {
