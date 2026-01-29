@@ -8,7 +8,7 @@ sbnd_lightcalo_data.OpFlashMin: -0.8 # assumption is light-triggered data
 sbnd_lightcalo_data.OpFlashMax: 2.0  # assumption is light-triggered data
 
 sbnd_lightcalo_data.UseELifetimeDB:  true
-sbnd_lightcalo_data.ELifetimeDBFile: tpc_elifetime
+sbnd_lightcalo_data.ELifetimeDBFile: "tpc_elifetime"
 sbnd_lightcalo_data.ELifetimeDBTag:  @local::SBND_Calibration_GlobalTags.tpc_elifetime_data
 
 sbnd_lightcalo_data_sce: @local::sbnd_lightcalo_data

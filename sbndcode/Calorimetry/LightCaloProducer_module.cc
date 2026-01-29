@@ -172,7 +172,6 @@ private:
   double fxarapucavuv_viseff;
   double fxarapucavis_eff; 
 
-  // Electron lifetime database parameters
   bool fuse_elifetime_db;
   std::string felifetime_db_file;
   std::string felifetime_db_tag;
@@ -508,7 +507,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
       auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
-      // Use TPC-specific electron lifetime
       double elifetime = (hit->WireID().TPC == 0) ? elifetime_tpc0 : elifetime_tpc1;
       double atten_correction = std::exp(drift_time/elifetime); // exp(us/us)
       auto hit_plane = hit->View();
@@ -536,7 +534,6 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           if (hit->View() !=bestHits) continue;
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
-          // correct for e- attenuation using TPC-specific lifetime
           auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
           double elifetime = (hit->WireID().TPC == 0) ? elifetime_tpc0 : elifetime_tpc1;
           double atten_correction = std::exp(drift_time/elifetime); // exp(us/us)
@@ -836,9 +833,8 @@ sbnd::LightCaloProducer::ELifetimeInfo sbnd::LightCaloProducer::GetELifetimeFrom
   felifetime_db->GetNamedChannelData(0, "etau_sce_spatial_east", tau_E);
   felifetime_db->GetNamedChannelData(0, "etau_sce_spatial_west", tau_W);
   
-  // TPC0 is East, TPC1 is West
-  info.tau_tpc0 = tau_E;
-  info.tau_tpc1 = tau_W;
+  info.tau_tpc0 = tau_E*1e3; // the db value is in ms, convert to us
+  info.tau_tpc1 = tau_W*1e3; // the db value is in ms, convert to us
 
   if (fverbose) {
     std::cout << "[LightCaloProducer] : Electron lifetime from DB for run " << run << std::endl;
