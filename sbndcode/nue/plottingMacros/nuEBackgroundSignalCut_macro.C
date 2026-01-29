@@ -1551,14 +1551,14 @@ void nuEBackgroundSignalCut_macro(){
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT/";
 
     // If clearCosmicCut == 1 -> cut all PFPs with clearCosmic score of 1. If clearCosmicCut == 0 -> keep all PFPs
-    int clearCosmicCut = 1;
-    int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 1;
-    int FVCut = 1;
-    int CRUMBSCut = 1;
-    int ETheta2Cut = 1;
-    int trackscoreCut = 1;
-    int trackscoreHighestCut = 1;
+    int clearCosmicCut = 0;
+    int numPFPs0Cut = 0;
+    int numRecoNeutrinosCut = 0;
+    int FVCut = 0;
+    int CRUMBSCut = 0;
+    int ETheta2Cut = 0;
+    int trackscoreCut = 0;
+    int trackscoreHighestCut = 0;
     int upperCRUMBSCut = 0;
     int upperPFPCut = 0;
     int QSquaredCut = 0;
@@ -1940,6 +1940,8 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceNumPFPsDist = createHistGroup("sliceNumPFPsDist", "Number of PFPs in the Slice (Not Weighted)", "Number of PFPs", 20, 0, 20); 
     auto sliceNumPrimaryPFPs = createHistGroup("sliceNumPrimaryPFPs", "Number of Primary PFPs in the Slice", "Number of Primary PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPsDist = createHistGroup("sliceNumPrimaryPFPsDist", "Number of Primary PFPs in the Slice (Not Weighted)", "Number of Primary PFPs", 20, 0, 20); 
+    auto sliceNumNeutrinos = createHistGroup("sliceNumNeutrinos", "Number of Reco Neutrinos in the Slice", "Number of Reco Neutrinos", 10, 0, 10);
+    auto sliceNumNeutrinosDist = createHistGroup("sliceNumNeutrinosDist", "Number of Reco Neutrinos in the Slice (Not Weighted)", "Number of Reco Neutrinos", 10, 0, 10);
 
     auto ERecoSumThetaReco = createHistGroup("ERecoSumThetaReco", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoSumThetaRecoDist = createHistGroup("ERecoSumThetaRecoDist", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice (Not Weighted)", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -2019,6 +2021,7 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceCRUMBSScore_splitBDT = createSplitHistGroup("sliceCRUMBSScore_splitBDT", "CRUMBS Score of the Slice: BDT Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitBDT = createSplitHistGroup("sliceNumPFPs_splitBDT", "Number of PFPs in the Slice: BDT Vertexing", "Number of PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPs_splitBDT = createSplitHistGroup("sliceNumPrimaryPFPs_splitBDT", "Number of Primary PFPs in the Slice: BDT Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitBDT = createSplitHistGroup("sliceNumNeutrinos_splitBDT", "Number of Reco Neutrinos in the Slice: BDT Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
 
     auto ERecoSumThetaReco_splitBDT = createSplitHistGroup("ERecoSumThetaReco_splitBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitBDT = createSplitHistGroup("ERecoHighestThetaReco_splitBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -2036,6 +2039,7 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceCRUMBSScore_splitDLUboone = createSplitHistGroup("sliceCRUMBSScore_splitDLUboone", "CRUMBS Score of the Slice: DL Uboone Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitDLUboone = createSplitHistGroup("sliceNumPFPs_splitDLUboone", "Number of PFPs in the Slice: DL Uboone Vertexing", "Number of PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPs_splitDLUboone = createSplitHistGroup("sliceNumPrimaryPFPs_splitDLUboone", "Number of Primary PFPs in the Slice: DL Uboone Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitDLUboone = createSplitHistGroup("sliceNumNeutrinos_splitDLUboone", "Number of Reco Neutrinos in the Slice: DL Uboone Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
 
     auto ERecoSumThetaReco_splitDLUboone = createSplitHistGroup("ERecoSumThetaReco_splitDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitDLUboone = createSplitHistGroup("ERecoHighestThetaReco_splitDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -2053,6 +2057,7 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceCRUMBSScore_splitDLNuE = createSplitHistGroup("sliceCRUMBSScore_splitDLNuE", "CRUMBS Score of the Slice: DL Nu+E Vertexing", "CRUMBS Score", 25, -1, 1);
     auto sliceNumPFPs_splitDLNuE = createSplitHistGroup("sliceNumPFPs_splitDLNuE", "Number of PFPs in the Slice: DL Nu+E Vertexing", "Number of PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPs_splitDLNuE = createSplitHistGroup("sliceNumPrimaryPFPs_splitDLNuE", "Number of Primary PFPs in the Slice: DL Nu+E Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitDLNuE = createSplitHistGroup("sliceNumNeutrinos_splitDLNuE", "Number of Reco Neutrinos in the Slice: DL Nu+E Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
 
     auto ERecoSumThetaReco_splitDLNuE = createSplitHistGroup("ERecoSumThetaReco_splitDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoHighestThetaReco_splitDLNuE = createSplitHistGroup("ERecoHighestThetaReco_splitDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -2763,6 +2768,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.cosmic->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.cosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.cosmic->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2796,6 +2802,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.cosmic->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.cosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.cosmic->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2832,6 +2839,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.cosmic->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.cosmic->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.cosmic->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.cosmic->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.cosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2876,6 +2884,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.nu_e->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.nu_e->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.nu_e->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2909,6 +2918,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.nu_e->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.nu_e->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.nu_e->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2944,6 +2954,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.nu_e->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.nu_e->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.nu_e->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.nu_e->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.nu_e->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -2988,6 +2999,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.NCNpi0->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.NCNpi0->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3021,6 +3033,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.NCNpi0->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.NCNpi0->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3056,6 +3069,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.NCNpi0->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.NCNpi0->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.NCNpi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.NCNpi0->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.NCNpi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3101,6 +3115,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.otherNC->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.otherNC->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.otherNC->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3134,6 +3149,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.otherNC->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.otherNC->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.otherNC->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3169,6 +3185,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.otherNC->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.otherNC->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.otherNC->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.otherNC->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.otherNC->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3213,6 +3230,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.CCnumu->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.CCnumu->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.CCnumu->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3246,6 +3264,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.CCnumu->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.CCnumu->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.CCnumu->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3281,6 +3300,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.CCnumu->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.CCnumu->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.CCnumu->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.CCnumu->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.CCnumu->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3325,6 +3345,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.CCnue->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.CCnue->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.CCnue->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3358,6 +3379,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.CCnue->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.CCnue->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.CCnue->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3393,6 +3415,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.CCnue->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.CCnue->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.CCnue->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.CCnue->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.CCnue->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3437,6 +3460,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.dirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.dirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.dirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3470,6 +3494,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.dirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.dirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.dirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3505,6 +3530,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.dirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.dirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.dirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.dirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3549,6 +3575,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.nu_eDirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.nu_eDirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3582,6 +3609,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.nu_eDirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.nu_eDirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3617,6 +3645,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.nu_eDirt->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.nu_eDirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.nu_eDirt->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.nu_eDirt->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.nu_eDirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3661,6 +3690,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitBDT.other->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitBDT.other->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitBDT.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitBDT.other->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3694,6 +3724,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLUboone.other->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLUboone.other->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLUboone.other->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3729,6 +3760,7 @@ void nuEBackgroundSignalCut_macro(){
                         sliceCRUMBSScore_splitDLNuE.other->Fill(reco_sliceScore->at(slice), weight);
                         sliceNumPFPs_splitDLNuE.other->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitDLNuE.other->Fill(numRecoNeutrinos, weight);
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -3783,6 +3815,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.currentCosmic->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.currentCosmic->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.currentCosmic->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.currentCosmic->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.currentCosmic->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentCosmic->Fill(Q2HighestValue, weight);
@@ -3869,6 +3903,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.ubooneCosmic->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.ubooneCosmic->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.ubooneCosmic->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.ubooneCosmic->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.ubooneCosmic->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneCosmic->Fill(Q2HighestValue, weight);
@@ -3954,6 +3990,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.nuECosmic->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.nuECosmic->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.nuECosmic->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.nuECosmic->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.nuECosmic->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuECosmic->Fill(Q2HighestValue, weight);
@@ -4042,6 +4080,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.currentSignal->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.currentSignal->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.currentSignal->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.currentSignal->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.currentSignal->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentSignal->Fill(Q2HighestValue, weight);
@@ -4174,6 +4214,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.ubooneSignal->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.ubooneSignal->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.ubooneSignal->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.ubooneSignal->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.ubooneSignal->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneSignal->Fill(Q2HighestValue, weight);
@@ -4302,6 +4344,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.nuESignal->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.nuESignal->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.nuESignal->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.nuESignal->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.nuESignal->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuESignal->Fill(Q2HighestValue, weight);
@@ -4432,6 +4476,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.currentSignalFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.currentSignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.currentSignalFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.currentSignalFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.currentSignalFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentSignalFuzzy->Fill(Q2HighestValue, weight);
@@ -4559,6 +4605,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.ubooneSignalFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.ubooneSignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.ubooneSignalFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.ubooneSignalFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.ubooneSignalFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneSignalFuzzy->Fill(Q2HighestValue, weight);
@@ -4686,6 +4734,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.nuESignalFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.nuESignalFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.nuESignalFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.nuESignalFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.nuESignalFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuESignalFuzzy->Fill(Q2HighestValue, weight);
@@ -4817,6 +4867,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.currentBNB->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.currentBNB->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.currentBNB->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.currentBNB->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.currentBNB->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentBNB->Fill(Q2HighestValue, weight);
@@ -4912,6 +4964,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.ubooneBNB->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.ubooneBNB->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.ubooneBNB->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.ubooneBNB->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.ubooneBNB->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneBNB->Fill(Q2HighestValue, weight);
@@ -5008,6 +5062,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.nuEBNB->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.nuEBNB->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.nuEBNB->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.nuEBNB->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.nuEBNB->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuEBNB->Fill(Q2HighestValue, weight);
@@ -5105,6 +5161,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.currentBNBFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.currentBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.currentBNBFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.currentBNBFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.currentBNBFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.currentBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -5199,6 +5257,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.ubooneBNBFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.ubooneBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.ubooneBNBFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.ubooneBNBFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.ubooneBNBFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.ubooneBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -5293,6 +5353,8 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPsDist.nuEBNBFuzzy->Fill(numPFPsSlice);
                         sliceNumPrimaryPFPs.nuEBNBFuzzy->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumPrimaryPFPsDist.nuEBNBFuzzy->Fill(numPrimaryPFPsSlice);
+                        sliceNumNeutrinos.nuEBNBFuzzy->Fill(numRecoNeutrinos, weight);
+                        sliceNumNeutrinosDist.nuEBNBFuzzy->Fill(numRecoNeutrinos);
 
                         if(Q2HighestValue != -999999){
                             QSquaredHighest.nuEBNBFuzzy->Fill(Q2HighestValue, weight);
@@ -5409,6 +5471,9 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPrimaryPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawAll(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumNeutrinosDist, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
     styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(QSquaredHighestDist, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
@@ -5535,6 +5600,7 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
+    efficiency(sliceNumNeutrinos, 0, 1, 999, 999, (base_path + "sliceNumNeutrinos").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(ERecoHighestThetaReco, 0, 1, 999, 999, (base_path + "ERecoHighestThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
@@ -5598,6 +5664,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(sliceCRUMBSScore_splitBDT, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitBDT, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPrimaryPFPs_splitBDT, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumNeutrinos_splitBDT, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitBDT, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitBDT, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitBDT, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -5612,6 +5679,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(sliceCRUMBSScore_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPrimaryPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumNeutrinos_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitDLUboone, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitDLUboone, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitDLUboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -5626,6 +5694,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(sliceCRUMBSScore_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
     styleDrawSplit(sliceNumPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceNumPrimaryPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(sliceNumNeutrinos_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredHighest_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(QSquaredSum_splitDLNuE, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(ERecoSumThetaReco_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
