@@ -27,6 +27,7 @@
 #include <iostream>
 #include <algorithm>
 #include <optional>
+#include <array>
 
 #include "TGeoManager.h"
 
@@ -53,6 +54,17 @@ struct FilterBlockConfig {
         fhicl::Comment("PDG codes of the neutrino")
     };
 
+    fhicl::OptionalSequence<int> TargetPDGs {
+        fhicl::Name("TargetPDGs"),
+        fhicl::Comment("Allowed target PDG codes")
+    };
+
+    fhicl::OptionalSequence<float, 2> WRange {
+        fhicl::Name("WRange"),
+        fhicl::Comment("Range of allowed invariant hadronic mass (W) as (min, max). Use -1 for min or max to indicate one-sided bound.")
+    };
+
+
     fhicl::OptionalAtom<bool> InTPC {
         fhicl::Name("InTPC"),
         fhicl::Comment("Require interaction vertex in the TPC")
@@ -66,7 +78,7 @@ struct FilterBlockConfig {
 
     fhicl::OptionalSequence<int> Modes {
         fhicl::Name("Modes"),
-        fhicl::Comment("List of interaction modes")
+        fhicl::Comment("List of allowed interaction modes")
     };
 
     fhicl::OptionalSequence<int> RequiredPDGs {
@@ -93,6 +105,8 @@ struct FilterBlockConfig {
 
 struct FilterBlock { 
     std::optional<std::vector<int>> nu_pdgs;
+    std::optional<std::vector<int>> target_pdgs;
+    std::optional<std::array<float, 2>> wrange;
     std::optional<bool> in_tpc;
     std::optional<bool> iscc; 
     std::optional<std::vector<int>> modes;
@@ -104,6 +118,8 @@ struct FilterBlock {
     // computed from options
     // (pdg, nrequired)
     std::map<int, int> required_counts;
+    float wmin = -1.0;
+    float wmax = -1.0;
 };
 
 
@@ -149,6 +165,25 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
         std::vector<int> nu_pdgs;
         if (cfg.NuPDGs(nu_pdgs)) {
             block.nu_pdgs = nu_pdgs;
+        }
+
+        std::vector<int> target_pdgs;
+        if (cfg.TargetPDGs(target_pdgs)) {
+            block.target_pdgs = target_pdgs;
+        }
+
+        std::array<float, 2> wrange;
+        if (cfg.WRange(wrange)) {
+            block.wrange = wrange;
+            block.wmin = wrange.at(0);
+            block.wmax = wrange.at(1);
+
+            if (block.wmin > block.wmax && block.wmax > 0) {
+                throw cet::exception("TrueSignalFilter")
+                    << "In Filters[" << i << "]: WRange ("
+                    << block.wmin << ", " << block.wmax << ") invalid\n";
+            }
+            
         }
 
         bool in_tpc; 
@@ -219,6 +254,17 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
     if (block.nu_pdgs) {
         if (std::find(block.nu_pdgs->begin(), block.nu_pdgs->end(), nu.Nu().PdgCode())
                 == block.nu_pdgs->end()) return false;
+    }
+
+    if (block.target_pdgs) {
+        if (std::find(block.target_pdgs->begin(), block.target_pdgs->end(), nu.Target())
+                == block.target_pdgs->end()) return false;
+    }
+
+    if (block.wrange) {
+        float w = nu.W();
+        if (block.wmin >= 0. && w < block.wmin) return false;
+        if (block.wmax >= 0. && w > block.wmax) return false;
     }
 
     if (block.modes) {
@@ -337,14 +383,29 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
             log << (val.value() ? "True" : "False") << "\n";
         }
     };
+    auto print_ke_thresholds = [&](const std::string& name, const std::optional<std::map<int, float>>& val) {
+        log << " - " << name << ": ";
+        if (!val) {
+            log << kNotSet << "\n";
+        }
+        else {
+            log << "\n";
+            for (const auto& t : val.value()) {
+                log << "    - " << std::get<0>(t) << ": " << std::get<1>(t) << " MeV\n";
+            }
+        }
+    };
 
     print_int_vec("NuPDGs", block.nu_pdgs);
+    print_int_vec("TargetPDGs", block.target_pdgs);
     print_bool("InTPC", block.in_tpc);
     print_bool("IsCC", block.iscc);
     print_int_vec("Modes", block.modes);
     print_int_vec("RequiredPDGs", block.required_pdgs);
     print_int_vec("DisallowedPDGs", block.disallowed_pdgs);
     print_bool("Exclusive", block.exclusive);
+    print_ke_thresholds("KEThresholds", block.ke_thresholds);
+    // TODO WRange
 }
 
 DEFINE_ART_MODULE(TrueSignalFilter)
