@@ -6,6 +6,7 @@ BEGIN_PROLOG
 sbnd_blipalg:
 {
   HitProducer:          "specialblipgaushit"       #// input recob::Hits to use for blip reconstruction
+  HitTruthMatcher:      "blipgaushitTruthMatch"    #// Truth info corresponding to the above hit collection
   TrkProducer:          "blipPandoraTrackCopy"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
   SimEDepProducer:      "ionandscint:priorSCE:G4"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
