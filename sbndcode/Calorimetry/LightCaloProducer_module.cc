@@ -269,21 +269,22 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   geom = lar::providerFrom<geo::Geometry>();
 
   art::ServiceHandle<art::TFileService> fs;
-  _tree = fs->make<TTree>("lightcalo","");
-  _tree->Branch("run",           &_run,          "run/I");
-  _tree->Branch("subrun",        &_subrun,       "subrun/I");
-  _tree->Branch("event",         &_event,        "event/I");
-  _tree->Branch("pfpid",         &_pfpid,        "pfpid/I");
-  _tree->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
+  if (ffill_tree){
+    _tree = fs->make<TTree>("lightcalo","");
+    _tree->Branch("run",           &_run,          "run/I");
+    _tree->Branch("subrun",        &_subrun,       "subrun/I");
+    _tree->Branch("event",         &_event,        "event/I");
+    _tree->Branch("pfpid",         &_pfpid,        "pfpid/I");
+    _tree->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
 
-  _tree->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
-  _tree->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
-  _tree->Branch("visibility",   "std::vector<double>", &_visibility);
+    _tree->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+    _tree->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+    _tree->Branch("visibility",   "std::vector<double>", &_visibility);
 
-  _tree->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
-  _tree->Branch("slice_L",       &_slice_L,      "slice_L/D");
-  _tree->Branch("slice_E",       &_slice_E,      "slice_E/D");
-
+    _tree->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
+    _tree->Branch("slice_L",       &_slice_L,      "slice_L/D");
+    _tree->Branch("slice_E",       &_slice_E,      "slice_E/D");
+  }
   // Call appropriate produces<>() functions here.
   produces<std::vector<sbn::LightCalo>>();
   produces<art::Assns<recob::Slice,   sbn::LightCalo>>();
@@ -325,21 +326,21 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
   ::art::Handle<std::vector<recob::Slice>> slice_h;
   e.getByLabel(fslice_producer, slice_h);
   if(!slice_h.isValid() || slice_h->empty()){
-    std::cout << "don't have good slices!" << std::endl;
+    std::cout << "[LightCaloProducer] : " << fslice_producer << " doesn't have good slices!" << std::endl;
     return;
   }
 
   ::art::Handle<std::vector<recob::PFParticle>> pfp_h;
   e.getByLabel(fslice_producer, pfp_h);
   if(!pfp_h.isValid() || pfp_h->empty()) {
-    std::cout << "don't have good PFParticle!" << std::endl;
+    std::cout << "[LightCaloProducer] : " << fslice_producer << " doesn't have good PFParticles!" << std::endl;
     return;
   }
 
   ::art::Handle<std::vector<recob::SpacePoint>> spacepoint_h;
   e.getByLabel(fslice_producer, spacepoint_h);
   if(!spacepoint_h.isValid() || spacepoint_h->empty()) {
-    std::cout << "don't have good SpacePoints!" << std::endl;
+    std::cout << "[LightCaloProducer] : " << fslice_producer << " don't have good SpacePoints!" << std::endl;
     return;
   }
   
@@ -350,7 +351,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     ::art::Handle<std::vector<recob::OpFlash>> flash_h;
     e.getByLabel(fopflash_producer_v[i], flash_h);
     if (!flash_h.isValid() || flash_h->empty()) {
-      std::cout << "don't have good PMT flashes from producer " << fopflash_producer_v[i] << std::endl;
+      std::cout << "[LightCaloProducer] : " << "don't have good PMT flashes from producer " << fopflash_producer_v[i] << std::endl;
     }
     else{
       if (fopflash_producer_v[i].find("tpc0") != std::string::npos)
@@ -376,7 +377,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     ::art::Handle<std::vector<sbn::TPCPMTBarycenterMatch>> bcfm_h;
     e.getByLabel(fbcfm_producer, bcfm_h);
     if(!bcfm_h.isValid() || bcfm_h->empty()) {
-      std::cout << "don't have good barycenter matches!" << std::endl;
+      std::cout << "[LightCaloProducer] : " << "don't have good barycenter matches!" << std::endl;
       return;
     }
     std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>> bcfm_v;
@@ -385,7 +386,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     CollectMatches(bcfm_h, bcfm_v, fbcfm_producer, e, match_slices_v, match_op0, match_op1,
                     [this](art::Ptr<sbn::TPCPMTBarycenterMatch> bcfm) {
                       if (bcfm->flashTime > fopflash_max || bcfm->flashTime < fopflash_min) return false;
-                      if (bcfm->score < 0.02) return false;
+                      if (bcfm->score < fbcfmscore_cut) return false;
                       return true;
                     });
   }
@@ -393,7 +394,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
     e.getByLabel(fopt0_producer, opt0_h);
     if(!opt0_h.isValid() || opt0_h->empty()) {
-      std::cout << "don't have good OpT0Finder matches!" << std::endl;
+      std::cout << "[LightCaloProducer] : " << "don't have good OpT0Finder matches!" << std::endl;
       return;
     }
     std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
@@ -430,7 +431,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
       ::art::Handle<std::vector<recob::OpFlash>> flash_ara_h;
       e.getByLabel(fopflash_ara_producer_v[i], flash_ara_h);
       if (!flash_ara_h.isValid() || flash_ara_h->empty()) {
-        std::cout << "don't have good X-ARAPUCA flashes from producer " << fopflash_ara_producer_v[i] << std::endl;
+        std::cout << "[LightCaloProducer] : " << "don't have good X-ARAPUCA flashes from producer " << fopflash_ara_producer_v[i] << std::endl;
       }
       else{
         if (fopflash_ara_producer_v[i].find("tpc0") != std::string::npos)
@@ -467,7 +468,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
 
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
-      auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
+      auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
       double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
       auto hit_plane = hit->View();
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/fcal_area_const.at(hit_plane));
@@ -495,7 +496,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
-          auto drift_time = hit->PeakTime()*0.5 - clock_data.TriggerOffsetTPC(); 
+          auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
           double charge = (1/fcal_area_const.at(hit->View()))*atten_correction*hit->Integral();
           if (xyz.X() < 0) has_sp0 = true;
@@ -515,7 +516,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     // find matching flashes if slice has reco spacepoints in both TPCs
     if ((has_sp0 && has_sp1) && (opflash0.isNull() || opflash1.isNull())){
       if (opflash0.isNull() && opflash1.isNull()){
-        if (fverbose) std::cout << "No opflashes found for slice with spacepoints in both TPCs." << std::endl;
+        if (fverbose) std::cout << "[LightCaloProducer] : " << "No opflashes found for slice with spacepoints in both TPCs." << std::endl;
         return;
       }
       else if (opflash0.isNull()) opflash0 = FindMatchingFlash(flash0_v, opflash1->Time());
@@ -531,7 +532,7 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
       flash_time = opflash1->Time(); 
     }
 
-    if (flash_in_0==false && flash_in_1==false && fverbose)
+    if (flash_in_0==false && flash_in_1==false)
       return;
 
     // get total L count
@@ -597,9 +598,9 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     _slice_E = (_slice_L + _slice_Q)*1e-9*g4param->Wph(); // GeV, Wph = 19.5 eV  
 
     if (fverbose){
-      std::cout << "charge: " << _slice_Q << std::endl;
-      std::cout << "light:  " << _slice_L << std::endl;
-      std::cout << "energy: " << _slice_E << std::endl;
+      std::cout << "[LightCaloProducer] : " << "charge: " << _slice_Q << std::endl;
+      std::cout << "[LightCaloProducer] : " << "light:  " << _slice_L << std::endl;
+      std::cout << "[LightCaloProducer] : " << "energy: " << _slice_E << std::endl;
     }
 
     sbn::LightCalo lightcalo{_slice_Q,_slice_L,_slice_E,bestHits};
@@ -657,7 +658,7 @@ void sbnd::LightCaloProducer::CollectMatches(const art::Handle<std::vector<Match
     auto slice = it->first;
     auto flash_v = it->second;
     if (flash_v.size() > 2){
-      std::cout << "more than two opflash matched to this slice!" << std::endl;
+      std::cout << "[LightCaloProducer] : " << "more than two opflash matched to this slice!" << std::endl;
       continue;
     }
     bool found_opflash0 = false;
@@ -692,7 +693,7 @@ void sbnd::LightCaloProducer::CollectMatches(const art::Handle<std::vector<Match
 art::Ptr<recob::OpFlash> sbnd::LightCaloProducer::FindMatchingFlash(const std::vector<art::Ptr<recob::OpFlash>> &flash_v,
                                                                     double ref_time)
 {
-  double best_dt = 1.e9;
+  double best_dt = std::numeric_limits<double>::max();  
   art::Ptr<recob::OpFlash> best;
   for (size_t i = 0; i < flash_v.size(); ++i) {
     art::Ptr<recob::OpFlash> cand = flash_v[i];
