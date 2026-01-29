@@ -4,6 +4,7 @@ set (MODULE_LIBRARIES
                 larsim::LegacyLArG4
                 larcorealg::Geometry
                 larcore::Geometry_Geometry_service
+                larevt::CalibrationDBI
                 lardata::Utilities
                 lardataobj::RecoBase
                 art::Framework_Core

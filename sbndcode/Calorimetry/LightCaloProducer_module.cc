@@ -44,6 +44,10 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
+// Calibration database includes for electron lifetime
+#include "larevt/CalibrationDBI/Providers/DBFolder.h"
+#include "wda.h"
+
 // SBND includes
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/Common/Reco/LightCalo.h"
@@ -121,6 +125,15 @@ private:
   // Returns the weighted mean of the light vector 
   double CalcMean(std::vector<double> total_light, std::vector<double> total_err);
 
+  // Struct to hold electron lifetime data from database
+  struct ELifetimeInfo {
+    double tau_tpc0;
+    double tau_tpc1;
+  };
+
+  // Helper to get electron lifetime from database
+  ELifetimeInfo GetELifetimeFromDB(uint64_t run);
+
   // fcl parameters 
   std::vector<std::string> fopflash_producer_v;
   std::vector<std::string> fopflash_ara_producer_v;
@@ -158,6 +171,13 @@ private:
   double fxarapucavuv_vuveff;
   double fxarapucavuv_viseff;
   double fxarapucavis_eff; 
+
+  // Electron lifetime database parameters
+  bool fuse_elifetime_db;
+  std::string felifetime_db_file;
+  std::string felifetime_db_tag;
+  std::unique_ptr<lariov::DBFolder> felifetime_db;
+  std::map<uint32_t, ELifetimeInfo> felifetime_cache;
 
   std::vector<float> fopdet_vuv_eff;
   std::vector<float> fopdet_vis_eff;
@@ -236,6 +256,14 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   fxarapucavuv_vuveff = p.get<double>("XArapucaVUVVUVEff");
   fxarapucavuv_viseff = p.get<double>("XArapucaVUVVISEff");
   fxarapucavis_eff    = p.get<double>("XArapucaVISEff");
+
+  // Electron lifetime database configuration
+  fuse_elifetime_db = p.get<bool>("UseELifetimeDB", false);
+  if (fuse_elifetime_db) {
+    felifetime_db_file = p.get<std::string>("ELifetimeDBFile");
+    felifetime_db_tag  = p.get<std::string>("ELifetimeDBTag");
+    felifetime_db = std::make_unique<lariov::DBFolder>(felifetime_db_file, "", "", felifetime_db_tag, true, false);
+  }
 
   // fill efficiency vectors 
   fopdet_vuv_eff.resize(nchan,0.);
@@ -466,10 +494,23 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
     bool has_sp0 = false;
     bool has_sp1 = false;
 
+    // Get electron lifetime (from database if enabled, otherwise from detector properties)
+    double elifetime_tpc0, elifetime_tpc1;
+    if (fuse_elifetime_db) {
+      ELifetimeInfo elife_info = GetELifetimeFromDB(e.id().run());
+      elifetime_tpc0 = elife_info.tau_tpc0;
+      elifetime_tpc1 = elife_info.tau_tpc1;
+    } else {
+      elifetime_tpc0 = det_prop.ElectronLifetime();
+      elifetime_tpc1 = det_prop.ElectronLifetime();
+    }
+
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
       auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
-      double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
+      // Use TPC-specific electron lifetime
+      double elifetime = (hit->WireID().TPC == 0) ? elifetime_tpc0 : elifetime_tpc1;
+      double atten_correction = std::exp(drift_time/elifetime); // exp(us/us)
       auto hit_plane = hit->View();
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/fcal_area_const.at(hit_plane));
       plane_hits.at(hit_plane)++; 
@@ -495,9 +536,10 @@ void sbnd::LightCaloProducer::CalculateCalorimetry(art::Event& e,
           if (hit->View() !=bestHits) continue;
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
-          // correct for e- attenuation 
+          // correct for e- attenuation using TPC-specific lifetime
           auto drift_time = clock_data.TPCTick2TrigTime(hit->PeakTime());
-          double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
+          double elifetime = (hit->WireID().TPC == 0) ? elifetime_tpc0 : elifetime_tpc1;
+          double atten_correction = std::exp(drift_time/elifetime); // exp(us/us)
           double charge = (1/fcal_area_const.at(hit->View()))*atten_correction*hit->Integral();
           if (xyz.X() < 0) has_sp0 = true;
           else             has_sp1 = true;
@@ -777,6 +819,36 @@ double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma, std::v
     if (wgt_denom!=0) total_mean += wgt_num/wgt_denom;
   }
   return total_mean; 
+}
+
+sbnd::LightCaloProducer::ELifetimeInfo sbnd::LightCaloProducer::GetELifetimeFromDB(uint64_t run) {
+  // Check cache first
+  if (felifetime_cache.count(run)) {
+    return felifetime_cache.at(run);
+  }
+
+  // Query database - translate run into fake "timestamp" 
+  // (same convention as NormalizeDriftSQLite)
+  felifetime_db->UpdateData((run + 1000000000) * 1000000000);
+
+  ELifetimeInfo info;
+  double tau_E, tau_W;
+  felifetime_db->GetNamedChannelData(0, "etau_sce_spatial_east", tau_E);
+  felifetime_db->GetNamedChannelData(0, "etau_sce_spatial_west", tau_W);
+  
+  // TPC0 is East, TPC1 is West
+  info.tau_tpc0 = tau_E;
+  info.tau_tpc1 = tau_W;
+
+  if (fverbose) {
+    std::cout << "[LightCaloProducer] : Electron lifetime from DB for run " << run << std::endl;
+    std::cout << "[LightCaloProducer] : TPC0 (East): " << info.tau_tpc0 << " us" << std::endl;
+    std::cout << "[LightCaloProducer] : TPC1 (West): " << info.tau_tpc1 << " us" << std::endl;
+  }
+
+  // Cache the result
+  felifetime_cache[run] = info;
+  return info;
 }
 
 DEFINE_ART_MODULE(sbnd::LightCaloProducer)
