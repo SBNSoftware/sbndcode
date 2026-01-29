@@ -28,7 +28,7 @@ outputs:
     out1:
     {
         module_type: RootOutput
-        fileName: "lightcalo-art.root"
+        fileName: "%ifb_lightcalo-art.root"
         dataTier: "reconstructed"
         compressionLevel:1
     }
