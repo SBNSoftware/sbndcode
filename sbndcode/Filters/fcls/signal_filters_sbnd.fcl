@@ -1,5 +1,9 @@
 BEGIN_PROLOG
 
+# Signal definitions for exclusive cross section analysis sample production
+# Each block can contain multiple filters in case the signal definition cannot
+# be expressed with a single set of filter options!
+
 sbnd_ccnue_filter:
 {
     module_type: TrueSignalFilter
@@ -47,7 +51,7 @@ sbnd_2p2h_filter:
             RequiredPDGs: [ 13, 2212, 2212 ]
             DisallowedPDGs: [ 111, 211 ]
             InTPC: true
-            Exclusive: true
+            Exclusive: false
         }
     ]
 }

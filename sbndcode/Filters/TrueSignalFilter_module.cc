@@ -15,12 +15,12 @@
  * {
  *   nu: 14
  *   cc: true
- *   NoFinalStatePDG: [ 2112 ] 
+ *   NoFinalStatePDG: [ 2112 ]
  * }
  * {
  *   nu: 14
  *   cc: False
- *   FinalStatePDG: [ 2112 ] 
+ *   FinalStatePDG: [ 2112 ]
  * }
  */
 
@@ -33,11 +33,11 @@
 
 #include "fhiclcpp/types/Sequence.h"
 #include "fhiclcpp/types/Tuple.h"
-#include "fhiclcpp/types/OptionalAtom.h"    
-#include "fhiclcpp/types/OptionalSequence.h"    
-#include "art/Framework/Core/EDFilter.h" 
-#include "art/Framework/Core/ModuleMacros.h" 
-#include "art/Framework/Principal/Event.h" 
+#include "fhiclcpp/types/OptionalAtom.h"
+#include "fhiclcpp/types/OptionalSequence.h"
+#include "art/Framework/Core/EDFilter.h"
+#include "art/Framework/Core/ModuleMacros.h"
+#include "art/Framework/Principal/Event.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCNeutrino.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
@@ -64,12 +64,10 @@ struct FilterBlockConfig {
         fhicl::Comment("Range of allowed invariant hadronic mass (W) as (min, max). Use -1 for min or max to indicate one-sided bound.")
     };
 
-
     fhicl::OptionalAtom<bool> InTPC {
         fhicl::Name("InTPC"),
         fhicl::Comment("Require interaction vertex in the TPC")
     };
-
 
     fhicl::OptionalAtom<bool> IsCC {
         fhicl::Name("IsCC"),
@@ -103,18 +101,18 @@ struct FilterBlockConfig {
 };
 
 
-struct FilterBlock { 
+struct FilterBlock {
     std::optional<std::vector<int>> nu_pdgs;
     std::optional<std::vector<int>> target_pdgs;
     std::optional<std::array<float, 2>> wrange;
     std::optional<bool> in_tpc;
-    std::optional<bool> iscc; 
+    std::optional<bool> iscc;
     std::optional<std::vector<int>> modes;
     std::optional<std::vector<int>> required_pdgs;
     std::optional<std::vector<int>> disallowed_pdgs;
     std::optional<std::map<int, float>> ke_thresholds;
     std::optional<bool> exclusive;
-    
+
     // computed from options
     // (pdg, nrequired)
     std::map<int, int> required_counts;
@@ -142,17 +140,17 @@ public:
     virtual bool filter(art::Event& e) override;
 
 protected:
-    bool PassBlock(const art::Ptr<simb::MCTruth>, const FilterBlock&) const;
+    bool PassBlock(const art::Ptr<simb::MCTruth>, const FilterBlock&, mf::LogDebug&) const;
     void PrintBlock(const FilterBlock&) const;
 
 private:
-    art::InputTag fGenieModuleLabel; 
+    art::InputTag fGenieModuleLabel;
     std::vector<FilterBlock> fFilterBlocks;
 };
 
 
 TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
-    EDFilter{pset}, fGenieModuleLabel(pset().GENIELabel())
+    EDFilter{pset}, fGenieModuleLabel{pset().GENIELabel()}
 {
     // loop over filter blocks
     auto const& cfg_blocks = pset().Filters();
@@ -183,25 +181,25 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
                     << "In Filters[" << i << "]: WRange ("
                     << block.wmin << ", " << block.wmax << ") invalid\n";
             }
-            
+
         }
 
-        bool in_tpc; 
+        bool in_tpc;
         if (cfg.InTPC(in_tpc)) {
             block.in_tpc = in_tpc;
         }
 
-        bool iscc; 
+        bool iscc;
         if (cfg.IsCC(iscc)) {
             block.iscc = iscc;
         }
 
-        std::vector<int> modes; 
+        std::vector<int> modes;
         if (cfg.Modes(modes)) {
             block.modes = modes;
         }
 
-        std::vector<int> required_pdgs; 
+        std::vector<int> required_pdgs;
         if (cfg.RequiredPDGs(required_pdgs)) {
             block.required_pdgs = required_pdgs;
 
@@ -211,18 +209,18 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
             }
         }
 
-        std::vector<int> disallowed_pdgs; 
+        std::vector<int> disallowed_pdgs;
         if (cfg.DisallowedPDGs(disallowed_pdgs)) {
             block.disallowed_pdgs = disallowed_pdgs;
         }
 
-        std::vector<std::tuple<int, float>> ke_thresholds; 
+        std::vector<std::tuple<int, float>> ke_thresholds;
         if (cfg.KEThresholds(ke_thresholds)) {
-            for (auto& pdg_threshold : ke_thresholds) {
-                std::map<int, float> ke_thresholds;
+            std::map<int, float> ke_threshold_map;
+            for (const auto& pdg_threshold : ke_thresholds) {
                 int pdg = std::get<0>(pdg_threshold);
                 float threshold = std::get<1>(pdg_threshold);
-                auto [it, inserted] = ke_thresholds.emplace(pdg, threshold);
+                auto [it, inserted] = ke_threshold_map.emplace(pdg, threshold);
 
                 // error on duplicates
                 if (!inserted) {
@@ -230,12 +228,11 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
                         << "In Filters[" << i << "]: KEThreshold duplicate "
                         << "entry for PDG " << pdg << ".\n";
                 }
-
-                block.ke_thresholds = ke_thresholds;
             }
+            block.ke_thresholds = ke_threshold_map;
         }
 
-        bool exclusive; 
+        bool exclusive;
         if (cfg.Exclusive(exclusive)) {
             block.exclusive = exclusive;
         }
@@ -246,56 +243,74 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
 }
 
 
-bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterBlock& block) const {
+bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterBlock& block, mf::LogDebug& debug_log) const {
+    const std::string kSpace = "    ";
+    debug_log << kSpace << "Checking MCTruth is neutrino... ";
     if (mc->Origin() != simb::kBeamNeutrino) return false;
+    debug_log << "PASS\n";
 
     const auto& nu = mc->GetNeutrino();
 
     if (block.nu_pdgs) {
-        if (std::find(block.nu_pdgs->begin(), block.nu_pdgs->end(), nu.Nu().PdgCode())
+        int nu_pdg = nu.Nu().PdgCode();
+        debug_log << kSpace << "Checking MCTruth has appropriate neutrino PDG (Nu PDG=" << nu_pdg << ")... ";
+        if (std::find(block.nu_pdgs->begin(), block.nu_pdgs->end(), nu_pdg)
                 == block.nu_pdgs->end()) return false;
+        debug_log << "PASS\n";
     }
 
     if (block.target_pdgs) {
-        if (std::find(block.target_pdgs->begin(), block.target_pdgs->end(), nu.Target())
+        int target_pdg = nu.Target();
+        debug_log << kSpace << "Checking MCTruth has appropriate target PDG (Target PDG=" << target_pdg << ")... ";
+        if (std::find(block.target_pdgs->begin(), block.target_pdgs->end(), target_pdg)
                 == block.target_pdgs->end()) return false;
+        debug_log << "PASS\n";
     }
 
     if (block.wrange) {
         float w = nu.W();
+        debug_log << kSpace << "Checking MCTruth has W within range (W=" << w << ")... ";
         if (block.wmin >= 0. && w < block.wmin) return false;
         if (block.wmax >= 0. && w > block.wmax) return false;
+        debug_log << "PASS\n";
     }
 
     if (block.modes) {
-        if (std::find(block.modes->begin(), block.modes->end(), nu.Mode())
+        int mode = nu.Mode();
+        debug_log << kSpace << "Checking MCTruth has appropriate mode (mode=" << mode << ")... ";
+        if (std::find(block.modes->begin(), block.modes->end(), mode)
                 == block.modes->end()) return false;
-    }
-
-    if (block.in_tpc) {
-        // technically user could request vertices outside the tpc?
-        TVector3 vtx{ nu.Nu().Vx(), nu.Nu().Vy(), nu.Nu().Vz() };
-        if (RecoUtils::IsInsideTPC(vtx, 0) != block.in_tpc.value()) return false;
+        debug_log << "PASS\n";
     }
 
     if (block.iscc) {
+        debug_log << kSpace << "Checking MCTruth CC/NC (CCNC=" << nu.CCNC() << ")... ";
         if (block.iscc.value() && (nu.CCNC() != simb::kCC)) return false;
         if (!block.iscc.value() && (nu.CCNC() != simb::kNC)) return false;
+        debug_log << "PASS\n";
+    }
+
+    if (block.in_tpc) {
+        TVector3 vtx{ nu.Nu().Vx(), nu.Nu().Vy(), nu.Nu().Vz() };
+        debug_log << kSpace << "Checking MCTruth is inside the TPC (x=" << vtx(0) << ", y=" << vtx(1) << ", z=" << vtx(2) << ")... ";
+        // technically user could request vertices outside the tpc?
+        if (RecoUtils::IsInsideTPC(vtx, 0) != block.in_tpc.value()) return false;
+        debug_log << "PASS\n";
     }
 
     //get a vector of final state particles for the next few checks
     std::vector<int> primaries;
+    bool has_thresholds = block.ke_thresholds.has_value();
     for (int i = 0; i < mc->NParticles(); ++i) {
         const auto& part(mc->GetParticle(i));
         // only consider primaries
         if (part.StatusCode() != 1) continue;
-        if (part.Mother() > 0) continue;
 
         // check against threshold map. Primaries not counted if below threshold
-        if (block.ke_thresholds) {
+        if (has_thresholds) {
             int pdg = part.PdgCode();
             if (block.ke_thresholds->find(pdg) != block.ke_thresholds->end()) {
-                float ke = part.E() - part.Mass();
+                float ke = 1.0e3 * (part.E() - part.Mass());
                 if (ke < block.ke_thresholds->at(pdg)) continue;
             }
         }
@@ -303,6 +318,7 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
     }
 
     if (block.required_pdgs) {
+        debug_log << kSpace << "Checking list of primaries [";
         // check that primaries contains all the required PDGs
         // count multiplicities in the event
         std::map<int,int> counts;
@@ -310,25 +326,47 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
             counts[pdg]++;
         }
 
+        for (const auto& [k, v] : counts) {
+            float threshold = 0.;
+            if (has_thresholds) {
+                if (block.ke_thresholds->find(k) != block.ke_thresholds->end()) {
+                    threshold = block.ke_thresholds->at(k);
+                }
+            }
+            debug_log << "\n" << kSpace << kSpace << "PDG=" << k
+                << ", count above " << threshold << " MeV threshold=" << v;
+        }
+        debug_log << "\n" << kSpace << "]... ";
+
         // Check that for every required PDG, the event has enough.
         // if exclusive: check equality
         bool exclusive = block.exclusive.value_or(false);
-        for (auto const& [required_pdg, nrequired] : block.required_counts) {
+        for (const auto& [required_pdg, nrequired] : block.required_counts) {
             auto it = counts.find(required_pdg);
             if (it == counts.end() || it->second < nrequired) return false;
             if (exclusive && it->second != nrequired) return false;
         }
 
-        // TODO check if there are extra particles not in the required list if exclusive
+        // check if there are extra particles not in the required list if exclusive
+        if (exclusive) {
+            for (const auto& [primary_pdg, count] : counts) {
+                // extra particle not in the list
+                if (block.required_counts.find(primary_pdg) == block.required_counts.end()) return false;
+            }
+        }
+
+        debug_log << "PASS\n";
     }
 
     if (block.disallowed_pdgs) {
+        debug_log << kSpace << "Checking no primaries are disallowed... ";
         // check that the primaries list doesn't contain anything disallowed
         // note: primaries still are only counted if they are above threshold
         for (int disallowed_pdg : *block.disallowed_pdgs) {
             if (std::find(primaries.begin(), primaries.end(), disallowed_pdg)
                     != primaries.end()) return false;
         }
+        debug_log << "PASS\n";
     }
 
     return true;
@@ -336,15 +374,29 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
 
 
 bool TrueSignalFilter::filter(art::Event & e) {
+    // pass debug log reference to PassBlock so that we can print messages to
+    // the same line without adding too many timestamps to the output logs, and
+    // we also only have to write "FAIL" once in the code.
+    // We get a logger message once for every event
+    mf::LogDebug debug_log{"TrueSignalFilter"};
+
     auto mclists = e.getMany<std::vector<simb::MCTruth>>();
     for (size_t i = 0; i != mclists.size(); i++) {
         const auto& mclist(mclists.at(i));
         for (size_t j = 0; j != mclist->size(); j++) {
             art::Ptr<simb::MCTruth> mc(mclist, j);
-            for (auto const& block : fFilterBlocks) {
-                if (PassBlock(mc, block)) {
+            // for (auto const& block : fFilterBlocks) {
+            debug_log << "Filtering MCTruth " << j << "...\n";
+            for (size_t ib = 0; ib != fFilterBlocks.size(); ib++) {
+                const auto& block = fFilterBlocks.at(ib);
+                if (PassBlock(mc, block, debug_log)) {
                     // mctruth passes at least one filter, so we are done
+                    debug_log << "MCTruth " << j << " passed filter " << ib << "!\n";
                     return true;
+                }
+                else {
+                    debug_log << "FAIL\n";
+                    debug_log << "MCTruth " << j << " did not pass filter " << ib << "\n";
                 }
             }
         }
@@ -368,8 +420,10 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
         }
         else {
             log << "{ ";
-            for (int i : val.value()) {
-                log << i << ", ";
+            const auto& vec = val.value();
+            for (size_t i = 0; i != vec.size(); i++) {
+                log << vec.at(i);
+                if (i < vec.size() - 1) log << ", ";
             }
             log << " }\n";
         }
@@ -390,8 +444,8 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
         }
         else {
             log << "\n";
-            for (const auto& t : val.value()) {
-                log << "    - " << std::get<0>(t) << ": " << std::get<1>(t) << " MeV\n";
+            for (const auto& [k, v] : val.value()) {
+                log << "    - " << k << ": " << v << " MeV\n";
             }
         }
     };
