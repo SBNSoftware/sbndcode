@@ -4,6 +4,7 @@ BEGIN_PROLOG
 # Each block can contain multiple filters in case the signal definition cannot
 # be expressed with a single set of filter options!
 
+# CC nue or nuebar
 sbnd_ccnue_filter:
 {
     module_type: TrueSignalFilter
@@ -17,6 +18,7 @@ sbnd_ccnue_filter:
     ]
 }
 
+# one muon > 27 MeV, one charged pion > 30 MeV, no protons > 20 MeV, no neutrons, no pi0
 sbnd_cohpi_filter:
 {
     module_type: TrueSignalFilter
@@ -31,11 +33,12 @@ sbnd_cohpi_filter:
             RequiredPDGs: [ 13, 211 ]
             DisallowedPDGs: [ 111, 2212, 2112 ]
             InTPC: true
-            Exclusive: true
+            ExactCounts: true
         }
     ]
 }
 
+# one muon > 27 MeV, two protons > 50 MeV, no pions, any number of neutrons
 sbnd_2p2h_filter:
 {
     module_type: TrueSignalFilter
@@ -49,13 +52,15 @@ sbnd_2p2h_filter:
                 [ 2212, 50 ]
             ]
             RequiredPDGs: [ 13, 2212, 2212 ]
+            IgnoredPDGs: [ 2112 ]
             DisallowedPDGs: [ 111, 211 ]
             InTPC: true
-            Exclusive: false
+            ExactCounts: true
         }
     ]
 }
 
+# one proton only!
 sbnd_nc1p_filter:
 {
     module_type: TrueSignalFilter
@@ -65,11 +70,12 @@ sbnd_nc1p_filter:
             IsCC: false
             RequiredPDGs: [ 2212 ]
             InTPC: true
-            Exclusive: true
+            ExactCounts: true
         }
     ]
 }
 
+# one eta + anything except pi0s
 sbnd_eta_filter:
 {
     module_type: TrueSignalFilter
@@ -83,6 +89,7 @@ sbnd_eta_filter:
     ]
 }
 
+# pi0 + anything
 sbnd_pi0_filter:
 {
     module_type: TrueSignalFilter

@@ -1,27 +1,17 @@
 /*
  * Filter module for common true signal definition options
+ * Each filter block can check
  * - True nu flavors
  * - CC/NC
  * - Modes
  * - Fiducial vertex
  * - Final state primary PDG
- * - Final state primary KE
- * - Exclude PDG list
- * - Exclusive? Exact match to primary list, or allow others (except those listed in exclude list)
+ * - Final state primary KE thresholds
+ * - Disallowed PDG list
+ * - Exact counts? Exact match to primary list, or allow others (except those listed in exclude list or below threshold)
  *
- * Can pass multiple filter options with fcl parameters
- * Example: Pass CC events with no final state proton OR NC events with final
- * state proton (not sure why you would want to do this, but it's possible!)
- * {
- *   nu: 14
- *   cc: true
- *   NoFinalStatePDG: [ 2112 ]
- * }
- * {
- *   nu: 14
- *   cc: False
- *   FinalStatePDG: [ 2112 ]
- * }
+ * Multiple filters blocks per event are supported. Event is kept if it passes
+ * any filter block
  */
 
 #include <iostream>
@@ -84,19 +74,24 @@ struct FilterBlockConfig {
         fhicl::Comment("List of PDG codes that must appear in the event as primaries. May repeat PDG codes for multiple particles of the same type")
     };
 
-    fhicl::OptionalSequence<fhicl::Tuple<int, float>> KEThresholds {
-        fhicl::Name("KEThresholds"),
-        fhicl::Comment("Minimum KE for particles to count towards either required or disallowed particle lists. Format is [PDG code, threshold (MeV)]")
+    fhicl::OptionalAtom<bool> ExactCounts {
+        fhicl::Name("ExactCounts"),
+        fhicl::Comment("If true, event must contain the exact count of particles listed in the required PDG list with no extra primaries, except those in the ignored list or below KE threshold")
     };
-
-    fhicl::OptionalAtom<bool> Exclusive {
-        fhicl::Name("Exclusive"),
-        fhicl::Comment("If true, event must contain the exact required PDGs with no extra primary particles")
+    
+    fhicl::OptionalSequence<int> IgnoredPDGs {
+        fhicl::Name("IgnoredPDGs"),
+        fhicl::Comment("List of PDG codes which are not considered when counting primaries, even if they are above KE thresholds")
     };
 
     fhicl::OptionalSequence<int> DisallowedPDGs {
         fhicl::Name("DisallowedPDGs"),
-        fhicl::Comment("List of PDG codes which must not be present in the primaries (not used if \"Exclusive\" option is true)")
+        fhicl::Comment("List of PDG codes which must not be present in the primaries")
+    };
+
+    fhicl::OptionalSequence<fhicl::Tuple<int, float>> KEThresholds {
+        fhicl::Name("KEThresholds"),
+        fhicl::Comment("Minimum KE for particles to count towards either required or disallowed particle lists. Format is [PDG code, threshold (MeV)]")
     };
 };
 
@@ -109,9 +104,10 @@ struct FilterBlock {
     std::optional<bool> iscc;
     std::optional<std::vector<int>> modes;
     std::optional<std::vector<int>> required_pdgs;
+    std::optional<std::vector<int>> ignored_pdgs;
     std::optional<std::vector<int>> disallowed_pdgs;
     std::optional<std::map<int, float>> ke_thresholds;
-    std::optional<bool> exclusive;
+    std::optional<bool> exact_counts;
 
     // computed from options
     // (pdg, nrequired)
@@ -232,9 +228,9 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
             block.ke_thresholds = ke_threshold_map;
         }
 
-        bool exclusive;
-        if (cfg.Exclusive(exclusive)) {
-            block.exclusive = exclusive;
+        bool exact_counts;
+        if (cfg.ExactCounts(exact_counts)) {
+            block.exact_counts = exact_counts;
         }
 
         PrintBlock(block);
@@ -301,14 +297,22 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
     //get a vector of final state particles for the next few checks
     std::vector<int> primaries;
     bool has_thresholds = block.ke_thresholds.has_value();
+    bool has_ignored = block.ignored_pdgs.has_value();
     for (int i = 0; i < mc->NParticles(); ++i) {
         const auto& part(mc->GetParticle(i));
+        debug_log << kSpace << "MC particle list " << i << " " << part.PdgCode() << " STATUS=" << part.StatusCode() << ", E=" << part.E() << "\n";
         // only consider primaries
         if (part.StatusCode() != 1) continue;
 
-        // check against threshold map. Primaries not counted if below threshold
+        // don't count particles in the ignored list
+        int pdg = part.PdgCode();
+        if (has_ignored) {
+            if (std::find(block.ignored_pdgs->begin(), block.ignored_pdgs->end(), pdg)
+                    != block.ignored_pdgs->end()) continue;
+        }
+
+        // don't count particles below threshold
         if (has_thresholds) {
-            int pdg = part.PdgCode();
             if (block.ke_thresholds->find(pdg) != block.ke_thresholds->end()) {
                 float ke = 1.0e3 * (part.E() - part.Mass());
                 if (ke < block.ke_thresholds->at(pdg)) continue;
@@ -339,16 +343,17 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterB
         debug_log << "\n" << kSpace << "]... ";
 
         // Check that for every required PDG, the event has enough.
-        // if exclusive: check equality
-        bool exclusive = block.exclusive.value_or(false);
+        // if exact_counts: check equality
+        bool exact_counts = block.exact_counts.value_or(false);
         for (const auto& [required_pdg, nrequired] : block.required_counts) {
             auto it = counts.find(required_pdg);
             if (it == counts.end() || it->second < nrequired) return false;
-            if (exclusive && it->second != nrequired) return false;
+            if (exact_counts && it->second != nrequired) return false;
         }
 
-        // check if there are extra particles not in the required list if exclusive
-        if (exclusive) {
+        // check if there are extra particles not in the required list if exact_counts is set
+        // note: counts already excludes below threshold particles & ignored particles
+        if (exact_counts) {
             for (const auto& [primary_pdg, count] : counts) {
                 // extra particle not in the list
                 if (block.required_counts.find(primary_pdg) == block.required_counts.end()) return false;
@@ -456,8 +461,9 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
     print_bool("IsCC", block.iscc);
     print_int_vec("Modes", block.modes);
     print_int_vec("RequiredPDGs", block.required_pdgs);
+    print_int_vec("IgnoredPDGs", block.ignored_pdgs);
     print_int_vec("DisallowedPDGs", block.disallowed_pdgs);
-    print_bool("Exclusive", block.exclusive);
+    print_bool("ExactCounts", block.exact_counts);
     print_ke_thresholds("KEThresholds", block.ke_thresholds);
     // TODO WRange
 }
