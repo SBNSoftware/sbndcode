@@ -153,7 +153,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
     
     // Check that path length isn't zero
-    if( !pinfo.pathLength ) return;
+    //if( !pinfo.pathLength ) return;
 
     // If this is a new blip, initialize
     if( !tblip.G4ChargeMap.size() ) {
