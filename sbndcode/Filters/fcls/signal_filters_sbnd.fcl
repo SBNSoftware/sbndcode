@@ -1,8 +1,8 @@
 BEGIN_PROLOG
 
 # Signal definitions for exclusive cross section analysis sample production
-# Each block can contain multiple filters in case the signal definition cannot
-# be expressed with a single set of filter options!
+# The "Filters" option accepts a list of parameter sets in case the signal
+# definition cannot be expressed with a single set of filter options
 
 # CC nue or nuebar
 sbnd_ccnue_filter:
@@ -97,6 +97,23 @@ sbnd_pi0_filter:
     Filters: [
         {
             RequiredPDGs: [ 111 ]
+            InTPC: true
+        }
+    ]
+}
+
+# Charged or neutral kaon + anything
+sbnd_kaon_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 321 ]
+            InTPC: true
+        },
+        {
+            RequiredPDGs: [ 311 ]
             InTPC: true
         }
     ]

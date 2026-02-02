@@ -41,12 +41,12 @@ namespace filt{
 struct FilterBlockConfig {
     fhicl::OptionalSequence<int> NuPDGs {
         fhicl::Name("NuPDGs"),
-        fhicl::Comment("PDG codes of the neutrino")
+        fhicl::Comment("Allowed PDG codes for the neutrino")
     };
 
     fhicl::OptionalSequence<int> TargetPDGs {
         fhicl::Name("TargetPDGs"),
-        fhicl::Comment("Allowed target PDG codes")
+        fhicl::Comment("Allowed PDG codes for the target")
     };
 
     fhicl::OptionalSequence<float, 2> WRange {
@@ -71,7 +71,7 @@ struct FilterBlockConfig {
 
     fhicl::OptionalSequence<int> RequiredPDGs {
         fhicl::Name("RequiredPDGs"),
-        fhicl::Comment("List of PDG codes that must appear in the event as primaries. May repeat PDG codes for multiple particles of the same type")
+        fhicl::Comment("List of PDG codes that must appear in the event as primaries. May repeat PDG codes to require multiple particles of the same type")
     };
 
     fhicl::OptionalAtom<bool> ExactCounts {
@@ -86,12 +86,12 @@ struct FilterBlockConfig {
 
     fhicl::OptionalSequence<int> DisallowedPDGs {
         fhicl::Name("DisallowedPDGs"),
-        fhicl::Comment("List of PDG codes which must not be present in the primaries")
+        fhicl::Comment("List of PDG codes which must not be present in the list of primaries if they are above KE thresholds")
     };
 
     fhicl::OptionalSequence<fhicl::Tuple<int, float>> KEThresholds {
         fhicl::Name("KEThresholds"),
-        fhicl::Comment("Minimum KE for particles to count towards either required or disallowed particle lists. Format is [PDG code, threshold (MeV)]")
+        fhicl::Comment("Minimum KE required for particles to count towards the list of primaries. Format is [PDG code, threshold (MeV)]")
     };
 };
 
@@ -239,7 +239,7 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
 }
 
 
-bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth> mc, const FilterBlock& block, mf::LogDebug& debug_log) const {
+bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const FilterBlock& block, mf::LogDebug& debug_log) const {
     const std::string kSpace = "    ";
     debug_log << kSpace << "Checking MCTruth is neutrino... ";
     if (mc->Origin() != simb::kBeamNeutrino) return false;
@@ -390,7 +390,6 @@ bool TrueSignalFilter::filter(art::Event & e) {
         const auto& mclist(mclists.at(i));
         for (size_t j = 0; j != mclist->size(); j++) {
             art::Ptr<simb::MCTruth> mc(mclist, j);
-            // for (auto const& block : fFilterBlocks) {
             debug_log << "Filtering MCTruth " << j << "...\n";
             for (size_t ib = 0; ib != fFilterBlocks.size(); ib++) {
                 const auto& block = fFilterBlocks.at(ib);
