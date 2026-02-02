@@ -1159,6 +1159,7 @@ void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filena
 
     TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
     c->SetTicks();
+    c->SetLeftMargin(0.15);
 
     if(vertex == "BDT"){
         plot->SetMarkerColor(TColor::GetColor("#e42536"));
@@ -1211,6 +1212,7 @@ void drawEfficiencyErrorsIndividual(TEfficiency* plot, const std::string& filena
     gEff->SetTitle(plot->GetTitle());
     gEff->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
     gEff->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitleOffset(1.6);
     gEff->Draw("AP");
 
     plot->Draw("SAME");
@@ -1592,9 +1594,9 @@ void nuEBackgroundSignalCut_macro(){
     int numRecoNeutrinosCut = 1;
     int FVCut = 1;
     int CRUMBSCut = 1;
-    int ETheta2Cut = 0;
-    int trackscoreCut = 0;
+    int ETheta2Cut = 1;
     int trackscoreHighestCut = 0;
+    int trackscoreCut = 0;
     int upperCRUMBSCut = 0;
     int upperPFPCut = 0;
     int QSquaredCut = 0;
@@ -1614,24 +1616,24 @@ void nuEBackgroundSignalCut_macro(){
     } else if(CRUMBSCut == 1 && ETheta2Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbsCuts.txt";
-    } else if(ETheta2Cut == 1 && trackscoreCut == 0){
+    } else if(ETheta2Cut == 1 && trackscoreHighestCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_EThetaCuts.txt";
-    } else if(trackscoreCut == 1 && trackscoreHighestCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreCuts.txt";
-    } else if(trackscoreHighestCut == 1 && upperCRUMBSCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscoreCuts.txt";
+    } else if(trackscoreHighestCut == 1 && trackscoreCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts.txt";
+    } else if(trackscoreCut == 1 && upperCRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts.txt";
     } else if(upperCRUMBSCut == 1 && upperPFPCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBSCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS.txt";
     } else if(upperPFPCut == 1 && QSquaredCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFPCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_upperPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS_upperPFP.txt";
     } else if(QSquaredCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_QSquared_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscore_highestTrackscore_upperCRUMBS_upperPFP_QSquaredCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_upperPFP_QSquared_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS_upperPFP_QSquared.txt";
     }
     
     std::ofstream clearFile(txtFileName, std::ios::trunc);
@@ -2373,9 +2375,9 @@ void nuEBackgroundSignalCut_macro(){
                 double crumbsScoreCut_high_DLUboone = 0.8;
                 double crumbsScoreCut_high_DLNuE = 0.8;
                 
-                double EThetaCut_highestPFP_BDT = 1.79;
-                double EThetaCut_highestPFP_DLUboone = 1.79;
-                double EThetaCut_highestPFP_DLNuE = 1.79;
+                double EThetaCut_highestPFP_BDT = 2.3;
+                double EThetaCut_highestPFP_DLUboone = 2.3;
+                double EThetaCut_highestPFP_DLNuE = 2.3;
                 
                 double EThetaCut_sum_BDT = 3.32;
                 double EThetaCut_sum_DLUboone = 3.32;
@@ -2656,18 +2658,18 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+                    
                     if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-
                     if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
@@ -2758,18 +2760,18 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
                     if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLNuE << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
-                    }
-
                     if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
@@ -2831,14 +2833,14 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
 
-                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLUboone << std::endl;
+                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLUboone << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
@@ -5672,22 +5674,22 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(QSquaredSumDist, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawBackSig(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_Backsig_lower_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
-    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", true, true, true, true);
-    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(trackscoreAllPFPsDist, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_Backsig_weighted.pdf").c_str(), "topRight", true, true, true, true);
-    styleDrawAll(trackscoreHighestScorePFPs, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(trackscoreAllPFPs, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(trackscoreHighestScorePFPs, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(trackscoreHighestScorePFPsDist, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(trackscoreHighestScorePFPs, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_Backsig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(trackscoreHighestScorePFPs, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
 
-    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
-    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
 
     styleDrawAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
     styleDrawAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
@@ -6021,6 +6023,23 @@ void nuEBackgroundSignalCut_macro(){
     printf("Before Cuts:\nnu+e = %f, NCNpi0 = %f, Other NC = %f, CCnumu = %f\nCCnue = %f, Dirt = %f, nu+e Dirt = %f, Cosmic = %f, Other = %f\n\n", numEventBeforeCutWithoutWeightingDLNuE.nuE, numEventBeforeCutWithoutWeightingDLNuE.NCNPi0, numEventBeforeCutWithoutWeightingDLNuE.otherNC, numEventBeforeCutWithoutWeightingDLNuE.CCnumu, numEventBeforeCutWithoutWeightingDLNuE.CCnue, numEventBeforeCutWithoutWeightingDLNuE.dirt, numEventBeforeCutWithoutWeightingDLNuE.nuEDirt, numEventBeforeCutWithoutWeightingDLNuE.cosmic, numEventBeforeCutWithoutWeightingDLNuE.other);
     printf("After Cut:\nnu+e = %f (%f%%), NCNpi0 = %f (%f%%), Other NC = %f (%f%%), CCnumu = %f (%f%%)\n", numEventCutWithoutWeightingDLNuE.nuE, (100.0*numEventCutWithoutWeightingDLNuE.nuE/numEventBeforeCutWithoutWeightingDLNuE.nuE), numEventCutWithoutWeightingDLNuE.NCNPi0, (100.0*numEventCutWithoutWeightingDLNuE.NCNPi0/numEventBeforeCutWithoutWeightingDLNuE.NCNPi0), numEventCutWithoutWeightingDLNuE.otherNC, (100.0*numEventCutWithoutWeightingDLNuE.otherNC/numEventBeforeCutWithoutWeightingDLNuE.otherNC), numEventCutWithoutWeightingDLNuE.CCnumu, (100.0*numEventCutWithoutWeightingDLNuE.CCnumu/numEventBeforeCutWithoutWeightingDLNuE.CCnumu));
     printf("CCnue = %f (%f%%), Dirt = %f (%f%%), nu+e Dirt = %f (%f%%), Cosmic = %f (%f%%), Other = %f (%f%%)\n", numEventCutWithoutWeightingDLNuE.CCnue, (100.0*numEventCutWithoutWeightingDLNuE.CCnue/numEventBeforeCutWithoutWeightingDLNuE.CCnue), numEventCutWithoutWeightingDLNuE.dirt, (100.0*numEventCutWithoutWeightingDLNuE.dirt/numEventBeforeCutWithoutWeightingDLNuE.dirt), numEventCutWithoutWeightingDLNuE.nuEDirt, (100.0*numEventCutWithoutWeightingDLNuE.nuEDirt/numEventBeforeCutWithoutWeightingDLNuE.nuEDirt), numEventCutWithoutWeightingDLNuE.cosmic, (100.0*numEventCutWithoutWeightingDLNuE.cosmic/numEventBeforeCutWithoutWeightingDLNuE.cosmic), numEventCutWithoutWeightingDLNuE.other, (100.0*numEventCutWithoutWeightingDLNuE.other/numEventBeforeCutWithoutWeightingDLNuE.other));
+
+    std::cout << "" << std::endl;
+    std::cout << "clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", FV = " << FVCut << std::endl;
+    std::cout << "CRUMBS = " << CRUMBSCut << ", ETheta2 (highest) = " << ETheta2Cut << ", trackscore highest energy = " << trackscoreCut << ", trackscore highest score = " << trackscoreHighestCut << std::endl;
+    std::cout << "upper CRUMBS = " << upperCRUMBSCut << ", upper PFP = " << upperPFPCut << ", QSquared = " << QSquaredCut << std::endl;
+
+    std::ofstream out_file(txtFileName, std::ios::app);
+    if(out_file.is_open()){
+        out_file << "================" << std::endl;
+        out_file << "clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", FV = " << FVCut << std::endl;
+        out_file << "CRUMBS = " << CRUMBSCut << ", ETheta2 (highest) = " << ETheta2Cut << ", trackscore highest energy = " << trackscoreCut << ", trackscore highest score = " << trackscoreHighestCut << std::endl;
+        out_file << "upper CRUMBS = " << upperCRUMBSCut << ", upper PFP = " << upperPFPCut << ", QSquared = " << QSquaredCut << std::endl;
+        out_file << "================" << std::endl;
+        out_file.close(); 
+    } else{
+        std::cerr << "Error: couldnt open txt file" << std::endl;
+    }
 
     //printf("\nNum Nu+E from slice category = %f, num Nu+E from int type = %f\n", numNuESliceCategory_DLNuE, numNuEIntType_DLNuE);
     //printf("Num nu+e with completeness > 0.5 = %f, num nu+e in else = %f\n", numNuESliceCategoryPassed_DLNuE, numNuESliceCategoryElse_DLNuE);
