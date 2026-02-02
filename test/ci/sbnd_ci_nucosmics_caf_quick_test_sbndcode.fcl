@@ -1,5 +1,5 @@
 #include "eventweight_genie_systtools_test.fcl"
-#include "cafmakerjob_sbnd_sce_systtools_and_fluxwgt.fcl"
+#include "cafmakerjob_sbnd_sce_systtools_and_fluxwgt_and_g4rw.fcl"
 
 services.NuRandomService.policy: "perEvent"
 
