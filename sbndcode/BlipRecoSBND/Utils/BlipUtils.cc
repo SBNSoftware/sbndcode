@@ -163,7 +163,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // .. otherwise, check that the new particle
     // creation time is comparable to existing blip.
     // then calculate new energy-weighted position.
-    } else if ( fabs(tblip.Time-pinfo.time) < 3) {
+    } else if ( fabs(tblip.Time-pinfo.time) < 3 || true) {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
