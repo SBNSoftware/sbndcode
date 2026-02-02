@@ -105,7 +105,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       // Create the new blip
       blip::TrueBlip tb;
       GrowTrueBlip(pinfo[i],tb);
-      if( !tb.Energy ) continue;  
+      if( !tb.Energy ) continue;
 
       // We want to loop through any contiguous electrons (produced
       // with process "eIoni") and add the energy they deposit into this blip.
@@ -163,7 +163,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // .. otherwise, check that the new particle
     // creation time is comparable to existing blip.
     // then calculate new energy-weighted position.
-    } else if ( fabs(tblip.Time-pinfo.time) < 3 || true) {
+    } else if ( fabs(tblip.Time-pinfo.time) < 3) {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
