@@ -79,6 +79,21 @@ typedef struct{
     TH1F* other;
 } splitHistGroup_struct;
 
+typedef struct{
+    TCanvas* canvas;
+    TH1F* baseHist;
+    TH1F* electron;
+    TH1F* nuEElectron;
+    TH1F* proton;
+    TH1F* muon;
+    TH1F* cosmicMuon;
+    TH1F* cosmicOther;
+    TH1F* pi0;
+    TH1F* chargedPi;
+    TH1F* other;
+    TH1F* nuEOther;
+} splitPFPHistGroup_struct;
+
 struct weights_struct{
     double signalCurrent = 0;
     double signalUboone = 0;
@@ -163,6 +178,27 @@ splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const st
     };
 }
 
+splitPFPHistGroup_struct createSplitPFPHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
+    TCanvas* canvas = new TCanvas((baseName + "_canvas").c_str(), "Graph Draw Options", 200, 10, 600, 400);
+
+    TH1F* base = new TH1F(baseName.c_str(), title.c_str(), bins, xlow, xup);
+    base->SetTitle((title + ";" + xAxisTitle + ";# of PFPs").c_str());
+
+    return {
+        canvas,
+        base,
+        (TH1F*) base->Clone((baseName + "_electron").c_str()),
+        (TH1F*) base->Clone((baseName + "_nuEElectron").c_str()),
+        (TH1F*) base->Clone((baseName + "_proton").c_str()),
+        (TH1F*) base->Clone((baseName + "_muon").c_str()),
+        (TH1F*) base->Clone((baseName + "_cosmicMuon").c_str()),
+        (TH1F*) base->Clone((baseName + "_cosmicOther").c_str()),
+        (TH1F*) base->Clone((baseName + "_pi0").c_str()),
+        (TH1F*) base->Clone((baseName + "_chargedPi").c_str()),
+        (TH1F*) base->Clone((baseName + "_other").c_str()),
+        (TH1F*) base->Clone((baseName + "_otherNuE").c_str())
+    };
+}
 
 /*
 void styleDrawPur(purHist_struct hists,
@@ -459,6 +495,196 @@ void styleDrawBackSig(histGroup_struct hists,
 
     for (auto* hist : allHists)
         delete hist;
+}
+
+void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
+                    double ymin, double ymax, double xmin, double xmax,
+                    const char* filename, const std::string& legendLocation,
+                    int* drawLine = nullptr, int* linePos = nullptr,
+                    bool useLogScale = false){
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    if (useLogScale)
+        hists.canvas->SetLogy(1);
+    else
+        hists.canvas->SetLogy(0);
+
+    std::vector<TH1F*> allHists = {hists.electron, hists.nuEElectron, hists.proton, hists.muon, hists.cosmicMuon, hists.cosmicOther, hists.pi0, hists.chargedPi, hists.other, hists.nuEOther};
+
+    if (useLogScale) {
+        for (auto* hist : allHists) {
+            if (!hist) continue;
+            int nBins = hist->GetNbinsX();
+            for (int i = 1; i <= nBins; ++i) {
+                if (hist->GetBinContent(i) <= 0)
+                    hist->SetBinContent(i, 1e-6);
+            }
+        }
+    }
+
+    for (auto* hist : allHists){
+        if(hist){
+            hist->SetStats(0);
+            hist->GetXaxis()->SetTickLength(0.04);
+            hist->GetYaxis()->SetTickLength(0.03);
+            hist->GetXaxis()->SetTickSize(0.02);
+            hist->GetYaxis()->SetTickSize(0.02);
+        }
+    }
+    
+
+    hists.nuEElectron->SetLineWidth(2); hists.nuEElectron->SetLineColor(TColor::GetColor("#656364"));
+    hists.electron->SetLineWidth(2);    hists.electron->SetLineColor(TColor::GetColor("#578dff"));
+    hists.proton->SetLineWidth(2);      hists.proton->SetLineColor(TColor::GetColor("#86c8dd"));
+    hists.muon->SetLineWidth(2);        hists.muon->SetLineColor(TColor::GetColor("#adad7d"));
+    hists.cosmicMuon->SetLineWidth(2);  hists.cosmicMuon->SetLineColor(TColor::GetColor("#c91f16"));
+    hists.cosmicOther->SetLineWidth(2); hists.cosmicOther->SetLineColor(TColor::GetColor("#ff5e02"));
+    hists.pi0->SetLineWidth(2);         hists.pi0->SetLineColor(TColor::GetColor("#1845fb"));
+    hists.chargedPi->SetLineWidth(2);   hists.chargedPi->SetLineColor(TColor::GetColor("#c849a9"));
+    hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
+    hists.nuEOther->SetLineWidth(2);    hists.nuEOther->SetLineColor(TColor::GetColor("#a96b59"));
+
+    if((ymin != 999) && (ymax != 999)){
+        for(auto* hist : allHists)
+            if (hist) hist->GetYaxis()->SetRangeUser(ymin, ymax);
+    }
+
+    if((xmin != 999) && (xmax != 999)){
+        for(auto* hist : allHists)
+            if (hist) hist->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
+
+    double maxYValue = 0.0;
+    for (auto* hist : allHists)
+        if (hist && hist->GetMaximum() > maxYValue)
+            maxYValue = hist->GetMaximum();
+
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+    double yminVal = useLogScale ? 1e-1 : 0;
+    if((ymin == 999) && (ymax == 999)){
+        double ymaxVal = useLogScale ? (maxYValue * 100.0) : (maxYValue * 1.1);
+        std::cout << "setting yaxis to " << yminVal << ", " << ymaxVal << std::endl;
+        for (auto* hist : allHists)
+            if (hist) hist->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    hists.electron->Draw("hist");
+    hists.nuEElectron->Draw("histsame");
+    hists.proton->Draw("histsame");
+    hists.muon->Draw("histsame");
+    hists.cosmicMuon->Draw("histsame");
+    hists.cosmicOther->Draw("histsame");
+    hists.pi0->Draw("histsame");
+    hists.chargedPi->Draw("histsame");
+    hists.other->Draw("histsame");
+    hists.nuEOther->Draw("histsame");
+
+    int nEntries = 10;
+    double height = std::max(0.03 * nEntries, 0.03);
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+
+    if(legendLocation == "topRight"){ Lxmin=0.72; Lymax=0.863; Lxmax=0.87; Lymin=Lymax - height; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.28; Lymin=Lymax - height; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.72; Lymin=0.137; Lxmax=0.87; Lymax=Lymin + height; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymin=0.137; Lxmax=0.28; Lymax=Lymin + height; }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    //auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
+    legend->AddEntry(hists.nuEElectron, "#nu+e Electron", "f");
+    legend->AddEntry(hists.electron, "Electron", "f");
+    legend->AddEntry(hists.proton, "Proton", "f");
+    legend->AddEntry(hists.muon, "Muon", "f");
+    legend->AddEntry(hists.cosmicMuon, "Cosmic Muon", "f");
+    legend->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
+    legend->AddEntry(hists.pi0, "Neutral Pion", "f");
+    legend->AddEntry(hists.chargedPi, "Charged Pion", "f");
+    legend->AddEntry(hists.other, "Other", "f");
+    legend->AddEntry(hists.nuEOther, "#nu+e Other", "f");
+    legend->SetTextSize(0.0225);
+
+    legend->SetMargin(0.13);
+    legend->Draw();
+
+    hists.canvas->SaveAs(filename);
+
+    // Drawing the histograms as a stack.
+    const char* histsTitle = hists.electron->GetTitle();
+    const char* xAxisTitle = hists.electron->GetXaxis()->GetTitle();
+    const char* yAxisTitle = hists.electron->GetYaxis()->GetTitle();
+
+    std::string stackTitle = std::string(histsTitle) + ";" + xAxisTitle + ";" + yAxisTitle;
+
+    THStack* stack = new THStack("stack", stackTitle.c_str());
+    stack->Add(hists.electron);
+    stack->Add(hists.nuEElectron);
+    stack->Add(hists.proton);
+    stack->Add(hists.muon);
+    stack->Add(hists.cosmicMuon);
+    stack->Add(hists.cosmicOther);
+    stack->Add(hists.pi0);
+    stack->Add(hists.chargedPi);
+    stack->Add(hists.other);
+    stack->Add(hists.nuEOther);
+
+    hists.canvas->cd();
+    hists.canvas->Clear();
+
+    if(useLogScale) hists.canvas->SetLogy(1);
+    else hists.canvas->SetLogy(0);
+
+    // Build a frame with your desired axis limits
+    double xminFrame = (xmin != 999 ? xmin : hists.electron->GetXaxis()->GetXmin());
+    double xmaxFrame = (xmax != 999 ? xmax : hists.electron->GetXaxis()->GetXmax());
+    double yminFrame = (ymin != 999 ? ymin : 1e-6);
+    double ymaxFrame = (ymax != 999 ? ymax : stack->GetMaximum()*1.2);
+    
+    TH1F* frame = new TH1F("frame", stackTitle.c_str(),
+                           1, xminFrame, xmaxFrame);
+
+    frame->SetMinimum(yminFrame);
+    frame->SetMaximum(ymaxFrame);
+    frame->SetTitle(stackTitle.c_str());
+    //frame->GetXaxis()->SetTitle(xAxisTitle);
+    //frame->GetYaxis()->SetTitle(yAxisTitle);
+
+    frame->SetLineColor(0);
+    frame->SetLineWidth(0);
+    frame->SetFillStyle(0);     
+    frame->SetStats(0);
+    //frame->Draw("axis");
+    frame->Draw("HIST");
+
+    hists.canvas->Update();
+
+    stack->Draw("hist same");
+
+    gPad->RedrawAxis();
+
+    auto legendStack = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    legendStack->AddEntry(hists.nuEElectron, "#nu+e Electron", "f");
+    legendStack->AddEntry(hists.electron, "Electron", "f");
+    legendStack->AddEntry(hists.proton, "Proton", "f");
+    legendStack->AddEntry(hists.muon, "Muon", "f");
+    legendStack->AddEntry(hists.cosmicMuon, "Cosmic Muon", "f");
+    legendStack->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
+    legendStack->AddEntry(hists.pi0, "Neutral Pion", "f");
+    legendStack->AddEntry(hists.chargedPi, "Charged Pion", "f");
+    legendStack->AddEntry(hists.other, "Other", "f");
+    legendStack->AddEntry(hists.nuEOther, "#nu+e Other", "f");
+    legendStack->SetTextSize(0.0225);
+    legendStack->SetMargin(0.13);
+    legendStack->Draw();
+
+    std::string fname(filename);
+    std::string stackedFname;
+    size_t pos = fname.rfind(".pdf");
+    if(pos != std::string::npos) stackedFname = fname.substr(0, pos) + "_stacked.pdf";
+    else stackedFname = fname + "_stacked.pdf";
+
+    hists.canvas->SaveAs(stackedFname.c_str());
+
 }
 
 void styleDrawSplit(splitHistGroup_struct hists,
@@ -1540,8 +1766,8 @@ void nuEBackgroundSignalWeighted_macro(){
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit/";
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/enuelastic_DLVertexingDLNu+E_26Dec_v10_06_00_gen_g4_detsim_reco1_reco2_analysed_DLNu+E_26Dec_25890928_2176_Analysed_DLNu+E_output-0f528a1f-2a9b-4b7f-b99e-7c2684cabb08.root");
     
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_19Jan.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_1Feb.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithSplit_TEST_highStats/";
     
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/output_16Jan.root");
@@ -1913,7 +2139,9 @@ void nuEBackgroundSignalWeighted_macro(){
     auto trackscoreAllPFPsDist = createHistGroup("trackscoreAllPFPsDist", "Trackscore of All PFPs in the Slice (Not Weighted)", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs = createHistGroup("trackscoreHighestScorePFPs", "Trackscore of the PFP with the Highest Trackscore in the Slice", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPsDist = createHistGroup("trackscoreHighestScorePFPsDist", "Trackscore of the PFP with the Highest Trackscore in the Slice (Not Weighted)", "Trackscore", 20, 0, 1);
-    
+   
+    auto trackscoreAllPFPsPFP = createHistGroup("trackscoreAllPFPsPFP", "Trackscore of All PFPs in the Slice (Split By PFP)", "Trackscore", 20, 0, 1);
+ 
     auto hitRatioLowCompletenessSlices = createHistGroup("hitRatioLowCompletenessSlices", "Fraction of Slice Hits Contained in PFPs", "Ratio", 20, 0, 1);
 
     auto deltaX = createHistGroup("deltaX", "#Deltax of Neutrino Vertex in Slice", "x_{Reco} - x_{True} (cm)", 40, -5, 5);
@@ -1978,6 +2206,8 @@ void nuEBackgroundSignalWeighted_macro(){
     auto trackscoreAllPFPs_splitBDT = createSplitHistGroup("trackscoreAllPFPs_splitBDT", "Trackscore of All PFPs in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitBDT = createSplitHistGroup("trackscoreHighestScorePFPs_splitBDT", "Trackscore of the PFP with the Highest Trackscore in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
 
+    auto trackscoreAllPFPs_splitPFPBDT = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPBDT", "Trackscore of All PFPs in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
+
     // Dists:
     auto sliceCompletenessDist_splitBDT = createSplitHistGroup("sliceCompletenessDist_splitBDT", "Slice Completeness: BDT Vertexing (unweighted)", "Completeness", 102, 0, 1.02);
     auto slicePurityDist_splitBDT = createSplitHistGroup("slicePurityDist_splitBDT", "Slice Purity: BDT Vertexing (unweighted)", "Purity", 102, 0, 1.02);
@@ -2013,6 +2243,8 @@ void nuEBackgroundSignalWeighted_macro(){
     auto trackscoreAllPFPs_splitDLUboone = createSplitHistGroup("trackscoreAllPFPs_splitDLUboone", "Trackscore of All PFPs in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLUboone = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLUboone", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
 
+    auto trackscoreAllPFPs_splitPFPDLUboone = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPDLUboone", "Trackscore of All PFPs in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
+
     // Dist
     auto sliceCompletenessDist_splitDLUboone = createSplitHistGroup("sliceCompletenessDist_splitDLUboone", "Slice Completeness: DL Uboone Vertexing (unweighted)", "Completeness", 102, 0, 1.02);
     auto slicePurityDist_splitDLUboone = createSplitHistGroup("slicePurityDist_splitDLUboone", "Slice Purity: DL Uboone Vertexing (unweighted)", "Purity", 102, 0, 1.02);
@@ -2047,6 +2279,8 @@ void nuEBackgroundSignalWeighted_macro(){
     auto trackscoreHighestEnergyPFP_splitDLNuE = createSplitHistGroup("trackscoreHighestEnergyPFP_splitDLNuE", "Trackscore of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreAllPFPs_splitDLNuE = createSplitHistGroup("trackscoreAllPFPs_splitDLNuE", "Trackscore of All PFPs in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLNuE = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLNuE", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
+
+    auto trackscoreAllPFPs_splitPFPDLNuE = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPDLNuE", "Trackscore of All PFPs in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
 
     // Dist
     auto sliceCompletenessDist_splitDLNuE = createSplitHistGroup("sliceCompletenessDist_splitDLNuE", "Slice Completeness: DL Nu+E Vertexing (unweighted)", "Completeness", 102, 0, 1.02);
@@ -2510,6 +2744,241 @@ void nuEBackgroundSignalWeighted_macro(){
                     std::cout << "No event type assigned" << std::endl;
                     sliceEventType = 8;
                 }
+
+                // Looping through PFPs
+                // Assigning category to PFPs
+                for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                        double pfpCategory = -999999;
+                        if(reco_particleTrueOrigin->at(pfp) == 1){
+                            // Beam Origin
+                            if(reco_particleTrueInteractionType->at(pfp) == 1098){
+                                // Comes from a nu+e elastic scatter
+                                if(reco_particleTruePDG->at(pfp) == 11){
+                                    pfpCategory = 1;
+                                } else{
+                                    // Something from the nu+e that isn't an electron
+                                    pfpCategory = 10;
+                                }
+                            } else{
+                                // From the beam but not a nu+e elasic scatter
+                                if(std::abs(reco_particleTruePDG->at(pfp)) == 11){
+                                    pfpCategory = 2;
+                                } else if(std::abs(reco_particleTruePDG->at(pfp)) == 2212){
+                                    pfpCategory = 3;
+                                } else if(std::abs(reco_particleTruePDG->at(pfp)) == 13){
+                                    pfpCategory = 4;
+                                } else if(std::abs(reco_particleTruePDG->at(pfp)) == 111){
+                                    pfpCategory = 7;
+                                } else if(std::abs(reco_particleTruePDG->at(pfp)) == 211){
+                                    pfpCategory = 8;
+                                } else{
+                                    pfpCategory = 9;
+                                }
+                            }
+                        } else if(reco_particleTrueOrigin->at(pfp) == 2){
+                            // Cosmic Origin
+                            if(std::abs(reco_particleTruePDG->at(pfp)) == 13){
+                                pfpCategory = 5;
+                            } else{
+                                pfpCategory = 6;
+                            }
+                        } else{
+                            pfpCategory = 9;
+                        }
+
+                        // Categories: nu+e electron = 1, electron = 2, proton = 3, muon = 4, cosmic muon = 5, cosmic other = 6, pi0 = 7
+                        // charged pion = 8, other = 9, other from nu+e = 10
+                    
+                        // PLOTS HERE
+                        if(pfpCategory == 1){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
+                                        trackscoreAllPFPsPFP.currentSignal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    } else{
+                                        trackscoreAllPFPsPFP.currentSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    }
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
+                                        trackscoreAllPFPsPFP.ubooneSignal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    } else{
+                                        trackscoreAllPFPsPFP.ubooneSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    }
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
+                                        trackscoreAllPFPsPFP.nuESignal->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    } else{
+                                        trackscoreAllPFPsPFP.nuESignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    }
+                                }
+                            }
+                        } else if(pfpCategory == 2){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.electron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.electron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.electron->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 3){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.proton->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.proton->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.proton->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 4){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.muon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.muon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.muon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 5){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuECosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 6){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuECosmic->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 7){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 8){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 9){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.other->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.other->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.other->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        } else if(pfpCategory == 10){
+                            if(DLCurrent == 2){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPBDT.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 0){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLUboone.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            } else if(DLCurrent == 5){
+                                if(reco_particleTrackScore->at(pfp) != -999999){
+                                    trackscoreAllPFPs_splitPFPDLNuE.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
+                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
+                                }
+                            }
+                        }
+                    }
+                } 
 
                 // Filling Split Histograms
                 if(sliceEventType == 0){
@@ -5568,6 +6037,9 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawAll(trackscoreHighestScorePFPsDist, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawBackSig(trackscoreHighestScorePFPs, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_Backsig_weighted.pdf").c_str(), "topRight", true, true, true, true);
 
+    styleDrawAll(trackscoreAllPFPsPFP, 999, 999, 999, 999, (base_path + "trackscoreAllPFPsPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(trackscoreAllPFPsPFP, 999, 999, 999, 999, (base_path + "trackscoreAllPFPsPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+
     styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
     styleDrawBackSig(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
@@ -5689,6 +6161,8 @@ void nuEBackgroundSignalWeighted_macro(){
     efficiency(trackscoreHighestEnergyPFP, 0, 1, 999, 999, (base_path + "trackscoreHighestEnergyPFP").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(trackscoreAllPFPs, 0, 1, 999, 999, (base_path + "trackscoreAllPFPs").c_str(), "bottomLeft", nullptr, &right, 1);
     efficiency(trackscoreHighestScorePFPs, 0, 1, 999, 999, (base_path + "trackscoreHighestScorePFPs").c_str(), "bottomLeft", nullptr, &right, 1);
+
+    efficiency(trackscoreAllPFPsPFP, 0, 1, 999, 999, (base_path + "trackscoreAllPFPsPFP").c_str(), "bottomLeft", nullptr, &right, 1);
 
     efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "bottomLeft", nullptr, &right, -1);
     efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "bottomRight", nullptr, &right, -1);
@@ -5877,6 +6351,8 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawSplit(trackscoreAllPFPs_splitBDT, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreHighestScorePFPs_splitBDT, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
 
+    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPBDT, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+
     styleDrawSplit(sliceCompletenessDist_splitBDT, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(slicePurityDist_splitBDT, 999, 999, 999, 999, (base_path + "slicePurity_all_dist_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScoreDist_splitBDT, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -5903,6 +6379,8 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawSplit(trackscoreHighestEnergyPFP_splitDLUboone, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreAllPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreHighestScorePFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+
+    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     
     styleDrawSplit(sliceCompletenessDist_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(slicePurityDist_splitDLUboone, 999, 999, 999, 999, (base_path + "slicePurity_all_dist_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -5930,7 +6408,9 @@ void nuEBackgroundSignalWeighted_macro(){
     styleDrawSplit(trackscoreHighestEnergyPFP_splitDLNuE, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreAllPFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreHighestScorePFPs_splitDLNuE, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
-    
+
+    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+ 
     styleDrawSplit(sliceCompletenessDist_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(slicePurityDist_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_dist_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(sliceCRUMBSScoreDist_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
