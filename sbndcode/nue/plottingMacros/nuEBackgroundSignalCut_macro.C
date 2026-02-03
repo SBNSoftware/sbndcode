@@ -1824,17 +1824,17 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 void nuEBackgroundSignalCut_macro(){
     std::string txtFileName = "purity_max_values_withCuts.txt";
 
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_19Jan.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_1Feb.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT/";
 
     // If clearCosmicCut == 1 -> cut all PFPs with clearCosmic score of 1. If clearCosmicCut == 0 -> keep all PFPs
-    int clearCosmicCut = 1;
-    int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 1;
-    int FVCut = 1;
-    int CRUMBSCut = 1;
-    int trackscorePFPsCut = 1;
+    int clearCosmicCut = 0;
+    int numPFPs0Cut = 0;
+    int numRecoNeutrinosCut = 0;
+    int FVCut = 0;
+    int CRUMBSCut = 0;
+    int trackscorePFPsCut = 0;
     int ETheta2Cut = 0;
     int trackscoreHighestCut = 0;
     int trackscoreCut = 0;
@@ -3233,7 +3233,7 @@ void nuEBackgroundSignalCut_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.currentSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.currentSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
@@ -3243,7 +3243,7 @@ void nuEBackgroundSignalCut_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.ubooneSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.ubooneSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
@@ -3253,7 +3253,7 @@ void nuEBackgroundSignalCut_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.nuESignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.nuESignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }

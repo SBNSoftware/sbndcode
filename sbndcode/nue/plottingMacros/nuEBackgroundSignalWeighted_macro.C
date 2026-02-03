@@ -2798,7 +2798,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.currentSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.currentSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
@@ -2808,7 +2808,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.ubooneSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.ubooneSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
@@ -2818,7 +2818,7 @@ void nuEBackgroundSignalWeighted_macro(){
                                     if(sliceCategoryPlottingMacro == 1 && signal == 1){
                                         // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
                                         trackscoreAllPFPsPFP.nuESignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else{
+                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
                                         trackscoreAllPFPsPFP.nuESignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
                                     }
                                 }
