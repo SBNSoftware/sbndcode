@@ -257,6 +257,8 @@ class BlipAnaTreeDataStruct
   float blip_energyTrue[kMaxBlips];   // blip truth energy [MeV]
   float blip_yzcorr[kMaxBlips];       // YZ uniformity correction factor (already applied)
   bool  blip_isMC[kMaxBlips];         // blip is matched to MC particle
+  int   blip_parid[kMaxBlips];        //Id of particle info vector entry matched to blip
+  int   blip_pdg[kMaxBlips];          //pdg of particle matched to blip
   int   blip_edepid[kMaxBlips];       // true energy dep ID ("edep_variable[id]")
   float blip_proxtrkdist[kMaxBlips];  // distance to nearest track
   int   blip_proxtrkid[kMaxBlips];    // index of nearest trk
@@ -412,6 +414,8 @@ class BlipAnaTreeDataStruct
     FillWith(blip_proxtrkid,  -9);
     FillWith(blip_incylinder, false);
     FillWith(blip_isMC,       false);
+    FillWith(blip_parid,       -9);
+    FillWith(blip_pdg,       -9);
     FillWith(blip_edepid,     -9);
     for(int i=0; i<kNplanes; i++) 
       FillWith(blip_clustid[i],-9);
@@ -525,6 +529,8 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
     evtTree->Branch("blip_proxtrkdist",blip_proxtrkdist,"blip_proxtrkdist[nblips]/F");
     evtTree->Branch("blip_isMC",blip_isMC,"blip_isMC[nblips]/O");
+    evtTree->Branch("blip_parid",blip_parid,"blip_parid[nblips]/O");
+    evtTree->Branch("blip_pdg",blip_pdg,"blip_pdg[nblips]/O");
     if( saveTrkInfo ) evtTree->Branch("blip_proxtrkid",blip_proxtrkid,"blip_proxtrkid[nblips]/I");
     if( saveTruthInfo ) evtTree->Branch("blip_edepid",blip_edepid,"blip_edepid[nblips]/I");
     for(int i=0;i<kNplanes;i++) evtTree->Branch(Form("blip_pl%i_clustid",i),blip_clustid[i],Form("blip_pl%i_clustid[nblips]/I",i));
@@ -1400,7 +1406,9 @@ void BlipAna::analyze(const art::Event& evt)
     // -----------------------------------------------
     if( blp.truth.ID >= 0 && blp.truth.Energy > 0 ) {
       fData->blip_isMC[i]             = true;
-      fData->blip_edepid[i]           = blp.truth.ID;
+      //fData->blip_edepid[i]           = blp.truth.ID; //Need to update this matching
+      fData->blip_parid[i]           = blp.truth.LeadG4Index;
+      fData->blip_pdg[i]           = blp.truth.LeadG4PDG;
       fData->blip_energyTrue[i]       = blp.truth.Energy;
       fData->edep_blipid[blp.truth.ID]  = blp.ID;
       fNum3DBlipsTrue++;

@@ -110,7 +110,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     //Find the particle with the matching G4ID
     for(auto& Par : pinfo){
       if(Par.trackId != MaxG4ID) continue;
-      blip.truth.ID = blip.ID;
+      blip.truth.ID = blip.ID; //might be better to make it the particle ID or index?
       blip.truth.Cryostat = blip.Cryostat;
       blip.truth.TPC = blip.TPC;
       blip.truth.Time = Par.time; //particle birth time? Or should be end time or halfway?
