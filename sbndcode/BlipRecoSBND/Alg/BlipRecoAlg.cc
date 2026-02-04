@@ -1204,7 +1204,7 @@ namespace blip {
       //  blip.truth = trueblips[*set_edepids.begin()];
       //--------------------------------------
       //Stuff under here is for the new blip MC truth matching
-      BlipUtils::BlipMCTruthMatching( blip, hitinfo, pinfo, fCaloPlane)
+      BlipUtils::BlipMCTruthMatching( blip, hitinfo, pinfo, fCaloPlane);
     
     }//endloop over blip vector
   }//End main blip reco function
