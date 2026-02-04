@@ -81,7 +81,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
   }
 
   //Use hitG4TrkID to match to a particular particle then fill in blip Truth info from that
-  void BlipMCTruthMatching( blip::blip &blip, std::vector<blip::HitInfo> const& hitinfoVec, std::vector<blip::ParticleInfo>& pinfo, 
+  void BlipMCTruthMatching( blip::Blip &blip, std::vector<blip::HitInfo> const& hitinfoVec, std::vector<blip::ParticleInfo>& pinfo, 
   int caloPlane)
   {
     std::map<int, float> ChargeContributions; //Map from G4ID to charge in cluster
