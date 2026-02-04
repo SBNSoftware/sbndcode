@@ -94,7 +94,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       if(hc.Plane != caloPlane) continue;
       //Find the G4ID with the largest contribution
       //Get largest contribution from a single particle
-      for( int iHit : HitIDs) {
+      for( int iHit : hc.HitIDs) {
         int G4ID = hitinfoVec[iHit].g4trkid;
         float Charge = hitinfoVec[iHit].charge;
         int PDG = hitinfoVec[iHit].g4pdg;
@@ -117,13 +117,13 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       //blip.truth.TimeTick = Par.time / ClockTick; //Doesn't actually seem used ever so maybe we don't need it
       blip.truth.Energy = Par.depEnergy;
       blip.truth.DepElectrons = Par.depElectrons;
-      blip.truth.NumElectrons = Par.NumElectrons;
+      blip.truth.NumElectrons = Par.numElectrons;
       blip.truth.LeadG4ID = MaxG4ID;
       blip.truth.LeadG4Index = Par.index; //I think these should be indexed the same?
       blip.truth.LeadG4PDG = MaxPDG;
       blip.truth.LeadCharge = ChargeContributions[MaxG4ID];
       //Update position in a way that should be robust against move away from TVector3
-      for(int i=0; i<3; i++) blip.truth.Position[i] = (Par.startPoint[i] + Par.endPoint[i])/2
+      for(int i=0; i<3; i++) blip.truth.Position[i] = (Par.startPoint[i] + Par.endPoint[i])/2;
       blip.truth.G4ChargeMap = ChargeContributions;
       blip.truth.G4PDGMap = PDGMap;
     }
