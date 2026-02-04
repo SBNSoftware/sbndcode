@@ -94,6 +94,14 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       if(hc.Plane != caloPlane) continue;
       //Find the G4ID with the largest contribution
       //Get largest contribution from a single particle
+      //initialize the map
+      for( int iHit : hc.HitIDs) {
+        int G4ID = hitinfoVec[iHit].g4trkid;
+        int PDG = hitinfoVec[iHit].g4pdg;
+        ChargeContributions[G4ID] = 0;
+        PDGMap[PDG] = 0;
+      }
+      //Now actually account for the charge
       for( int iHit : hc.HitIDs) {
         int G4ID = hitinfoVec[iHit].g4trkid;
         float Charge = hitinfoVec[iHit].charge;
