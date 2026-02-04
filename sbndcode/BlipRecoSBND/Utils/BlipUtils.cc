@@ -118,7 +118,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     //Find the particle with the matching G4ID
     for(auto& Par : pinfo){
       if(Par.trackId != MaxG4ID) continue;
-      blip.truth.ID = blip.ID; //might be better to make it the particle ID or index?
+      blip.truth.ID = -9; //might be better to make it the particle ID or index?
       blip.truth.Cryostat = blip.Cryostat;
       blip.truth.TPC = blip.TPC;
       blip.truth.Time = Par.time; //particle birth time? Or should be end time or halfway?
@@ -141,6 +141,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
   //===================================================================
   // Provided a vector of all particle information for event, fill a
   // vector of true blips
+  //May need edep information added too
   void MakeTrueBlips( std::vector<blip::ParticleInfo>& pinfo, std::vector<blip::TrueBlip>& trueblips ) {
      
     art::ServiceHandle<geo::Geometry> geom;
@@ -227,7 +228,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       float w2 = pinfo.depEnergy/totE;
       tblip.Position    = w1*tblip.Position + w2*pinfo.position;
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
-      tblip.LeadCharge  = pinfo.depElectrons;
+      //tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
     } else {
       return;

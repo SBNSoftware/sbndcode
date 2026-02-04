@@ -1406,7 +1406,7 @@ void BlipAna::analyze(const art::Event& evt)
     // -----------------------------------------------
     if( blp.truth.ID >= 0 && blp.truth.Energy > 0 ) {
       fData->blip_isMC[i]             = true;
-      //fData->blip_edepid[i]           = blp.truth.ID; //Need to update this matching
+      fData->blip_edepid[i]           = blp.truth.ID; //Need to update this matching
       fData->blip_parid[i]           = blp.truth.LeadG4Index;
       fData->blip_pdg[i]           = blp.truth.LeadG4PDG;
       fData->blip_energyTrue[i]       = blp.truth.Energy;

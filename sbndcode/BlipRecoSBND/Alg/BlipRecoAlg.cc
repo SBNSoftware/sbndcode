@@ -1205,6 +1205,13 @@ namespace blip {
       //--------------------------------------
       //Stuff under here is for the new blip MC truth matching
       BlipUtils::BlipMCTruthMatching( blip, hitinfo, pinfo, fCaloPlane);
+      std::set<int> set_edepids;
+      for(auto& hc : blip.clusters ) {
+        if( !hc.isValid )   continue; 
+        if( hc.EdepID < 0 ) continue;
+        set_edepids.insert( hc.EdepID );
+      }
+      if( set_edepids.size() == 1 )   blip.truth.ID = trueblips[*set_edepids.begin()].ID; //get edep ID from hit cluster
     
     }//endloop over blip vector
   }//End main blip reco function
