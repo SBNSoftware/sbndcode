@@ -53,6 +53,7 @@ namespace BlipUtils {
   void      FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
+  void      BlipMCTruthMatching( blip::blip &blip, std::vector<blip::HitInfo> const& hitinfoVec, std::vector<blip::ParticleInfo>& pinfo, int caloPlane);
   void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&); 
   void      GrowTrueBlip(blip::ParticleInfo&, blip::TrueBlip&);
   void      MergeTrueBlips(std::vector<blip::TrueBlip>&, float);

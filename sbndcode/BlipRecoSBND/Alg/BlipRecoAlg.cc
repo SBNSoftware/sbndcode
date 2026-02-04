@@ -1193,14 +1193,18 @@ namespace blip {
       // Save the true blip into the object;
       // at least one cluster needs to match.
       // ================================================
-      std::set<int> set_edepids;
-      for(auto& hc : blip.clusters ) {
-        if( !hc.isValid )   continue; 
-        if( hc.EdepID < 0 ) continue;
-        set_edepids.insert( hc.EdepID );
-      }
-      if( set_edepids.size() == 1 ) 
-        blip.truth = trueblips[*set_edepids.begin()];
+      //JACOB DISABLED THIS SAVING ON FEB 4, 2026 FOR NEW BLIP MC MATCH
+      //std::set<int> set_edepids;
+      //for(auto& hc : blip.clusters ) {
+      //  if( !hc.isValid )   continue; 
+      //  if( hc.EdepID < 0 ) continue;
+      //  set_edepids.insert( hc.EdepID );
+      //}
+      //if( set_edepids.size() == 1 ) 
+      //  blip.truth = trueblips[*set_edepids.begin()];
+      //--------------------------------------
+      //Stuff under here is for the new blip MC truth matching
+      BlipUtils::BlipMCTruthMatching( *blip, *hitinfoVec, *pinfo, fCaloPlane)
     
     }//endloop over blip vector
   }//End main blip reco function

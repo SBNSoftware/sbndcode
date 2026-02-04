@@ -80,6 +80,56 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
   
   }
 
+  //Use hitG4TrkID to match to a particular particle then fill in blip Truth info from that
+  void BlipMCTruthMatching( blip::blip &blip, std::vector<blip::HitInfo> const& hitinfoVec, std::vector<blip::ParticleInfo>& pinfo, 
+  int caloPlane)
+  {
+    std::map<int, float> ChargeContributions; //Map from G4ID to charge in cluster
+    std::map<int, float> PDGMap; //Map from G4ID to charge in cluster
+    double MaxCharge=0;
+    int MaxG4ID=0;
+    int MaxPDG=0; //DOES NOT HAVE TO RESET IN LOOP. SHOULD ONLY RUN ONCE!
+    for(auto& hc : blip.clusters ) {
+      //Only check cluster on the calo plane
+      if(hc.Plane != caloPlane) continue;
+      //Find the G4ID with the largest contribution
+      //Get largest contribution from a single particle
+      for( int iHit : HitIDs) {
+        int G4ID = hitinfoVec[iHit].g4trkid;
+        float Charge = hitinfoVec[iHit].charge;
+        int PDG = hitinfoVec[iHit].g4pdg;
+        ChargeContributions[G4ID] += Charge;
+        PDGMap[PDG] +=Charge;
+        if(ChargeContributions[G4ID]>MaxCharge){
+          MaxCharge=ChargeContributions[G4ID];
+          MaxG4ID=G4ID;
+          MaxPDG = PDG;
+        }
+      }
+    }
+    //Find the particle with the matching G4ID
+    for(auto& Par : pinfo){
+      if(Par.trackId != MaxG4ID) continue;
+      blip.truth.ID = blip.ID;
+      blip.truth.Cryostat = blip.Cryostat;
+      blip.truth.TPC = blip.TPC;
+      blip.truth.Time = Par.time; //particle birth time? Or should be end time or halfway?
+      //blip.truth.TimeTick = Par.time / ClockTick; //Doesn't actually seem used ever so maybe we don't need it
+      blip.truth.Energy = Par.depEnergy;
+      blip.truth.DepElectrons = Par.depElectrons;
+      blip.truth.NumElectrons = Par.NumElectrons;
+      blip.truth.LeadG4ID = MaxG4ID;
+      blip.truth.LeadG4Index = Par.index; //I think these should be indexed the same?
+      blip.truth.LeadG4PDG = MaxPDG;
+      blip.truth.LeadCharge = ChargeContributions[MaxG4ID];
+      //Update position in a way that should be robust against move away from TVector3
+      for(int i=0; i<3; i++) blip.truth.Position[i] = (Par.startPoint[i] + Par.endPoint[i])/2
+      blip.truth.G4ChargeMap = ChargeContributions;
+      blip.truth.G4PDGMap = PDGMap;
+    }
+    //All the blip info has now been updated to match the particle with the largest individual contribution to the blip
+  }
+
   //===================================================================
   // Provided a vector of all particle information for event, fill a
   // vector of true blips
