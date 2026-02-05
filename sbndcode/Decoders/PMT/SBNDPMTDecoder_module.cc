@@ -29,9 +29,13 @@
 #include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
-#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+#include "sbndcode/OpDetSim/TriggerEmulationService.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "art_root_io/TFileService.h"
 #include "TH1D.h"
@@ -48,8 +52,7 @@
 #include <iostream>
 #include <bitset>
 #include <memory>
-
-#include "sbndcode/OpDetSim/TriggerEmulationService.h"
+#include <string>
 
 namespace sbndaq {
     class SBNDPMTDecoder;
@@ -78,26 +81,17 @@ public:
     uint32_t get_boardid(artdaq::Fragment & frag);
     void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
+    std::vector<uint> fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db);
+
 private:
     uint fdebug;
-    uint                      ftiming_type;
 
     std::vector<std::string>  fcaen_fragment_name;
     std::string               fcaen_module_label;
-
+    std::string               fframeshift_module_label;
+    
     std::vector<uint32_t>     fignore_fragid;
     uint32_t                  fnominal_length; 
-
-    uint32_t                  fraw_ts_correction;
-
-    std::string               fspectdc_product_name;
-    uint32_t                  fspectdc_ftrig_ch;
-    uint32_t                  fspectdc_etrig_ch;
-
-    std::string               fptb_product_name;
-    std::vector<uint>         fptb_allowed_hlts;   
-    uint                      fptb_raw_diff_max;
-
     uint                      fallowed_time_diff;
 
     std::string fpmt_instance_name;
@@ -114,6 +108,8 @@ private:
 
     int fn_maxflashes;
     uint fn_caenboards;
+    uint fn_caenchannels;
+    uint ftiming_caen_offset;
     uint16_t fthreshold_ftrig;
     uint16_t fdefault_postpercent; // should be a number between 0 and 100
 
@@ -122,15 +118,15 @@ private:
 
     std::vector<uint> fset_fragid_map;
     bool fuse_set_map;
-
-    std::vector<uint> fch_map;
-
     int fmon_threshold;
 
     // histogram info  
     std::stringstream histname; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
     uint evt_counter = 0;
+
+    sbndDB::PMTCalibrationDatabase const* fpmt_calib_db;
+    opdet::sbndPDMapAlg opdetmap; //map for photon detector types
 };
 
 
@@ -141,23 +137,13 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fcaen_fragment_name = p.get<std::vector<std::string>>("caen_fragment_name");
     fcaen_module_label  = p.get<std::string>("caen_module_label","daq");
+    fframeshift_module_label = p.get<std::string>("frameshift_module_label");
 
     fignore_fragid = p.get<std::vector<uint32_t>>("ignore_fragid",{});
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
-
-    ftiming_type = p.get<uint>("timing_type",0);
-    
-    fraw_ts_correction = p.get<uint>("raw_ts_correction",367000); // ns
-
-    fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
-    fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
-    fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
-
-    fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
-    fptb_allowed_hlts = p.get<std::vector<uint>>("ptb_allowed_hlts",{});
-    fptb_raw_diff_max = p.get<uint>("ptb_raw_diff_max",3000000); // ns
-
     fallowed_time_diff = p.get<uint>("allowed_time_diff",3000); // us!!! 
+
+    // configure output labels 
     fpmt_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
     fflt_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
     ftim_instance_name = p.get<std::string>("timingInstanceName","TimingChannels");
@@ -171,6 +157,8 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<uint>("n_caenboards",8);
+    fn_caenchannels  = p.get<uint>("n_caenchannels",15);
+    ftiming_caen_offset = p.get<uint>("timing_caen_offset",900);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     fdefault_postpercent = p.get<uint16_t>("default_postpercent",80);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
@@ -179,8 +167,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fset_fragid_map = p.get<std::vector<uint>>("set_fragid_map",{});
     fuse_set_map    = p.get<bool>("use_set_map",false);
 
-    fch_map          = p.get<std::vector<uint>>("ch_map",{});
-
+    fpmt_calib_db    = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
     fmon_threshold   = p.get<int>("mon_threshold", 15);
  
     produces< std::vector< raw::OpDetWaveform > >(fpmt_instance_name); 
@@ -222,6 +209,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
+    std::vector<uint> ch_map = fill_chmap(fpmt_calib_db);
+
     uint ncont = 0; // counter for number of containers
 
     bool found_caen = false;
@@ -281,144 +270,22 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         return;
     }
     
-    // create a timing type per event so the default doesn't get overwritten
     uint64_t event_trigger_time = 0; // in ns
-    auto timing_type = ftiming_type; 
-    int  timing_ch = -1;
 
-    // get the raw event header timestamp
-    art::Handle<artdaq::detail::RawEventHeader> header_handle;
-    uint64_t raw_timestamp = 0;
-    evt.getByLabel("daq", "RawEventHeader", header_handle);
-    if ((header_handle.isValid())){
-        auto rawheader = artdaq::RawEvent(*header_handle); 
-        raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
-        if (fdebug>1)
-            std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
-    }
+    art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;    
+    evt.getByLabel(fframeshift_module_label, frameShiftHandle);
+
+    if(!frameShiftHandle.isValid())
+        throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
     
-    // get spec tdc product
-    if (timing_type==0){
-        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-        evt.getByLabel(fspectdc_product_name,tdcHandle);
-        bool found_ett = false;
-        std::vector<uint64_t> tdc_etrig_v;
-        uint64_t min_raw_tdc_diff = uint64_t(1e12);
+    event_trigger_time           = frameShiftHandle->FrameDefault();
+    evtTimingInfo->timingType    = frameShiftHandle->TimingTypeDefault();
+    evtTimingInfo->timingChannel = frameShiftHandle->TimingChannelDefault(); 
 
-        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-            if (fdebug>0) std::cout << "No SPECTDC products found." << std::endl;
-            timing_type++;
-        }
-        else{
-            if (fdebug>1) std::cout << "SPECTDC (decoded) products found: " << std::endl;
-            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-
-            for (size_t i=0; i<tdc_v.size(); i++){
-                auto tdc = tdc_v[i];
-                const uint32_t  ch = tdc.Channel();
-                const uint64_t  ts = tdc.Timestamp();
-                const uint64_t  offset = tdc.Offset();
-                const std::string name  = tdc.Name();
-            
-                if ((ch==fspectdc_etrig_ch || ch==fspectdc_ftrig_ch) && (fdebug>1)){
-                    std::cout << "      TDC CH " << ch << " -> "
-                    << "name: " << name
-                    << ", ts (ns): " << ts%uint64_t(1e9)
-                    << ", sec (s): " << ts/uint64_t(1e9)
-                    << ", offset: " << offset 
-                    << std::endl;
-                }
-                if (ch==fspectdc_etrig_ch){
-                    found_ett = true;
-                    tdc_etrig_v.push_back(ts);
-                    timing_ch = fspectdc_etrig_ch;
-                }
-            }
-            if (found_ett==false)
-                timing_type++;
-            else{
-                if (tdc_etrig_v.size()==1){
-                    event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
-                }
-                else{ // finding the closest ETRIG to the raw timestamp
-                    for (size_t i=0; i < tdc_etrig_v.size(); i++){
-                        event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
-                        auto tdc_etrig = tdc_etrig_v[i];
-                        uint64_t diff = (tdc_etrig < (raw_timestamp)) ? (raw_timestamp - tdc_etrig) : (tdc_etrig - raw_timestamp);
-                        if (diff < min_raw_tdc_diff){
-                            event_trigger_time = tdc_etrig%uint64_t(1e9);
-                            min_raw_tdc_diff = diff;
-                        }
-                    }
-                }
-            }
-        } // end else statement for finding tdc
-    }
-    if (timing_type==1){
-        // get ptb product
-        art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
-        evt.getByLabel(fptb_product_name,ptbHandle);
-        bool found_ptb_hlt = false;
-        if ((!ptbHandle.isValid() || ptbHandle->size() == 0)){
-            if (fdebug>0) std::cout << "No PTB products found." << std::endl;
-            timing_type++;
-        }
-        else{
-            const std::vector<raw::ptb::sbndptb> ptb_v(*ptbHandle);
-
-            if (fdebug>1) std::cout << "PTB (decoded) HLTs: " << std::endl;
-            for (size_t i=0; i<ptb_v.size(); i++){
-                auto ptb = ptb_v[i];
-                auto hltrigs = ptb.GetHLTriggers();
-
-                if (!hltrigs.empty()){
-                    for (size_t j=0; j < hltrigs.size(); j++){
-                        raw::ptb::Trigger trig = hltrigs.at(j);
-                        uint64_t ptb_timestamp = (trig.timestamp * 20);
-                        std::bitset<32> ptb_hlt_bitset = std::bitset<32>(trig.trigger_word);
-                        for (auto allowed_hlt : fptb_allowed_hlts){
-                            if (ptb_hlt_bitset[allowed_hlt]){
-                                auto diff = (ptb_timestamp < raw_timestamp) ? (raw_timestamp - ptb_timestamp) : (ptb_timestamp - raw_timestamp);
-                                if (diff > fptb_raw_diff_max) continue;
-                                
-                                found_ptb_hlt = true;
-                                event_trigger_time = ptb_timestamp%(uint(1e9));
-                                timing_ch = allowed_hlt;
-                                if (fdebug>1){
-                                    std::cout << "      PTB HLT " <<  allowed_hlt << " -> " 
-                                              << "ts (ns): " << ptb_timestamp%(uint(1e9))
-                                              << std::endl; 
-                                }
-                            }
-                        }
-                    } 
-                } // end hlt check
-            } // end of loop over ptb products
-            if (found_ptb_hlt==false){
-                timing_type++;
-            }
-        } // end handle validity check
-    } // end of timing type 1
-    if (timing_type==2){
-        // CAEN only configuration
-        // if neither PTB or SPEC products are found, the timestamp will be equal to
-        // the start of the waveform (according to CAEN TTT and wvfm length)
+    // if frameshift has no shift, the timestamp will be equal to
+    // the start of the waveform (according to CAEN TTT and wvfm length)
+    if(evtTimingInfo->timingType == sbnd::timing::kNoShiftType)
         event_trigger_time = 0;
-        timing_ch=16;
-    }
-
-    if (fdebug>1){
-        std::cout << "Using " ;
-        if (timing_type==0)
-            std::cout << "SPECTDC for event reference time, ";
-        else if (timing_type==1)
-            std::cout << "PTB for event reference time, ";
-        else if (timing_type==2)
-            std::cout << "CAEN-only for event reference time, ";
-        std::cout << "channel/word " << timing_ch << ", event trigger time: " << event_trigger_time << " ns" << std::endl;
-    }
-    evtTimingInfo->timingType = timing_type;
-    evtTimingInfo->timingChannel = timing_ch;
 
     bool extended_flag = false;
 
@@ -557,7 +424,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
                 }
                 double time_diff = (int(iwvfm_start) - int(event_trigger_time))*1e-3; // us
-                if ((std::abs(time_diff) > fallowed_time_diff) && (timing_type<2)){
+                if ((std::abs(time_diff) > fallowed_time_diff) && (event_trigger_time!=0)){
                     // second rollover between reference time and waveform start 
                     if (std::abs(time_diff + 1e6) < fallowed_time_diff)
                         time_diff += 1e6; // us 
@@ -567,18 +434,16 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     else if (fdebug>1)
                         std::cout << "WARNING: TIME DIFFERENCE IS GREATER THAN " << fallowed_time_diff << " us. Event timestamp: " << event_trigger_time << ", waveform timestamp: " << iwvfm_start << std::endl;
                 }
-                uint ch;
-                if (i == 15)
-                    ch = fragid;
-                else
-                    ch = fch_map.at(fragid*15 + i);
-                raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
                 if ((i == 15) && (foutput_ftrig_wvfm)){
+                    // for the timing ch of each board, the opdetwaveform channel is equal to the board id
+                    raw::OpDetWaveform waveform(time_diff, fragid, combined_wvfm);
                     fltwvfmVec->push_back(waveform);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
                     fltTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                 }
                 else if ((fragid == 8)){ // fyi: this hardcodes the timing caen board index
+                    // for the timing caen, the opdetwaveform channel is offset (900) + chidx 
+                    raw::OpDetWaveform waveform(time_diff, ftiming_caen_offset + i, combined_wvfm);
                     if ((foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end())){
                         timwvfmVec->push_back(waveform);
                         art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
@@ -586,6 +451,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     }
                 }
                 else{
+                    // for normal pmt chs, the opdetwaveform channel is from the ch_map
+                    raw::OpDetWaveform waveform(time_diff, ch_map.at(fragid*15+i), combined_wvfm);
                     pmtwvfmVec->push_back(waveform);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_pmtwvfm_ptr(pmtwvfmVec->size()-1);
                     pmtTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
@@ -611,14 +478,12 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             }
         }  
     } // end board loop
+    board_frag_v.clear();
 
     // loop through flashes
     art::ServiceHandle<art::TFileService> tfs;
     art::ServiceHandle<calib::TriggerEmulationService> fTriggerService;
     int PMTPerBoard = fTriggerService->getPMTPerBoard();
-    // int fTotalCAENBoards = fTriggerService->getTotalCAENBoards();
-    //std::vector< std::vector<int> > MonPulsesAll;
-    //MonPulseAll.clear();
     std::vector<int> MonPulsesFlat;
     std::vector<int> pulseSizes;
     MonPulsesFlat.clear();
@@ -638,17 +503,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     // make ptrs
     auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
     auto sizesPtr = std::make_unique<std::vector<int>>(std::move(pulseSizes));
-
-    /*std::unique_ptr< std::vector< std::vector<int> > >  MonPulsesPtr(std::make_unique< std::vector< std::vector<int> > > ());
-    for (auto &pulse : MonPulsesAll) {
-      MonPulsesPtr->reserve(MonPulsesPtr->size() + pulse.size());
-      std::move(pulse.begin(), pulse.end(), std::back_inserter(*MonPulsesPtr));
-    }
-    // clean up the vector
-    for (unsigned i = 0; i < MonPulsesAll.size(); i++) MonPulsesAll[i] = std::vector<int>();
-    */ 
-
-    board_frag_v.clear();
 
     evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
     evt.put(std::move(fltwvfmVec),fflt_instance_name);
@@ -808,6 +662,23 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
     CAENV1730EventHeader header = event_ptr->Header;
     uint32_t boardid = header.boardID;
     return boardid;
+}
+
+std::vector<uint> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
+    std::vector<uint> ch_map(fn_caenboards*fn_caenchannels,9999);
+    if (pmt_calib_db==nullptr){
+        throw std::runtime_error("PMT Calibration Database pointer is null.");
+    }
+    auto nopdets = opdetmap.size();
+    for (size_t idet=0; idet<nopdets; idet++){
+        std::string pd_type = opdetmap.pdType(idet);
+        if (pd_type.find("pmt") == std::string::npos) continue;
+        // the boards in the database are 1-indexed, need to convert to 0-indexed
+        int board = pmt_calib_db->getCAENDigitizer(idet) - 1;
+        int channel = pmt_calib_db->getCAENDigitizerChannel(idet);
+        ch_map[board*15 + channel] = idet;
+    }
+    return ch_map;
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDPMTDecoder)

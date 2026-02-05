@@ -23,10 +23,9 @@
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
-#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
-#include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 #include <memory>
@@ -49,19 +48,22 @@ public:
   void produce(art::Event& e) override;
 
   std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_time_s,
-                                           const uint32_t ref_time_ns);
+					   const uint32_t ref_time_ns, const uint32_t etrig_time_s,
+					   const uint32_t etrig_time_ns);
   std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
-  bool SPECTDCReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time);
-  bool PTBHLTReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time, uint32_t &hlt_code);
 
 private:
 
   art::ServiceHandle<CRTGeoService> fCRTGeoService;
 
   std::string           fFEBDataModuleLabel;
+  std::string           fFrameShiftModuleLabel;
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
+  bool                  fApplyETrigWindow;
+  double                fETrigMin;
+  double                fETrigMax;
   bool                  fApplyTs0Window;
   double                fTs0Min;
   double                fTs0Max;
@@ -70,24 +72,19 @@ private:
   double                fTs1Max;
   bool                  fCorrectForDifferentSecond;
   bool                  fReferenceTs0;
-  int                   fTimingType;
-  std::string           fDAQHeaderModuleLabel;
-  std::string           fDAQHeaderInstanceLabel;
-  uint32_t              fRawTSCorrection;
-  uint32_t              fMaxAllowedRefTimeDiff;
-  std::string           fSPECTDCModuleLabel;
-  uint32_t              fSPECTDCETrigChannel;
-  std::string           fPTBModuleLabel;
-  std::vector<uint32_t> fAllowedPTBHLTs;
 };
 
 
 sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
+  , fFrameShiftModuleLabel(p.get<std::string>("FrameShiftModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyETrigWindow(p.get<bool>("ApplyETrigWindow"))
+  , fETrigMin(p.get<double>("ETrigMin", 0))
+  , fETrigMax(p.get<double>("ETrigMax", std::numeric_limits<double>::max()))
   , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
   , fTs0Min(p.get<double>("Ts0Min", 0))
   , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
@@ -96,15 +93,6 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0(p.get<bool>("ReferenceTs0"))
-  , fTimingType(p.get<int>("TimingType", 0))
-  , fDAQHeaderModuleLabel(p.get<std::string>("DAQHeaderModuleLabel", ""))
-  , fDAQHeaderInstanceLabel(p.get<std::string>("DAQHeaderInstanceLabel", ""))
-  , fRawTSCorrection(p.get<uint32_t>("RawTSCorrection", 0))
-  , fMaxAllowedRefTimeDiff(p.get<uint32_t>("MaxAllowedRefTimeDiff", 0))
-  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", ""))
-  , fSPECTDCETrigChannel(p.get<uint32_t>("SPECTDCETrigChannel", 4))
-  , fPTBModuleLabel(p.get<std::string>("PTBModuleLabel", ""))
-  , fAllowedPTBHLTs(p.get<std::vector<uint32_t>>("AllowedPTBHLTs", {}))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
@@ -125,66 +113,39 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   std::vector<art::Ptr<FEBData>> FEBDataVec;
   art::fill_ptr_vector(FEBDataVec, FEBDataHandle);
 
-  uint64_t raw_ts = 0, ref_time = 0;
-  uint32_t ref_time_s = 0, ref_time_ns = 0;
+  uint32_t ref_time_s = 0, ref_time_ns = 0, etrig_time_s = 0, etrig_time_ns = 0;
 
   if(fReferenceTs0)
     {
-      art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
-      e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
+      art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
+      e.getByLabel(fFrameShiftModuleLabel, frameShiftHandle);
 
-      if(DAQHeaderHandle.isValid())
-        {
-          artdaq::RawEvent rawHeaderEvent = artdaq::RawEvent(*DAQHeaderHandle);
-          raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
-        }
+      if(!frameShiftHandle.isValid())
+        throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
 
-      int timingType = fTimingType;
-      int timingCh   = 0;
+      uint64_t ref_time = frameShiftHandle->FrameDefault();
 
-      if(timingType == 0)
-        {
-          uint64_t spec_tdc_ref_time = 0;
+      ref_time_s  = ref_time / sbnd::timing::kSecondInNanoseconds;
+      ref_time_ns = ref_time % sbnd::timing::kSecondInNanoseconds;
 
-          if(SPECTDCReference(e, raw_ts, spec_tdc_ref_time))
-            {
-              ref_time = spec_tdc_ref_time;
-              timingCh = fSPECTDCETrigChannel;
-            }
-          else
-            ++timingType;
-        }
+      timingReferenceInfo->timingType    = frameShiftHandle->TimingTypeDefault();
+      timingReferenceInfo->timingChannel = frameShiftHandle->TimingChannelDefault();
 
-      if(timingType == 1)
-        {
-          uint64_t ptb_hlt_ref_time = 0;
-          uint32_t hlt_code         = 0;
+      if(timingReferenceInfo->timingType == sbnd::timing::kNoShiftType)
+	{
+	  std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
+          ref_time_s = unix_set.size() ? *unix_set.rbegin(): 0;
+	}
 
-          if(PTBHLTReference(e, raw_ts, ptb_hlt_ref_time, hlt_code))
-            {
-              ref_time = ptb_hlt_ref_time;
-              timingCh = hlt_code;
-            }
-          else
-            ++timingType;
-        }
+      uint64_t etrig_time = frameShiftHandle->FrameEtrig();
 
-      if(timingType == 2)
-        {
-          std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
-          ref_time = unix_set.size() ? *unix_set.rbegin() * static_cast<uint64_t>(1e9) : 0;
-        }
-
-      ref_time_s  = ref_time / static_cast<uint64_t>(1e9);
-      ref_time_ns = ref_time % static_cast<uint64_t>(1e9);
-
-      timingReferenceInfo->timingType    = timingType;
-      timingReferenceInfo->timingChannel = timingCh;
+      etrig_time_s  = etrig_time / sbnd::timing::kSecondInNanoseconds;
+      etrig_time_ns = etrig_time % sbnd::timing::kSecondInNanoseconds;
     }
 
   for(auto data : FEBDataVec)
     {
-      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_time_s, ref_time_ns);
+      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_time_s, ref_time_ns, etrig_time_s, etrig_time_ns);
 
       for(auto hit : newStripHits)
         {
@@ -201,7 +162,8 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 }
 
 std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_time_s,
-                                                                                    const uint32_t ref_time_ns)
+                                                                                    const uint32_t ref_time_ns, const uint32_t etrig_time_s,
+                                                                                    const uint32_t etrig_time_ns)
 {
   std::vector<CRTStripHit> stripHits;
 
@@ -245,6 +207,27 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   if(fReferenceTs0)
     t0 -= ref_time_ns;
+
+  if(fApplyETrigWindow)
+    {
+      double t0_etrig         = (int)data->Ts0() + module.t0DelayCorrection;
+      const int64_t unix_diff = static_cast<int64_t>(ref_time_s) - static_cast<int64_t>(etrig_time_s);
+
+      if(unix_diff < -1 || unix_diff > 1)
+        {
+          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
+        }
+
+      t0_etrig -= etrig_time_ns;
+
+      if(unix_diff == 1)
+	t0_etrig -= 1e9;
+      else if(unix_diff == -1)
+	t0_etrig += 1e9;
+
+      if(t0_etrig < fETrigMin || t0_etrig > fETrigMax)
+	return stripHits;
+    }
 
   if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
     return stripHits;
@@ -304,94 +287,6 @@ std::set<uint32_t> sbnd::crt::CRTStripHitProducer::UnixSet(const std::vector<art
     }
 
   return set;
-}
-
-bool sbnd::crt::CRTStripHitProducer::SPECTDCReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time)
-{
-  bool found = false;
-
-  art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
-  e.getByLabel(fSPECTDCModuleLabel, TDCHandle);
-
-  if(!TDCHandle.isValid() || TDCHandle->size() == 0)
-    return found;
-
-  std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
-  art::fill_ptr_vector(TDCVec, TDCHandle);
-
-  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
-  uint64_t min_diff_ts = 0;
-
-  for(auto ts : TDCVec)
-    {
-      if(ts->Channel() == fSPECTDCETrigChannel)
-        {
-          uint64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
-
-          if(diff < min_diff)
-            {
-              min_diff    = diff;
-              min_diff_ts = ts->Timestamp();
-              found       = true;
-            }
-        }
-    }
-
-  if(min_diff > fMaxAllowedRefTimeDiff)
-    return false;
-
-  ref_time = min_diff_ts;
-
-  return found;
-}
-
-bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time, uint32_t &hlt_code)
-{
-  bool found = false;
-
-  art::Handle<std::vector<raw::ptb::sbndptb>> PTBHandle;
-  e.getByLabel(fPTBModuleLabel, PTBHandle);
-
-  if(!PTBHandle.isValid() || PTBHandle->size() == 0)
-    return found;
-
-  std::vector<art::Ptr<raw::ptb::sbndptb>> PTBVec;
-  art::fill_ptr_vector(PTBVec, PTBHandle);
-
-  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
-  uint64_t min_diff_ts = 0;
-
-  for(auto ptb : PTBVec)
-    {
-      for(auto hlt : ptb->GetHLTriggers())
-        {
-          uint64_t hlt_timestamp          = (hlt.timestamp * 20);
-          std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt.trigger_word);
-
-          for(uint32_t allowed_hlt : fAllowedPTBHLTs)
-            {
-              if(hlt_word_bitset[allowed_hlt])
-                {
-                  uint64_t diff = raw_ts > hlt_timestamp ? raw_ts - hlt_timestamp : hlt_timestamp - raw_ts;
-
-                  if(diff < min_diff)
-                    {
-                      min_diff    = diff;
-                      min_diff_ts = hlt_timestamp;
-                      hlt_code    = allowed_hlt;
-                      found       = true;
-                    }
-                }
-            }
-        }
-    }
-
-  if(min_diff > fMaxAllowedRefTimeDiff)
-    return false;
-
-  ref_time = min_diff_ts;
-
-  return found;
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTStripHitProducer)

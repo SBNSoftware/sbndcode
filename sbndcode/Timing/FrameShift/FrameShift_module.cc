@@ -156,9 +156,6 @@ private:
   // Tree production
   TTree *fTree;
   art::ServiceHandle<art::TFileService> tfs;
-
-  // Useful value
-  static constexpr uint64_t kSecondInNanoseconds = static_cast<uint64_t>(1e9);
 };
 
 
