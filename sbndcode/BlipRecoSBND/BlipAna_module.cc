@@ -529,8 +529,8 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
     evtTree->Branch("blip_proxtrkdist",blip_proxtrkdist,"blip_proxtrkdist[nblips]/F");
     evtTree->Branch("blip_isMC",blip_isMC,"blip_isMC[nblips]/O");
-    evtTree->Branch("blip_parid",blip_parid,"blip_parid[nblips]/O");
-    evtTree->Branch("blip_pdg",blip_pdg,"blip_pdg[nblips]/O");
+    evtTree->Branch("blip_parid",blip_parid,"blip_parid[nblips]/I");
+    evtTree->Branch("blip_pdg",blip_pdg,"blip_pdg[nblips]/I");
     if( saveTrkInfo ) evtTree->Branch("blip_proxtrkid",blip_proxtrkid,"blip_proxtrkid[nblips]/I");
     if( saveTruthInfo ) evtTree->Branch("blip_edepid",blip_edepid,"blip_edepid[nblips]/I");
     for(int i=0;i<kNplanes;i++) evtTree->Branch(Form("blip_pl%i_clustid",i),blip_clustid[i],Form("blip_pl%i_clustid[nblips]/I",i));
