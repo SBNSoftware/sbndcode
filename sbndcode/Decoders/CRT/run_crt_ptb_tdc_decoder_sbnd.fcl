@@ -4,6 +4,7 @@
 #include "crt_channel_map_service.fcl"
 #include "SBNDPTBDecoderDefaults.fcl"
 #include "spectdc_decoder_sbnd.fcl"
+#include "frameshift_sbnd_data.fcl"
 
 process_name: Decoders
 
@@ -34,9 +35,10 @@ physics:
     crtdecoder: @local::crt_decoder
     ptbdecoder: @local::SBNDPTBDecoderDefaults
     tdcdecoder: @local::spec_tdc_decoder_sbnd
+    frameshift: @local::frameshift_data
   }
   
-  decoders:      [ crtdecoder, ptbdecoder, tdcdecoder ]
+  decoders:      [ crtdecoder, ptbdecoder, tdcdecoder, frameshift ]
   trigger_paths: [ decoders ]
 
   stream1:   [ out1 ]
