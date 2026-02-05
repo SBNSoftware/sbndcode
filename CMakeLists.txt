@@ -15,7 +15,7 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.14.02)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.14.02.02)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
@@ -88,11 +88,8 @@ find_package( Eigen3 REQUIRED )
 find_package( Geant4 REQUIRED )
 find_package( Boost COMPONENTS system REQUIRED )
 find_package( ROOT REQUIRED )
-
-if(DEFINED ENV{HEP_HPC_DIR} )
-  find_ups_product( hdf5 )
-  find_ups_product( hep_hpc )
-endif()
+find_package( hdf5 REQUIRED )
+find_package( hep_hpc REQUIRED )
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)

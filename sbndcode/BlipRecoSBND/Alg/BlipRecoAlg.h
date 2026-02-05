@@ -132,6 +132,7 @@ namespace blip {
 
     // --- FCL configs ---
     std::string         fHitProducer;
+    std::string         fHitTruthMatcher;
     std::string         fTrkProducer;
     std::string         fGeantProducer;
     std::string         fSimDepProducer;
