@@ -57,6 +57,7 @@ message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
+find_package( protobuf REQUIRED )
 find_package( art REQUIRED )
 find_package( art_root_io REQUIRED )
 find_package( artdaq_core REQUIRED )
