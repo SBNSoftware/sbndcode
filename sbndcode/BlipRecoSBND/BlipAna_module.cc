@@ -1404,7 +1404,7 @@ void BlipAna::analyze(const art::Event& evt)
     // save the clustIDs and true energy deposits to the blip
     // (use the association between clust <--> edep)
     // -----------------------------------------------
-    if( blp.truth.ID >= 0 && blp.truth.Energy > 0 ) {
+    if( blp.truth.LeadG4Index >= 0 && blp.truth.Energy > 0 ) {
       fData->blip_isMC[i]             = true;
       fData->blip_edepid[i]           = blp.truth.ID; //Need to update this matching
       fData->blip_parid[i]           = blp.truth.LeadG4Index;
