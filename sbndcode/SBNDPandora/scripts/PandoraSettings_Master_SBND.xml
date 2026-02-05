@@ -1,3 +1,7 @@
+<!--
+    ATTN: If you modify this XML please make the corresponding change in PandoraSettings_CI_SBND.xml
+    to ensure the continuous integration workflow remains in sync with the standard workflow.
+-->
 <pandora>
   <!-- GLOBAL SETTINGS -->
   <IsMonitoringEnabled>false</IsMonitoringEnabled>
