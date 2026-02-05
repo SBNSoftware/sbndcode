@@ -51,4 +51,4 @@ install_scripts(AS_TEST)
 
 install_fhicl()
 
-install(FILES fcl_file_checks.list DESTINATION "${sbndcode_UPS_PRODUCT_NAME}/${sbndcode_UPS_PRODUCT_VERSION}/test")
+install(FILES fcl_file_checks.list DESTINATION "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${PROJECT_VERSION}/test")
