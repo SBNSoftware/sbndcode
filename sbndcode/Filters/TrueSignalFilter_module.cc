@@ -136,7 +136,7 @@ public:
     virtual bool filter(art::Event& e) override;
 
 protected:
-    bool PassBlock(const art::Ptr<simb::MCTruth>, const FilterBlock&, mf::LogDebug&) const;
+    bool PassBlock(const art::Ptr<simb::MCTruth>&, const FilterBlock&, mf::LogDebug&) const;
     void PrintBlock(const FilterBlock&) const;
 
 private:
