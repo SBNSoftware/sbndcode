@@ -1829,18 +1829,21 @@ void nuEBackgroundSignalCut_macro(){
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT/";
 
     // If clearCosmicCut == 1 -> cut all PFPs with clearCosmic score of 1. If clearCosmicCut == 0 -> keep all PFPs
-    int clearCosmicCut = 0;
-    int numPFPs0Cut = 0;
-    int numRecoNeutrinosCut = 0;
-    int FVCut = 0;
+    int clearCosmicCut = 1;
+    int numPFPs0Cut = 1;
+    int numRecoNeutrinosCut = 1;
+    int FVCut = 1;
     int CRUMBSCut = 0;
+    int primaryPFPCut = 0;
     int trackscorePFPsCut = 0;
-    int ETheta2Cut = 0;
-    int trackscoreHighestCut = 0;
     int trackscoreCut = 0;
-    int upperCRUMBSCut = 0;
-    int upperPFPCut = 0;
-    int QSquaredCut = 0;
+    int ETheta2Cut = 0;
+    int ETheta2SumCut = 0;
+   
+    int highestEnergyPFPPrimary_DLNuE = 0;
+    int totalLeft_DLNuE = 0;
+    int highestEnergyPFPPrimaryNuE_DLNuE = 0;
+    int totalLeftNuE_DLNuE = 0;
 
     if(clearCosmicCut == 1 && numPFPs0Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_cuts/";
@@ -1854,39 +1857,26 @@ void nuEBackgroundSignalCut_macro(){
     } else if(FVCut == 1 && CRUMBSCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts.txt";
-    } else if(CRUMBSCut == 1 && trackscorePFPsCut == 0){
+    } else if(CRUMBSCut == 1 && primaryPFPCut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbsCuts.txt";
-    } else if(trackscorePFPsCut == 1 && ETheta2Cut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_trackscorePFPs_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_trackscorePFPsCuts.txt";
+    } else if(primaryPFPCut == 1 && trackscorePFPsCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFPCuts.txt";
+    } else if(trackscorePFPsCut == 1 && trackscoreCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAllCuts.txt";
+    } else if(trackscoreCut == 1 && ETheta2Cut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscore_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscoreCuts.txt";
+    } else if(ETheta2Cut == 1 && ETheta2SumCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscore_etheta2_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscore_etheta2Cuts.txt";
+    } else if(ETheta2SumCut == 1){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscore_etheta2_etheta2Sum_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreAll_trackscore_etheta2_etheta2SumCuts.txt";
     }
     
-    
-    /* 
-    } else if(CRUMBSCut == 1 && ETheta2Cut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbsCuts.txt";
-    } else if(ETheta2Cut == 1 && trackscoreHighestCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_EThetaCuts.txt";
-    } else if(trackscoreHighestCut == 1 && trackscoreCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts.txt";
-    } else if(trackscoreCut == 1 && upperCRUMBSCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts.txt";
-    } else if(upperCRUMBSCut == 1 && upperPFPCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS.txt";
-    } else if(upperPFPCut == 1 && QSquaredCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_upperPFP_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS_upperPFP.txt";
-    } else if(QSquaredCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScore_trackscoreHighEnergy_upperCRUMBS_upperPFP_QSquared_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_ETheta_trackscoreHighScoreCuts_trackscoreHighEnergyCuts_upperCRUMBS_upperPFP_QSquared.txt";
-    }
-    */
     
     std::ofstream clearFile(txtFileName, std::ios::trunc);
     if (!clearFile.is_open()) {
@@ -2387,25 +2377,25 @@ void nuEBackgroundSignalCut_macro(){
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0; double zMax = 509.4;
 
-    TH2D *xCoordAngleDifferenceBDT_low = new TH2D("xCoordAngleDifferenceBDT_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
-    TH2D *yCoordAngleDifferenceBDT_low = new TH2D("yCoordAngleDifferenceBDT_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
-    TH2D *zCoordAngleDifferenceBDT_low = new TH2D("zCoordAngleDifferenceBDT_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
-    TH2D *xCoordAngleDifferenceBDT_high = new TH2D("xCoordAngleDifferenceBDT_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
-    TH2D *yCoordAngleDifferenceBDT_high = new TH2D("yCoordAngleDifferenceBDT_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *xCoordAngleDifferenceBDT_low = new TH2D("xCoordAngleDifferenceBDT_low", "", 15, xMin, (xMin + 30), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDT_low = new TH2D("yCoordAngleDifferenceBDT_low", "", 15, yMin, (yMin + 30), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDT_low = new TH2D("zCoordAngleDifferenceBDT_low", "", 15, zMin, (zMin + 30), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceBDT_high = new TH2D("xCoordAngleDifferenceBDT_high", "", 15, (xMax - 30), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDT_high = new TH2D("yCoordAngleDifferenceBDT_high", "", 15, (yMax - 30), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceBDT_high = new TH2D("zCoordAngleDifferenceBDT_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
     
-    TH2D *xCoordAngleDifferenceDLUboone_low = new TH2D("xCoordAngleDifferenceDLUboone_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLUboone_low = new TH2D("yCoordAngleDifferenceDLUboone_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
-    TH2D *zCoordAngleDifferenceDLUboone_low = new TH2D("zCoordAngleDifferenceDLUboone_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
-    TH2D *xCoordAngleDifferenceDLUboone_high = new TH2D("xCoordAngleDifferenceDLUboone_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLUboone_high = new TH2D("yCoordAngleDifferenceDLUboone_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLUboone_low = new TH2D("xCoordAngleDifferenceDLUboone_low", "", 15, xMin, (xMin + 30), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUboone_low = new TH2D("yCoordAngleDifferenceDLUboone_low", "", 15, yMin, (yMin + 30), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLUboone_low = new TH2D("zCoordAngleDifferenceDLUboone_low", "", 15, zMin, (zMin + 30), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLUboone_high = new TH2D("xCoordAngleDifferenceDLUboone_high", "", 15, (xMax - 30), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUboone_high = new TH2D("yCoordAngleDifferenceDLUboone_high", "", 15, (yMax - 30), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLUboone_high = new TH2D("zCoordAngleDifferenceDLUboone_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
     
-    TH2D *xCoordAngleDifferenceDLNuE_low = new TH2D("xCoordAngleDifferenceDLNuE_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLNuE_low = new TH2D("yCoordAngleDifferenceDLNuE_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
-    TH2D *zCoordAngleDifferenceDLNuE_low = new TH2D("zCoordAngleDifferenceDLNuE_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
-    TH2D *xCoordAngleDifferenceDLNuE_high = new TH2D("xCoordAngleDifferenceDLNuE_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
-    TH2D *yCoordAngleDifferenceDLNuE_high = new TH2D("yCoordAngleDifferenceDLNuE_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLNuE_low = new TH2D("xCoordAngleDifferenceDLNuE_low", "", 15, xMin, (xMin + 30), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_low = new TH2D("yCoordAngleDifferenceDLNuE_low", "", 15, yMin, (yMin + 30), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceDLNuE_low = new TH2D("zCoordAngleDifferenceDLNuE_low", "", 15, zMin, (zMin + 30), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceDLNuE_high = new TH2D("xCoordAngleDifferenceDLNuE_high", "", 15, (xMax - 30), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceDLNuE_high = new TH2D("yCoordAngleDifferenceDLNuE_high", "", 15, (yMax - 30), yMax, 40, 0, 180);
     TH2D *zCoordAngleDifferenceDLNuE_high = new TH2D("zCoordAngleDifferenceDLNuE_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
     
     TH2D *xCoordAngleDifferenceBDT = new TH2D("xCoordAngleDifferenceBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
@@ -2423,62 +2413,62 @@ void nuEBackgroundSignalCut_macro(){
     TH2D *xCoordEnergyAsymmetryHighestBDT = new TH2D("xCoordEnergyAsymmetryHighestBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetryHighestBDT = new TH2D("yCoordEnergyAsymmetryHighestBDT", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetryHighestBDT = new TH2D("zCoordEnergyAsymmetryHighestBDT", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestBDT_low = new TH2D("xCoordEnergyAsymmetryHighestBDT_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestBDT_low = new TH2D("yCoordEnergyAsymmetryHighestBDT_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestBDT_low = new TH2D("zCoordEnergyAsymmetryHighestBDT_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestBDT_high = new TH2D("xCoordEnergyAsymmetryHighestBDT_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestBDT_high = new TH2D("yCoordEnergyAsymmetryHighestBDT_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestBDT_high = new TH2D("zCoordEnergyAsymmetryHighestBDT_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestBDT_low = new TH2D("xCoordEnergyAsymmetryHighestBDT_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestBDT_low = new TH2D("yCoordEnergyAsymmetryHighestBDT_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestBDT_low = new TH2D("zCoordEnergyAsymmetryHighestBDT_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestBDT_high = new TH2D("xCoordEnergyAsymmetryHighestBDT_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestBDT_high = new TH2D("yCoordEnergyAsymmetryHighestBDT_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestBDT_high = new TH2D("zCoordEnergyAsymmetryHighestBDT_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
     
     TH2D *xCoordEnergyAsymmetryHighestDLUboone = new TH2D("xCoordEnergyAsymmetryHighestDLUboone", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetryHighestDLUboone = new TH2D("yCoordEnergyAsymmetryHighestDLUboone", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetryHighestDLUboone = new TH2D("zCoordEnergyAsymmetryHighestDLUboone", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLUboone_low = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("xCoordEnergyAsymmetryHighestDLUboone_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("yCoordEnergyAsymmetryHighestDLUboone_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLUboone_high = new TH2D("zCoordEnergyAsymmetryHighestDLUboone_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
 
     TH2D *xCoordEnergyAsymmetryHighestDLNuE = new TH2D("xCoordEnergyAsymmetryHighestDLNuE", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetryHighestDLNuE = new TH2D("yCoordEnergyAsymmetryHighestDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetryHighestDLNuE = new TH2D("zCoordEnergyAsymmetryHighestDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLNuE_low = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("xCoordEnergyAsymmetryHighestDLNuE_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("yCoordEnergyAsymmetryHighestDLNuE_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetryHighestDLNuE_high = new TH2D("zCoordEnergyAsymmetryHighestDLNuE_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
 
     TH2D *xCoordEnergyAsymmetrySummedBDT = new TH2D("xCoordEnergyAsymmetrySummedBDT", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetrySummedBDT = new TH2D("yCoordEnergyAsymmetrySummedBDT", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetrySummedBDT = new TH2D("zCoordEnergyAsymmetrySummedBDT", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedBDT_low = new TH2D("xCoordEnergyAsymmetrySummedBDT_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedBDT_low = new TH2D("yCoordEnergyAsymmetrySummedBDT_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedBDT_low = new TH2D("zCoordEnergyAsymmetrySummedBDT_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedBDT_high = new TH2D("xCoordEnergyAsymmetrySummedBDT_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedBDT_high = new TH2D("yCoordEnergyAsymmetrySummedBDT_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedBDT_high = new TH2D("zCoordEnergyAsymmetrySummedBDT_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedBDT_low = new TH2D("xCoordEnergyAsymmetrySummedBDT_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedBDT_low = new TH2D("yCoordEnergyAsymmetrySummedBDT_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedBDT_low = new TH2D("zCoordEnergyAsymmetrySummedBDT_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedBDT_high = new TH2D("xCoordEnergyAsymmetrySummedBDT_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedBDT_high = new TH2D("yCoordEnergyAsymmetrySummedBDT_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedBDT_high = new TH2D("zCoordEnergyAsymmetrySummedBDT_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
     
     TH2D *xCoordEnergyAsymmetrySummedDLUboone = new TH2D("xCoordEnergyAsymmetrySummedDLUboone", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetrySummedDLUboone = new TH2D("yCoordEnergyAsymmetrySummedDLUboone", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetrySummedDLUboone = new TH2D("zCoordEnergyAsymmetrySummedDLUboone", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLUboone_low = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("xCoordEnergyAsymmetrySummedDLUboone_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("yCoordEnergyAsymmetrySummedDLUboone_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLUboone_high = new TH2D("zCoordEnergyAsymmetrySummedDLUboone_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
 
     TH2D *xCoordEnergyAsymmetrySummedDLNuE = new TH2D("xCoordEnergyAsymmetrySummedDLNuE", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
     TH2D *yCoordEnergyAsymmetrySummedDLNuE = new TH2D("yCoordEnergyAsymmetrySummedDLNuE", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
     TH2D *zCoordEnergyAsymmetrySummedDLNuE = new TH2D("zCoordEnergyAsymmetrySummedDLNuE", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_low", "", 10, xMin, (xMin + 20), 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_low", "", 10, yMin, (yMin + 20), 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_low", "", 10, zMin, (zMin + 20), 20, -1, 1);
-    TH2D *xCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (xMax - 20), xMax, 20, -1, 1);
-    TH2D *yCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (yMax - 20), yMax, 20, -1, 1);
-    TH2D *zCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_high", "", 10, (zMax - 20), zMax, 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLNuE_low = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    TH2D *xCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("xCoordEnergyAsymmetrySummedDLNuE_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("yCoordEnergyAsymmetrySummedDLNuE_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetrySummedDLNuE_high = new TH2D("zCoordEnergyAsymmetrySummedDLNuE_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
 
     double numNuESliceCategory_DLNuE = 0;
     double numNuESliceCategoryPassed_DLNuE = 0;
@@ -2606,6 +2596,7 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
                 double highestEnergy_trackscore = -999999;
+                double highestEnergy_primary = -999999;
 
                 double highestTrackscore = -999999;
 
@@ -2643,41 +2634,50 @@ void nuEBackgroundSignalCut_macro(){
                 double crumbsScoreCut_high_DLUboone = 0.8;
                 double crumbsScoreCut_high_DLNuE = 0.8;
     
-                double trackscorePFPs_upper_BDT = 0.4;
+                double primaryPFPCut_low_BDT = 1;
+                double primaryPFPCut_low_DLUboone = 1; 
+                double primaryPFPCut_low_DLNuE = 1;
+                
+                double primaryPFPCut_high_BDT = 0;
+                double primaryPFPCut_high_DLUboone = 0;
+                double primaryPFPCut_high_DLNuE = 0;
+
+                double trackscorePFPs_upper_BDT = 0.5;
                 double trackscorePFPs_lower_BDT = 0.2;
 
-                double EThetaCut_highestPFP_BDT = 1.8;
-                double EThetaCut_highestPFP_DLUboone = 1.8;
-                double EThetaCut_highestPFP_DLNuE = 1.8;
+                double EThetaCut_highestPFP_BDT = 2.5;
+                double EThetaCut_highestPFP_DLUboone = 3;
+                double EThetaCut_highestPFP_DLNuE = 2.5;
                 
-                double EThetaCut_sum_BDT = 3.32;
-                double EThetaCut_sum_DLUboone = 3.32;
-                double EThetaCut_sum_DLNuE = 3.32;
-              
-                double trackscore_highestPFP_BDT = 0.425;
-                double trackscore_highestPFP_DLUboone = 0.425;
-                double trackscore_highestPFP_DLNuE = 0.375;
-
-                double trackscore_highestScore_BDT = 0.325;
-                double trackscore_highestScore_DLUboone = 0.325;
-                double trackscore_highestScore_DLNuE = 0.325;
+                double EThetaCut_summedPFP_BDT = 3.577;
+                double EThetaCut_summedPFP_DLUboone = 4.6;
+                double EThetaCut_summedPFP_DLNuE = 2.5;
                 
-                double upperCrumbsScoreCut_BDT = 0.64;
-                double upperCrumbsScoreCut_DLUboone = 0.56;
-                double upperCrumbsScoreCut_DLNuE = 0.56;
-
-                double numPFPsUpperCut_BDT = 5;
-                double numPFPsUpperCut_DLUboone = 5;
-                double numPFPsUpperCut_DLNuE = 4;
-
-                double QSquared_highest_BDT = 0.0005;
-                double QSquared_highest_DLUboone = 0.0005;
-                double QSquared_highest_DLNuE = 0.0005;
-
-                double QSquared_sum_BDT = 0.0005;
-                double QSquared_sum_DLUboone = 0.0005;
-                double QSquared_sum_DLNuE = 0.0005;
+                double trackscore_highestPFP_high_BDT = 0.4;
+                double trackscore_highestPFP_high_DLUboone = 0.4;
+                double trackscore_highestPFP_high_DLNuE = 0.4;
                 
+                double trackscore_highestPFP_low_BDT = 0.25;
+                double trackscore_highestPFP_low_DLUboone = 0.25;
+                double trackscore_highestPFP_low_DLNuE = 0.25;
+                
+               
+                for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                        if(clearCosmicCut == 1){
+                            if(reco_particleClearCosmic->at(pfp) == 0){
+                                if(reco_particleIsPrimary->at(pfp) == 1){
+                                    numPrimaryPFPsSlice++;
+                                }
+                            }
+                        } else if(clearCosmicCut == 0){
+                            if(reco_particleIsPrimary->at(pfp) == 1){
+                                numPrimaryPFPsSlice++;
+                            }
+                        
+                        }
+                    }
+                } 
 
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
@@ -2692,11 +2692,6 @@ void nuEBackgroundSignalCut_macro(){
                                         numPFPsSlice++;
                                         //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
                                        
-                                        if(reco_particleIsPrimary->at(pfp) == 1){
-                                            // This PFP is a primary PFP
-                                            numPrimaryPFPsSlice++;
-                                        }
-
                                         summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                                         if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                                             highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -2708,6 +2703,7 @@ void nuEBackgroundSignalCut_macro(){
                                             highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                                             highestEnergy_purity = reco_particlePurity->at(pfp);
                                             highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
+                                            highestEnergy_primary = reco_particleIsPrimary->at(pfp);
                                         }
 
                                         if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2716,11 +2712,6 @@ void nuEBackgroundSignalCut_macro(){
                                     numPFPsSlice++;
                                     //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
                                    
-                                    if(reco_particleIsPrimary->at(pfp) == 1){
-                                        // This PFP is a primary PFP
-                                        numPrimaryPFPsSlice++;
-                                    }
-
                                     summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                                     if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                                         highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -2732,6 +2723,7 @@ void nuEBackgroundSignalCut_macro(){
                                         highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                                         highestEnergy_purity = reco_particlePurity->at(pfp);
                                         highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
+                                        highestEnergy_primary = reco_particleIsPrimary->at(pfp);
                                     }
 
                                     if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2742,11 +2734,6 @@ void nuEBackgroundSignalCut_macro(){
                             numPFPsSlice++;
                             //printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
 
-                            if(reco_particleIsPrimary->at(pfp) == 1){
-                                // This PFP is a primary PFP
-                                numPrimaryPFPsSlice++;
-                            }                           
- 
                             summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                             if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                                 highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -2758,6 +2745,7 @@ void nuEBackgroundSignalCut_macro(){
                                 highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                                 highestEnergy_purity = reco_particlePurity->at(pfp);
                                 highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
+                                highestEnergy_primary = reco_particleIsPrimary->at(pfp);
                             }
                                 
                             if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2949,6 +2937,12 @@ void nuEBackgroundSignalCut_macro(){
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
+
+                    if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_BDT || numPrimaryPFPsSlice < primaryPFPCut_high_BDT)){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PRIMARY PFPS = " << numPrimaryPFPsSlice << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
@@ -2956,36 +2950,18 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                    if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_BDT){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA (SUMMED) = " << (summedEnergy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_BDT){
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_BDT || highestEnergy_trackscore < trackscore_highestPFP_low_BDT)){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
                     
-                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-
-                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_BDT){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-
-                    if(QSquaredCut == 1 && (Q2HighestValue > QSquared_highest_BDT)){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH QSQUARED = " << Q2HighestValue << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_BDT += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_BDT += weight;
                     if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_afterCut_BDT += weight;
@@ -3052,44 +3028,43 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLNuE || numPrimaryPFPsSlice < primaryPFPCut_high_DLNuE)){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PRIMARY PFPS = " << numPrimaryPFPsSlice << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                    if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_DLNuE){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA (SUMMED) = " << (summedEnergy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLNuE << std::endl;
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLNuE || highestEnergy_trackscore < trackscore_highestPFP_low_DLNuE)){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
-                    }
-                    
-                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_DLNuE){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(QSquaredCut == 1 && (Q2HighestValue > QSquared_highest_DLNuE)){
-                       std::cout << "DLNuE: DOES NOT PASS CUTS WITH QSQUARED = " << Q2HighestValue << std::endl;
-                       if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                       continue;
                     }
 
+                    totalLeft_DLNuE++;
+                    if(highestEnergy_primary == 1){
+                        highestEnergyPFPPrimary_DLNuE++;
+                    }
+                    
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_DLNuE += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_DLNuE += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                        numSignal_afterCut_DLNuE += weight;
+                        totalLeftNuE_DLNuE++;
+                        if(highestEnergy_primary == 1){
+                            highestEnergyPFPPrimaryNuE_DLNuE++;
+                        }
+                    }
                     if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_afterCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 3) numBNB_afterCut_DLNuE += weight;
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_afterCut_DLNuE += weight;
@@ -3125,42 +3100,30 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLUboone || numPrimaryPFPsSlice < primaryPFPCut_high_DLUboone)){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PRIMARY PFPS = " << numPrimaryPFPsSlice << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
 
-                    if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
+                    if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_DLUboone){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA (SUMMED) = " << (summedEnergy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
                     
-                    if(trackscoreCut == 1 && highestEnergy_trackscore > trackscore_highestPFP_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << trackscore_highestPFP_DLUboone << std::endl;
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLUboone || highestEnergy_trackscore < trackscore_highestPFP_low_DLUboone)){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
                     
-                    if(upperCRUMBSCut == 1 && reco_sliceScore->at(slice) > upperCrumbsScoreCut_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(upperPFPCut == 1 && numPFPsSlice > numPFPsUpperCut_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH NUMBER OF PFPS IN SLICE = " << numPFPsSlice << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue;
-                    }
-
-                    if(QSquaredCut == 1 && Q2HighestValue > QSquared_highest_DLUboone){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH QSQUARED = " << Q2HighestValue << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue; 
-                    }
-
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_DLUboone += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_DLUboone += weight;
                     if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_afterCut_DLUboone += weight;
@@ -4765,32 +4728,32 @@ void nuEBackgroundSignalCut_macro(){
                                 zCoordEnergyAsymmetryHighestBDT->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                 zCoordEnergyAsymmetrySummedBDT->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));                                
  
-                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                if(recoVX >= xMin && recoVX <= xMin+30){
                                     xCoordAngleDifferenceBDT_low->Fill(recoVX, angleDifference);
                                     xCoordEnergyAsymmetryHighestBDT_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedBDT_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));                               
  
-                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                } else if(recoVX <= xMax && recoVX >= xMax-30){
                                     xCoordAngleDifferenceBDT_high->Fill(recoVX, angleDifference); 
                                     xCoordEnergyAsymmetryHighestBDT_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedBDT_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
                                 }
 
-                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                if(recoVY >= yMin && recoVY <= yMin+30){
                                     yCoordAngleDifferenceBDT_low->Fill(recoVY, angleDifference);
                                     yCoordEnergyAsymmetryHighestBDT_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedBDT_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                } else if(recoVY <= yMax && recoVY >= yMax-30){
                                     yCoordAngleDifferenceBDT_high->Fill(recoVY, angleDifference);
                                     yCoordEnergyAsymmetryHighestBDT_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedBDT_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));  
                                 }
 
-                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                if(recoVZ >= zMin && recoVZ <= zMin+30){
                                     zCoordAngleDifferenceBDT_low->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestBDT_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedBDT_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-110){
                                     zCoordAngleDifferenceBDT_high->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestBDT_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedBDT_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
@@ -4927,31 +4890,31 @@ void nuEBackgroundSignalCut_macro(){
                                 yCoordEnergyAsymmetrySummedDLUboone->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 zCoordEnergyAsymmetrySummedDLUboone->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));                               
  
-                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                if(recoVX >= xMin && recoVX <= xMin+30){
                                     xCoordAngleDifferenceDLUboone_low->Fill(recoVX, angleDifference);
                                     xCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));                               
-                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                } else if(recoVX <= xMax && recoVX >= xMax-30){
                                     xCoordAngleDifferenceDLUboone_high->Fill(recoVX, angleDifference); 
                                     xCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 }
 
-                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                if(recoVY >= yMin && recoVY <= yMin+30){
                                     yCoordAngleDifferenceDLUboone_low->Fill(recoVY, angleDifference);
                                     yCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                } else if(recoVY <= yMax && recoVY >= yMax-30){
                                     yCoordAngleDifferenceDLUboone_high->Fill(recoVY, angleDifference);
                                     yCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
                                 }
 
-                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                if(recoVZ >= zMin && recoVZ <= zMin+30){
                                     zCoordAngleDifferenceDLUboone_low->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestDLUboone_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedDLUboone_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-110){
                                     zCoordAngleDifferenceDLUboone_high->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestDLUboone_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedDLUboone_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
@@ -5088,32 +5051,32 @@ void nuEBackgroundSignalCut_macro(){
                                 yCoordEnergyAsymmetrySummedDLNuE->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 zCoordEnergyAsymmetrySummedDLNuE->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
 
-                                if(recoVX >= xMin && recoVX <= xMin+20){
+                                if(recoVX >= xMin && recoVX <= xMin+30){
                                     xCoordAngleDifferenceDLNuE_low->Fill(recoVX, angleDifference);
                                     xCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVX <= xMax && recoVX >= xMax-20){
+                                } else if(recoVX <= xMax && recoVX >= xMax-30){
                                     xCoordAngleDifferenceDLNuE_high->Fill(recoVX, angleDifference); 
                                     xCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVX, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     xCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVX, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 }
 
-                                if(recoVY >= yMin && recoVY <= yMin+20){
+                                if(recoVY >= yMin && recoVY <= yMin+30){
                                     yCoordAngleDifferenceDLNuE_low->Fill(recoVY, angleDifference);
                                     yCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 
-                                } else if(recoVY <= yMax && recoVY >= yMax-20){
+                                } else if(recoVY <= yMax && recoVY >= yMax-30){
                                     yCoordAngleDifferenceDLNuE_high->Fill(recoVY, angleDifference); 
                                     yCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVY, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     yCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVY, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
                                 }
 
-                                if(recoVZ >= zMin && recoVZ <= zMin+20){
+                                if(recoVZ >= zMin && recoVZ <= zMin+30){
                                     zCoordAngleDifferenceDLNuE_low->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestDLNuE_low->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedDLNuE_low->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy));
-                                } else if(recoVZ <= zMax && recoVZ >= zMax-40){
+                                } else if(recoVZ <= zMax && recoVZ >= zMax-110){
                                     zCoordAngleDifferenceDLNuE_high->Fill(recoVZ, angleDifference);
                                     zCoordEnergyAsymmetryHighestDLNuE_high->Fill(recoVZ, ((recoilElectron_energy - highestEnergy_energy)/recoilElectron_energy));
                                     zCoordEnergyAsymmetrySummedDLNuE_high->Fill(recoVZ, ((recoilElectron_energy - summedEnergy)/recoilElectron_energy)); 
@@ -6203,9 +6166,9 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
-    styleDrawAll(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceNumPrimaryPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(sliceNumNeutrinosDist, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
@@ -6349,7 +6312,8 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(sliceCRUMBSScore, 0, 1, 0.1, 0.8, (base_path + "sliceCRUMBSScorePositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
-    efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPs").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
+    efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
+    efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
     efficiency(sliceNumNeutrinos, 0, 1, 0, 2, (base_path + "sliceNumNeutrinos").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
@@ -6581,15 +6545,15 @@ void nuEBackgroundSignalCut_macro(){
 
     std::cout << "" << std::endl;
     std::cout << "clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", FV = " << FVCut << std::endl;
-    std::cout << "CRUMBS = " << CRUMBSCut << ", ETheta2 (highest) = " << ETheta2Cut << ", trackscore highest energy = " << trackscoreCut << ", trackscore highest score = " << trackscoreHighestCut << std::endl;
-    std::cout << "upper CRUMBS = " << upperCRUMBSCut << ", upper PFP = " << upperPFPCut << ", QSquared = " << QSquaredCut << std::endl;
+    std::cout << "CRUMBS = " << CRUMBSCut << ", Primary PFP = " << primaryPFPCut << ", trackscore of all PFPs = " << trackscorePFPsCut << ", trackscore of highest energy PFP = " << trackscoreCut << std::endl;
+    std::cout << "ETheta2 (highest energy PFP) = " << ETheta2Cut << std::endl; 
 
     std::ofstream out_file(txtFileName, std::ios::app);
     if(out_file.is_open()){
         out_file << "================" << std::endl;
         out_file << "clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", FV = " << FVCut << std::endl;
-        out_file << "CRUMBS = " << CRUMBSCut << ", ETheta2 (highest) = " << ETheta2Cut << ", trackscore highest energy = " << trackscoreCut << ", trackscore highest score = " << trackscoreHighestCut << std::endl;
-        out_file << "upper CRUMBS = " << upperCRUMBSCut << ", upper PFP = " << upperPFPCut << ", QSquared = " << QSquaredCut << std::endl;
+        out_file << "CRUMBS = " << CRUMBSCut << ", Primary PFP = " << primaryPFPCut << ", trackscore of all PFPs = " << trackscorePFPsCut << ", trackscore of highest energy PFP = " << trackscoreCut << std::endl;
+        out_file << "ETheta2 (highest energy PFP) = " << ETheta2Cut << std::endl; 
         out_file << "================" << std::endl;
         out_file.close(); 
     } else{
@@ -6598,6 +6562,13 @@ void nuEBackgroundSignalCut_macro(){
 
     printf("\nNumber of: nu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, other = %f, cosmic muon = %f, cosmic other = %f\n", numPFPsBeforeDLNuE.nuEElectron, numPFPsBeforeDLNuE.nuEOther, numPFPsBeforeDLNuE.electron, numPFPsBeforeDLNuE.proton, numPFPsBeforeDLNuE.muon, numPFPsBeforeDLNuE.pi0, numPFPsBeforeDLNuE.chargedPi, numPFPsBeforeDLNuE.other, numPFPsBeforeDLNuE.cosmicMuon, numPFPsBeforeDLNuE.cosmicOther);
 
+    std::cout << "" << std::endl;
+    std::cout << "Number of slices where the highest energy PFP is primary (after cuts) = " << highestEnergyPFPPrimary_DLNuE << " (" << 100*highestEnergyPFPPrimary_DLNuE/totalLeft_DLNuE << "%)" << std::endl;
+    std::cout << "Slices left = " << totalLeft_DLNuE << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "Number of nu+e slices where the highest energy PFP is primary (after cuts) = " << highestEnergyPFPPrimaryNuE_DLNuE << " (" << 100*highestEnergyPFPPrimaryNuE_DLNuE/totalLeftNuE_DLNuE << "%)" << std::endl;
+    std::cout << "nu+e slices left = " << totalLeftNuE_DLNuE << std::endl;
+    
     //printf("\nNum Nu+E from slice category = %f, num Nu+E from int type = %f\n", numNuESliceCategory_DLNuE, numNuEIntType_DLNuE);
     //printf("Num nu+e with completeness > 0.5 = %f, num nu+e in else = %f\n", numNuESliceCategoryPassed_DLNuE, numNuESliceCategoryElse_DLNuE);
 }
