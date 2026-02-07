@@ -282,7 +282,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     if(!frameShiftHandle.isValid())
         throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
     
-    event_trigger_time           = frameShiftHandle->FrameDefault();
+    event_trigger_time           = frameShiftHandle->FrameDefault()%uint64_t(1e9);
     evtTimingInfo->timingType    = frameShiftHandle->TimingTypeDefault();
     evtTimingInfo->timingChannel = frameShiftHandle->TimingChannelDefault(); 
 
