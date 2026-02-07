@@ -108,7 +108,7 @@ private:
 
     int fn_maxflashes;
     uint fn_caenboards;
-    uint fn_caenchannels;
+    uint fn_caenpmtchannels;
     uint ftiming_caen_offset;
     uint16_t fthreshold_ftrig;
     uint16_t fdefault_postpercent; // should be a number between 0 and 100
@@ -157,7 +157,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<uint>("n_caenboards",8);
-    fn_caenchannels  = p.get<uint>("n_caenchannels",15);
+    fn_caenpmtchannels  = p.get<uint>("n_caenpmtchannels",15);
     ftiming_caen_offset = p.get<uint>("timing_caen_offset",900);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     fdefault_postpercent = p.get<uint16_t>("default_postpercent",80);
@@ -665,7 +665,7 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
 }
 
 std::vector<uint> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
-    std::vector<uint> ch_map(fn_caenboards*fn_caenchannels,9999);
+    std::vector<uint> ch_map(fn_caenboards*fn_caenpmtchannels,9999);
     if (pmt_calib_db==nullptr){
         throw std::runtime_error("PMT Calibration Database pointer is null.");
     }

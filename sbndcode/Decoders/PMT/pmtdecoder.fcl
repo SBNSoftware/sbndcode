@@ -27,7 +27,7 @@ pmtdecoder:
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
     n_caenboards:    9 # number of caen boards; this is used for memory allocation
                        # 1-8 = PMT caens, 9th = timing caen
-    n_caenchannels:  15 # number of channels per caen board; this is used for memory allocation
+    n_caenpmtchannels:  15 # number of PMT(!) channels per caen board; for memory allocation of chmap
     timing_caen_offset: 900 # the channel offset for the timing caen board
     threshold_ftrig: 16350 # the threshold for the flash trigger channel
 

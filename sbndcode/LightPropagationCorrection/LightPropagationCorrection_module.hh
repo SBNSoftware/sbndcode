@@ -145,7 +145,7 @@ private:
 
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
-
+    opdet::sbndPDMapAlg fPDSMap;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
@@ -171,7 +171,6 @@ private:
     std::string fSpacePointLabel;
     std::string fOpHitsModuleLabel;
     std::string fOpFlashNewLabel;
-    std::string fSPECTDCLabel;
     std::string fFlashMatchingTool;
     
     bool fSaveCorrectionTree;
@@ -215,10 +214,9 @@ private:
     int fEvent;
     int fRun;
     int fSubrun;
+    size_t fNOpChannels;
     double _fNuScore;
     double _fFMScore;
-    double fEventTriggerTime=-999999.;
-    double fRWMTime=-999999.;
     std::vector<double> fNuScore;
     std::vector<double> fFMScore;
     std::vector<double> fOpFlashTimeOld;
