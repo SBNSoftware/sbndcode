@@ -73,8 +73,37 @@ struct eventCounter_struct{
     double other = 0;
 };
 
+struct beforeEventCount_struct{
+    double signal = 0;
+    double background = 0;
+    eventCounter_struct splitInt;
+};
+
 struct eventCounting_struct{
-    
+    double clearCosmicsSig = 0;
+    double clearCosmicsBack = 0;
+    eventCounter_struct clearCosmicsIntSplit;
+    double numPFPs0Sig = 0;
+    double numPFPs0Back = 0;
+    eventCounter_struct numPFPs0IntSplit;
+    double numRecoNeut0Sig = 0;
+    double numRecoNeut0Back = 0;
+    eventCounter_struct numRecoNeut0IntSplit;
+    double FVSig = 0;
+    double FVBack = 0;
+    eventCounter_struct FVIntSplit;
+    double crumbsSig = 0;
+    double crumbsBack = 0;
+    eventCounter_struct crumbsIntSplit;
+    double primaryPFPSig = 0;
+    double primaryPFPBack = 0;
+    eventCounter_struct primaryPFPIntSplit;
+    double trackscoreSig = 0;
+    double trackscoreBack = 0;
+    eventCounter_struct trackscoreIntSplit;
+    double ETheta2Sig = 0;    
+    double ETheta2Back = 0;    
+    eventCounter_struct ETheta2IntSplit;    
 };
 
 typedef struct{
@@ -1850,6 +1879,14 @@ void nuEBackgroundSignalCut_macro(){
     int highestEnergyPFPPrimaryNuE_DLNuE = 0;
     int totalLeftNuE_DLNuE = 0;
 
+    beforeEventCount_struct eventsBeforeCuts_BDT;
+    beforeEventCount_struct eventsBeforeCuts_DLUboone;
+    beforeEventCount_struct eventsBeforeCuts_DLNuE;
+
+    eventCounting_struct eventsAfterCuts_BDT;
+    eventCounting_struct eventsAfterCuts_DLUboone;
+    eventCounting_struct eventsAfterCuts_DLNuE;
+
     if(clearCosmicCut == 1 && numPFPs0Cut == 0){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic.txt";
@@ -1879,6 +1916,7 @@ void nuEBackgroundSignalCut_macro(){
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_etheta2SumCuts.txt";
     }
     
+    std::string tableFileName = base_path + "table.txt"
     
     std::ofstream clearFile(txtFileName, std::ios::trunc);
     if (!clearFile.is_open()) {
@@ -1887,6 +1925,14 @@ void nuEBackgroundSignalCut_macro(){
         return;
     }
     clearFile.close();
+    
+    std::ofstream clearTableFile(tableFileName, std::ios::trunc);
+    if (!clearTableFile.is_open()) {
+        std::cerr << "Error: could not open or create "
+                  << tableFileName << std::endl;
+        return;
+    }
+    clearTableFile.close();
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -2891,15 +2937,86 @@ void nuEBackgroundSignalCut_macro(){
 
                 // Applying cuts here
                 if(DLCurrent == 2){
-                    if(sliceCategoryPlottingMacro == 0) numCosmic_beforeCut_BDT += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_beforeCut_BDT += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_beforeCut_BDT += weight;
-                    if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_BDT += weight;
-                    if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_BDT += weight;
-             
+                    if(sliceCategoryPlottingMacro == 0){
+                        numCosmic_beforeCut_BDT += weight;
+                        eventsBeforeCuts_BDT.background += weight;
+                        eventsAfterCuts_BDT.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                        numSignal_beforeCut_BDT += weight;
+                        eventsBeforeCuts_BDT.signal += weight;
+                        eventsAfterCuts_BDT.clearCosmicsSig += weight;
+                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
+                        numSignalFuzzy_beforeCut_BDT += weight;
+                        eventsBeforeCuts_BDT.background += weight;
+                        eventsAfterCuts_BDT.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 3){
+                        numBNB_beforeCut_BDT += weight;
+                        eventsBeforeCuts_BDT.background += weight;
+                        eventsAfterCuts_BDT.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 4){
+                        numBNBFuzzy_beforeCut_BDT += weight;
+                        eventsBeforeCuts_BDT.background += weight;
+                        eventsAfterCuts_BDT.clearCosmicsBack += weight;
+                    }
+
+                    if(sliceEventType == 0){
+                        eventsBeforeCuts_BDT.splitInt.cosmic += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsBeforeCuts_BDT.splitInt.nuE += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsBeforeCuts_BDT.splitInt.NCNPi0 += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsBeforeCuts_BDT.splitInt.otherNC += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsBeforeCuts_BDT.splitInt.CCnumu += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsBeforeCuts_BDT.splitInt.CCnue += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsBeforeCuts_BDT.splitInt.dirt += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        eventsBeforeCuts_BDT.splitInt.nuEDirt += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsBeforeCuts_BDT.splitInt.other += weight;
+                        eventsAfterCuts_BDT.clearCosmicsIntSplit.other += weight;
+                    }
+
                     if(numPFPs0Cut == 1 && numPFPsSlice == 0){
                         // This is a slice with 0 PFPs in it
                         continue;
+                    }
+
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.numPFPs0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.numPFPs0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.numPFPs0IntSplit.other += weight;
                     }
 
                     if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
@@ -2907,6 +3024,31 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
 
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.numRecoNeut0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.numRecoNeut0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.numRecoNeut0IntSplit.other += weight;
+                    }
 
                     if(FVCut == 1){
                         if (!(recoVX < FVCut_xHigh_BDT && recoVX > FVCut_xLow_BDT  && std::abs(recoVX) > FVCut_xCentre_BDT && recoVY < FVCut_yHigh_BDT && recoVY > FVCut_yLow_BDT && recoVZ > FVCut_zLow_BDT && recoVZ < FVCut_zHigh_BDT)){ 
@@ -2915,11 +3057,63 @@ void nuEBackgroundSignalCut_macro(){
                             continue;
                         }
                     }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.FVSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.FVBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.FVIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.FVIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.FVIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.FVIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.FVIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.FVIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.FVIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.FVIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.FVIntSplit.other += weight;
+                    }
 
                     if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_BDT || reco_sliceScore->at(slice) > crumbsScoreCut_high_BDT)){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.crumbsSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.crumbsBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.crumbsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.crumbsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.crumbsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.crumbsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.crumbsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.crumbsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.crumbsIntSplit.other += weight;
                     }
 
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_BDT || numPrimaryPFPsSlice == primaryPFPCut_high_BDT)){
@@ -2927,11 +3121,95 @@ void nuEBackgroundSignalCut_macro(){
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
                     }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.primaryPFPSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.primaryPFPBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.primaryPFPIntSplit.other += weight;
+                    }
                    
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_BDT || highestEnergy_trackscore < trackscore_highestPFP_low_BDT)){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.trackscoreSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.trackscoreBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.trackscoreIntSplit.other += weight;
+                    }
+                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_BDT){
                         std::cout << "BDT: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.ETheta2Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.ETheta2Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.ETheta2IntSplit.other += weight;
                     }
                     
                     if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_BDT){
@@ -2946,12 +3224,6 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
-                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_BDT || highestEnergy_trackscore < trackscore_highestPFP_low_BDT)){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-                    
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_BDT += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_BDT += weight;
                     if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_afterCut_BDT += weight;
@@ -2959,39 +3231,73 @@ void nuEBackgroundSignalCut_macro(){
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_afterCut_BDT += weight;
                 
                 } else if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) numCosmic_beforeCut_DLNuE += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_beforeCut_DLNuE += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_beforeCut_DLNuE += weight;
-                    if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_DLNuE += weight;
-                    if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_DLNuE += weight;
-                   
+                    if(sliceCategoryPlottingMacro == 0){
+                        numCosmic_beforeCut_DLNuE += weight;
+                        eventsBeforeCuts_DLNuE.background += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                        numSignal_beforeCut_DLNuE += weight;
+                        eventsBeforeCuts_DLNuE.signal += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsSig += weight;
+                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
+                        numSignalFuzzy_beforeCut_DLNuE += weight;
+                        eventsBeforeCuts_DLNuE.background += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 3){
+                        numBNB_beforeCut_DLNuE += weight;
+                        eventsBeforeCuts_DLNuE.background += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 4){
+                        numBNBFuzzy_beforeCut_DLNuE += weight;
+                        eventsBeforeCuts_DLNuE.background += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    }
+
                     if(sliceEventType == 0){
                         numEventBeforeCutDLNuE.cosmic += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.cosmic++;
+                        eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
                     } else if(sliceEventType == 1 && signal == 1){
                         numEventBeforeCutDLNuE.nuE += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.nuE++;
+                        eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE += weight;
                     } else if(sliceEventType == 2){
                         numEventBeforeCutDLNuE.NCNPi0 += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.NCNPi0++;
+                        eventsBeforeCuts_DLNuE.splitInt.NCNPi0 += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 += weight;
                     } else if(sliceEventType == 3){
                         numEventBeforeCutDLNuE.otherNC += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.otherNC++;
+                        eventsBeforeCuts_DLNuE.splitInt.otherNC += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC += weight;
                     } else if(sliceEventType == 4){
                         numEventBeforeCutDLNuE.CCnumu += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.CCnumu++;
+                        eventsBeforeCuts_DLNuE.splitInt.CCnumu += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu += weight;
                     } else if(sliceEventType == 5){
                         numEventBeforeCutDLNuE.CCnue += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.CCnue++;
+                        eventsBeforeCuts_DLNuE.splitInt.CCnue += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue += weight;
                     } else if(sliceEventType == 6){
                         numEventBeforeCutDLNuE.dirt += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.dirt++;
+                        eventsBeforeCuts_DLNuE.splitInt.dirt += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt += weight;
                     } else if(sliceEventType == 7 && signal == 1){
                         numEventBeforeCutDLNuE.nuEDirt += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.nuEDirt++;
+                        eventsBeforeCuts_DLNuE.splitInt.nuEDirt += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt += weight;
                     } else if(sliceEventType == 8){
                         numEventBeforeCutDLNuE.other += weight; 
                         numEventBeforeCutWithoutWeightingDLNuE.other++;
+                        eventsBeforeCuts_DLNuE.splitInt.other += weight;
+                        eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other += weight;
                     }
 
                     if(numPFPs0Cut == 1 && numPFPsSlice == 0){
@@ -2999,9 +3305,61 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.numPFPs0IntSplit.other += weight;
+                    }
+                    
                     if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
                         // This is a slice with no reco neutrino
                         continue;
+                    }
+
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other += weight;
                     }
                
                     if(FVCut == 1){ 
@@ -3012,10 +3370,62 @@ void nuEBackgroundSignalCut_macro(){
                         }
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.FVSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.FVBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.FVIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.FVIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.FVIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.FVIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.FVIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.FVIntSplit.other += weight;
+                    }
+                    
                     if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_DLNuE || reco_sliceScore->at(slice) > crumbsScoreCut_high_DLNuE)){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
                     }
                     
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLNuE || numPrimaryPFPsSlice == primaryPFPCut_high_DLNuE)){
@@ -3024,10 +3434,94 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
+                    }
+                    
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLNuE || highestEnergy_trackscore < trackscore_highestPFP_low_DLNuE)){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.trackscoreSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.trackscoreBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.trackscoreIntSplit.other += weight;
+                    }
+                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
                     }
                     
                     if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_DLNuE){
@@ -3038,12 +3532,6 @@ void nuEBackgroundSignalCut_macro(){
                     
                     if(trackscoreHighestCut == 1 && highestTrackscore > trackscore_highestScore_DLNuE){
                         std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestTrackscore << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLNuE || highestEnergy_trackscore < trackscore_highestPFP_low_DLNuE)){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
                         continue;
                     }
@@ -3068,20 +3556,117 @@ void nuEBackgroundSignalCut_macro(){
                     if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_afterCut_DLNuE += weight;
                 
                 } else if(DLCurrent == 0){
-                    if(sliceCategoryPlottingMacro == 0) numCosmic_beforeCut_DLUboone += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_beforeCut_DLUboone += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) numSignalFuzzy_beforeCut_DLUboone += weight;
-                    if(sliceCategoryPlottingMacro == 3) numBNB_beforeCut_DLUboone += weight;
-                    if(sliceCategoryPlottingMacro == 4) numBNBFuzzy_beforeCut_DLUboone += weight;
+                    if(sliceCategoryPlottingMacro == 0){
+                        numCosmic_beforeCut_DLUboone += weight;
+                        eventsBeforeCuts_DLUboone.background += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                        numSignal_beforeCut_DLUboone += weight;
+                        eventsBeforeCuts_DLUboone.signal += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsSig += weight;
+                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
+                        numSignalFuzzy_beforeCut_DLUboone += weight;
+                        eventsBeforeCuts_DLUboone.background += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 3){
+                        numBNB_beforeCut_DLUboone += weight;
+                        eventsBeforeCuts_DLUboone.background += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsBack += weight;
+                    } else if(sliceCategoryPlottingMacro == 4){
+                        numBNBFuzzy_beforeCut_DLUboone += weight;
+                        eventsBeforeCuts_DLUboone.background += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsBack += weight;
+                    }
                     
+                    if(sliceEventType == 0){
+                        eventsBeforeCuts_DLUboone.splitInt.cosmic += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsBeforeCuts_DLUboone.splitInt.nuE += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsBeforeCuts_DLUboone.splitInt.NCNPi0 += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsBeforeCuts_DLUboone.splitInt.otherNC += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsBeforeCuts_DLUboone.splitInt.CCnumu += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsBeforeCuts_DLUboone.splitInt.CCnue += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsBeforeCuts_DLUboone.splitInt.dirt += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        eventsBeforeCuts_DLUboone.splitInt.nuEDirt += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsBeforeCuts_DLUboone.splitInt.other += weight;
+                        eventsAfterCuts_DLUboone.clearCosmicsIntSplit.other += weight;
+                    }
+
                     if(numPFPs0Cut == 1 && numPFPsSlice == 0){
                         // This is a slice with 0 PFPs in it
                         continue;
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.other += weight;
+                    }
+                    
                     if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
                         // This is a slice with no reco neutrino
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.other += weight;
                     }
                 
                     if(FVCut == 1){
@@ -3092,10 +3677,62 @@ void nuEBackgroundSignalCut_macro(){
                         }
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.FVSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.FVBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.FVIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.FVIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.FVIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.FVIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.FVIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.FVIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.FVIntSplit.other += weight;
+                    }
+                    
                     if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_DLUboone || reco_sliceScore->at(slice) > crumbsScoreCut_high_DLUboone)){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.crumbsSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.crumbsBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.crumbsIntSplit.other += weight;
                     }
                     
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLUboone || numPrimaryPFPsSlice == primaryPFPCut_high_DLUboone)){
@@ -3104,10 +3741,94 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.primaryPFPSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.primaryPFPBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.primaryPFPIntSplit.other += weight;
+                    }
+                    
+                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLUboone || highestEnergy_trackscore < trackscore_highestPFP_low_DLUboone)){
+                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.trackscoreSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.trackscoreBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.trackscoreBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.trackscoreIntSplit.other += weight;
+                    }
+                    
                     if(ETheta2Cut == 1 && (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_highestPFP_DLUboone){
                         std::cout << "DLUboone: DOES NOT PASS CUTS WITH ETHETA = " << (highestEnergy_energy * highestEnergy_theta * highestEnergy_theta) << std::endl;
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.ETheta2Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.ETheta2Back += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.dirt += weight;
+                    } else if(sliceEventType == 7){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.ETheta2IntSplit.other += weight;
                     }
                     
                     if(ETheta2SumCut == 1 && (summedEnergy * highestEnergy_theta * highestEnergy_theta) > EThetaCut_summedPFP_DLUboone){
@@ -3121,13 +3842,6 @@ void nuEBackgroundSignalCut_macro(){
                         if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
                         continue;
                     }
-                    
-                    if(trackscoreCut == 1 && (highestEnergy_trackscore > trackscore_highestPFP_high_DLUboone || highestEnergy_trackscore < trackscore_highestPFP_low_DLUboone)){
-                        std::cout << "DLUboone: DOES NOT PASS CUTS WITH TRACKSCORE = " << highestEnergy_trackscore << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                        continue;
-                    }
-                    
 
                     if(sliceCategoryPlottingMacro == 0) numCosmic_afterCut_DLUboone += weight;
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) numSignal_afterCut_DLUboone += weight;
@@ -6563,6 +7277,210 @@ void nuEBackgroundSignalCut_macro(){
         out_file.close(); 
     } else{
         std::cerr << "Error: couldnt open txt file" << std::endl;
+    }
+
+    std::ofstream out_tablefile(tableFileName, std::ios::app);
+    if(out_tablefile.is_open()){
+        // DL Nu+E Table 
+        out_tablefile << "=========== DL Nu+E Vertexing ===========" << std::endl;
+        out_tablefile << "\begin{table}[h!]" << std::endl;
+        out_tablefile << "\centering" << std::endl;
+        out_tablefile << "\resizebox{\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\begin{tabular}{|c|c|c|c|c|c|}" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "\textbf{Cut Name} & \textbf{$\epsilon$ (\%)} & \textbf{$\rho$ (\%)} & \textbf{$\epsilon\rho$}& Signal Left & Background Left \\" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << std::setprecision(3) << "No Cut & " << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background) << " & " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal) << " & " << eventsBeforeCuts_DLNuE.signal << " (" << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << "\%)" << " & " << eventsBeforeCuts_DLNuE.background << " (" << 100*eventsBeforeCuts_DLNuE.background/eventsBeforeCuts_DLNuE.background << "\%)" << " \\ " << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        if(clearCosmicCut == 1){
+            out_tablefile << std::setprecision(3) << "Remove Clear Cosmic PFPs & " << 100*eventsAfterCuts_DLNuE.clearCosmicSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.clearCosmicSig/(eventsAfterCuts_DLNuE.clearCosmicSig+eventsAfterCuts_DLNuE.clearCosmicBack) << " & " << (eventsAfterCuts_DLNuE.clearCosmicSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.clearCosmicSig/(eventsAfterCuts_DLNuE.clearCosmicSig+eventsAfterCuts_DLNuE.clearCosmicBack)) << " & " << eventsAfterCuts_DLNuE.clearCosmicSig << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicSig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.clearCosmicBack << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicBack/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numPFPs0Cut == 1){
+            out_tablefile << std::setprecision(3) << "PFPs in Slice != 0 & " << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back) << " & " << (eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back)) << " & " << eventsAfterCuts_DLNuE.numPFPs0Sig << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.numPFPs0Back << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Back/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numRecoNeutrinosCut == 1){
+            out_tablefile << std::setprecision(3) << "1 Reco Neutrino in Slice & " << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back) << " & " << (eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back)) << " & " << eventsAfterCuts_DLNuE.numRecoNeut0Sig << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.numRecoNeut0Back << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Back/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(FVCut == 1){
+            out_tablefile << std::setprecision(3) << "FV Cut & " << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack) << " & " << (eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << " & " << eventsAfterCuts_DLNuE.FVSig << " (" << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.FVBack << " (" << 100*eventsAfterCuts_DLNuE.FVBack/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(CRUMBSCut == 1){
+            out_tablefile << std::setprecision(3) << crumbsScoreCut_low_DLNuE << " < CRUMBS Score < " << crumbsScoreCut_high_DLNuE << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack) << " & " << (eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack)) << " & " << eventsAfterCuts_DLNuE.crumbsSig << " (" << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.crumbsBack << " (" << 100*eventsAfterCuts_DLNuE.crumbsBack/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+       
+        if(primaryPFPCut == 1){ 
+            out_tablefile << std::setprecision(3) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLNuE << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack) << " & " << (eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack)) << " & " << eventsAfterCuts_DLNuE.primaryPFPSig << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.primaryPFPBack << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPBack/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(trackscoreCut == 1){
+            out_tablefile << std::setprecision(3) << "Highest Energy PFP in Slice has " << trackscore_highestPFP_low_DLNuE << " < Trackscore < " << trackscore_highestPFP_high_DLNuE << " & " << 100*eventsAfterCuts_DLNuE.trackscoreSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.trackscoreSig/(eventsAfterCuts_DLNuE.trackscoreSig+eventsAfterCuts_DLNuE.trackscoreBack) << " & " << (eventsAfterCuts_DLNuE.trackscoreSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.trackscoreSig/(eventsAfterCuts_DLNuE.trackscoreSig+eventsAfterCuts_DLNuE.trackscoreBack)) << " & " << eventsAfterCuts_DLNuE.trackscoreSig << " (" << 100*eventsAfterCuts_DLNuE.trackscoreSig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.trackscoreBack << " (" << 100*eventsAfterCuts_DLNuE.trackscoreBack/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(ETheta2Cut == 1){
+            out_tablefile << std::setprecision(3) << "$\textrm{E}\theta^2 \textrm{ (Highest Energy PFP)} < " << EThetaCut_highestPFP_DLNuE << "$ & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << "\%) & " << eventsAfterCuts_DLNuE.ETheta2Back << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+        
+        out_tablefile << "\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\end{table}" << std::endl;
+       
+        out_tablefile << "" << std::endl;
+        out_tablefile << "" << std::endl;
+        out_tablefile << "" << std::endl;
+        // ======================================== 
+        // Put split interaction table here
+       
+        out_tablefile << "\begin{table}[h!]" << std::endl;
+        out_tablefile << "\centering" << std::endl;
+        out_tablefile << "\resizebox{\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "\multicolumn{10}{|c|}{\textbf{Number of Events Left}} \\" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "\textbf{Cut Name} & \textbf{$\boldsymbol{\nu+e}$} & \textbf{NCN$\boldsymbol{\pi^0}$} & \textbf{Other NC} & \textbf{CC$\boldsymbol{\nu_\mu}$} & \textbf{CC$\boldsymbol{\nu_e}$} & \textbf{Dirt} & \textbf{$\boldsymbol{\nu+e}$ Dirt} & \textbf{Cosmic} & \textbf{Other}\\" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "No Cut & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.nuE << std::setprecision(3) << " (" << 100*eventsBeforeCuts_BDT.splitInt.nuE/eventsBeforeCuts_BDT.splitInt.nuE << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.NCNPi0 << std::setprecision(3) << "(" << 100*eventsBeforeCuts_BDT.splitInt.NCNPi0 << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.otherNC << " (" << 100*eventsBeforeCuts_BDT.splitInt.otherNC/eventsBeforeCuts_BDT.splitInt.otherNC << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.CCnumu << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.CCnumu/eventsBeforeCuts_BDT.splitInt.CCnumu << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.CCnue << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.CCnue/eventsBeforeCuts_BDT.splitInt.CCnue << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.dirt << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.dirt/eventsBeforeCuts_BDT.splitInt.dirt << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.nuEDirt << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.nuEDirt/eventsBeforeCuts_BDT.splitInt.nuEDirt << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.cosmic << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.cosmic/eventsBeforeCuts_BDT.splitInt.cosmic << "\%) & " << std::setprecision(6) << eventsBeforeCuts_BDT.splitInt.other << " (" << std::setprecision(3) << 100*eventsBeforeCuts_BDT.splitInt.other/eventsBeforeCuts_BDT.splitInt.other << "\%) \\" << std::endl;
+        out_tablefile << "Remove Clear Cosmic PFPs & " << std::setprecision(7) << eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.nuE << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.otherNC << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.CCnumu << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.CCnue << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.dirt << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.cosmic << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.other << "\%) & "<< std::endl;
+        out_tablefile << "Remove Clear Cosmic PFPs & " << std::setprecision(7) << eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.nuE << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.otherNC << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.CCnumu << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.CCnue << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.dirt << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.cosmic << "\%) & " << std::setprecision(6) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other << std::setprecision(3) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other/eventsBeforeCuts_DLNuE.clearCosmicsIntSplit.other << "\%) & "<< std::endl;
+
+        out_tablefile << "" << std::endl;
+        out_tablefile << "\newpage" << std::endl;
+        out_tablefile << "" << std::endl;
+
+
+        // DL Uboone Tables 
+        out_tablefile << "=========== DL Uboone Vertexing ===========" << std::endl;
+        out_tablefile << "\begin{table}[h!]" << std::endl;
+        out_tablefile << "\centering" << std::endl;
+        out_tablefile << "\resizebox{\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\begin{tabular}{|c|c|c|c|c|c|}" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "\textbf{Cut Name} & \textbf{$\epsilon$ (\%)} & \textbf{$\rho$ (\%)} & \textbf{$\epsilon\rho$}& Signal Left & Background Left \\" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << std::setprecision(3) << "No Cut & " << 100*eventsBeforeCuts_DLUboone.signal/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsBeforeCuts_DLUboone.signal/(eventsBeforeCuts_DLUboone.signal+eventsBeforeCuts_DLUboone.background) << " & " << (eventsBeforeCuts_DLUboone.signal/(eventsBeforeCuts_DLUboone.signal+eventsBeforeCuts_DLUboone.background))*(eventsBeforeCuts_DLUboone.signal/eventsBeforeCuts_DLUboone.signal) << " & " << eventsBeforeCuts_DLUboone.signal << " (" << 100*eventsBeforeCuts_DLUboone.signal/eventsBeforeCuts_DLUboone.signal << "\%)" << " & " << eventsBeforeCuts_DLUboone.background << " (" << 100*eventsBeforeCuts_DLUboone.background/eventsBeforeCuts_DLUboone.background << "\%)" << " \\ " << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        if(clearCosmicCut == 1){
+            out_tablefile << std::setprecision(3) << "Remove Clear Cosmic PFPs & " << 100*eventsAfterCuts_DLUboone.clearCosmicSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.clearCosmicSig/(eventsAfterCuts_DLUboone.clearCosmicSig+eventsAfterCuts_DLUboone.clearCosmicBack) << " & " << (eventsAfterCuts_DLUboone.clearCosmicSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.clearCosmicSig/(eventsAfterCuts_DLUboone.clearCosmicSig+eventsAfterCuts_DLUboone.clearCosmicBack)) << " & " << eventsAfterCuts_DLUboone.clearCosmicSig << " (" << 100*eventsAfterCuts_DLUboone.clearCosmicSig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.clearCosmicBack << " (" << 100*eventsAfterCuts_DLUboone.clearCosmicBack/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numPFPs0Cut == 1){
+            out_tablefile << std::setprecision(3) << "PFPs in Slice != 0 & " << 100*eventsAfterCuts_DLUboone.numPFPs0Sig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.numPFPs0Sig/(eventsAfterCuts_DLUboone.numPFPs0Sig+eventsAfterCuts_DLUboone.numPFPs0Back) << " & " << (eventsAfterCuts_DLUboone.numPFPs0Sig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.numPFPs0Sig/(eventsAfterCuts_DLUboone.numPFPs0Sig+eventsAfterCuts_DLUboone.numPFPs0Back)) << " & " << eventsAfterCuts_DLUboone.numPFPs0Sig << " (" << 100*eventsAfterCuts_DLUboone.numPFPs0Sig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.numPFPs0Back << " (" << 100*eventsAfterCuts_DLUboone.numPFPs0Back/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numRecoNeutrinosCut == 1){
+            out_tablefile << std::setprecision(3) << "1 Reco Neutrino in Slice & " << 100*eventsAfterCuts_DLUboone.numRecoNeut0Sig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.numRecoNeut0Sig/(eventsAfterCuts_DLUboone.numRecoNeut0Sig+eventsAfterCuts_DLUboone.numRecoNeut0Back) << " & " << (eventsAfterCuts_DLUboone.numRecoNeut0Sig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.numRecoNeut0Sig/(eventsAfterCuts_DLUboone.numRecoNeut0Sig+eventsAfterCuts_DLUboone.numRecoNeut0Back)) << " & " << eventsAfterCuts_DLUboone.numRecoNeut0Sig << " (" << 100*eventsAfterCuts_DLUboone.numRecoNeut0Sig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.numRecoNeut0Back << " (" << 100*eventsAfterCuts_DLUboone.numRecoNeut0Back/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(FVCut == 1){
+            out_tablefile << std::setprecision(3) << "FV Cut & " << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack) << " & " << (eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack)) << " & " << eventsAfterCuts_DLUboone.FVSig << " (" << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.FVBack << " (" << 100*eventsAfterCuts_DLUboone.FVBack/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(CRUMBSCut == 1){
+            out_tablefile << std::setprecision(3) << crumbsScoreCut_low_DLUboone << " < CRUMBS Score < " << crumbsScoreCut_high_DLUboone << " & " << 100*eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.crumbsSig/(eventsAfterCuts_DLUboone.crumbsSig+eventsAfterCuts_DLUboone.crumbsBack) << " & " << (eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.crumbsSig/(eventsAfterCuts_DLUboone.crumbsSig+eventsAfterCuts_DLUboone.crumbsBack)) << " & " << eventsAfterCuts_DLUboone.crumbsSig << " (" << 100*eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.crumbsBack << " (" << 100*eventsAfterCuts_DLUboone.crumbsBack/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+       
+        if(primaryPFPCut == 1){ 
+            out_tablefile << std::setprecision(3) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLUboone << " & " << 100*eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.primaryPFPSig/(eventsAfterCuts_DLUboone.primaryPFPSig+eventsAfterCuts_DLUboone.primaryPFPBack) << " & " << (eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.primaryPFPSig/(eventsAfterCuts_DLUboone.primaryPFPSig+eventsAfterCuts_DLUboone.primaryPFPBack)) << " & " << eventsAfterCuts_DLUboone.primaryPFPSig << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.primaryPFPBack << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPBack/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(trackscoreCut == 1){
+            out_tablefile << std::setprecision(3) << "Highest Energy PFP in Slice has " << trackscore_highestPFP_low_DLUboone << " < Trackscore < " << trackscore_highestPFP_high_DLUboone << " & " << 100*eventsAfterCuts_DLUboone.trackscoreSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.trackscoreSig/(eventsAfterCuts_DLUboone.trackscoreSig+eventsAfterCuts_DLUboone.trackscoreBack) << " & " << (eventsAfterCuts_DLUboone.trackscoreSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.trackscoreSig/(eventsAfterCuts_DLUboone.trackscoreSig+eventsAfterCuts_DLUboone.trackscoreBack)) << " & " << eventsAfterCuts_DLUboone.trackscoreSig << " (" << 100*eventsAfterCuts_DLUboone.trackscoreSig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.trackscoreBack << " (" << 100*eventsAfterCuts_DLUboone.trackscoreBack/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(ETheta2Cut == 1){
+            out_tablefile << std::setprecision(3) << "$\textrm{E}\theta^2 \textrm{ (Highest Energy PFP)} < " << EThetaCut_highestPFP_DLUboone << "$ & " << 100*eventsAfterCuts_DLUboone.ETheta2Sig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.ETheta2Sig/(eventsAfterCuts_DLUboone.ETheta2Sig+eventsAfterCuts_DLUboone.ETheta2Back) << " & " << (eventsAfterCuts_DLUboone.ETheta2Sig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.ETheta2Sig/(eventsAfterCuts_DLUboone.ETheta2Sig+eventsAfterCuts_DLUboone.ETheta2Back)) << " & " << eventsAfterCuts_DLUboone.ETheta2Sig << " (" << 100*eventsAfterCuts_DLUboone.ETheta2Sig/eventsBeforeCuts_DLUboone.signal << "\%) & " << eventsAfterCuts_DLUboone.ETheta2Back << " (" << 100*eventsAfterCuts_DLUboone.ETheta2Back/eventsBeforeCuts_DLUboone.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+        
+        out_tablefile << "\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\end{table}" << std::endl;
+        
+
+        out_tablefile << "" << std::endl;
+        out_tablefile << "\newpage" << std::endl;
+        out_tablefile << "" << std::endl;
+        
+        // BDT Table 
+        out_tablefile << "=========== BDT Vertexing ===========" << std::endl;
+        out_tablefile << "\begin{table}[h!]" << std::endl;
+        out_tablefile << "\centering" << std::endl;
+        out_tablefile << "\resizebox{\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\begin{tabular}{|c|c|c|c|c|c|}" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << "\textbf{Cut Name} & \textbf{$\epsilon$ (\%)} & \textbf{$\rho$ (\%)} & \textbf{$\epsilon\rho$}& Signal Left & Background Left \\" << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        out_tablefile << std::setprecision(3) << "No Cut & " << 100*eventsBeforeCuts_BDT.signal/eventsBeforeCuts_BDT.signal << " & " << 100*eventsBeforeCuts_BDT.signal/(eventsBeforeCuts_BDT.signal+eventsBeforeCuts_BDT.background) << " & " << (eventsBeforeCuts_BDT.signal/(eventsBeforeCuts_BDT.signal+eventsBeforeCuts_BDT.background))*(eventsBeforeCuts_BDT.signal/eventsBeforeCuts_BDT.signal) << " & " << eventsBeforeCuts_BDT.signal << " (" << 100*eventsBeforeCuts_BDT.signal/eventsBeforeCuts_BDT.signal << "\%)" << " & " << eventsBeforeCuts_BDT.background << " (" << 100*eventsBeforeCuts_BDT.background/eventsBeforeCuts_BDT.background << "\%)" << " \\ " << std::endl;
+        out_tablefile << "\hline" << std::endl;
+        if(clearCosmicCut == 1){
+            out_tablefile << std::setprecision(3) << "Remove Clear Cosmic PFPs & " << 100*eventsAfterCuts_BDT.clearCosmicSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.clearCosmicSig/(eventsAfterCuts_BDT.clearCosmicSig+eventsAfterCuts_BDT.clearCosmicBack) << " & " << (eventsAfterCuts_BDT.clearCosmicSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.clearCosmicSig/(eventsAfterCuts_BDT.clearCosmicSig+eventsAfterCuts_BDT.clearCosmicBack)) << " & " << eventsAfterCuts_BDT.clearCosmicSig << " (" << 100*eventsAfterCuts_BDT.clearCosmicSig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.clearCosmicBack << " (" << 100*eventsAfterCuts_BDT.clearCosmicBack/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numPFPs0Cut == 1){
+            out_tablefile << std::setprecision(3) << "PFPs in Slice != 0 & " << 100*eventsAfterCuts_BDT.numPFPs0Sig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.numPFPs0Sig/(eventsAfterCuts_BDT.numPFPs0Sig+eventsAfterCuts_BDT.numPFPs0Back) << " & " << (eventsAfterCuts_BDT.numPFPs0Sig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.numPFPs0Sig/(eventsAfterCuts_BDT.numPFPs0Sig+eventsAfterCuts_BDT.numPFPs0Back)) << " & " << eventsAfterCuts_BDT.numPFPs0Sig << " (" << 100*eventsAfterCuts_BDT.numPFPs0Sig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.numPFPs0Back << " (" << 100*eventsAfterCuts_BDT.numPFPs0Back/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(numRecoNeutrinosCut == 1){
+            out_tablefile << std::setprecision(3) << "1 Reco Neutrino in Slice & " << 100*eventsAfterCuts_BDT.numRecoNeut0Sig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.numRecoNeut0Sig/(eventsAfterCuts_BDT.numRecoNeut0Sig+eventsAfterCuts_BDT.numRecoNeut0Back) << " & " << (eventsAfterCuts_BDT.numRecoNeut0Sig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.numRecoNeut0Sig/(eventsAfterCuts_BDT.numRecoNeut0Sig+eventsAfterCuts_BDT.numRecoNeut0Back)) << " & " << eventsAfterCuts_BDT.numRecoNeut0Sig << " (" << 100*eventsAfterCuts_BDT.numRecoNeut0Sig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.numRecoNeut0Back << " (" << 100*eventsAfterCuts_BDT.numRecoNeut0Back/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(FVCut == 1){
+            out_tablefile << std::setprecision(3) << "FV Cut & " << 100*eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.FVSig/(eventsAfterCuts_BDT.FVSig+eventsAfterCuts_BDT.FVBack) << " & " << (eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.FVSig/(eventsAfterCuts_BDT.FVSig+eventsAfterCuts_BDT.FVBack)) << " & " << eventsAfterCuts_BDT.FVSig << " (" << 100*eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.FVBack << " (" << 100*eventsAfterCuts_BDT.FVBack/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(CRUMBSCut == 1){
+            out_tablefile << std::setprecision(3) << crumbsScoreCut_low_BDT << " < CRUMBS Score < " << crumbsScoreCut_high_BDT << " & " << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack) << " & " << (eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack)) << " & " << eventsAfterCuts_BDT.crumbsSig << " (" << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.crumbsBack << " (" << 100*eventsAfterCuts_BDT.crumbsBack/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+       
+        if(primaryPFPCut == 1){ 
+            out_tablefile << std::setprecision(3) << "Primary PFPs in Slice = " << primaryPFPCut_low_BDT << " & " << 100*eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.primaryPFPSig/(eventsAfterCuts_BDT.primaryPFPSig+eventsAfterCuts_BDT.primaryPFPBack) << " & " << (eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.primaryPFPSig/(eventsAfterCuts_BDT.primaryPFPSig+eventsAfterCuts_BDT.primaryPFPBack)) << " & " << eventsAfterCuts_BDT.primaryPFPSig << " (" << 100*eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.primaryPFPBack << " (" << 100*eventsAfterCuts_BDT.primaryPFPBack/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(trackscoreCut == 1){
+            out_tablefile << std::setprecision(3) << "Highest Energy PFP in Slice has " << trackscore_highestPFP_low_BDT << " < Trackscore < " << trackscore_highestPFP_high_BDT << " & " << 100*eventsAfterCuts_BDT.trackscoreSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.trackscoreSig/(eventsAfterCuts_BDT.trackscoreSig+eventsAfterCuts_BDT.trackscoreBack) << " & " << (eventsAfterCuts_BDT.trackscoreSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.trackscoreSig/(eventsAfterCuts_BDT.trackscoreSig+eventsAfterCuts_BDT.trackscoreBack)) << " & " << eventsAfterCuts_BDT.trackscoreSig << " (" << 100*eventsAfterCuts_BDT.trackscoreSig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.trackscoreBack << " (" << 100*eventsAfterCuts_BDT.trackscoreBack/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+
+        if(ETheta2Cut == 1){
+            out_tablefile << std::setprecision(3) << "$\textrm{E}\theta^2 \textrm{ (Highest Energy PFP)} < " << EThetaCut_highestPFP_BDT << "$ & " << 100*eventsAfterCuts_BDT.ETheta2Sig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.ETheta2Sig/(eventsAfterCuts_BDT.ETheta2Sig+eventsAfterCuts_BDT.ETheta2Back) << " & " << (eventsAfterCuts_BDT.ETheta2Sig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.ETheta2Sig/(eventsAfterCuts_BDT.ETheta2Sig+eventsAfterCuts_BDT.ETheta2Back)) << " & " << eventsAfterCuts_BDT.ETheta2Sig << " (" << 100*eventsAfterCuts_BDT.ETheta2Sig/eventsBeforeCuts_BDT.signal << "\%) & " << eventsAfterCuts_BDT.ETheta2Back << " (" << 100*eventsAfterCuts_BDT.ETheta2Back/eventsBeforeCuts_BDT.background << "\%) \\ " << std::endl;
+            out_tablefile << "\hline" << std::endl;
+        }
+        
+        out_tablefile << "\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\end{table}" << std::endl;
+        
+        // Put split interaction table here
+        
+        out_tablefile << "" << std::endl;
+        out_tablefile << "\newpage" << std::endl;
+        out_tablefile << "" << std::endl;
+
     }
 
     printf("\nNumber of: nu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, other = %f, cosmic muon = %f, cosmic other = %f\n", numPFPsBeforeDLNuE.nuEElectron, numPFPsBeforeDLNuE.nuEOther, numPFPsBeforeDLNuE.electron, numPFPsBeforeDLNuE.proton, numPFPsBeforeDLNuE.muon, numPFPsBeforeDLNuE.pi0, numPFPsBeforeDLNuE.chargedPi, numPFPsBeforeDLNuE.other, numPFPsBeforeDLNuE.cosmicMuon, numPFPsBeforeDLNuE.cosmicOther);
