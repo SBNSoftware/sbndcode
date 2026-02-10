@@ -117,6 +117,7 @@ typedef struct{
     TH1F* cosmicOther;
     TH1F* pi0;
     TH1F* chargedPi;
+    TH1F* photon;
     TH1F* other;
     TH1F* nuEOther;
 } splitPFPHistGroup_struct;
@@ -130,6 +131,7 @@ struct pfpCounter_struct{
     double cosmicOther = 0;
     double pi0 = 0;
     double chargedPi = 0;
+    double photon = 0;
     double other = 0;
     double nuEOther = 0;
 };
@@ -237,6 +239,7 @@ splitPFPHistGroup_struct createSplitPFPHistGroup(const std::string& baseName, co
         (TH1F*) base->Clone((baseName + "_cosmicOther").c_str()),
         (TH1F*) base->Clone((baseName + "_pi0").c_str()),
         (TH1F*) base->Clone((baseName + "_chargedPi").c_str()),
+        (TH1F*) base->Clone((baseName + "_photon").c_str()),
         (TH1F*) base->Clone((baseName + "_other").c_str()),
         (TH1F*) base->Clone((baseName + "_otherNuE").c_str())
     };
@@ -322,7 +325,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     else
         hists.canvas->SetLogy(0);
 
-    std::vector<TH1F*> allHists = {hists.electron, hists.nuEElectron, hists.proton, hists.muon, hists.cosmicMuon, hists.cosmicOther, hists.pi0, hists.chargedPi, hists.other, hists.nuEOther};
+    std::vector<TH1F*> allHists = {hists.electron, hists.nuEElectron, hists.proton, hists.muon, hists.cosmicMuon, hists.cosmicOther, hists.pi0, hists.chargedPi, hists.photon, hists.other, hists.nuEOther};
 
     if (useLogScale) {
         for (auto* hist : allHists) {
@@ -354,6 +357,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     hists.cosmicOther->SetLineWidth(2); hists.cosmicOther->SetLineColor(TColor::GetColor("#ff5e02"));
     hists.pi0->SetLineWidth(2);         hists.pi0->SetLineColor(TColor::GetColor("#1845fb"));
     hists.chargedPi->SetLineWidth(2);   hists.chargedPi->SetLineColor(TColor::GetColor("#c849a9"));
+    hists.photon->SetLineWidth(2);      hists.photon->SetLineColor(TColor::GetColor("#7a21dd"));
     hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
     hists.nuEOther->SetLineWidth(2);    hists.nuEOther->SetLineColor(TColor::GetColor("#a96b59"));
 
@@ -389,10 +393,11 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     hists.cosmicOther->Draw("histsame");
     hists.pi0->Draw("histsame");
     hists.chargedPi->Draw("histsame");
+    hists.photon->Draw("histsame");
     hists.other->Draw("histsame");
     hists.nuEOther->Draw("histsame");
 
-    int nEntries = 10;
+    int nEntries = 11;
     double height = std::max(0.03 * nEntries, 0.03);
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
 
@@ -411,6 +416,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     legend->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
     legend->AddEntry(hists.pi0, "Neutral Pion", "f");
     legend->AddEntry(hists.chargedPi, "Charged Pion", "f");
+    legend->AddEntry(hists.photon, "Photon", "f");
     legend->AddEntry(hists.other, "Other", "f");
     legend->AddEntry(hists.nuEOther, "#nu+e Other", "f");
     legend->SetTextSize(0.0225);
@@ -436,6 +442,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     stack->Add(hists.cosmicOther);
     stack->Add(hists.pi0);
     stack->Add(hists.chargedPi);
+    stack->Add(hists.photon);
     stack->Add(hists.other);
     stack->Add(hists.nuEOther);
 
@@ -482,6 +489,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     legendStack->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
     legendStack->AddEntry(hists.pi0, "Neutral Pion", "f");
     legendStack->AddEntry(hists.chargedPi, "Charged Pion", "f");
+    legendStack->AddEntry(hists.photon, "Photon", "f");
     legendStack->AddEntry(hists.other, "Other", "f");
     legendStack->AddEntry(hists.nuEOther, "#nu+e Other", "f");
     legendStack->SetTextSize(0.0225);
@@ -1915,7 +1923,12 @@ void nuEBackgroundSignalCut_macro(){
         base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_etheta2Sum_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_etheta2SumCuts.txt";
     }
-   
+ 
+    // If the directory already exists, delete everything in it
+    // If the directory doesn't exists, create it. 
+    if (!gSystem->AccessPathName(base_path.c_str())) {
+        gSystem->Exec(Form("rm -rf %s/*", base_path.c_str()));
+    }
     gSystem->mkdir(base_path.c_str(), kTRUE);
 
     std::string tableFileName = base_path + "table.txt";
@@ -2374,7 +2387,6 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPs_splitBDT = createSplitHistGroup("trackscoreAllPFPs_splitBDT", "Trackscore of All PFPs in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitBDT = createSplitHistGroup("trackscoreHighestScorePFPs_splitBDT", "Trackscore of the PFP with the Highest Trackscore in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
 
-    auto trackscoreAllPFPs_splitPFPBDT = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPBDT", "Trackscore of All PFPs in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
 
     // DL Uboone
     auto sliceCompleteness_splitDLUboone = createSplitHistGroup("sliceCompleteness_splitDLUboone", "Slice Completeness: DL Uboone Vertexing", "Completeness", 102, 0, 1.02);
@@ -2394,7 +2406,6 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPs_splitDLUboone = createSplitHistGroup("trackscoreAllPFPs_splitDLUboone", "Trackscore of All PFPs in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLUboone = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLUboone", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
     
-    auto trackscoreAllPFPs_splitPFPDLUboone = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPDLUboone", "Trackscore of All PFPs in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
 
     // DL Nu+E
     auto sliceCompleteness_splitDLNuE = createSplitHistGroup("sliceCompleteness_splitDLNuE", "Slice Completeness: DL Nu+E Vertexing", "Completeness", 102, 0, 1.02);
@@ -2414,14 +2425,62 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPs_splitDLNuE = createSplitHistGroup("trackscoreAllPFPs_splitDLNuE", "Trackscore of All PFPs in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLNuE = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLNuE", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     
-    auto trackscoreAllPFPs_splitPFPDLNuE = createSplitPFPHistGroup("trackscoreAllPFPs_splitPFPDLNuE", "Trackscore of All PFPs in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
-
     auto recoX_low_splitDLNuE = createSplitHistGroup("recoX_low_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
     auto recoX_high_splitDLNuE = createSplitHistGroup("recoX_high_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
     auto recoY_low_splitDLNuE = createSplitHistGroup("recoY_low_splitDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 68, -204, -170);
     auto recoY_high_splitDLNuE = createSplitHistGroup("recoY_high_splitDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 128, 140, 204);
     auto recoZ_low_splitDLNuE = createSplitHistGroup("recoZ_low_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 0, 50);
     auto recoZ_high_splitDLNuE = createSplitHistGroup("recoZ_high_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 460, 510);
+    
+    // Plots split up into true pdg of highest energy PFP in slice
+    // BDT Vertexing
+    auto sliceCompleteness_splitPFPBDT = createSplitPFPHistGroup("sliceCompleteness_splitPFPBDT", "Slice Completeness: BDT Vertexing", "Completeness", 102, 0, 1.02);
+    auto slicePurity_splitPFPBDT = createSplitPFPHistGroup("slicePurity_splitPFPBDT", "Slice Purity: BDT Vertexing", "Purity", 102, 0, 1.02);
+    auto sliceCRUMBSScore_splitPFPBDT = createSplitPFPHistGroup("sliceCRUMBSScore_splitPFPBDT", "CRUMBS Score of the Slice: BDT Vertexing", "CRUMBS Score", 25, -1, 1);
+    auto sliceNumPFPs_splitPFPBDT = createSplitPFPHistGroup("sliceNumPFPs_splitPFPBDT", "Number of PFPs in the Slice: BDT Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitPFPBDT = createSplitPFPHistGroup("sliceNumPrimaryPFPs_splitPFPBDT", "Number of Primary PFPs in the Slice: BDT Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitPFPBDT = createSplitPFPHistGroup("sliceNumNeutrinos_splitPFPBDT", "Number of Reco Neutrinos in the Slice: BDT Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
+
+    auto ERecoSumThetaReco_splitPFPBDT = createSplitPFPHistGroup("ERecoSumThetaReco_splitPFPBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+    auto ERecoHighestThetaReco_splitPFPBDT = createSplitPFPHistGroup("ERecoHighestThetaReco_splitPFPBDT", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: BDT Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+
+    auto QSquaredHighest_splitPFPBDT = createSplitPFPHistGroup("QSquaredHighest_splitPFPBDT", "Q^{2} Using Highest Energy PFP in Slice: BDT Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredSum_splitPFPBDT = createSplitPFPHistGroup("QSquaredSum_splitPFPBDT", "Q^{2} Using Sum of PFP Energies in Slice: BDT Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+
+    auto trackscoreHighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPBDT", "Trackscore of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Trackscore", 20, 0, 1);
+
+    // DL Uboone Vertexing
+    auto sliceCompleteness_splitPFPDLUboone = createSplitPFPHistGroup("sliceCompleteness_splitPFPDLUboone", "Slice Completeness: DL Uboone Vertexing", "Completeness", 102, 0, 1.02);
+    auto slicePurity_splitPFPDLUboone = createSplitPFPHistGroup("slicePurity_splitPFPDLUboone", "Slice Purity: DL Uboone Vertexing", "Purity", 102, 0, 1.02);
+    auto sliceCRUMBSScore_splitPFPDLUboone = createSplitPFPHistGroup("sliceCRUMBSScore_splitPFPDLUboone", "CRUMBS Score of the Slice: DL Uboone Vertexing", "CRUMBS Score", 25, -1, 1);
+    auto sliceNumPFPs_splitPFPDLUboone = createSplitPFPHistGroup("sliceNumPFPs_splitPFPDLUboone", "Number of PFPs in the Slice: DL Uboone Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitPFPDLUboone = createSplitPFPHistGroup("sliceNumPrimaryPFPs_splitPFPDLUboone", "Number of Primary PFPs in the Slice: DL Uboone Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitPFPDLUboone = createSplitPFPHistGroup("sliceNumNeutrinos_splitPFPDLUboone", "Number of Reco Neutrinos in the Slice: DL Uboone Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
+
+    auto ERecoSumThetaReco_splitPFPDLUboone = createSplitPFPHistGroup("ERecoSumThetaReco_splitPFPDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+    auto ERecoHighestThetaReco_splitPFPDLUboone = createSplitPFPHistGroup("ERecoHighestThetaReco_splitPFPDLUboone", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Uboone Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+
+    auto QSquaredHighest_splitPFPDLUboone = createSplitPFPHistGroup("QSquaredHighest_splitPFPDLUboone", "Q^{2} Using Highest Energy PFP in Slice: DL Uboone Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredSum_splitPFPDLUboone = createSplitPFPHistGroup("QSquaredSum_splitPFPDLUboone", "Q^{2} Using Sum of PFP Energies in Slice: DL Uboone Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+
+    auto trackscoreHighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPDLUboone", "Trackscore of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
+
+    // DL Nu+E Vertexing
+    auto sliceCompleteness_splitPFPDLNuE = createSplitPFPHistGroup("sliceCompleteness_splitPFPDLNuE", "Slice Completeness: DL Nu+E Vertexing", "Completeness", 102, 0, 1.02);
+    auto slicePurity_splitPFPDLNuE = createSplitPFPHistGroup("slicePurity_splitPFPDLNuE", "Slice Purity: DL Nu+E Vertexing", "Purity", 102, 0, 1.02);
+    auto sliceCRUMBSScore_splitPFPDLNuE = createSplitPFPHistGroup("sliceCRUMBSScore_splitPFPDLNuE", "CRUMBS Score of the Slice: DL Nu+E Vertexing", "CRUMBS Score", 25, -1, 1);
+    auto sliceNumPFPs_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumPFPs_splitPFPDLNuE", "Number of PFPs in the Slice: DL Nu+E Vertexing", "Number of PFPs", 20, 0, 20);
+    auto sliceNumPrimaryPFPs_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumPrimaryPFPs_splitPFPDLNuE", "Number of Primary PFPs in the Slice: DL Nu+E Vertexing", "Number of Primary PFPs", 20, 0, 20);
+    auto sliceNumNeutrinos_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumNeutrinos_splitPFPDLNuE", "Number of Reco Neutrinos in the Slice: DL Nu+E Vertexing", "Number of Reco Neutrinos", 10, 0, 10);
+
+    auto ERecoSumThetaReco_splitPFPDLNuE = createSplitPFPHistGroup("ERecoSumThetaReco_splitPFPDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+    auto ERecoHighestThetaReco_splitPFPDLNuE = createSplitPFPHistGroup("ERecoHighestThetaReco_splitPFPDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
+
+    auto QSquaredHighest_splitPFPDLNuE = createSplitPFPHistGroup("QSquaredHighest_splitPFPDLNuE", "Q^{2} Using Highest Energy PFP in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+    auto QSquaredSum_splitPFPDLNuE = createSplitPFPHistGroup("QSquaredSum_splitPFPDLNuE", "Q^{2} Using Sum of PFP Energies in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
+
+    auto trackscoreHighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPDLNuE", "Trackscore of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
+
 
     double xMin = -201.3; double xMax = 201.3;
     double yMin = -203.8; double yMax = 203.8;
@@ -2634,7 +2693,12 @@ void nuEBackgroundSignalCut_macro(){
     eventCounter_struct numEventCutWithoutWeightingDLNuE;
     eventCounter_struct numEventBeforeCutWithoutWeightingDLNuE;
 
-    pfpCounter_struct numPFPsBeforeDLNuE;
+    //pfpCounter_struct numPFPsBeforeDLNuE;
+
+    pfpCounter_struct numSlicesHighestPFPBeforeDLNuE;
+    pfpCounter_struct numSlicesHighestPFPBeforeWeightedDLNuE;
+    pfpCounter_struct numSlicesHighestPFPAfterDLNuE;
+    pfpCounter_struct numSlicesHighestPFPAfterWeightedDLNuE;
 
     double numSignal_afterCut_DLNuE = 0;
     double numSignalFuzzy_afterCut_DLNuE = 0;
@@ -2713,6 +2777,9 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_purity = -999999;
                 double highestEnergy_trackscore = -999999;
                 double highestEnergy_primary = -999999;
+                double highestEnergy_truePDG = -999999;
+                double highestEnergy_trueOrigin = -999999;
+                double highestEnergy_trueInt = -999999;
 
                 double highestTrackscore = -999999;
 
@@ -2758,6 +2825,9 @@ void nuEBackgroundSignalCut_macro(){
                                     highestEnergy_purity = reco_particlePurity->at(pfp);
                                     highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
                                     highestEnergy_primary = reco_particleIsPrimary->at(pfp);
+                                    highestEnergy_truePDG = reco_particleTruePDG->at(pfp);
+                                    highestEnergy_trueOrigin = reco_particleTrueOrigin->at(pfp);
+                                    highestEnergy_trueInt = reco_particleTrueInteractionType->at(pfp);
                                 }
 
                                 if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2779,6 +2849,9 @@ void nuEBackgroundSignalCut_macro(){
                                 highestEnergy_purity = reco_particlePurity->at(pfp);
                                 highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
                                 highestEnergy_primary = reco_particleIsPrimary->at(pfp);
+                                highestEnergy_truePDG = reco_particleTruePDG->at(pfp);
+                                highestEnergy_trueOrigin = reco_particleTrueOrigin->at(pfp);
+                                highestEnergy_trueInt = reco_particleTrueInteractionType->at(pfp);
                             }
                                 
                             if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2937,6 +3010,9 @@ void nuEBackgroundSignalCut_macro(){
                     //std::cout << "No event type assigned" << std::endl;                
                     sliceEventType = 8;
                 }
+
+
+                // Counter here
 
                 // Applying cuts here
                 if(DLCurrent == 2){
@@ -3859,6 +3935,8 @@ void nuEBackgroundSignalCut_macro(){
 
                 // Looping through PFPs
                 // Assigning category to PFPs
+                // THIS SECTION OF CODE ISN'T REALLY USED
+                /*
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                         double pfpCategory = -999999;
@@ -3912,196 +3990,833 @@ void nuEBackgroundSignalCut_macro(){
 
                         // Categories: nu+e electron = 1, electron = 2, proton = 3, muon = 4, cosmic muon = 5, cosmic other = 6, pi0 = 7
                         // charged pion = 8, other = 9, other from nu+e = 10
-                    
-                        // PLOTS HERE
-                        if(pfpCategory == 1){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
-                                        trackscoreAllPFPsPFP.currentSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
-                                        trackscoreAllPFPsPFP.currentSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    }
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
-                                        trackscoreAllPFPsPFP.ubooneSignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
-                                        trackscoreAllPFPsPFP.ubooneSignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    }
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.nuEElectron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                                        // slice is a nu+e elastic scatter with completeness > 0.5 and PFP is truth-matched to a recoil electron
-                                        trackscoreAllPFPsPFP.nuESignal->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
-                                        trackscoreAllPFPsPFP.nuESignalFuzzy->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    }
-                                }
-                            }
-                        } else if(pfpCategory == 2){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.electron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.electron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.electron->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 3){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.proton->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.proton->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.proton->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 4){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.muon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.muon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.muon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 5){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.cosmicMuon->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuECosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 6){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneCosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.cosmicOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuECosmic->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 7){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.pi0->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 8){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.chargedPi->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 9){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.other->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.other->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.other->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        } else if(pfpCategory == 10){
-                            if(DLCurrent == 2){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPBDT.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.currentBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 0){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLUboone.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.ubooneBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            } else if(DLCurrent == 5){
-                                if(reco_particleTrackScore->at(pfp) != -999999){
-                                    trackscoreAllPFPs_splitPFPDLNuE.nuEOther->Fill(reco_particleTrackScore->at(pfp), weight);
-                                    trackscoreAllPFPsPFP.nuEBNB->Fill(reco_particleTrackScore->at(pfp), weight);
-                                }
-                            }
-                        }
                     }
                 } 
+                */
+
+                // Filling Split (By PFP) Histograms
+                if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1){
+                    // nu+e electron
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.nuEElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.nuEElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.nuEElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.nuEElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.nuEElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.nuEElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.nuEElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.nuEElectron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.nuEElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.nuEElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.nuEElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.nuEElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.nuEElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.nuEElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.nuEElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.nuEElectron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.nuEElectron++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.nuEElectron += weight;
+                        sliceCompleteness_splitPFPDLNuE.nuEElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.nuEElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.nuEElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.nuEElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.nuEElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.nuEElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.nuEElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.nuEElectron->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1){
+                    // something from the nu+e that isn't an electron
+                    std::cout << "Nu+E Other, True PDG = " << highestEnergy_truePDG << std::endl;
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.nuEOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.nuEOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.nuEOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.nuEOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.nuEOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.nuEOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.nuEOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.nuEOther->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.nuEOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.nuEOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.nuEOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.nuEOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.nuEOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.nuEOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.nuEOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.nuEOther->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.nuEOther++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.nuEOther += weight;
+                        sliceCompleteness_splitPFPDLNuE.nuEOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.nuEOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.nuEOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.nuEOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.nuEOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.nuEOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.nuEOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.nuEOther->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueOrigin == 1){
+                    // Electron/Positron from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.electron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.electron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.electron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.electron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.electron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.electron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.electron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.electron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.electron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.electron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.electron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.electron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.electron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.electron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.electron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.electron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.electron++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.electron += weight;
+                        sliceCompleteness_splitPFPDLNuE.electron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.electron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.electron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.electron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.electron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.electron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.electron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.electron->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 2212 && highestEnergy_trueOrigin == 1){
+                    // Proton/Antiproton from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.proton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.proton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.proton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.proton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.proton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.proton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.proton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.proton->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.proton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.proton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.proton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.proton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.proton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.proton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.proton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.proton->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.proton++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.proton += weight;
+                        sliceCompleteness_splitPFPDLNuE.proton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.proton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.proton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.proton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.proton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.proton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.proton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.proton->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+
+                    if(highestEnergy_truePDG == -2212) std::cout << "antiproton" << std::endl;
+                } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 1){
+                    // Muon/Antimuon from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.muon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.muon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.muon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.muon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.muon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.muon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.muon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.muon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.muon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.muon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.muon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.muon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.muon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.muon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.muon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.muon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.muon++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.muon += weight;
+                        sliceCompleteness_splitPFPDLNuE.muon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.muon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.muon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.muon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.muon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.muon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.muon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.muon->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 111 && highestEnergy_trueOrigin == 1){
+                    // Pi0 from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.pi0->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.pi0->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.pi0->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.pi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.pi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.pi0->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.pi0->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.pi0->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.pi0->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.pi0->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.pi0->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.pi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.pi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.pi0->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.pi0->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.pi0->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.pi0++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.pi0 += weight;
+                        sliceCompleteness_splitPFPDLNuE.pi0->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.pi0->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.pi0->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.pi0->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.pi0->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.pi0->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.pi0->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.pi0->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 211 && highestEnergy_trueOrigin == 1){
+                    // Charged Pi from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.chargedPi->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.chargedPi->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.chargedPi->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.chargedPi->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.chargedPi->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.chargedPi->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.chargedPi->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.chargedPi->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.chargedPi->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.chargedPi->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.chargedPi->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.chargedPi->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.chargedPi->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.chargedPi->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.chargedPi->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.chargedPi->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.chargedPi++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.chargedPi += weight;
+                        sliceCompleteness_splitPFPDLNuE.chargedPi->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.chargedPi->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.chargedPi->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.chargedPi->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.chargedPi->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.chargedPi->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.chargedPi->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.chargedPi->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 22 && highestEnergy_trueOrigin == 1){
+                    // Photon from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.photon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.photon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.photon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.photon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.photon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.photon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.photon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.photon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.photon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.photon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.photon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.photon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.photon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.photon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.photon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.photon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.photon++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.photon += weight;
+                        sliceCompleteness_splitPFPDLNuE.photon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.photon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.photon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.photon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.photon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.photon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.photon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.photon->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(highestEnergy_trueOrigin == 1){
+                    // Something else from a beam neutrino
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.other->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.other->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.other->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.other->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.other++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.other += weight;
+                        sliceCompleteness_splitPFPDLNuE.other->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.other->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.other->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.other->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.other->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.other->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.other->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.other->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                    std::cout << "Beam Other, True PDG = " << highestEnergy_truePDG << std::endl; 
+                } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 2){
+                    // Muon/Antimuon from cosmic origin
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.cosmicMuon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.cosmicMuon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.cosmicMuon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.cosmicMuon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.cosmicMuon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.cosmicMuon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.cosmicMuon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.cosmicMuon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.cosmicMuon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.cosmicMuon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.cosmicMuon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.cosmicMuon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.cosmicMuon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.cosmicMuon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.cosmicMuon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.cosmicMuon->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.cosmicMuon++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.cosmicMuon += weight;
+                        sliceCompleteness_splitPFPDLNuE.cosmicMuon->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.cosmicMuon->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.cosmicMuon->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.cosmicMuon->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.cosmicMuon->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.cosmicMuon->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.cosmicMuon->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.cosmicMuon->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                } else if(highestEnergy_trueOrigin == 2){
+                    // Something else from cosmic origin
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.cosmicOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.cosmicOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.cosmicOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.cosmicOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.cosmicOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.cosmicOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.cosmicOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.cosmicOther->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.cosmicOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.cosmicOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.cosmicOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.cosmicOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.cosmicOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.cosmicOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.cosmicOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.cosmicOther->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.cosmicOther++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther += weight;
+                        sliceCompleteness_splitPFPDLNuE.cosmicOther->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.cosmicOther->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.cosmicOther->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.cosmicOther->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.cosmicOther->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.cosmicOther->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.cosmicOther->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.cosmicOther->Fill(Q2SumValue, weight);
+                        }
+
+                    }
+                    std::cout << "Cosmic Other, True PDG = " << highestEnergy_truePDG << std::endl;
+                }
+
+
 
                 // Filling Split Histograms
                 if(sliceEventType == 0){
@@ -7170,8 +7885,6 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(trackscoreAllPFPs_splitBDT, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreHighestScorePFPs_splitBDT, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPBDT, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
-
     // DL Uboone Vertexing
     styleDrawSplit(sliceCompleteness_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(slicePurity_splitDLUboone, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -7187,8 +7900,6 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(trackscoreAllPFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(trackscoreHighestScorePFPs_splitDLUboone, 999, 999, 999, 999, (base_path + "trackscoreHighestScorePFPs_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     
-    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
-        
     // DL Nu+E Vertexing
     styleDrawSplit(sliceCompleteness_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
     styleDrawSplit(slicePurity_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
@@ -7209,8 +7920,46 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(recoY_high_splitDLNuE, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
     styleDrawSplit(recoZ_low_splitDLNuE, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(recoZ_high_splitDLNuE, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted_splitDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
-    
-    styleDrawPFPSplit(trackscoreAllPFPs_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "trackscoreAllPFPs_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+   
+    // Plotting split histograms (by PFP)
+    // BDT
+    styleDrawPFPSplit(sliceCompleteness_splitPFPBDT, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(slicePurity_splitPFPBDT, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceCRUMBSScore_splitPFPBDT, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPFPs_splitPFPBDT, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPrimaryPFPs_splitPFPBDT, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumNeutrinos_splitPFPBDT, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredHighest_splitPFPBDT, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredSum_splitPFPBDT, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoSumThetaReco_splitPFPBDT, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPBDT, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+
+    // DL Uboone
+    styleDrawPFPSplit(sliceCompleteness_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(slicePurity_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceCRUMBSScore_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPFPs_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPrimaryPFPs_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumNeutrinos_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredHighest_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredSum_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoSumThetaReco_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+
+    // DL Nu+E
+    styleDrawPFPSplit(sliceCompleteness_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(slicePurity_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceCRUMBSScore_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPFPs_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumPrimaryPFPs_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceNumNeutrinos_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredHighest_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(QSquaredSum_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoSumThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
 
     printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, numEvents_BDTBNB, numEvents_BDTNuE);
     printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
@@ -7650,7 +8399,9 @@ void nuEBackgroundSignalCut_macro(){
         out_tablefile << "" << std::endl;
     }
 
-    printf("\nNumber of: nu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, other = %f, cosmic muon = %f, cosmic other = %f\n", numPFPsBeforeDLNuE.nuEElectron, numPFPsBeforeDLNuE.nuEOther, numPFPsBeforeDLNuE.electron, numPFPsBeforeDLNuE.proton, numPFPsBeforeDLNuE.muon, numPFPsBeforeDLNuE.pi0, numPFPsBeforeDLNuE.chargedPi, numPFPsBeforeDLNuE.other, numPFPsBeforeDLNuE.cosmicMuon, numPFPsBeforeDLNuE.cosmicOther);
+    //printf("\nAll PFPs in Slices:\nNumber of: nu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, other = %f, cosmic muon = %f, cosmic other = %f\n", numPFPsBeforeDLNuE.nuEElectron, numPFPsBeforeDLNuE.nuEOther, numPFPsBeforeDLNuE.electron, numPFPsBeforeDLNuE.proton, numPFPsBeforeDLNuE.muon, numPFPsBeforeDLNuE.pi0, numPFPsBeforeDLNuE.chargedPi, numPFPsBeforeDLNuE.other, numPFPsBeforeDLNuE.cosmicMuon, numPFPsBeforeDLNuE.cosmicOther);
+    printf("\n\nHighest Energy PFP in Slices After Cuts (Unweighted):\nnu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, photon = %f, other = %f, cosmic muons = %f, cosmic other = %f\n", numSlicesHighestPFPAfterDLNuE.nuEElectron, numSlicesHighestPFPAfterDLNuE.nuEOther, numSlicesHighestPFPAfterDLNuE.electron, numSlicesHighestPFPAfterDLNuE.proton, numSlicesHighestPFPAfterDLNuE.muon, numSlicesHighestPFPAfterDLNuE.pi0, numSlicesHighestPFPAfterDLNuE.chargedPi, numSlicesHighestPFPAfterDLNuE.photon, numSlicesHighestPFPAfterDLNuE.other, numSlicesHighestPFPAfterDLNuE.cosmicMuon, numSlicesHighestPFPAfterDLNuE.cosmicOther);
+    printf("\n\nHighest Energy PFP in Slices After Cuts (Weighted):\nnu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, photon = %f, other = %f, cosmic muons = %f, cosmic other = %f\n", numSlicesHighestPFPAfterWeightedDLNuE.nuEElectron, numSlicesHighestPFPAfterWeightedDLNuE.nuEOther, numSlicesHighestPFPAfterWeightedDLNuE.electron, numSlicesHighestPFPAfterWeightedDLNuE.proton, numSlicesHighestPFPAfterWeightedDLNuE.muon, numSlicesHighestPFPAfterWeightedDLNuE.pi0, numSlicesHighestPFPAfterWeightedDLNuE.chargedPi, numSlicesHighestPFPAfterWeightedDLNuE.photon, numSlicesHighestPFPAfterWeightedDLNuE.other, numSlicesHighestPFPAfterWeightedDLNuE.cosmicMuon, numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther);
 
     //printf("\nNum Nu+E from slice category = %f, num Nu+E from int type = %f\n", numNuESliceCategory_DLNuE, numNuEIntType_DLNuE);
     //printf("Num nu+e with completeness > 0.5 = %f, num nu+e in else = %f\n", numNuESliceCategoryPassed_DLNuE, numNuESliceCategoryElse_DLNuE);
