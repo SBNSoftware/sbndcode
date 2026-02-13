@@ -13,7 +13,7 @@
  * the SBN Document 43891-v1 in the SBN Document Database.
  * @note A Python version of the binary decoding is available for testing purposes. You can find 
  * it [here: V1740 binary decoder](https://github.com/aliciavr/V1740_binary_decoder).
- * @version 4.0
+ * @version 5.0
  */
 
 #include "art/Framework/Core/EDProducer.h"
@@ -493,7 +493,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
       }
       append_waveforms(wvfms, fragment_wvfms, num_channels);
       appended_samples = wvfms[0].size() - num_nominal_samples_per_wvfm;
-      std::cout << "APPENDED_SAMPLES = " << appended_samples << std::endl;
       
       if (last_one) {
         if (fdebug_extended_fragments) std::cout << "\t\t LAST fragment " << std::endl;
@@ -572,16 +571,10 @@ void sbndaq::SBNDXARAPUCADecoder::shift_time(uint64_t TTT_ticks, int64_t TTT_end
   int64_t appended_ns = static_cast<int64_t>(appended_samples) * static_cast<int64_t>(fns_per_sample); // this is just for the debug output.
 
   // If an frameshift timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
-  std::cout << " NUM SAMPLES PER WVFM = " << num_samples_per_wvfm << std::endl;
-  std::cout << " APPENDED WAVEFORM SAMPLES = " << appended_samples << std::endl;
   if (factive_timing_frame != CAEN_ONLY_TIMING) {
     ref_timestamp = signed_difference_UTC_timestamp(TTT_UNIX_timestamp, timestamp); // ns.
-    std::cout << " REF TIMESTAMP: " << ref_timestamp << std::endl;
     ini_wvfm_timestamp = (ref_timestamp - pulse_duration_ns) * NANOSEC_TO_MICROSEC; // us.
-    std::cout << " END TIMESTAMP: " << end_wvfm_timestamp << std::endl;
-    std::cout << "appended_samples * fns_per_sample = " << appended_samples * fns_per_sample << std::endl;
     end_wvfm_timestamp = (ref_timestamp + appended_ns) * NANOSEC_TO_MICROSEC; // us.
-    std::cout << " END TIMESTAMP: " << end_wvfm_timestamp << std::endl;
   } else {
     ref_timestamp = TTT_UNIX_timestamp; // ns.
 
@@ -589,8 +582,6 @@ void sbndaq::SBNDXARAPUCADecoder::shift_time(uint64_t TTT_ticks, int64_t TTT_end
     end_wvfm_timestamp = ((ref_timestamp + appended_ns)% NANOSEC_IN_SEC) * NANOSEC_TO_MICROSEC; // us.
   }
   appended_samples = 0;
-  std::cout << " NUM SAMPLES PER WVFM = " << num_samples_per_wvfm << std::endl;
-  std::cout << " APPENDED WAVEFORM SAMPLES = " << appended_samples << std::endl;
   if (fdebug_timing) {
     std::cout << std::fixed << std::setprecision(0);
     std::cout << "\t\t ns/tick = " << NANOSEC_PER_TICK << ", ns/sample = " << fns_per_sample << std::endl;
