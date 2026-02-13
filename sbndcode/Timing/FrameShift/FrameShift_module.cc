@@ -293,7 +293,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
       //Pick default stream -- ETRIG
       _frame_default        = _frame_etrig;
       _timing_type_default  = _timing_type_etrig;
-      _timing_channel_etrig = _timing_channel_etrig;
+      _timing_channel_default = _timing_channel_etrig;
     }
 
   if(fDebugFrame)
