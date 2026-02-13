@@ -14,32 +14,26 @@ xarapucadecoder:
     fragment_id_offset: 41216                                   # Offset to be applied to the fragment IDs (0xA100).
     board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
     # - Timing configuration.
-    timing_priority: 0                                          # 0 SPEC-TDC ETRIG, 1 PTB HLT (1-5, 14,15), 2 CAEN-only. 
     ns_per_sample: 16                                           # Nanoseconds per sample.
-    # - RAW timestamp configuration:
-    raw_event_header_product_name: "daq"                        # Label identifying the module that created the artdaq::detail::RawEventHeader data product.
-    raw_trig_max_diff: 3000000                                  # Maximum difference (in ns) allowed between trigger timestamps and raw timestamp.
-    raw_timestamp_correction: 367000                            # Correction (in ns) to be applied to the raw timestamp.
-    # - SPEC-TDC access configuration
-    spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products (if any).
-    spectdc_ftrig_ch: 3                                         # Channel assigned to flash triggers.
-    spectdc_etrig_ch: 4                                         # Channel assigned to ETT (Event Trigger Timestamp) triggers.
-    # - PTB access configuration
-    ptb_product_name: "ptbdecoder"                              # Name for getting PTB Decoder products (if any).
-    allowed_hl_triggers: [1, 2, 3, 4, 5, 14, 15]                # List of allowed HLT trigger types (1-5, 14, 15).
+    # - FrameShift access configuration
+    frameshift_product_name: "frameshift"                       # Name for getting FrameShift module products (if any). 
 
     # OUTPUT configuration:
     # - Output data product instance name.
     waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
     timing_ref_instance_name: ""                                # Name for the instance product containing the timing reference information.
     store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
+    # Combination of extended fragments.
+    combine_ext_frag: true                                      # (De)activates the combination of extended fragments into a single raw::OpDetWaveform object.
+    allowed_jittering: 64                                       # Allowed jittering (in ns) between fragments to be combined.
     # - Debug options.
-    debug_tdc_handle: false                                     # (De)activates SPEC-TDC art::Handle information printing.
-    debug_ptb_handle: false                                     # (De)activates PTB art::Handle information printing.
+    debug_frameshift_handle: false                              # (De)activates FrameShift art::Handle information printing.
     debug_fragments_handle: false                               # (De)activates V1740B CAEN fragments art::Handle information printing.
     debug_timing: false                                         # (De)activates timing data printing.
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
+    debug_extended_fragments: false                             # (De)activates extended fragments information printing.
+    debug_jittering: false                                      # (De)activates trigger jittering information printing.
     # - Verbose option.
     verbose: false                                              # (De)activates verbosity.
 }
