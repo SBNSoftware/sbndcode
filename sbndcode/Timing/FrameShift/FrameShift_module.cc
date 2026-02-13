@@ -92,14 +92,10 @@ private:
                                        // TODO: Derive this value and verify if it is consistent across pmt/crt
                                        // TODO: Get this value from database instead of fhicl parameter
   uint64_t fShiftTdcRwm2PtbGate;       // Value to move Tdc RWM (ch2) frame to agree with HLT Gate Frame
-                                       // This is derived by subtracting: TDC RWM - HLT Gate.
-                                       // Using the MC2025B dataset, this distribution has a mean of 1738 ns and std of 9 ns.
                                        // TODO: Get this value from database instead of fhicl parameter
   uint64_t fShiftTdcEtrig2PtbEtrig;    // Value to move Tdc Etrig (ch4) to agree with HLT ETRIG
-                                       // TODO: Derive + edit fcl
                                        // TODO: Get from database
   uint64_t fShiftTdcCrtt12PtbCrtt1;    // Value to move Tdc Crt T1 Reset (ch0) to agree with HLT CRT T1
-                                       // TODO: Derive + edit fcl
                                        // TODO: Get from database
   bool fMakeTree;                      // Whether to produce a TTree in the hist file
   bool fDebugDAQHeader;                // Whether to print debug statements relevant to DAQ header
@@ -132,6 +128,7 @@ private:
   std::vector<uint64_t> _tdc_ch0;                  // Stores all the timestamps recorded in the TDC channel 0 (CRT T1)
   std::vector<uint64_t> _tdc_ch1;                  // Stores all the timestamps recorded in the TDC channel 1 (BES)
   std::vector<uint64_t> _tdc_ch2;                  // Stores all the timestamps recorded in the TDC channel 2 (RWM)
+  //std::vector<uint64_t> _tdc_ch3;                  // Stores all the timestamps recorded in the TDC channel 3 (Flash trigger)
   std::vector<uint64_t> _tdc_ch4;                  // Stores all the timestamps recorded in the TDC channel 4 (Event trigger)
 
   uint64_t _tdc_crtt1_ts;                          // Stores the TDC CRT T1 timestamp, once we've decided which one was closest to the DAQ header timestamp
@@ -175,10 +172,10 @@ sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fBeamGateHlt = p.get<int>("BeamGateHlt");
   fOffbeamGateHlt = p.get<int>("OffbeamGateHlt");
   fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel");
-  fShiftData2MC = p.get<uint64_t>("ShiftData2MC"); //TODO: Define this parameter + Get from database instead of fhicl parameters
-  fShiftTdcRwm2PtbGate = p.get<uint64_t>("ShiftTdcRwm2PtbGate"); //TODO: Get from database instead of fhicl parameters
-  fShiftTdcEtrig2PtbEtrig = p.get<uint64_t>("ShiftTdcEtrig2PtbEtrig"); //TODO: Get from database instead of fhicl parameters
-  fShiftTdcCrtt12PtbCrtt1 = p.get<uint64_t>("ShiftTdcCrtt12PtbCrtt1"); //TODO: Get from database instead of fhicl parameters
+  fShiftData2MC = p.get<uint64_t>("ShiftData2MC");
+  fShiftTdcRwm2PtbGate = p.get<uint64_t>("ShiftTdcRwm2PtbGate");
+  fShiftTdcEtrig2PtbEtrig = p.get<uint64_t>("ShiftTdcEtrig2PtbEtrig");
+  fShiftTdcCrtt12PtbCrtt1 = p.get<uint64_t>("ShiftTdcCrtt12PtbCrtt1");
   fMakeTree = p.get<bool>("MakeTree", false);
   fDebugDAQHeader = p.get<bool>("DebugDAQHeader", false);
   fDebugPtb = p.get<bool>("DebugPtb", false);
@@ -201,36 +198,20 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
     std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
   GetRawTimestamp(e);
-  GetTDCTimestamps(e);
   GetPTBTimestamps(e);
+  GetTDCTimestamps(e);
   FindETRIGs();
 
   uint64_t global_etrig_ts = DecideGlobalEtrigTimestamp();
   DecideRelevantTDCTimestamps(global_etrig_ts);
   DecideRelevantPTBTimestamps(global_etrig_ts);
 
-  //-----------------------Pick default frame-----------------------//
-  // The follow picks which frame to apply at downstream stage and store it as frame_default, based on the stream
-  //
-  // 1. Beam Stream: recontruct the beam spill + porch relative to RWM record in TDC since it has better resolution. 
-  // Then, apply a constant to shift the RWM fram 
-  // i.e. frame_tdc_rwm + shift rwm to beam gate HLT 26
-  //
-  // 2. Offbeam Stream: reconstruct the porch relative to the beam gate opening frame
-  // i.e. frame_hlt_gate equiv
-  //
-  // 3. Xmuon Stream: shift to etrig
-  //
-  // TODO: Align Data Beam and Offbeam with MC with frame_data2mc
-  //    + MC: t = 0 = first proton in spill
-  //    + Data: t = 0 = abitrary. All subsystem electronics time is reference to the last PPS
-    
-  //Frame CRT T1
   if(_isBeam || _isOffbeam)
     {
+      //Frame CRT T1
       if(_tdc_crtt1_ts != kInvalidTimestamp)
         {
-          _frame_crtt1          = _tdc_crtt1_ts; //TODO: Add shift from TDC to PTB: +fShiftTdcCrtt12PtbCrtt1
+          _frame_crtt1          = _tdc_crtt1_ts - fShiftTdcCrtt12PtbCrtt1;
           _timing_type_crtt1    = kSPECTDCType;
           _timing_channel_crtt1 = 0;
         }
@@ -248,9 +229,9 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
         }
 
       //Frame Beam Gate
-      if(_isBeam && _tdc_rwm_ts != kInvalidTimestamp) // TODO: For Offbeam, I think HLT Gate is recorded in TDC as FTRIG and can be found
+      if(_isBeam && _tdc_rwm_ts != kInvalidTimestamp)
         {
-          _frame_gate          = _tdc_rwm_ts + fShiftTdcRwm2PtbGate; //TODO: Add  shift from Data to MD: + fShiftData2MC
+          _frame_gate          = _tdc_rwm_ts - fShiftTdcRwm2PtbGate; //TODO: Add  shift from Data to MD: + fShiftData2MC
           _timing_type_gate    = kSPECTDCType;
           _timing_channel_gate = 2;
         }
@@ -271,7 +252,7 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
   //Frame ETRIG
   if(_tdc_etrig_ts != kInvalidTimestamp)
     {
-      _frame_etrig          = _tdc_etrig_ts + fShiftTdcEtrig2PtbEtrig;
+      _frame_etrig          = _tdc_etrig_ts - fShiftTdcEtrig2PtbEtrig;
       _timing_type_etrig    = kSPECTDCType;
       _timing_channel_etrig = 4;
     }
@@ -288,6 +269,18 @@ void sbnd::timing::FrameShift::produce(art::Event& e)
       _timing_channel_etrig = kInvalidChannel;
     }
 
+  //-----------------------Pick default frame-----------------------//
+  // The follow picks which frame to apply at downstream stage and store it as frame_default, based on the stream
+  //
+  // 1. Beam Stream: recontruct the beam spill + porch relative to RWM record in TDC since it has better resolution. 
+  // Then, apply a constant to shift the RWM fram 
+  // i.e. frame_tdc_rwm + shift rwm to beam gate HLT 26
+  //
+  // 2. Offbeam Stream: reconstruct the porch relative to the beam gate opening frame
+  // i.e. frame_hlt_gate equiv
+  //
+  // 3. Xmuon Stream: shift to etrig
+    
   if(_isBeam || _isOffbeam)
     {
       //Pick default stream -- beam gate
@@ -407,8 +400,11 @@ void sbnd::timing::FrameShift::GetTDCTimestamps(const art::Event &e)
               _tdc_ch1.push_back(ts);
               break;
             case 2:
-              _tdc_ch2.push_back(ts);
+              _tdc_ch2.push_back(ts); 
               break;
+            //case 3:
+            //  _tdc_ch3.push_back(ts);
+            //  break;
             case 4:
               _tdc_ch4.push_back(ts);
               break;
@@ -589,6 +585,11 @@ void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(const uint64_t &globa
       std::cout << "TDC Channel 2 (RWM) Timestamp: "<< PrintFormatTimestamp(_tdc_rwm_ts) << std::endl;
       std::cout << "TDC Channel 4 (ETRIG) Timestamp: "<< PrintFormatTimestamp(_tdc_etrig_ts) << std::endl;
       std::cout << "----------------------------------------------------" << std::endl;
+      //for (size_t i = 0; i < _tdc_ch3.size(); i++)
+      //  {
+      //    std::cout << "TDC Channel 3 (FTRIG) Timestamp " << i << ": " << PrintFormatTimestamp(_tdc_ch3[i]) << std::endl;
+      //  }
+      //std::cout << "----------------------------------------------------" << std::endl;
     }
 }
 
@@ -638,7 +639,6 @@ void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &globa
     throw cet::exception("FrameShift") << "ETRIG HLT " << _hlt_etrig << " does not match any known Beam/Offbeam/Xmuon ETRIG HLT! Check data quality!";
 
   //Get Gate and CRT T1 HLT timestamps
-  //TODO: What if there is no Gate or CRT T1 HLT?
   for(size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++)
     {
       if(_ptb_hlt_trunmask[i] == _hlt_gate)
@@ -722,6 +722,7 @@ void sbnd::timing::FrameShift::ResetEventVars()
   _tdc_ch0.clear();
   _tdc_ch1.clear();
   _tdc_ch2.clear();
+  //_tdc_ch3.clear();
   _tdc_ch4.clear();
 
   _tdc_crtt1_ts = kInvalidTimestamp;
