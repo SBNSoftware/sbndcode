@@ -22,7 +22,7 @@ xarapucadecoder:
     # - Output data product instance name.
     waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
     timing_ref_instance_name: ""                                # Name for the instance product containing the timing reference information.
-    store_debug_waveforms: 2                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
+    store_debug_waveforms: 1                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # Combination of extended fragments.
     combine_ext_frag: true                                     # (De)activates the combination of extended fragments into a single raw::OpDetWaveform object.
     allowed_jittering: 64                                       # Allowed jittering (in ns) between fragments to be combined.
