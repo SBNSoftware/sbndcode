@@ -151,7 +151,7 @@ private:
   void shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp);
   bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
   bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
-  bool get_frameshift_timestamp(art::Event& e, uint64_t& timestamp, uint16_t& timing_type, uint16_t& timing_channel);
+  std::unique_ptr<raw::TimingReferenceInfo> get_frameshift_timestamp(art::Event& e, uint64_t& timestamp);
 
   // Waveforms decoding.
   void decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group);
@@ -272,6 +272,21 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
 
   if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: products initialized." << std::endl;
 
+  uint64_t timestamp = 0;           
+  
+  // ============= FRAMESHIFT MODE ============ //
+  if (auto fs_timing_ref_info = get_frameshift_timestamp(e, timestamp)) {
+    *prod_event_timing_ref_info = *fs_timing_ref_info;
+    if (fverbose | fdebug_frameshift_handle) {
+      std::cout << "\n > SBNDXARAPUCADecoder::produce: FrameShift reference, " << print_timestamp(timestamp) << ", found. Using FrameShift timing frame as reference." << std::endl;
+      std::cout << "\t FrameShift reference details: timing type: " << prod_event_timing_ref_info->timingType << ", timing channel: " << prod_event_timing_ref_info->timingChannel << "." << std::endl;
+    }
+  } else {
+    if (fverbose | fdebug_frameshift_handle) std::cout << "\n > SBNDXARAPUCADecoder::produce: FrameShift reference not found. Using CAEN-only timing frame as reference." << std::endl;
+  }
+
+
+  // ============= TIMING PRIORITY MODE ============ //
   // Gets the raw timestamp from the artdaq::RawEventHeader product.
   uint64_t corr_raw_timestamp = 0;         
   art::Handle <artdaq::detail::RawEventHeader> header_handle;
@@ -287,17 +302,6 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
   }
 
   // [0] ETRIG timestamp, [1] HLT timestamp, [2] CAEN-only timestamp.
-  uint64_t timestamp = 0;           
-  
-  //// ============= TESTING ========== ==== ////
-  if (get_frameshift_timestamp(e, timestamp, prod_event_timing_ref_info->timingType, prod_event_timing_ref_info->timingChannel)) {
-    if (fverbose | fdebug_frameshift_handle) {
-      std::cout << "\n > SBNDXARAPUCADecoder::produce: FrameShift reference, " << print_timestamp(timestamp) << ", found. Using FrameShift timing frame as reference." << std::endl;
-      std::cout << "\t FrameShift reference details: timing type: " << prod_event_timing_ref_info->timingType << ", timing channel: " << prod_event_timing_ref_info->timingChannel << "." << std::endl;
-    }
-  } else {
-    if (fverbose | fdebug_frameshift_handle) std::cout << "\n > SBNDXARAPUCADecoder::produce: FrameShift reference not found. Using CAEN-only timing frame as reference." << std::endl;
-  }
 
   // Gets the SPEC-TDC product (if any).
   if (ftiming_priority == SPEC_TDC_TIMING) {
@@ -902,36 +906,40 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
 }
 
 /**
-  * @brief Searches for the Frame Shift Info product in the event and checks if it is valid.
+  * @brief Searches for the frameshift timestamp in the event if any frameshift product is found and returns it as a TimingReferenceInfo object.
   * @param[in] e The event to be processed.
-  * @param[in,out] timestamp The timestamp of the frame shift info product (if found).
-  * @return A boolean indicating if a valid frame shift info product was found in the event.
-  * @details It searches for the Frame Shift Info product in the event. If it is found, it checks if the art::Handle is valid and if it contains a valid frame shift info object. If all checks are passed, it returns true, otherwise it throws an error.
+  * @param[in,out] timestamp The frameshift timestamp (if found).
+  * @param[in,out] timing_type The type of the frameshift timestamp (if found).
+  * @param[in,out] timing_channel The channel of the frameshift timestamp (if found).
+  * @return A unique pointer to a TimingReferenceInfo object containing the frameshift timestamp information (if found), or nullptr if no valid frameshift product is found.
+  * @details It searches for the frameshift products in the event and looks for the default frameshift timestamp, type and channel. If any valid frameshift product is found, it returns its information as a TimingReferenceInfo object.
  */
-bool sbndaq::SBNDXARAPUCADecoder::get_frameshift_timestamp(art::Event& e, uint64_t& timestamp, uint16_t& timing_type, uint16_t& timing_channel) {
-  bool frameshift_found = false;
+std::unique_ptr<raw::TimingReferenceInfo> sbndaq::SBNDXARAPUCADecoder::get_frameshift_timestamp(art::Event& e, uint64_t& timestamp) {
+  std::unique_ptr<raw::TimingReferenceInfo> fs_timing_ref_info = nullptr;
 
   art::Handle<sbnd::timing::FrameShiftInfo> frameshiftHandle;    
   e.getByLabel(fframeshift_product_name, frameshiftHandle);
 
-
-  if (fverbose | fdebug_frameshift_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_frameshift_timestamp: Frameshift timing frame selected. Searching for Frameshift products..." << std::endl;
+  if (fverbose || fdebug_frameshift_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_frameshift_timestamp: Frameshift timing frame selected. Searching for Frameshift products..." << std::endl;
   
-  // The art::Handle object is not valid.
-  if (!frameshiftHandle.isValid()) {
+  if (frameshiftHandle.isValid()) {
+    
+    uint16_t timing_type    = frameshiftHandle->TimingTypeDefault();
+    uint16_t timing_channel = frameshiftHandle->TimingChannelDefault();
+
+    if (timing_type != sbnd::timing::kNoShiftType) { // Only if timing type is valid, the timestamp is considered valid.
+      timestamp = frameshiftHandle->FrameDefault();
+      fs_timing_ref_info = std::make_unique<raw::TimingReferenceInfo>(timing_type, timing_channel);
+    } else {
+      timestamp = 0;
+    }
+        
+  } else {
     if (fdebug_frameshift_handle) std::cout << "\n\tFrameshift handle not valid for " << fframeshift_product_name << "." << std::endl;
     throw std::runtime_error("XA Decoder: Frame Shift Info object is invalid, check data quality");
-
-  } else {
-
-    timestamp       = frameshiftHandle->FrameDefault();
-    timing_type     = frameshiftHandle->TimingTypeDefault();
-    timing_channel  = frameshiftHandle->TimingChannelDefault(); 
-    
-    frameshift_found = true;
   }
 
-  return frameshift_found;
+  return fs_timing_ref_info;
 }
 
 // ===============  Decodes the waveforms =============== //
