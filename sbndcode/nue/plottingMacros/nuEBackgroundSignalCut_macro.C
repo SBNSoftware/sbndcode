@@ -114,6 +114,8 @@ typedef struct{
     TH1F* proton;
     TH1F* muon;
     TH1F* cosmicMuon;
+    TH1F* cosmicPhoton;
+    TH1F* cosmicElectron;
     TH1F* cosmicOther;
     TH1F* pi0;
     TH1F* chargedPi;
@@ -125,9 +127,20 @@ typedef struct{
 struct pfpCounter_struct{
     double electron = 0;
     double nuEElectron = 0;
+    double nuEProton = 0;
+    double nuEPhoton = 0;
+    double neutron = 0;
+    double kaon = 0;
+    double noTruth = 0;
     double proton = 0;
     double muon = 0;
     double cosmicMuon = 0;
+    double cosmicPhoton = 0;
+    double cosmicProton = 0;
+    double cosmicElectron = 0;
+    double cosmicChargedPi = 0;
+    double cosmicNoTruth = 0;
+    double cosmicNeutron = 0;
     double cosmicOther = 0;
     double pi0 = 0;
     double chargedPi = 0;
@@ -236,6 +249,8 @@ splitPFPHistGroup_struct createSplitPFPHistGroup(const std::string& baseName, co
         (TH1F*) base->Clone((baseName + "_proton").c_str()),
         (TH1F*) base->Clone((baseName + "_muon").c_str()),
         (TH1F*) base->Clone((baseName + "_cosmicMuon").c_str()),
+        (TH1F*) base->Clone((baseName + "_cosmicPhoton").c_str()),
+        (TH1F*) base->Clone((baseName + "_cosmicElectron").c_str()),
         (TH1F*) base->Clone((baseName + "_cosmicOther").c_str()),
         (TH1F*) base->Clone((baseName + "_pi0").c_str()),
         (TH1F*) base->Clone((baseName + "_chargedPi").c_str()),
@@ -325,7 +340,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     else
         hists.canvas->SetLogy(0);
 
-    std::vector<TH1F*> allHists = {hists.electron, hists.nuEElectron, hists.proton, hists.muon, hists.cosmicMuon, hists.cosmicOther, hists.pi0, hists.chargedPi, hists.photon, hists.other, hists.nuEOther};
+    std::vector<TH1F*> allHists = {hists.electron, hists.nuEElectron, hists.proton, hists.muon, hists.cosmicMuon, hists.cosmicPhoton, hists.cosmicElectron, hists.cosmicOther, hists.pi0, hists.chargedPi, hists.photon, hists.other, hists.nuEOther};
 
     if (useLogScale) {
         for (auto* hist : allHists) {
@@ -349,17 +364,19 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     }
     
 
-    hists.nuEElectron->SetLineWidth(2); hists.nuEElectron->SetLineColor(TColor::GetColor("#656364"));
-    hists.electron->SetLineWidth(2);    hists.electron->SetLineColor(TColor::GetColor("#578dff"));
-    hists.proton->SetLineWidth(2);      hists.proton->SetLineColor(TColor::GetColor("#86c8dd"));
-    hists.muon->SetLineWidth(2);        hists.muon->SetLineColor(TColor::GetColor("#adad7d"));
-    hists.cosmicMuon->SetLineWidth(2);  hists.cosmicMuon->SetLineColor(TColor::GetColor("#c91f16"));
-    hists.cosmicOther->SetLineWidth(2); hists.cosmicOther->SetLineColor(TColor::GetColor("#ff5e02"));
-    hists.pi0->SetLineWidth(2);         hists.pi0->SetLineColor(TColor::GetColor("#1845fb"));
-    hists.chargedPi->SetLineWidth(2);   hists.chargedPi->SetLineColor(TColor::GetColor("#c849a9"));
-    hists.photon->SetLineWidth(2);      hists.photon->SetLineColor(TColor::GetColor("#7a21dd"));
-    hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
-    hists.nuEOther->SetLineWidth(2);    hists.nuEOther->SetLineColor(TColor::GetColor("#a96b59"));
+    hists.nuEElectron->SetLineWidth(2);     hists.nuEElectron->SetLineColor(TColor::GetColor("#656364"));
+    hists.electron->SetLineWidth(2);        hists.electron->SetLineColor(TColor::GetColor("#578dff"));
+    hists.proton->SetLineWidth(2);          hists.proton->SetLineColor(TColor::GetColor("#86c8dd"));
+    hists.muon->SetLineWidth(2);            hists.muon->SetLineColor(TColor::GetColor("#adad7d"));
+    hists.cosmicMuon->SetLineWidth(2);      hists.cosmicMuon->SetLineColor(TColor::GetColor("#c91f16"));
+    hists.cosmicPhoton->SetLineWidth(2);    hists.cosmicPhoton->SetLineColor(kViolet-4);
+    hists.cosmicElectron->SetLineWidth(2);  hists.cosmicElectron->SetLineColor(kGreen+2);
+    hists.cosmicOther->SetLineWidth(2);     hists.cosmicOther->SetLineColor(kPink-9);
+    hists.pi0->SetLineWidth(2);             hists.pi0->SetLineColor(TColor::GetColor("#1845fb"));
+    hists.chargedPi->SetLineWidth(2);       hists.chargedPi->SetLineColor(TColor::GetColor("#c849a9"));
+    hists.photon->SetLineWidth(2);          hists.photon->SetLineColor(TColor::GetColor("#7a21dd"));
+    hists.other->SetLineWidth(2);           hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
+    hists.nuEOther->SetLineWidth(2);        hists.nuEOther->SetLineColor(TColor::GetColor("#a96b59"));
 
     if((ymin != 999) && (ymax != 999)){
         for(auto* hist : allHists)
@@ -390,6 +407,8 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     hists.proton->Draw("histsame");
     hists.muon->Draw("histsame");
     hists.cosmicMuon->Draw("histsame");
+    hists.cosmicPhoton->Draw("histsame");
+    hists.cosmicElectron->Draw("histsame");
     hists.cosmicOther->Draw("histsame");
     hists.pi0->Draw("histsame");
     hists.chargedPi->Draw("histsame");
@@ -397,7 +416,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     hists.other->Draw("histsame");
     hists.nuEOther->Draw("histsame");
 
-    int nEntries = 11;
+    int nEntries = 13;
     double height = std::max(0.03 * nEntries, 0.03);
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
 
@@ -413,6 +432,8 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     legend->AddEntry(hists.proton, "Proton", "f");
     legend->AddEntry(hists.muon, "Muon", "f");
     legend->AddEntry(hists.cosmicMuon, "Cosmic Muon", "f");
+    legend->AddEntry(hists.cosmicPhoton, "Cosmic Photon", "f");
+    legend->AddEntry(hists.cosmicElectron, "Cosmic Electron", "f");
     legend->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
     legend->AddEntry(hists.pi0, "Neutral Pion", "f");
     legend->AddEntry(hists.chargedPi, "Charged Pion", "f");
@@ -439,6 +460,8 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     stack->Add(hists.proton);
     stack->Add(hists.muon);
     stack->Add(hists.cosmicMuon);
+    stack->Add(hists.cosmicPhoton);
+    stack->Add(hists.cosmicElectron);
     stack->Add(hists.cosmicOther);
     stack->Add(hists.pi0);
     stack->Add(hists.chargedPi);
@@ -486,6 +509,8 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
     legendStack->AddEntry(hists.proton, "Proton", "f");
     legendStack->AddEntry(hists.muon, "Muon", "f");
     legendStack->AddEntry(hists.cosmicMuon, "Cosmic Muon", "f");
+    legendStack->AddEntry(hists.cosmicPhoton, "Cosmic Photon", "f");
+    legendStack->AddEntry(hists.cosmicElectron, "Cosmic Electron", "f");
     legendStack->AddEntry(hists.cosmicOther, "Cosmic Other", "f");
     legendStack->AddEntry(hists.pi0, "Neutral Pion", "f");
     legendStack->AddEntry(hists.chargedPi, "Charged Pion", "f");
@@ -1222,13 +1247,18 @@ double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false)
     return maxVal;
 }
 
-void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation, bool effPurPlots, double xmin, double xmax, bool writeMaxValues = false, const std::string& textfilename = ""){
+void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEfficiency* plot_DLNuE, const std::string& filename, double lowY, double highY, const std::string& legendLocation, bool effPurPlots, double xmin, double xmax, bool writeMaxValues = false, double efficiencyWay = 0.0, const std::string& textfilename = ""){
     if (!plot_BDT || !plot_DLUboone || !plot_DLNuE) {
         std::cerr << "drawEfficiency: null TEfficiency pointer\n";
         return;
     }
 
     double maxVal = std::max({getMaxValueEfficiency(plot_BDT, false), getMaxValueEfficiency(plot_DLUboone, false), getMaxValueEfficiency(plot_DLNuE, false)});
+
+    double minVal = 999999;
+    double minBDT = getMinValueEfficiency(plot_BDT, xmin, xmax, false);
+    double minDLNuE = getMinValueEfficiency(plot_DLNuE, xmin, xmax, false);
+    double minDLUboone = getMinValueEfficiency(plot_DLUboone, xmin, xmax, false);
 
     TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
     c->SetTicks();
@@ -1255,7 +1285,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
    
         if(yEff > maxEff_BDT){
             maxEff_BDT = yEff;
-            maxEffBin_BDT = xCenter;
+            if(efficiencyWay == 1) maxEffBin_BDT = xCenter+xErr;
+            if(efficiencyWay == -1) maxEffBin_BDT = xCenter-xErr;
         }
 
         gEff_BDT->SetPoint(i-1, xCenter, yEff);
@@ -1272,7 +1303,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
     }
 
     std::cout << "MAX VAL HERE = " << maxVal << ", *1.1 = " << maxVal*1.1 << std::endl;
-    gEff_BDT->GetYaxis()->SetRangeUser(0, maxVal*1.1);
+    std::cout << "MIN VAL HERE = " << minVal << ", *0.9 = " << minVal*1.1 << std::endl;
+    gEff_BDT->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
 
     const TH1* hAxis = plot_BDT->GetTotalHistogram();
     gEff_BDT->SetTitle(plot_BDT->GetTitle());
@@ -1302,7 +1334,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         
         if(yEff > maxEff_DLUboone){
             maxEff_DLUboone = yEff;
-            maxEffBin_DLUboone = xCenter;
+            if(efficiencyWay == 1) maxEffBin_DLUboone = xCenter+xErr;
+            if(efficiencyWay == -1) maxEffBin_DLUboone = xCenter-xErr;
         }
    
         gEff_DLUboone->SetPoint(i-1, xCenter, yEff);
@@ -1338,7 +1371,8 @@ void drawEfficiencyErrors(TEfficiency* plot_BDT, TEfficiency* plot_DLUboone, TEf
         
         if(yEff > maxEff_DLNuE){
             maxEff_DLNuE = yEff;
-            maxEffBin_DLNuE = xCenter;
+            if(efficiencyWay == 1) maxEffBin_DLNuE = xCenter+xErr;
+            if(efficiencyWay == -1) maxEffBin_DLNuE = xCenter-xErr;
         }
    
         //if(i == 5) std::cout << "yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl;
@@ -1780,11 +1814,11 @@ void efficiency(histGroup_struct hists, double ymin, double ymax, double xmin, d
     effPur_BDT->SetUseWeightedEvents(false);
     effPur_DLUboone->SetUseWeightedEvents(false);
     effPur_DLNuE->SetUseWeightedEvents(false);
-    
-    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, text_filename);
-    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, text_filename);
-    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation, 0, xmin, xmax, false, text_filename);
-    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation, 1, xmin, xmax, true, text_filename);
+   
+    drawEfficiencyErrors(eff_BDT, eff_DLUboone, eff_DLNuE, filenameEffErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, efficiencyWay, text_filename);
+    drawEfficiencyErrors(rej_BDT, rej_DLUboone, rej_DLNuE, filenameRejErrors, -999999, -999999, legendLocation, 0, xmin, xmax, false, efficiencyWay, text_filename);
+    drawEfficiencyErrors(pur_BDT, pur_DLUboone, pur_DLNuE, filenamePurErrors, 0, maxPurityVal*1.1, legendLocation, 0, xmin, xmax, false, efficiencyWay, text_filename);
+    drawEfficiencyErrors(effPur_BDT, effPur_DLUboone, effPur_DLNuE, filenameEffPurErrors, 0, maxEffPurityVal*1.1, legendLocation, 1, xmin, xmax, true, efficiencyWay, text_filename);
     
     std::string filenameEffPurBDT = std::string(filename) + "_errorsBDT_effpur.pdf";
     std::string filenameEffPurDLUboone = std::string(filename) + "_errorsDLUboone_effpur.pdf";
@@ -1863,21 +1897,22 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
 
 void nuEBackgroundSignalCut_macro(){
-    std::string txtFileName = "purity_max_values_withCuts.txt";
+    std::string txtFileName = "purity_max_values_withoutCuts.txt";
 
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_1Feb.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_1Feb.root");
+    TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/testData/analysed_test_16Feb.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLUbooneNuEBDT_27Jan.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsSPLIT_test/";
 
     // If clearCosmicCut == 1 -> cut all PFPs with clearCosmic score of 1. If clearCosmicCut == 0 -> keep all PFPs
-    int clearCosmicCut = 1;
-    int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 1;
-    int FVCut = 1;
-    int CRUMBSCut = 1;
-    int primaryPFPCut = 1;
-    int trackscoreCut = 1;
-    int ETheta2Cut = 1;
+    int clearCosmicCut = 0;
+    int numPFPs0Cut = 0;
+    int numRecoNeutrinosCut = 0;
+    int FVCut = 0;
+    int CRUMBSCut = 0;
+    int primaryPFPCut = 0;
+    int trackscoreCut = 0;
+    int ETheta2Cut = 0;
     int ETheta2SumCut = 0;
     
     int trackscoreHighestCut = 0;
@@ -1896,32 +1931,32 @@ void nuEBackgroundSignalCut_macro(){
     eventCounting_struct eventsAfterCuts_DLNuE;
 
     if(clearCosmicCut == 1 && numPFPs0Cut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_cuts/";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic.txt";
     } else if(numPFPs0Cut == 1 && numRecoNeutrinosCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_cuts/";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0.txt";
-    } else if(numRecoNeutrinosCut == 1 && FVCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_cuts/";
+    } else if(numRecoNeutrinosCut == 1 && CRUMBSCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_cuts/";
         txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut.txt";
-    } else if(FVCut == 1 && CRUMBSCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fvCuts.txt";
-    } else if(CRUMBSCut == 1 && primaryPFPCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbsCuts.txt";
+    } else if(CRUMBSCut == 1 && FVCut == 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbsCuts.txt";
+    } else if(FVCut == 1 && primaryPFPCut== 0){
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_fv_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fvCuts.txt";
     } else if(primaryPFPCut == 1 && trackscoreCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFPCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFPCuts.txt";
     } else if(trackscoreCut == 1 && ETheta2Cut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscoreCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscore_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscoreCuts.txt";
     } else if(ETheta2Cut == 1 && ETheta2SumCut == 0){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2Cuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscore_etheta2_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscore_etheta2Cuts.txt";
     } else if(ETheta2SumCut == 1){
-        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_etheta2Sum_cuts/";
-        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_fv_crumbs_primaryPFP_trackscore_etheta2_etheta2SumCuts.txt";
+        base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCuts_crumbsFirst_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscore_etheta2_etheta2Sum_cuts/";
+        txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_trackscore_etheta2_etheta2SumCuts.txt";
     }
  
     // If the directory already exists, delete everything in it
@@ -2197,6 +2232,16 @@ void nuEBackgroundSignalCut_macro(){
     std::vector<double> *reco_particleNumHitsTruthMatched = nullptr;
     std::vector<double> *reco_particleNumTruthHits = nullptr;
     std::vector<double> *reco_particleClearCosmic = nullptr;  
+    std::vector<double> *reco_particlePlane0dEdx = nullptr;  
+    std::vector<double> *reco_particlePlane1dEdx = nullptr;  
+    std::vector<double> *reco_particlePlane2dEdx = nullptr;  
+    std::vector<double> *reco_particleBestPlanedEdx = nullptr;  
+    std::vector<double> *reco_particleRazzledPDG11 = nullptr;  
+    std::vector<double> *reco_particleRazzledPDG13 = nullptr;  
+    std::vector<double> *reco_particleRazzledPDG22 = nullptr;  
+    std::vector<double> *reco_particleRazzledPDG211 = nullptr;  
+    std::vector<double> *reco_particleRazzledPDG2212 = nullptr;  
+    std::vector<double> *reco_particleRazzledBestPDG = nullptr;  
   
     std::vector<double> *reco_neutrinoID = nullptr;
     std::vector<double> *reco_neutrinoPDG = nullptr;
@@ -2267,6 +2312,16 @@ void nuEBackgroundSignalCut_macro(){
     tree->SetBranchAddress("reco_particleNumHitsTruthMatched", &reco_particleNumHitsTruthMatched);
     tree->SetBranchAddress("reco_particleNumTruthHits", &reco_particleNumTruthHits);
     tree->SetBranchAddress("reco_particleClearCosmic", &reco_particleClearCosmic);
+    tree->SetBranchAddress("reco_particlePlane0dEdx", &reco_particlePlane0dEdx);
+    tree->SetBranchAddress("reco_particlePlane1dEdx", &reco_particlePlane1dEdx);
+    tree->SetBranchAddress("reco_particlePlane2dEdx", &reco_particlePlane2dEdx);
+    tree->SetBranchAddress("reco_particleBestPlanedEdx", &reco_particleBestPlanedEdx);
+    tree->SetBranchAddress("reco_particleRazzledPDG11", &reco_particleRazzledPDG11);
+    tree->SetBranchAddress("reco_particleRazzledPDG13", &reco_particleRazzledPDG13);
+    tree->SetBranchAddress("reco_particleRazzledPDG22", &reco_particleRazzledPDG22);
+    tree->SetBranchAddress("reco_particleRazzledPDG211", &reco_particleRazzledPDG211);
+    tree->SetBranchAddress("reco_particleRazzledPDG2212", &reco_particleRazzledPDG2212);
+    tree->SetBranchAddress("reco_particleRazzledBestPDG", &reco_particleRazzledBestPDG);
     
     tree->SetBranchAddress("reco_neutrinoID", &reco_neutrinoID);
     tree->SetBranchAddress("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -2314,6 +2369,13 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPsDist = createHistGroup("trackscoreAllPFPsDist", "Trackscore of All PFPs in the Slice (Not Weighted)", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs = createHistGroup("trackscoreHighestScorePFPs", "Trackscore of the PFP with the Highest Trackscore in the Slice", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPsDist = createHistGroup("trackscoreHighestScorePFPsDist", "Trackscore of the PFP with the Highest Trackscore in the Slice (Not Weighted)", "Trackscore", 20, 0, 1);
+
+    auto dEdxHighestEnergyPFP = createHistGroup("dEdxHighestEnergyPFP", "dE/dx of the PFP in the Slice with the Highest Energy", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP = createHistGroup("razzledPDG11HighestEnergyPFP", "Electron Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP = createHistGroup("razzledPDG13HighestEnergyPFP", "Muon Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP = createHistGroup("razzledPDG22HighestEnergyPFP", "Photon Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP = createHistGroup("razzledPDG211HighestEnergyPFP", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP = createHistGroup("razzledPDG2212HighestEnergyPFP", "Proton Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
 
     auto trackscoreAllPFPsPFP = createHistGroup("trackscoreAllPFPsPFP", "Trackscore of All PFPs in the Slice (Split By PFP)", "Trackscore", 20, 0, 1);
 
@@ -2387,6 +2449,12 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPs_splitBDT = createSplitHistGroup("trackscoreAllPFPs_splitBDT", "Trackscore of All PFPs in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitBDT = createSplitHistGroup("trackscoreHighestScorePFPs_splitBDT", "Trackscore of the PFP with the Highest Trackscore in the Slice: BDT Vertexing", "Trackscore", 20, 0, 1);
 
+    auto dEdxHighestEnergyPFP_splitBDT = createSplitHistGroup("dEdxHighestEnergyPFP_splitBDT", "dE/dx of the PFP in the Slice with the Highest Energy: BDT Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG11HighestEnergyPFP_splitBDT", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG13HighestEnergyPFP_splitBDT", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitBDT", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitBDT", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitBDT", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
 
     // DL Uboone
     auto sliceCompleteness_splitDLUboone = createSplitHistGroup("sliceCompleteness_splitDLUboone", "Slice Completeness: DL Uboone Vertexing", "Completeness", 102, 0, 1.02);
@@ -2406,6 +2474,12 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreAllPFPs_splitDLUboone = createSplitHistGroup("trackscoreAllPFPs_splitDLUboone", "Trackscore of All PFPs in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLUboone = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLUboone", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
     
+    auto dEdxHighestEnergyPFP_splitDLUboone = createSplitHistGroup("dEdxHighestEnergyPFP_splitDLUboone", "dE/dx of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG11HighestEnergyPFP_splitDLUboone", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG13HighestEnergyPFP_splitDLUboone", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitDLUboone", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitDLUboone", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitDLUboone", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
 
     // DL Nu+E
     auto sliceCompleteness_splitDLNuE = createSplitHistGroup("sliceCompleteness_splitDLNuE", "Slice Completeness: DL Nu+E Vertexing", "Completeness", 102, 0, 1.02);
@@ -2424,6 +2498,13 @@ void nuEBackgroundSignalCut_macro(){
     auto trackscoreHighestEnergyPFP_splitDLNuE = createSplitHistGroup("trackscoreHighestEnergyPFP_splitDLNuE", "Trackscore of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreAllPFPs_splitDLNuE = createSplitHistGroup("trackscoreAllPFPs_splitDLNuE", "Trackscore of All PFPs in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
     auto trackscoreHighestScorePFPs_splitDLNuE = createSplitHistGroup("trackscoreHighestScorePFPs_splitDLNuE", "Trackscore of the PFP with the Highest Trackscore in the Slice: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
+    
+    auto dEdxHighestEnergyPFP_splitDLNuE = createSplitHistGroup("dEdxHighestEnergyPFP_splitDLNuE", "dE/dx of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG11HighestEnergyPFP_splitDLNuE", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG13HighestEnergyPFP_splitDLNuE", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitDLNuE", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitDLNuE", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitDLNuE", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
     
     auto recoX_low_splitDLNuE = createSplitHistGroup("recoX_low_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
     auto recoX_high_splitDLNuE = createSplitHistGroup("recoX_high_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
@@ -2480,6 +2561,13 @@ void nuEBackgroundSignalCut_macro(){
     auto QSquaredSum_splitPFPDLNuE = createSplitPFPHistGroup("QSquaredSum_splitPFPDLNuE", "Q^{2} Using Sum of PFP Energies in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
 
     auto trackscoreHighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPDLNuE", "Trackscore of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
+    
+    auto recoX_low_splitPFPDLNuE = createSplitPFPHistGroup("recoX_low_splitPFPDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
+    auto recoX_high_splitPFPDLNuE = createSplitPFPHistGroup("recoX_high_splitPFPDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
+    auto recoY_low_splitPFPDLNuE = createSplitPFPHistGroup("recoY_low_splitPFPDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 68, -204, -170);
+    auto recoY_high_splitPFPDLNuE = createSplitPFPHistGroup("recoY_high_splitPFPDLNuE", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 128, 140, 204);
+    auto recoZ_low_splitPFPDLNuE = createSplitPFPHistGroup("recoZ_low_splitPFPDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 0, 50);
+    auto recoZ_high_splitPFPDLNuE = createSplitPFPHistGroup("recoZ_high_splitPFPDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm)", 100, 460, 510);
 
 
     double xMin = -201.3; double xMax = 201.3;
@@ -2624,37 +2712,37 @@ void nuEBackgroundSignalCut_macro(){
                 
    
     // CUT VALUES 
-    double FVCut_xLow_BDT = -190;
-    double FVCut_xHigh_BDT = 190;
+    double FVCut_xLow_BDT = -195;
+    double FVCut_xHigh_BDT = 192;
     double FVCut_xCentre_BDT = 10;
-    double FVCut_yLow_BDT = -180;
-    double FVCut_yHigh_BDT = 180;
-    double FVCut_zLow_BDT = 5;
-    double FVCut_zHigh_BDT = 400;
+    double FVCut_yLow_BDT = -196;
+    double FVCut_yHigh_BDT = 191;
+    double FVCut_zLow_BDT = 5.5;
+    double FVCut_zHigh_BDT = 460;
 
-    double FVCut_xLow_DLNuE = -185;
-    double FVCut_xHigh_DLNuE = 185;
+    double FVCut_xLow_DLNuE = -195;
+    double FVCut_xHigh_DLNuE = 192;
     double FVCut_xCentre_DLNuE = 10;
-    double FVCut_yLow_DLNuE = -185;
-    double FVCut_yHigh_DLNuE = 155;
-    double FVCut_zLow_DLNuE = 7;
-    double FVCut_zHigh_DLNuE = 400;
+    double FVCut_yLow_DLNuE = -196;
+    double FVCut_yHigh_DLNuE = 191;
+    double FVCut_zLow_DLNuE = 5.5;
+    double FVCut_zHigh_DLNuE = 460;
 
-    double FVCut_xLow_DLUboone = -190;
-    double FVCut_xHigh_DLUboone = 180;
+    double FVCut_xLow_DLUboone = -195;
+    double FVCut_xHigh_DLUboone = 192;
     double FVCut_xCentre_DLUboone = 10;
-    double FVCut_yLow_DLUboone = -185;
-    double FVCut_yHigh_DLUboone = 165;
-    double FVCut_zLow_DLUboone = 8;
-    double FVCut_zHigh_DLUboone = 400;
+    double FVCut_yLow_DLUboone = -196;
+    double FVCut_yHigh_DLUboone = 191;
+    double FVCut_zLow_DLUboone = 5.5;
+    double FVCut_zHigh_DLUboone = 460;
    
-    double crumbsScoreCut_low_BDT = -0.08;
-    double crumbsScoreCut_low_DLUboone = 0;
-    double crumbsScoreCut_low_DLNuE = 0.24;
+    double crumbsScoreCut_low_BDT = -0.04;
+    double crumbsScoreCut_low_DLUboone = -0.04;
+    double crumbsScoreCut_low_DLNuE = 0.2;
     
-    double crumbsScoreCut_high_BDT = 0.8;
-    double crumbsScoreCut_high_DLUboone = 0.8;
-    double crumbsScoreCut_high_DLNuE = 0.8;
+    double crumbsScoreCut_high_BDT = 0.84;
+    double crumbsScoreCut_high_DLUboone = 0.84;
+    double crumbsScoreCut_high_DLNuE = 0.84;
 
     double primaryPFPCut_low_BDT = 1;
     double primaryPFPCut_low_DLUboone = 1; 
@@ -2668,7 +2756,7 @@ void nuEBackgroundSignalCut_macro(){
     double trackscorePFPs_lower_BDT = 0.2;
 
     double EThetaCut_highestPFP_BDT = 2.56;
-    double EThetaCut_highestPFP_DLUboone = 3;
+    double EThetaCut_highestPFP_DLUboone = 2.05;
     double EThetaCut_highestPFP_DLNuE = 2.56;
    
     double trackscore_highestPFP_high_BDT = 0.4;
@@ -2699,6 +2787,9 @@ void nuEBackgroundSignalCut_macro(){
     pfpCounter_struct numSlicesHighestPFPBeforeWeightedDLNuE;
     pfpCounter_struct numSlicesHighestPFPAfterDLNuE;
     pfpCounter_struct numSlicesHighestPFPAfterWeightedDLNuE;
+
+    int numNuEScatterElectronsBNB_before_DLNuE = 0;
+    int numNuEScatterElectronsBNB_after_DLNuE = 0;
 
     double numSignal_afterCut_DLNuE = 0;
     double numSignalFuzzy_afterCut_DLNuE = 0;
@@ -2780,6 +2871,13 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_truePDG = -999999;
                 double highestEnergy_trueOrigin = -999999;
                 double highestEnergy_trueInt = -999999;
+                double highestEnergy_bestPlanedEdx = -999999;
+                double highestEnergy_razzledPDG11 = -999999;
+                double highestEnergy_razzledPDG13 = -999999;
+                double highestEnergy_razzledPDG22 = -999999;
+                double highestEnergy_razzledPDG211 = -999999;
+                double highestEnergy_razzledPDG2212 = -999999;
+                double highestEnergy_razzledBestPDG = -999999;
 
                 double highestTrackscore = -999999;
 
@@ -2828,6 +2926,13 @@ void nuEBackgroundSignalCut_macro(){
                                     highestEnergy_truePDG = reco_particleTruePDG->at(pfp);
                                     highestEnergy_trueOrigin = reco_particleTrueOrigin->at(pfp);
                                     highestEnergy_trueInt = reco_particleTrueInteractionType->at(pfp);
+                                    highestEnergy_bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
+                                    highestEnergy_razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
+                                    highestEnergy_razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
+                                    highestEnergy_razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
+                                    highestEnergy_razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
+                                    highestEnergy_razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
+                                    highestEnergy_razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
                                 }
 
                                 if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -2852,6 +2957,13 @@ void nuEBackgroundSignalCut_macro(){
                                 highestEnergy_truePDG = reco_particleTruePDG->at(pfp);
                                 highestEnergy_trueOrigin = reco_particleTrueOrigin->at(pfp);
                                 highestEnergy_trueInt = reco_particleTrueInteractionType->at(pfp);
+                                highestEnergy_bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
+                                highestEnergy_razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
+                                highestEnergy_razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
+                                highestEnergy_razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
+                                highestEnergy_razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
+                                highestEnergy_razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
+                                highestEnergy_razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
                             }
                                 
                             if(reco_particleTrackScore->at(pfp) > highestTrackscore) highestTrackscore = reco_particleTrackScore->at(pfp);
@@ -3013,6 +3125,96 @@ void nuEBackgroundSignalCut_macro(){
 
 
                 // Counter here
+                if(DLCurrent == 5){
+                    if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal == 1){
+                        // nu+e electron
+                        numSlicesHighestPFPBeforeDLNuE.nuEElectron++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.nuEElectron += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal != 1){
+                        numNuEScatterElectronsBNB_before_DLNuE++;
+                    } else if(highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal == 1){
+                        // something from a nu+e that isn't an electron
+                        if(std::abs(highestEnergy_truePDG) == 2212){
+                            numSlicesHighestPFPBeforeDLNuE.nuEProton++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.nuEProton += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 22){
+                            numSlicesHighestPFPBeforeDLNuE.nuEPhoton++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.nuEPhoton += weight;
+                        } else{
+                            numSlicesHighestPFPBeforeDLNuE.nuEOther++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.nuEOther += weight;
+                        }
+
+                    } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueOrigin == 1){
+                        // Electron/Positron from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.electron++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.electron += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 2212 && highestEnergy_trueOrigin == 1){
+                        // Proton/Antiproton from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.proton++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.proton += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 1){
+                        // Muon/Antimuon from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.muon++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.muon += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 111 && highestEnergy_trueOrigin == 1){
+                        // Pi0 from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.pi0++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.pi0 += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 211 && highestEnergy_trueOrigin == 1){
+                        // Charged Pi from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.chargedPi++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.chargedPi += weight;
+                    } else if(std::abs(highestEnergy_truePDG) == 22 && highestEnergy_trueOrigin == 1){
+                        // Photon from a beam neutrino
+                        numSlicesHighestPFPBeforeDLNuE.photon++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.photon += weight;
+                    } else if(highestEnergy_trueOrigin == 1){
+                        // Something else from a beam neutrino
+                        if(std::abs(highestEnergy_truePDG) == 2112){
+                            numSlicesHighestPFPBeforeDLNuE.neutron++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.neutron += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 321){
+                            numSlicesHighestPFPBeforeDLNuE.kaon++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.kaon += weight;
+                        } else if(std::abs(highestEnergy_truePDG) > 1e+09){
+                            numSlicesHighestPFPBeforeDLNuE.noTruth++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.noTruth += weight;
+                        } else{
+                            numSlicesHighestPFPBeforeDLNuE.other++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.other += weight;
+                        }
+
+                    } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 2){
+                        // Muon/Antimuon from cosmic origin
+                        numSlicesHighestPFPBeforeDLNuE.cosmicMuon++;
+                        numSlicesHighestPFPBeforeWeightedDLNuE.cosmicMuon += weight;
+                    } else if(highestEnergy_trueOrigin == 2){
+                        // Something else from cosmic origin
+                        if(std::abs(highestEnergy_truePDG) == 22){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicPhoton++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicPhoton += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 2212){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicProton++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicProton += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 11){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicElectron++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicElectron += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 211){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicChargedPi++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicChargedPi += weight;
+                        } else if(std::abs(highestEnergy_truePDG) > 1e+09){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicNoTruth++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicNoTruth += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 2112){
+                            numSlicesHighestPFPBeforeDLNuE.cosmicNeutron++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicNeutron += weight;
+                        } else{
+                            numSlicesHighestPFPBeforeDLNuE.cosmicOther++;
+                            numSlicesHighestPFPBeforeWeightedDLNuE.cosmicOther += weight;
+                        }
+                    }
+                }
 
                 // Applying cuts here
                 if(DLCurrent == 2){
@@ -3128,6 +3330,38 @@ void nuEBackgroundSignalCut_macro(){
                     } else if(sliceEventType == 8){
                         eventsAfterCuts_BDT.numRecoNeut0IntSplit.other += weight;
                     }
+                    
+                    if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_BDT || reco_sliceScore->at(slice) > crumbsScoreCut_high_BDT)){
+                        std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.crumbsSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.crumbsBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_BDT.crumbsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_BDT.crumbsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_BDT.crumbsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_BDT.crumbsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_BDT.crumbsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_BDT.crumbsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_BDT.crumbsIntSplit.other += weight;
+                    }
 
                     if(FVCut == 1){
                         if (!(recoVX < FVCut_xHigh_BDT && recoVX > FVCut_xLow_BDT  && std::abs(recoVX) > FVCut_xCentre_BDT && recoVY < FVCut_yHigh_BDT && recoVY > FVCut_yLow_BDT && recoVZ > FVCut_zLow_BDT && recoVZ < FVCut_zHigh_BDT)){ 
@@ -3161,38 +3395,6 @@ void nuEBackgroundSignalCut_macro(){
                         eventsAfterCuts_BDT.FVIntSplit.nuEDirt += weight;
                     } else if(sliceEventType == 8){
                         eventsAfterCuts_BDT.FVIntSplit.other += weight;
-                    }
-
-                    if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_BDT || reco_sliceScore->at(slice) > crumbsScoreCut_high_BDT)){
-                        std::cout << "BDT: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a BDT signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_BDT.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_BDT.crumbsSig += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_BDT.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_BDT.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_BDT.crumbsBack += weight;
-
-                    if(sliceEventType == 0){
-                        eventsAfterCuts_BDT.crumbsIntSplit.cosmic += weight;
-                    } else if(sliceEventType == 1 && signal == 1){
-                        eventsAfterCuts_BDT.crumbsIntSplit.nuE += weight;
-                    } else if(sliceEventType == 2){
-                        eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0 += weight;
-                    } else if(sliceEventType == 3){
-                        eventsAfterCuts_BDT.crumbsIntSplit.otherNC += weight;
-                    } else if(sliceEventType == 4){
-                        eventsAfterCuts_BDT.crumbsIntSplit.CCnumu += weight;
-                    } else if(sliceEventType == 5){
-                        eventsAfterCuts_BDT.crumbsIntSplit.CCnue += weight;
-                    } else if(sliceEventType == 6){
-                        eventsAfterCuts_BDT.crumbsIntSplit.dirt += weight;
-                    } else if(sliceEventType == 7 && signal == 1){
-                        eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt += weight;
-                    } else if(sliceEventType == 8){
-                        eventsAfterCuts_BDT.crumbsIntSplit.other += weight;
                     }
 
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_BDT || numPrimaryPFPsSlice == primaryPFPCut_high_BDT)){
@@ -3443,6 +3645,39 @@ void nuEBackgroundSignalCut_macro(){
                     } else if(sliceEventType == 8){
                         eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other += weight;
                     }
+                    
+                    if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_DLNuE || reco_sliceScore->at(slice) > crumbsScoreCut_high_DLNuE)){
+                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
+                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
+                        continue;
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
+                    }
+                    
                
                     if(FVCut == 1){ 
                         if (!(recoVX < FVCut_xHigh_DLNuE && recoVX > FVCut_xLow_DLNuE && std::abs(recoVX) > FVCut_xCentre_DLNuE && recoVY < FVCut_yHigh_DLNuE && recoVY > FVCut_yLow_DLNuE && recoVZ > FVCut_zLow_DLNuE && recoVZ < FVCut_zHigh_DLNuE)){ 
@@ -3476,38 +3711,6 @@ void nuEBackgroundSignalCut_macro(){
                         eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt += weight;
                     } else if(sliceEventType == 8){
                         eventsAfterCuts_DLNuE.FVIntSplit.other += weight;
-                    }
-                    
-                    if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_DLNuE || reco_sliceScore->at(slice) > crumbsScoreCut_high_DLNuE)){
-                        std::cout << "DLNuE: DOES NOT PASS CUTS WITH CRUMBS SCORE = " << reco_sliceScore->at(slice) << std::endl;
-                        if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLNuE signal event" << std::endl;
-                        continue;
-                    }
-                    
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
-                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
-
-                    if(sliceEventType == 0){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
-                    } else if(sliceEventType == 1 && signal == 1){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
-                    } else if(sliceEventType == 2){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
-                    } else if(sliceEventType == 3){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
-                    } else if(sliceEventType == 4){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu += weight;
-                    } else if(sliceEventType == 5){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue += weight;
-                    } else if(sliceEventType == 6){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.dirt += weight;
-                    } else if(sliceEventType == 7 && signal == 1){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt += weight;
-                    } else if(sliceEventType == 8){
-                        eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
                     }
                     
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLNuE || numPrimaryPFPsSlice == primaryPFPCut_high_DLNuE)){
@@ -3725,64 +3928,30 @@ void nuEBackgroundSignalCut_macro(){
                         continue;
                     }
                     
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Sig += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
-                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
-                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.numRecoNeut0Sig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.numRecoNeut0Back += weight;
 
                     if(sliceEventType == 0){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.cosmic += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.cosmic += weight;
                     } else if(sliceEventType == 1 && signal == 1){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuE += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.nuE += weight;
                     } else if(sliceEventType == 2){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.NCNPi0 += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.NCNPi0 += weight;
                     } else if(sliceEventType == 3){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.otherNC += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.otherNC += weight;
                     } else if(sliceEventType == 4){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnumu += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.CCnumu += weight;
                     } else if(sliceEventType == 5){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.CCnue += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.CCnue += weight;
                     } else if(sliceEventType == 6){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.dirt += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.dirt += weight;
                     } else if(sliceEventType == 7 && signal == 1){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.nuEDirt += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.nuEDirt += weight;
                     } else if(sliceEventType == 8){
-                        eventsAfterCuts_DLUboone.numPFPs0IntSplit.other += weight;
-                    }
-                
-                    if(FVCut == 1){
-                        if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && std::abs(recoVX) > FVCut_xCentre_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
-                            std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
-                            if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
-                            continue;
-                        }
-                    }
-                    
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.FVBack += weight;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.FVSig += weight;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.FVBack += weight;
-                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.FVBack += weight;
-                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.FVBack += weight;
-
-                    if(sliceEventType == 0){
-                        eventsAfterCuts_DLUboone.FVIntSplit.cosmic += weight;
-                    } else if(sliceEventType == 1 && signal == 1){
-                        eventsAfterCuts_DLUboone.FVIntSplit.nuE += weight;
-                    } else if(sliceEventType == 2){
-                        eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0 += weight;
-                    } else if(sliceEventType == 3){
-                        eventsAfterCuts_DLUboone.FVIntSplit.otherNC += weight;
-                    } else if(sliceEventType == 4){
-                        eventsAfterCuts_DLUboone.FVIntSplit.CCnumu += weight;
-                    } else if(sliceEventType == 5){
-                        eventsAfterCuts_DLUboone.FVIntSplit.CCnue += weight;
-                    } else if(sliceEventType == 6){
-                        eventsAfterCuts_DLUboone.FVIntSplit.dirt += weight;
-                    } else if(sliceEventType == 7 && signal == 1){
-                        eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt += weight;
-                    } else if(sliceEventType == 8){
-                        eventsAfterCuts_DLUboone.FVIntSplit.other += weight;
+                        eventsAfterCuts_DLUboone.numRecoNeut0IntSplit.other += weight;
                     }
                     
                     if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low_DLUboone || reco_sliceScore->at(slice) > crumbsScoreCut_high_DLUboone)){
@@ -3815,6 +3984,40 @@ void nuEBackgroundSignalCut_macro(){
                         eventsAfterCuts_DLUboone.crumbsIntSplit.nuEDirt += weight;
                     } else if(sliceEventType == 8){
                         eventsAfterCuts_DLUboone.crumbsIntSplit.other += weight;
+                    }
+                    
+                    if(FVCut == 1){
+                        if (!(recoVX < FVCut_xHigh_DLUboone && recoVX > FVCut_xLow_DLUboone && std::abs(recoVX) > FVCut_xCentre_DLUboone && recoVY < FVCut_yHigh_DLUboone && recoVY > FVCut_yLow_DLUboone && recoVZ > FVCut_zLow_DLUboone && recoVZ < FVCut_zHigh_DLUboone)){ 
+                            std::cout << "DLUboone: DOES NOT PASS CUTS WITH VX = " << recoVX << ", VY = " << recoVY << ", VZ = " << recoVZ << std::endl;
+                            if(sliceCategoryPlottingMacro == 0) std::cout << "Cutting out a DLUboone signal event" << std::endl;
+                            continue;
+                        }
+                    }
+                    
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLUboone.FVSig += weight;
+                    if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLUboone.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLUboone.FVBack += weight;
+
+                    if(sliceEventType == 0){
+                        eventsAfterCuts_DLUboone.FVIntSplit.cosmic += weight;
+                    } else if(sliceEventType == 1 && signal == 1){
+                        eventsAfterCuts_DLUboone.FVIntSplit.nuE += weight;
+                    } else if(sliceEventType == 2){
+                        eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0 += weight;
+                    } else if(sliceEventType == 3){
+                        eventsAfterCuts_DLUboone.FVIntSplit.otherNC += weight;
+                    } else if(sliceEventType == 4){
+                        eventsAfterCuts_DLUboone.FVIntSplit.CCnumu += weight;
+                    } else if(sliceEventType == 5){
+                        eventsAfterCuts_DLUboone.FVIntSplit.CCnue += weight;
+                    } else if(sliceEventType == 6){
+                        eventsAfterCuts_DLUboone.FVIntSplit.dirt += weight;
+                    } else if(sliceEventType == 7 && signal == 1){
+                        eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt += weight;
+                    } else if(sliceEventType == 8){
+                        eventsAfterCuts_DLUboone.FVIntSplit.other += weight;
                     }
                     
                     if(primaryPFPCut == 1 && (numPrimaryPFPsSlice > primaryPFPCut_low_DLUboone || numPrimaryPFPsSlice == primaryPFPCut_high_DLUboone)){
@@ -3995,7 +4198,7 @@ void nuEBackgroundSignalCut_macro(){
                 */
 
                 // Filling Split (By PFP) Histograms
-                if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1){
+                if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal == 1){
                     // nu+e electron
                     if(DLCurrent == 2){
                         // BDT
@@ -4068,10 +4271,22 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.nuEElectron->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.nuEElectron->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.nuEElectron->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.nuEElectron->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.nuEElectron->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.nuEElectron->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.nuEElectron->Fill(recoVZ, weight);
+                        }
+
                     }
-                } else if(highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1){
+                } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal != 1){
+                    // nu+e elastic scatter that comes from the BNB files
+                    if(DLCurrent == 5) numNuEScatterElectronsBNB_after_DLNuE++;
+
+                } else if(highestEnergy_trueInt == 1098 && highestEnergy_trueOrigin == 1 && signal == 1){
                     // something from the nu+e that isn't an electron
-                    std::cout << "Nu+E Other, True PDG = " << highestEnergy_truePDG << std::endl;
                     if(DLCurrent == 2){
                         // BDT
                         sliceCompleteness_splitPFPBDT.nuEOther->Fill(reco_sliceCompleteness->at(slice), weight);
@@ -4120,8 +4335,19 @@ void nuEBackgroundSignalCut_macro(){
 
                     } else if(DLCurrent == 5){
                         // DL Nu+E
-                        numSlicesHighestPFPAfterDLNuE.nuEOther++;
-                        numSlicesHighestPFPAfterWeightedDLNuE.nuEOther += weight;
+
+                        if(std::abs(highestEnergy_truePDG) == 2212){
+                            numSlicesHighestPFPAfterDLNuE.nuEProton++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.nuEProton += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 22){
+                            numSlicesHighestPFPAfterDLNuE.nuEPhoton++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.nuEPhoton += weight;
+                        } else{
+                            numSlicesHighestPFPAfterDLNuE.nuEOther++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.nuEOther += weight;
+                            std::cout << "Nu+E Other, True PDG = " << highestEnergy_truePDG << std::endl;
+                        }
+
                         sliceCompleteness_splitPFPDLNuE.nuEOther->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitPFPDLNuE.nuEOther->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitPFPDLNuE.nuEOther->Fill(reco_sliceScore->at(slice), weight);
@@ -4142,6 +4368,16 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){
                             QSquaredSum_splitPFPDLNuE.nuEOther->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.nuEOther->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.nuEOther->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.nuEOther->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.nuEOther->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.nuEOther->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.nuEOther->Fill(recoVZ, weight);
+                        }
+
 
                     }
                 } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueOrigin == 1){
@@ -4217,6 +4453,16 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.electron->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.electron->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.electron->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.electron->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.electron->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.electron->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.electron->Fill(recoVZ, weight);
+                        }
+
+
                     }
                 } else if(std::abs(highestEnergy_truePDG) == 2212 && highestEnergy_trueOrigin == 1){
                     // Proton/Antiproton from a beam neutrino
@@ -4291,9 +4537,19 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.proton->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.proton->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.proton->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.proton->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.proton->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.proton->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.proton->Fill(recoVZ, weight);
+                        }
+
+
+                        if(highestEnergy_truePDG == -2212) std::cout << "antiproton" << std::endl;
                     }
 
-                    if(highestEnergy_truePDG == -2212) std::cout << "antiproton" << std::endl;
                 } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 1){
                     // Muon/Antimuon from a beam neutrino
                     if(DLCurrent == 2){
@@ -4366,6 +4622,16 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){
                             QSquaredSum_splitPFPDLNuE.muon->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.muon->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.muon->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.muon->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.muon->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.muon->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.muon->Fill(recoVZ, weight);
+                        }
+
 
                     }
                 } else if(std::abs(highestEnergy_truePDG) == 111 && highestEnergy_trueOrigin == 1){
@@ -4441,6 +4707,16 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.pi0->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.pi0->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.pi0->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.pi0->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.pi0->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.pi0->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.pi0->Fill(recoVZ, weight);
+                        }
+
+
                     }
                 } else if(std::abs(highestEnergy_truePDG) == 211 && highestEnergy_trueOrigin == 1){
                     // Charged Pi from a beam neutrino
@@ -4514,6 +4790,16 @@ void nuEBackgroundSignalCut_macro(){
                         if(Q2SumValue != -999999){
                             QSquaredSum_splitPFPDLNuE.chargedPi->Fill(Q2SumValue, weight);
                         }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.chargedPi->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.chargedPi->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.chargedPi->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.chargedPi->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.chargedPi->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.chargedPi->Fill(recoVZ, weight);
+                        }
+
 
                     }
                 } else if(std::abs(highestEnergy_truePDG) == 22 && highestEnergy_trueOrigin == 1){
@@ -4589,6 +4875,16 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.photon->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.photon->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.photon->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.photon->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.photon->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.photon->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.photon->Fill(recoVZ, weight);
+                        }
+
+
                     }
                 } else if(highestEnergy_trueOrigin == 1){
                     // Something else from a beam neutrino
@@ -4640,8 +4936,22 @@ void nuEBackgroundSignalCut_macro(){
 
                     } else if(DLCurrent == 5){
                         // DL Nu+E
-                        numSlicesHighestPFPAfterDLNuE.other++;
-                        numSlicesHighestPFPAfterWeightedDLNuE.other += weight;
+                        
+                        if(std::abs(highestEnergy_truePDG) == 2112){
+                            numSlicesHighestPFPAfterDLNuE.neutron++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.neutron += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 321){
+                            numSlicesHighestPFPAfterDLNuE.kaon++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.kaon += weight;
+                        } else if(std::abs(highestEnergy_truePDG) > 1e+09){
+                            numSlicesHighestPFPAfterDLNuE.noTruth++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.noTruth += weight;
+                        } else{
+                            numSlicesHighestPFPAfterDLNuE.other++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.other += weight;
+                            std::cout << "Beam Other, True PDG = " << highestEnergy_truePDG << std::endl; 
+                        }
+                        
                         sliceCompleteness_splitPFPDLNuE.other->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitPFPDLNuE.other->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitPFPDLNuE.other->Fill(reco_sliceScore->at(slice), weight);
@@ -4663,8 +4973,17 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.other->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.other->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.other->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.other->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.other->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.other->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.other->Fill(recoVZ, weight);
+                        }
+
+
                     }
-                    std::cout << "Beam Other, True PDG = " << highestEnergy_truePDG << std::endl; 
                 } else if(std::abs(highestEnergy_truePDG) == 13 && highestEnergy_trueOrigin == 2){
                     // Muon/Antimuon from cosmic origin
                     if(DLCurrent == 2){
@@ -4738,6 +5057,185 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.cosmicMuon->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.cosmicMuon->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.cosmicMuon->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.cosmicMuon->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.cosmicMuon->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.cosmicMuon->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.cosmicMuon->Fill(recoVZ, weight);
+                        }
+
+
+                    }
+                } else if(std::abs(highestEnergy_truePDG) == 22 && highestEnergy_trueOrigin == 2){
+                    // Photon from cosmic origin
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.cosmicPhoton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.cosmicPhoton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.cosmicPhoton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.cosmicPhoton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.cosmicPhoton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.cosmicPhoton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.cosmicPhoton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.cosmicPhoton->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.cosmicPhoton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.cosmicPhoton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.cosmicPhoton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.cosmicPhoton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.cosmicPhoton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.cosmicPhoton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.cosmicPhoton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.cosmicPhoton->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.cosmicPhoton++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.cosmicPhoton += weight;
+                        sliceCompleteness_splitPFPDLNuE.cosmicPhoton->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.cosmicPhoton->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.cosmicPhoton->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.cosmicPhoton->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.cosmicPhoton->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.cosmicPhoton->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.cosmicPhoton->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.cosmicPhoton->Fill(Q2SumValue, weight);
+                        }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.cosmicPhoton->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.cosmicPhoton->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.cosmicPhoton->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.cosmicPhoton->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.cosmicPhoton->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.cosmicPhoton->Fill(recoVZ, weight);
+                        }
+
+
+                    }
+
+                } else if(std::abs(highestEnergy_truePDG) == 11 && highestEnergy_trueOrigin == 2){
+                    // Electron/Positron from cosmic origin
+                    if(DLCurrent == 2){
+                        // BDT
+                        sliceCompleteness_splitPFPBDT.cosmicElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPBDT.cosmicElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPBDT.cosmicElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPBDT.cosmicElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPBDT.cosmicElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPBDT.cosmicElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPBDT.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPBDT.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPBDT.cosmicElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPBDT.cosmicElectron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 0){
+                        // DL Uboone
+                        sliceCompleteness_splitPFPDLUboone.cosmicElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLUboone.cosmicElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLUboone.cosmicElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLUboone.cosmicElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLUboone.cosmicElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLUboone.cosmicElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLUboone.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLUboone.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLUboone.cosmicElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLUboone.cosmicElectron->Fill(Q2SumValue, weight);
+                        }
+
+                    } else if(DLCurrent == 5){
+                        // DL Nu+E
+                        numSlicesHighestPFPAfterDLNuE.cosmicElectron++;
+                        numSlicesHighestPFPAfterWeightedDLNuE.cosmicElectron += weight;
+                        sliceCompleteness_splitPFPDLNuE.cosmicElectron->Fill(reco_sliceCompleteness->at(slice), weight);
+                        slicePurity_splitPFPDLNuE.cosmicElectron->Fill(reco_slicePurity->at(slice), weight);
+                        sliceCRUMBSScore_splitPFPDLNuE.cosmicElectron->Fill(reco_sliceScore->at(slice), weight);
+                        sliceNumPFPs_splitPFPDLNuE.cosmicElectron->Fill(numPFPsSlice, weight);
+                        sliceNumPrimaryPFPs_splitPFPDLNuE.cosmicElectron->Fill(numPrimaryPFPsSlice, weight);
+                        sliceNumNeutrinos_splitPFPDLNuE.cosmicElectron->Fill(numRecoNeutrinos, weight);
+
+                        if(highestEnergy_PFPID != -999999){
+                            ERecoSumThetaReco_splitPFPDLNuE.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaReco_splitPFPDLNuE.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+                        }
+
+                        if(Q2HighestValue != -999999){
+                            QSquaredHighest_splitPFPDLNuE.cosmicElectron->Fill(Q2HighestValue, weight);
+                        }
+
+                        if(Q2SumValue != -999999){
+                            QSquaredSum_splitPFPDLNuE.cosmicElectron->Fill(Q2SumValue, weight);
+                        }
+
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.cosmicElectron->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.cosmicElectron->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.cosmicElectron->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.cosmicElectron->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.cosmicElectron->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.cosmicElectron->Fill(recoVZ, weight);
+                        }
+
+
                     }
                 } else if(highestEnergy_trueOrigin == 2){
                     // Something else from cosmic origin
@@ -4789,8 +5287,24 @@ void nuEBackgroundSignalCut_macro(){
 
                     } else if(DLCurrent == 5){
                         // DL Nu+E
-                        numSlicesHighestPFPAfterDLNuE.cosmicOther++;
-                        numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther += weight;
+                        if(std::abs(highestEnergy_truePDG) == 211){
+                            numSlicesHighestPFPAfterDLNuE.cosmicChargedPi++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.cosmicChargedPi += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 2212){
+                            numSlicesHighestPFPAfterDLNuE.cosmicProton++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.cosmicProton += weight;
+                        } else if(std::abs(highestEnergy_truePDG) == 2112){
+                            numSlicesHighestPFPAfterDLNuE.cosmicNeutron++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.cosmicNeutron += weight;
+                        } else if(std::abs(highestEnergy_truePDG) > 1e+09){
+                            numSlicesHighestPFPAfterDLNuE.cosmicNoTruth++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.cosmicNoTruth += weight;
+                        } else{
+                            numSlicesHighestPFPAfterDLNuE.cosmicOther++;
+                            numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther += weight;
+                            std::cout << "Cosmic Other, True PDG = " << highestEnergy_truePDG << std::endl;
+                        }
+                        
                         sliceCompleteness_splitPFPDLNuE.cosmicOther->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity_splitPFPDLNuE.cosmicOther->Fill(reco_slicePurity->at(slice), weight);
                         sliceCRUMBSScore_splitPFPDLNuE.cosmicOther->Fill(reco_sliceScore->at(slice), weight);
@@ -4812,8 +5326,17 @@ void nuEBackgroundSignalCut_macro(){
                             QSquaredSum_splitPFPDLNuE.cosmicOther->Fill(Q2SumValue, weight);
                         }
 
+                        if(recoVX != -999999){
+                            recoX_low_splitPFPDLNuE.cosmicOther->Fill(recoVX, weight);
+                            recoX_high_splitPFPDLNuE.cosmicOther->Fill(recoVX, weight);
+                            recoY_low_splitPFPDLNuE.cosmicOther->Fill(recoVY, weight);
+                            recoY_high_splitPFPDLNuE.cosmicOther->Fill(recoVY, weight);
+                            recoZ_low_splitPFPDLNuE.cosmicOther->Fill(recoVZ, weight);
+                            recoZ_high_splitPFPDLNuE.cosmicOther->Fill(recoVZ, weight);
+                        }
+
+
                     }
-                    std::cout << "Cosmic Other, True PDG = " << highestEnergy_truePDG << std::endl;
                 }
 
 
@@ -5882,7 +6405,17 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.currentCosmic->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentCosmic->Fill(highestEnergy_trackscore);
-                            
+                           
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentCosmic->Fill(highestEnergy_bestPlanedEdx);
+
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfpTrack) != -999999){
@@ -5972,6 +6505,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneCosmic->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6062,6 +6605,16 @@ void nuEBackgroundSignalCut_macro(){
                             
                             trackscoreHighestEnergyPFP.nuECosmic->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuECosmic->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuECosmic->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6139,6 +6692,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.currentSignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignal->Fill(highestEnergy_bestPlanedEdx);
                            
     
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
@@ -6302,6 +6865,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.ubooneSignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneSignal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignal->Fill(highestEnergy_bestPlanedEdx);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6463,6 +7036,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.nuESignal->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignal->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignal->Fill(highestEnergy_bestPlanedEdx);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6627,6 +7210,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentSignalFuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6760,6 +7353,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneSignalFuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6894,6 +7497,16 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuESignalFuzzy->Fill(highestEnergy_trackscore);
                             
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
                                     if(reco_particleTrackScore->at(pfpTrack) != -999999){
@@ -7013,6 +7626,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.currentBNB->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentBNB->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNB->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7113,6 +7736,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.ubooneBNB->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneBNB->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNB->Fill(highestEnergy_bestPlanedEdx);
                            
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
@@ -7214,6 +7847,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.nuEBNB->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuEBNB->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNB->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7316,6 +7959,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.currentBNBFuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7415,6 +8068,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.ubooneBNBFuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7514,6 +8177,16 @@ void nuEBackgroundSignalCut_macro(){
 
                             trackscoreHighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_trackscore, weight);
                             trackscoreHighestEnergyPFPDist.nuEBNBFuzzy->Fill(highestEnergy_trackscore);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG11);
+                                razzledPDG13HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG13);
+                                razzledPDG22HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG22);
+                                razzledPDG211HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG211);
+                                razzledPDG2212HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7594,32 +8267,32 @@ void nuEBackgroundSignalCut_macro(){
 
     styleDrawAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right, true, true, false, false, false, false, true, true);
     
-    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
-    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawBackSig(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
-    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceNumPrimaryPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
     styleDrawBackSig(sliceNumPrimaryPFPs, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
-    styleDrawAll(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(sliceNumNeutrinosDist, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(sliceNumNeutrinos, 999, 999, 999, 999, (base_path + "sliceNumNeutrinos_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
 
-    styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(QSquaredHighestDist, 999, 999, 999, 999, (base_path + "QSquared_highest_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_Backsig_lower_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(QSquaredHighest, 999, 999, 999, 999, (base_path + "QSquared_highest_Backsig_lower_weighted.pdf").c_str(), "topRight", false, false, true, true);
     
-    styleDrawAll(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
+    styleDrawAll(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(QSquaredSumDist, 999, 999, 999, 999, (base_path + "QSquared_sum_all_lower_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_Backsig_lower_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(QSquaredSum, 999, 999, 999, 999, (base_path + "QSquared_sum_Backsig_lower_weighted.pdf").c_str(), "topRight", false, false, true, true);
 
     styleDrawAll(trackscoreHighestEnergyPFP, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(trackscoreHighestEnergyPFPDist, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
@@ -7633,6 +8306,19 @@ void nuEBackgroundSignalCut_macro(){
     
     styleDrawAll(trackscoreAllPFPsPFP, 999, 999, 999, 999, (base_path + "trackscoreAllPFPsPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(trackscoreAllPFPsPFP, 999, 999, 999, 999, (base_path + "trackscoreAllPFPsPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+
+    styleDrawAll(dEdxHighestEnergyPFP, 999, 999, 999, 999, (base_path + "dEdxHighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(dEdxHighestEnergyPFP, 999, 999, 999, 999, (base_path + "dEdxHighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledPDG11HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG11HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(razzledPDG11HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG11HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledPDG13HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG13HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(razzledPDG13HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG13HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledPDG22HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(razzledPDG22HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledPDG211HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(razzledPDG211HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledPDG2212HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(razzledPDG2212HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
 
     styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
@@ -7652,33 +8338,33 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(ThetaTrue, 999, 999, 999, 999, (base_path + "ThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
     styleDrawAll(ThetaTrueDist, 999, 999, 999, 999, (base_path + "ThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
 
-    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaX, 999, 999, 999, 999, (base_path + "deltaX_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, false, true);
     styleDrawAll(deltaXDist, 999, 999, 999, 999, (base_path + "deltaX_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
     styleDrawAll(deltaXDist, 0, 32000, 999, 999, (base_path + "deltaX_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaXDist, 0, 35000, 999, 999, (base_path + "deltaX_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaXDist, 0, 9000, 999, 999, (base_path + "deltaX_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaXDist, 0, 4000, 999, 999, (base_path + "deltaX_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
-    styleDrawBackSig(deltaX, 999, 999, 999, 999, (base_path + "deltaX_BackSig_weighted.pdf").c_str(), "topRight", true, false, true, true);
+    styleDrawBackSig(deltaX, 999, 999, 999, 999, (base_path + "deltaX_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
 
-    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaY, 999, 999, 999, 999, (base_path + "deltaY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, false, true);
     styleDrawAll(deltaYDist, 999, 999, 999, 999, (base_path + "deltaY_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
-    styleDrawBackSig(deltaY, 999, 999, 999, 999, (base_path + "deltaY_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(deltaY, 999, 999, 999, 999, (base_path + "deltaY_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(deltaYDist, 0, 19000, 999, 999, (base_path + "deltaY_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaYDist, 0, 37000, 999, 999, (base_path + "deltaY_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaYDist, 0, 8000, 999, 999, (base_path + "deltaY_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaYDist, 0, 4000, 999, 999, (base_path + "deltaY_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     
-    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, false, true);
     styleDrawAll(deltaZDist, 999, 999, 999, 999, (base_path + "deltaZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
-    styleDrawBackSig(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(deltaZ, 999, 999, 999, 999, (base_path + "deltaZ_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(deltaZDist, 0, 20000, 999, 999, (base_path + "deltaZ_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaZDist, 0, 36000, 999, 999, (base_path + "deltaZ_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaZDist, 0, 9000, 999, 999, (base_path + "deltaZ_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
     styleDrawAll(deltaZDist, 0, 4000, 999, 999, (base_path + "deltaZ_BNBDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, true, false);
     
-    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true, true);
+    styleDrawAll(deltaR, 999, 999, 999, 999, (base_path + "deltaR_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, false, true, false, true);
     styleDrawAll(deltaRDist, 999, 999, 999, 999, (base_path + "deltaR_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, false, true, true, true);
-    styleDrawBackSig(deltaR, 999, 999, 999, 999, (base_path + "deltaR_BackSig_weighted.pdf").c_str(), "topRight", true, true, true, true);
+    styleDrawBackSig(deltaR, 999, 999, 999, 999, (base_path + "deltaR_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(deltaRDist, 0, 25000, 999, 999, (base_path + "deltaR_signalBDT_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, false, true);
     styleDrawAll(deltaRDist, 0, 69000, 999, 999, (base_path + "deltaR_signalDLNuE_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false);
     styleDrawAll(deltaRDist, 0, 13000, 999, 999, (base_path + "deltaR_BNBBDT_dist.pdf").c_str(), "topRight", nullptr, &right, false, false, true, true, false, false, false, true);
@@ -7694,7 +8380,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoX_low, 999, 999, 999, 999, (base_path + "recoX_low_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     styleDrawAll(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(recoXDist_high, 999, 999, 999, 999, (base_path + "recoX_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
+    styleDrawBackSig(recoX_high, 999, 999, 999, 999, (base_path + "recoX_high_BackSig_weighted.pdf").c_str(), "bottomLeft", false, false, true, true);
     styleDrawAll(recoX_smallerBins, 999, 999, 999, 999, (base_path + "recoX_smallerBins_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoX_smallerBins, 999, 999, 999, 999, (base_path + "recoX_smallerBins_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     efficiency(recoX_smallerBins, 0, 1, -202, -190, (base_path + "recoX_smallerBins_right").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
@@ -7707,14 +8393,14 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(recoY, 0, 1, 140, 205, (base_path + "recoY_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
     styleDrawAll(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(recoYDist_low, 999, 999, 999, 999, (base_path + "recoY_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(recoY_low, 999, 999, 999, 999, (base_path + "recoY_low_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     styleDrawAll(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(recoYDist_high, 999, 999, 999, 999, (base_path + "recoY_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
+    styleDrawBackSig(recoY_high, 999, 999, 999, 999, (base_path + "recoY_high_BackSig_weighted.pdf").c_str(), "bottomLeft", false, false, true, true);
     styleDrawAll(recoY_smallerBins, 999, 999, 999, 999, (base_path + "recoY_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoY_smallerBins, 999, 999, 999, 999, (base_path + "recoY_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     efficiency(recoY_smallerBins, 0, 1, -205, -190, (base_path + "recoY_smallerBins_right").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
-    efficiency(recoY_smallerBins, 0, 1, 140, 205, (base_path + "recoY_smallerBins_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
+    efficiency(recoY_smallerBins, 0, 1, 190, 205, (base_path + "recoY_smallerBins_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoZ, 999, 999, 999, 999, (base_path + "recoZ_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(recoZDist, 999, 999, 999, 999, (base_path + "recoZ_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
@@ -7723,14 +8409,14 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(recoZ, 0, 1, 490, 510, (base_path + "recoZ_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
     styleDrawAll(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(recoZDist_low, 999, 999, 999, 999, (base_path + "recoZ_low_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(recoZ_low, 999, 999, 999, 999, (base_path + "recoZ_low_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     styleDrawAll(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(recoZDist_high, 999, 999, 999, 999, (base_path + "recoZ_high_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "bottomLeft", true, true, true, true);
+    styleDrawBackSig(recoZ_high, 999, 999, 999, 999, (base_path + "recoZ_high_BackSig_weighted.pdf").c_str(), "bottomLeft", false, false, true, true);
     styleDrawAll(recoZ_smallerBins, 999, 999, 999, 999, (base_path + "recoZ_smallerBins_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoZ_smallerBins, 999, 999, 999, 999, (base_path + "recoZ_smallerBins_BackSig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     efficiency(recoZ_smallerBins, 0, 1, 0, 20, (base_path + "recoZ_smallerBins_right").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
-    efficiency(recoZ_smallerBins, 0, 1, 490, 510, (base_path + "recoZ_smallerBins_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
+    efficiency(recoZ_smallerBins, 0, 1, 480, 510, (base_path + "recoZ_smallerBins_left").c_str(), "topLeft", nullptr, &right, 1, txtFileName);
 
     styleDrawAll(deltaTheta, 999, 999, 999, 999, (base_path + "deltaTheta_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true, false);
     styleDrawAll(deltaThetaDist, 999, 999, 999, 999, (base_path + "deltaTheta_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, true, true, true);
@@ -7738,10 +8424,10 @@ void nuEBackgroundSignalCut_macro(){
 
     styleDrawAll(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpCompletenessDist, 999, 999, 999, 999, (base_path + "pfpCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(pfpCompleteness, 999, 999, 999, 999, (base_path + "pfpCompleteness_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
     styleDrawAll(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true, true);
     styleDrawAll(pfpPurityDist, 999, 999, 999, 999, (base_path + "pfpPurity_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
-    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", true, true, true, true);
+    styleDrawBackSig(pfpPurity, 999, 999, 999, 999, (base_path + "pfpPurity_BackSig_weighted.pdf").c_str(), "bottomRight", false, false, true, true);
 
     //Test
     //efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1); 
@@ -7749,11 +8435,11 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(sliceCompleteness, 0, 1, 999, 999, (base_path + "sliceCompleteness").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(slicePurity, 0, 1, 999, 999, (base_path + "slicePurity").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(sliceCRUMBSScore, 0, 1, -1, 0.8, (base_path + "sliceCRUMBSScoreNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
-    efficiency(sliceCRUMBSScore, 0, 1, 0.1, 0.8, (base_path + "sliceCRUMBSScorePositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(sliceCRUMBSScore, 0, 1, 0.1, 1, (base_path + "sliceCRUMBSScorePositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(sliceNumPFPs, 0, 1, 999, 999, (base_path + "sliceNumPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
     efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPsNegative").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
-    efficiency(sliceNumPrimaryPFPs, 0, 1, 999, 999, (base_path + "sliceNumPrimaryPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
+    efficiency(sliceNumPrimaryPFPs, 0, 1, 0, 10, (base_path + "sliceNumPrimaryPFPsPositive").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
     efficiency(sliceNumNeutrinos, 0, 1, 0, 2, (base_path + "sliceNumNeutrinos").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
 
     efficiency(ERecoSumThetaReco, 0, 1, 999, 999, (base_path + "ERecoSumThetaReco").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
@@ -7767,6 +8453,18 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(trackscoreHighestScorePFPs, 0, 1, 999, 999, (base_path + "trackscoreHighestScorePFPs").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
     
     efficiency(trackscoreAllPFPsPFP, 0, 1, 999, 999, (base_path + "trackscoreAllPFPsPFP").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+
+    efficiency(dEdxHighestEnergyPFP, 0, 1, 999, 999, (base_path + "dEdxHighestEnergyPFP").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(razzledPDG11HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG11HighestEnergyPFPNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(razzledPDG11HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG11HighestEnergyPFPPositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(razzledPDG13HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG13HighestEnergyPFPNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(razzledPDG13HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG13HighestEnergyPFPPositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(razzledPDG22HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG22HighestEnergyPFPNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(razzledPDG22HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG22HighestEnergyPFPPositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(razzledPDG211HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG211HighestEnergyPFPNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(razzledPDG211HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG211HighestEnergyPFPPositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
+    efficiency(razzledPDG2212HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFPNegative").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
+    efficiency(razzledPDG2212HighestEnergyPFP, 0, 1, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFPPositive").c_str(), "bottomLeft", nullptr, &right, 1, txtFileName);
 
     efficiency(recoX_low, 0, 1, 999, 999, (base_path + "recoX_low").c_str(), "bottomLeft", nullptr, &right, -1, txtFileName);
     efficiency(recoY_low, 0, 1, 999, 999, (base_path + "recoY_low").c_str(), "bottomRight", nullptr, &right, -1, txtFileName);
@@ -7960,6 +8658,12 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(ERecoSumThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(recoX_low_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(recoX_high_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted_splitPFPDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
+    styleDrawPFPSplit(recoY_low_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(recoY_high_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoY_high_all_weighted_splitPFPDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
+    styleDrawPFPSplit(recoZ_low_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoZ_low_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(recoZ_high_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoZ_high_all_weighted_splitPFPDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
 
     printf("Number of Events\nUnweighted BDT: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_BDTCosmic, numEvents_BDTBNB, numEvents_BDTNuE);
     printf("Unweighted DL Nu+E: Cosmic = %f, BNB = %f, Nu+E = %f\n", numEvents_DLNuECosmic, numEvents_DLNuEBNB, numEvents_DLNuENuE);
@@ -8063,16 +8767,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
 
-        if(FVCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack) << " & " << (eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-
         if(CRUMBSCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_DLNuE << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_DLNuE << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack) << " & " << (eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
        
+        if(FVCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack) << " & " << (eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLNuE << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack) << " & " << (eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8124,16 +8828,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
        
-        if(FVCut == 1){
-            out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-
         if(CRUMBSCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_DLNuE << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_DLNuE << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
        
+        if(FVCut == 1){
+            out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLNuE << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8183,16 +8887,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
 
-        if(FVCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack) << " & " << (eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLUboone.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVBack/eventsBeforeCuts_DLUboone.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-
         if(CRUMBSCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_DLUboone << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_DLUboone << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.crumbsSig/(eventsAfterCuts_DLUboone.crumbsSig+eventsAfterCuts_DLUboone.crumbsBack) << " & " << (eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.crumbsSig/(eventsAfterCuts_DLUboone.crumbsSig+eventsAfterCuts_DLUboone.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsSig/eventsBeforeCuts_DLUboone.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsBack/eventsBeforeCuts_DLUboone.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
        
+        if(FVCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack) << " & " << (eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.FVSig/(eventsAfterCuts_DLUboone.FVSig+eventsAfterCuts_DLUboone.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLUboone.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVSig/eventsBeforeCuts_DLUboone.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVBack/eventsBeforeCuts_DLUboone.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLUboone << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal << " & " << 100*eventsAfterCuts_DLUboone.primaryPFPSig/(eventsAfterCuts_DLUboone.primaryPFPSig+eventsAfterCuts_DLUboone.primaryPFPBack) << " & " << (eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal)*(eventsAfterCuts_DLUboone.primaryPFPSig/(eventsAfterCuts_DLUboone.primaryPFPSig+eventsAfterCuts_DLUboone.primaryPFPBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.primaryPFPSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPSig/eventsBeforeCuts_DLUboone.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.primaryPFPBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPBack/eventsBeforeCuts_DLUboone.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8244,16 +8948,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
        
-        if(FVCut == 1){
-            out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.nuE/eventsBeforeCuts_DLUboone.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0/eventsBeforeCuts_DLUboone.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.otherNC/eventsBeforeCuts_DLUboone.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.CCnumu/eventsBeforeCuts_DLUboone.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.CCnue/eventsBeforeCuts_DLUboone.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.dirt/eventsBeforeCuts_DLUboone.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt/eventsBeforeCuts_DLUboone.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.cosmic/eventsBeforeCuts_DLUboone.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.other/eventsBeforeCuts_DLUboone.splitInt.other << "\\%) \\\\"<< std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-
         if(CRUMBSCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_DLUboone << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_DLUboone << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.nuE/eventsBeforeCuts_DLUboone.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.NCNPi0/eventsBeforeCuts_DLUboone.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.otherNC/eventsBeforeCuts_DLUboone.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.CCnumu/eventsBeforeCuts_DLUboone.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.CCnue/eventsBeforeCuts_DLUboone.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.dirt/eventsBeforeCuts_DLUboone.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.nuEDirt/eventsBeforeCuts_DLUboone.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.cosmic/eventsBeforeCuts_DLUboone.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.crumbsIntSplit.other/eventsBeforeCuts_DLUboone.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
        
+        if(FVCut == 1){
+            out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.nuE/eventsBeforeCuts_DLUboone.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.NCNPi0/eventsBeforeCuts_DLUboone.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.otherNC/eventsBeforeCuts_DLUboone.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.CCnumu/eventsBeforeCuts_DLUboone.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.CCnue/eventsBeforeCuts_DLUboone.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.dirt/eventsBeforeCuts_DLUboone.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.nuEDirt/eventsBeforeCuts_DLUboone.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.cosmic/eventsBeforeCuts_DLUboone.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.FVIntSplit.other/eventsBeforeCuts_DLUboone.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_DLUboone << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuE/eventsBeforeCuts_DLUboone.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.NCNPi0/eventsBeforeCuts_DLUboone.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.otherNC/eventsBeforeCuts_DLUboone.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnumu/eventsBeforeCuts_DLUboone.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.CCnue/eventsBeforeCuts_DLUboone.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.dirt/eventsBeforeCuts_DLUboone.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.nuEDirt/eventsBeforeCuts_DLUboone.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.cosmic/eventsBeforeCuts_DLUboone.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLUboone.primaryPFPIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLUboone.primaryPFPIntSplit.other/eventsBeforeCuts_DLUboone.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8304,16 +9008,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
 
+        if(CRUMBSCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_BDT << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_BDT << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack) << " & " << (eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsBack/eventsBeforeCuts_BDT.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
         if(FVCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.FVSig/(eventsAfterCuts_BDT.FVSig+eventsAfterCuts_BDT.FVBack) << " & " << (eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.FVSig/(eventsAfterCuts_BDT.FVSig+eventsAfterCuts_BDT.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_BDT.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVSig/eventsBeforeCuts_BDT.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVBack/eventsBeforeCuts_BDT.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
 
-        if(CRUMBSCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_BDT << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_BDT << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack) << " & " << (eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.crumbsSig/(eventsAfterCuts_BDT.crumbsSig+eventsAfterCuts_BDT.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsSig/eventsBeforeCuts_BDT.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsBack/eventsBeforeCuts_BDT.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-       
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_BDT << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal << " & " << 100*eventsAfterCuts_BDT.primaryPFPSig/(eventsAfterCuts_BDT.primaryPFPSig+eventsAfterCuts_BDT.primaryPFPBack) << " & " << (eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal)*(eventsAfterCuts_BDT.primaryPFPSig/(eventsAfterCuts_BDT.primaryPFPSig+eventsAfterCuts_BDT.primaryPFPBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.primaryPFPSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPSig/eventsBeforeCuts_BDT.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.primaryPFPBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPBack/eventsBeforeCuts_BDT.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8365,16 +9069,16 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
        
+        if(CRUMBSCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_BDT << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_BDT << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.nuE/eventsBeforeCuts_BDT.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0/eventsBeforeCuts_BDT.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.otherNC/eventsBeforeCuts_BDT.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.CCnumu/eventsBeforeCuts_BDT.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.CCnue/eventsBeforeCuts_BDT.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.dirt/eventsBeforeCuts_BDT.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt/eventsBeforeCuts_BDT.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.cosmic/eventsBeforeCuts_BDT.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.other/eventsBeforeCuts_BDT.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
         if(FVCut == 1){
             out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.nuE/eventsBeforeCuts_BDT.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.NCNPi0/eventsBeforeCuts_BDT.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.otherNC/eventsBeforeCuts_BDT.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.CCnumu/eventsBeforeCuts_BDT.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.CCnue/eventsBeforeCuts_BDT.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.dirt/eventsBeforeCuts_BDT.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.nuEDirt/eventsBeforeCuts_BDT.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.cosmic/eventsBeforeCuts_BDT.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.FVIntSplit.other/eventsBeforeCuts_BDT.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
 
-        if(CRUMBSCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low_BDT << " $<$ CRUMBS Score $<$ " << crumbsScoreCut_high_BDT << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.nuE/eventsBeforeCuts_BDT.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.NCNPi0/eventsBeforeCuts_BDT.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.otherNC/eventsBeforeCuts_BDT.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.CCnumu/eventsBeforeCuts_BDT.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.CCnue/eventsBeforeCuts_BDT.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.dirt/eventsBeforeCuts_BDT.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.nuEDirt/eventsBeforeCuts_BDT.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.cosmic/eventsBeforeCuts_BDT.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.crumbsIntSplit.other/eventsBeforeCuts_BDT.splitInt.other << "\\%) \\\\"<< std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-       
         if(primaryPFPCut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCut_low_BDT << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_BDT.primaryPFPIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.nuE/eventsBeforeCuts_BDT.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.NCNPi0/eventsBeforeCuts_BDT.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.otherNC/eventsBeforeCuts_BDT.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.CCnumu/eventsBeforeCuts_BDT.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.CCnue/eventsBeforeCuts_BDT.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.dirt/eventsBeforeCuts_BDT.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.nuEDirt/eventsBeforeCuts_BDT.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.cosmic/eventsBeforeCuts_BDT.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_BDT.primaryPFPIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_BDT.primaryPFPIntSplit.other/eventsBeforeCuts_BDT.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -8400,8 +9104,12 @@ void nuEBackgroundSignalCut_macro(){
     }
 
     //printf("\nAll PFPs in Slices:\nNumber of: nu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, other = %f, cosmic muon = %f, cosmic other = %f\n", numPFPsBeforeDLNuE.nuEElectron, numPFPsBeforeDLNuE.nuEOther, numPFPsBeforeDLNuE.electron, numPFPsBeforeDLNuE.proton, numPFPsBeforeDLNuE.muon, numPFPsBeforeDLNuE.pi0, numPFPsBeforeDLNuE.chargedPi, numPFPsBeforeDLNuE.other, numPFPsBeforeDLNuE.cosmicMuon, numPFPsBeforeDLNuE.cosmicOther);
-    printf("\n\nHighest Energy PFP in Slices After Cuts (Unweighted):\nnu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, photon = %f, other = %f, cosmic muons = %f, cosmic other = %f\n", numSlicesHighestPFPAfterDLNuE.nuEElectron, numSlicesHighestPFPAfterDLNuE.nuEOther, numSlicesHighestPFPAfterDLNuE.electron, numSlicesHighestPFPAfterDLNuE.proton, numSlicesHighestPFPAfterDLNuE.muon, numSlicesHighestPFPAfterDLNuE.pi0, numSlicesHighestPFPAfterDLNuE.chargedPi, numSlicesHighestPFPAfterDLNuE.photon, numSlicesHighestPFPAfterDLNuE.other, numSlicesHighestPFPAfterDLNuE.cosmicMuon, numSlicesHighestPFPAfterDLNuE.cosmicOther);
-    printf("\n\nHighest Energy PFP in Slices After Cuts (Weighted):\nnu+e electrons = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f\npi0 = %f, charged pi = %f, photon = %f, other = %f, cosmic muons = %f, cosmic other = %f\n", numSlicesHighestPFPAfterWeightedDLNuE.nuEElectron, numSlicesHighestPFPAfterWeightedDLNuE.nuEOther, numSlicesHighestPFPAfterWeightedDLNuE.electron, numSlicesHighestPFPAfterWeightedDLNuE.proton, numSlicesHighestPFPAfterWeightedDLNuE.muon, numSlicesHighestPFPAfterWeightedDLNuE.pi0, numSlicesHighestPFPAfterWeightedDLNuE.chargedPi, numSlicesHighestPFPAfterWeightedDLNuE.photon, numSlicesHighestPFPAfterWeightedDLNuE.other, numSlicesHighestPFPAfterWeightedDLNuE.cosmicMuon, numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther);
+    printf("\nHighest Energy PFP in Slices Before Cuts (Unweighted):\nnu+e electrons = %f, nu+e proton = %f, nu+e photon = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f, pi0 = %f, charged pi = %f, photon = %f, neutron = %f, kaon = %f, other = %f, no truth (beam) = %f, cosmic muons = %f, cosmic photons = %f, cosmic protons = %f, cosmic electrons = %f, cosmic charged pi = %f, cosmic neutrons = %f, cosmic other = %f, no truth (cosmic) = %f\n", numSlicesHighestPFPBeforeDLNuE.nuEElectron, numSlicesHighestPFPBeforeDLNuE.nuEProton, numSlicesHighestPFPBeforeDLNuE.nuEPhoton, numSlicesHighestPFPBeforeDLNuE.nuEOther, numSlicesHighestPFPBeforeDLNuE.electron, numSlicesHighestPFPBeforeDLNuE.proton, numSlicesHighestPFPBeforeDLNuE.muon, numSlicesHighestPFPBeforeDLNuE.pi0, numSlicesHighestPFPBeforeDLNuE.chargedPi, numSlicesHighestPFPBeforeDLNuE.photon, numSlicesHighestPFPBeforeDLNuE.neutron, numSlicesHighestPFPBeforeDLNuE.kaon, numSlicesHighestPFPBeforeDLNuE.other, numSlicesHighestPFPBeforeDLNuE.noTruth, numSlicesHighestPFPBeforeDLNuE.cosmicMuon, numSlicesHighestPFPBeforeDLNuE.cosmicPhoton, numSlicesHighestPFPBeforeDLNuE.cosmicProton, numSlicesHighestPFPBeforeDLNuE.cosmicElectron, numSlicesHighestPFPBeforeDLNuE.cosmicChargedPi, numSlicesHighestPFPBeforeDLNuE.cosmicNeutron, numSlicesHighestPFPBeforeDLNuE.cosmicOther, numSlicesHighestPFPBeforeDLNuE.cosmicNoTruth);
+    printf("\nHighest Energy PFP in Slices Before Cuts (Weighted):\nnu+e electrons = %f, nu+e proton = %f, nu+e photon = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f, pi0 = %f, charged pi = %f, photon = %f, neutron = %f, kaon = %f, other = %f, no truth (beam) = %f, cosmic muons = %f, cosmic photons = %f, cosmic protons = %f, cosmic electrons = %f, cosmic charged pi = %f, cosmic neutrons = %f, cosmic other = %f, no truth (cosmic) = %f\n", numSlicesHighestPFPBeforeWeightedDLNuE.nuEElectron, numSlicesHighestPFPBeforeWeightedDLNuE.nuEProton, numSlicesHighestPFPBeforeWeightedDLNuE.nuEPhoton, numSlicesHighestPFPBeforeWeightedDLNuE.nuEOther, numSlicesHighestPFPBeforeWeightedDLNuE.electron, numSlicesHighestPFPBeforeWeightedDLNuE.proton, numSlicesHighestPFPBeforeWeightedDLNuE.muon, numSlicesHighestPFPBeforeWeightedDLNuE.pi0, numSlicesHighestPFPBeforeWeightedDLNuE.chargedPi, numSlicesHighestPFPBeforeWeightedDLNuE.photon, numSlicesHighestPFPBeforeWeightedDLNuE.neutron, numSlicesHighestPFPBeforeWeightedDLNuE.kaon, numSlicesHighestPFPBeforeWeightedDLNuE.other, numSlicesHighestPFPBeforeWeightedDLNuE.noTruth, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicMuon, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicPhoton, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicProton, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicElectron, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicChargedPi, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicNeutron, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicOther, numSlicesHighestPFPBeforeWeightedDLNuE.cosmicNoTruth);
+    printf("\n\nHighest Energy PFP in Slices After Cuts (Unweighted):\nnu+e electrons = %f, nu+e proton = %f, nu+e photon = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f, pi0 = %f, charged pi = %f, photon = %f, neutron = %f, kaon = %f, other = %f, no truth (beam) = %f, cosmic muons = %f, cosmic photons = %f, cosmic protons = %f, cosmic electrons = %f, cosmic charged pi = %f, cosmic neutrons = %f, cosmic other = %f, no truth (cosmic) = %f\n", numSlicesHighestPFPAfterDLNuE.nuEElectron, numSlicesHighestPFPAfterDLNuE.nuEProton, numSlicesHighestPFPAfterDLNuE.nuEPhoton, numSlicesHighestPFPAfterDLNuE.nuEOther, numSlicesHighestPFPAfterDLNuE.electron, numSlicesHighestPFPAfterDLNuE.proton, numSlicesHighestPFPAfterDLNuE.muon, numSlicesHighestPFPAfterDLNuE.pi0, numSlicesHighestPFPAfterDLNuE.chargedPi, numSlicesHighestPFPAfterDLNuE.photon, numSlicesHighestPFPAfterDLNuE.neutron, numSlicesHighestPFPAfterDLNuE.kaon, numSlicesHighestPFPAfterDLNuE.other, numSlicesHighestPFPAfterDLNuE.noTruth, numSlicesHighestPFPAfterDLNuE.cosmicMuon, numSlicesHighestPFPAfterDLNuE.cosmicPhoton, numSlicesHighestPFPAfterDLNuE.cosmicProton, numSlicesHighestPFPAfterDLNuE.cosmicElectron, numSlicesHighestPFPAfterDLNuE.cosmicChargedPi, numSlicesHighestPFPAfterDLNuE.cosmicNeutron, numSlicesHighestPFPAfterDLNuE.cosmicOther, numSlicesHighestPFPAfterDLNuE.cosmicNoTruth);
+    printf("\nHighest Energy PFP in Slices After Cuts (Weighted):\nnu+e electrons = %f, nu+e proton = %f, nu+e photon = %f, nu+e other = %f, electron = %f, proton = %f, muon = %f, pi0 = %f, charged pi = %f, photon = %f, neutron = %f, kaon = %f, other = %f, no truth (beam) = %f, cosmic muons = %f, cosmic photons = %f, cosmic protons = %f, cosmic electrons = %f, cosmic charged pi = %f, cosmic neutrons = %f, cosmic other = %f, no truth (cosmic) = %f\n", numSlicesHighestPFPAfterWeightedDLNuE.nuEElectron, numSlicesHighestPFPAfterWeightedDLNuE.nuEProton, numSlicesHighestPFPAfterWeightedDLNuE.nuEPhoton, numSlicesHighestPFPAfterWeightedDLNuE.nuEOther, numSlicesHighestPFPAfterWeightedDLNuE.electron, numSlicesHighestPFPAfterWeightedDLNuE.proton, numSlicesHighestPFPAfterWeightedDLNuE.muon, numSlicesHighestPFPAfterWeightedDLNuE.pi0, numSlicesHighestPFPAfterWeightedDLNuE.chargedPi, numSlicesHighestPFPAfterWeightedDLNuE.photon, numSlicesHighestPFPAfterWeightedDLNuE.neutron, numSlicesHighestPFPAfterWeightedDLNuE.kaon, numSlicesHighestPFPAfterWeightedDLNuE.other, numSlicesHighestPFPAfterWeightedDLNuE.noTruth, numSlicesHighestPFPAfterWeightedDLNuE.cosmicMuon, numSlicesHighestPFPAfterWeightedDLNuE.cosmicPhoton, numSlicesHighestPFPAfterWeightedDLNuE.cosmicProton, numSlicesHighestPFPAfterWeightedDLNuE.cosmicElectron, numSlicesHighestPFPAfterWeightedDLNuE.cosmicChargedPi, numSlicesHighestPFPAfterWeightedDLNuE.cosmicNeutron, numSlicesHighestPFPAfterWeightedDLNuE.cosmicOther, numSlicesHighestPFPAfterWeightedDLNuE.cosmicNoTruth);
+
+    std::cout << "Num nu+e electron slices from BNB files: before cuts = " << numNuEScatterElectronsBNB_before_DLNuE << ", after = " << numNuEScatterElectronsBNB_after_DLNuE << std::endl;
 
     //printf("\nNum Nu+E from slice category = %f, num Nu+E from int type = %f\n", numNuESliceCategory_DLNuE, numNuEIntType_DLNuE);
     //printf("Num nu+e with completeness > 0.5 = %f, num nu+e in else = %f\n", numNuESliceCategoryPassed_DLNuE, numNuESliceCategoryElse_DLNuE);
