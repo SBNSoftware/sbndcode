@@ -35,6 +35,7 @@
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
+#include "sbnobj/Common/Reco/MVAPID.h"
 
 // Tools
 #include "canvas/Persistency/Common/FindManyP.h"
@@ -193,6 +194,16 @@ private:
   std::vector<double>   reco_particleNumHitsTruthMatched;
   std::vector<double>   reco_particleNumTruthHits;
   std::vector<double>   reco_particleClearCosmic;
+  std::vector<double>   reco_particlePlane0dEdx;
+  std::vector<double>   reco_particlePlane1dEdx;
+  std::vector<double>   reco_particlePlane2dEdx;
+  std::vector<double>   reco_particleBestPlanedEdx;
+  std::vector<double>   reco_particleRazzledPDG11;
+  std::vector<double>   reco_particleRazzledPDG13;
+  std::vector<double>   reco_particleRazzledPDG22;
+  std::vector<double>   reco_particleRazzledPDG211;
+  std::vector<double>   reco_particleRazzledPDG2212;
+  std::vector<double>   reco_particleRazzledBestPDG;
   
   std::vector<double>   reco_neutrinoID;
   std::vector<double>   reco_neutrinoPDG;
@@ -214,6 +225,7 @@ private:
   const std::string nuGenModuleLabel;
   const std::string hitLabel;
   const std::string crumbsLabel;
+  const std::string razzledLabel;
   const std::string trackLabel;
   const std::string showerLabel;
   const std::string MCTruthLabel;
@@ -238,6 +250,7 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   nuGenModuleLabel(p.get<std::string>("NuGenModuleLabel")),
   hitLabel(p.get<std::string>("HitLabel")),
   crumbsLabel(p.get<std::string>("CRUMBSLabel")),
+  razzledLabel(p.get<std::string>("RazzledLabel")),
   trackLabel(p.get<std::string>("TrackLabel")),
   showerLabel(p.get<std::string>("ShowerLabel")),
   MCTruthLabel(p.get<std::string>("MCTruthLabel")),
@@ -337,6 +350,16 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_particleNumHitsTruthMatched", &reco_particleNumHitsTruthMatched);
   NuETree->Branch("reco_particleNumTruthHits", &reco_particleNumTruthHits);
   NuETree->Branch("reco_particleClearCosmic", &reco_particleClearCosmic);
+  NuETree->Branch("reco_particlePlane0dEdx", &reco_particlePlane0dEdx);
+  NuETree->Branch("reco_particlePlane1dEdx", &reco_particlePlane1dEdx);
+  NuETree->Branch("reco_particlePlane2dEdx", &reco_particlePlane2dEdx);
+  NuETree->Branch("reco_particleBestPlanedEdx", &reco_particleBestPlanedEdx);
+  NuETree->Branch("reco_particleRazzledPDG11", &reco_particleRazzledPDG11);
+  NuETree->Branch("reco_particleRazzledPDG13", &reco_particleRazzledPDG13);
+  NuETree->Branch("reco_particleRazzledPDG22", &reco_particleRazzledPDG22);
+  NuETree->Branch("reco_particleRazzledPDG211", &reco_particleRazzledPDG211);
+  NuETree->Branch("reco_particleRazzledPDG2212", &reco_particleRazzledPDG2212);
+  NuETree->Branch("reco_particleRazzledBestPDG", &reco_particleRazzledBestPDG);
   
   NuETree->Branch("reco_neutrinoID", &reco_neutrinoID);
   NuETree->Branch("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -483,7 +506,8 @@ void sbnd::NuE::PFPs(art::Event const& e){
         art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
         art::FindOneP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceSCELabel);    
         art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
-                
+        art::FindOneP<sbn::MVAPID> pfpRazzledAssns(pfpVec, e, razzledLabel);
+
         std::vector<double> recoNeutrinoIDs;        
         std::vector<double> recoNeutrinoSliceIDs;
 
@@ -511,7 +535,8 @@ void sbnd::NuE::PFPs(art::Event const& e){
                 const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
                 const art::Ptr<recob::Slice> pfpSlice(pfpSliceAssns.at(pfp.key()));
                 const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
-                
+                const art::Ptr<sbn::MVAPID> pfpRazzled(pfpRazzledAssns.at(pfp.key()));
+
                 const auto meta  = pfpMetadataAssns.at(pfp.key());
                 const auto props = meta->GetPropertiesMap();
                 const auto trackscoreobj = props.find("TrackScore");
@@ -533,6 +558,8 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
                             counter++;
 
+                            std::cout << "===== NEW PFP =====" << std::endl;
+                            
                             const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
                             double pfpCompleteness = Completeness(e, showerHits, showerID_truth);
                             double pfpPurity = Purity(e, showerHits, showerID_truth);
@@ -584,6 +611,42 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             reco_particleNumHitsTruthMatched.push_back(pfpPurity*showerHits.size());
                             reco_particleNumTruthHits.push_back(fHitsMap[showerID_truth]);
 
+                            if(pfpRazzled.isNonnull()){
+                                const std::map<int, float> razzledMap = pfpRazzled->mvaScoreMap;
+                                std::cout << "Razzled SCE PDG 11 Score = " << razzledMap.at(11) << ", PDG 13 Score = " << razzledMap.at(13)<< ", PDG 22 Score = " << razzledMap.at(22)<< ", PDG 211 Score = " << razzledMap.at(211)<< ", PDG 2212 Score = " << razzledMap.at(2212)<< ", Best PDG = " << pfpRazzled->BestPDG() << std::endl;
+                                
+                                reco_particleRazzledPDG11.push_back(razzledMap.at(11));
+                                reco_particleRazzledPDG13.push_back(razzledMap.at(13));
+                                reco_particleRazzledPDG22.push_back(razzledMap.at(22));
+                                reco_particleRazzledPDG211.push_back(razzledMap.at(211));
+                                reco_particleRazzledPDG2212.push_back(razzledMap.at(2212));
+                                reco_particleRazzledBestPDG.push_back(pfpRazzled->BestPDG());
+                            } else{
+                                std::cout << "PFP Razzled = null" << std::endl;
+                                reco_particleRazzledPDG11.push_back(-999999);
+                                reco_particleRazzledPDG13.push_back(-999999);
+                                reco_particleRazzledPDG22.push_back(-999999);
+                                reco_particleRazzledPDG211.push_back(-999999);
+                                reco_particleRazzledPDG2212.push_back(-999999);
+                                reco_particleRazzledBestPDG.push_back(-999999);
+                            }
+
+                            if(pfpShower.isNonnull()){
+                                std::vector<double> showerDEDX = pfpShower->dEdx();
+                                std::cout << "Shower Start = (" << pfpShower->ShowerStart().X() << ", " << pfpShower->ShowerStart().Y() << ", " << pfpShower->ShowerStart().Z() << ", Shower Length = " << pfpShower->Length() << ", Shower Opening Angle = " << pfpShower->OpenAngle() << ", Shower Best Plane = " << pfpShower->best_plane() << std::endl;
+                                std::cout << "Plane 0 dE/dx = " << showerDEDX[0] << ", Plane 1 dE/dx = " << showerDEDX[1] << ", Plane 2 dE/dx = " << showerDEDX[2] << ", Best Plane Shower dE/dx = " << showerDEDX[pfpShower->best_plane()] << std::endl; 
+                                
+                                reco_particlePlane0dEdx.push_back(showerDEDX[0]);
+                                reco_particlePlane1dEdx.push_back(showerDEDX[1]);
+                                reco_particlePlane2dEdx.push_back(showerDEDX[2]);
+                                reco_particleBestPlanedEdx.push_back(showerDEDX[pfpShower->best_plane()]);
+                            } else{
+                                std::cout << "PFPShower = null" << std::endl;
+                                reco_particlePlane0dEdx.push_back(-999999);
+                                reco_particlePlane1dEdx.push_back(-999999);
+                                reco_particlePlane2dEdx.push_back(-999999);
+                                reco_particleBestPlanedEdx.push_back(-999999);
+                            }
                            
                             if(trackscoreobj != props.end()){
                                 reco_particleTrackScore.push_back(trackscoreobj->second);
@@ -675,6 +738,16 @@ void sbnd::NuE::PFPs(art::Event const& e){
         reco_particleNumHitsTruthMatched.push_back(-999999);
         reco_particleNumTruthHits.push_back(-999999);
         reco_particleClearCosmic.push_back(-999999);
+        reco_particlePlane0dEdx.push_back(-999999);
+        reco_particlePlane1dEdx.push_back(-999999);
+        reco_particlePlane2dEdx.push_back(-999999);
+        reco_particleBestPlanedEdx.push_back(-999999);
+        reco_particleRazzledPDG11.push_back(-999999);
+        reco_particleRazzledPDG13.push_back(-999999);
+        reco_particleRazzledPDG22.push_back(-999999);
+        reco_particleRazzledPDG211.push_back(-999999);
+        reco_particleRazzledPDG2212.push_back(-999999);
+        reco_particleRazzledBestPDG.push_back(-999999);
     }
 
     if(neutrinoCounter == 0){
@@ -1123,6 +1196,16 @@ void sbnd::NuE::clearVectors(){
     reco_particleNumHitsTruthMatched.clear();
     reco_particleNumTruthHits.clear();
     reco_particleClearCosmic.clear();
+    reco_particlePlane0dEdx.clear();
+    reco_particlePlane1dEdx.clear();
+    reco_particlePlane2dEdx.clear();
+    reco_particleBestPlanedEdx.clear();
+    reco_particleRazzledPDG11.clear();
+    reco_particleRazzledPDG13.clear();
+    reco_particleRazzledPDG22.clear();
+    reco_particleRazzledPDG211.clear();
+    reco_particleRazzledPDG2212.clear();
+    reco_particleRazzledBestPDG.clear();
     
     reco_neutrinoID.clear();
     reco_neutrinoPDG.clear();

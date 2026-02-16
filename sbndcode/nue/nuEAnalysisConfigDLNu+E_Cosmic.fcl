@@ -10,6 +10,7 @@ nuE:
     NuGenModuleLabel:   "corsika"
     HitLabel:           "gaushit"
     CRUMBSLabel:        "crumbs"
+    RazzledLabel:       "pandoraRazzled"
     TrackLabel:         "pandoraSCETrack"
     ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
