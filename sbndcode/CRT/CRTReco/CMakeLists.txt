@@ -39,8 +39,8 @@ simple_plugin(
 
 simple_plugin(
               CRTBlobProducer module
+              lardata::Utilities
               sbnobj::SBND_CRT
-              sbndcode_GeoWrappers
 )
 
 install_fhicl()
