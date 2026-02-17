@@ -1919,7 +1919,7 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
     ProfileCanvas->SetTickx();
     ProfileCanvas->SetTicky();
 
-    profX->SetTitle(Form("ProfileX of %s", title));
+    profX->SetTitle(Form("ProfileX (Standard Deviation) of %s", title));
     profX->SetLineColor(kBlack);
     profX->SetLineWidth(2);
     profX->SetMarkerStyle(20);
@@ -1935,12 +1935,42 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
     std::string profileFilename = std::string(filename);
     size_t dotPos = profileFilename.find_last_of(".");
-    if (dotPos != std::string::npos)
-        profileFilename.insert(dotPos, "_profile");
-    else
-        profileFilename += "_profile.df"; 
+    if(dotPos != std::string::npos){
+        profileFilename.insert(dotPos, "_profileSD");
+    } else{
+        profileFilename += "_profileSD.pdf"; 
+    }
 
     ProfileCanvas->SaveAs(profileFilename.c_str());
+
+    TProfile* profX_errMean = hist->ProfileX("_pfx_errMean", 1, -1, "");
+    TCanvas* ProfileErrCanvas = new TCanvas("profileErr_canvas", "TProfile from TH2D (Error on Mean)", 300, 50, 800, 600);
+    ProfileErrCanvas->SetTickx();
+    ProfileErrCanvas->SetTicky();
+
+    profX_errMean->SetTitle(Form("ProfileX (Error on Mean) of %s", title));
+    profX_errMean->SetLineColor(kBlack);
+    profX_errMean->SetLineWidth(2);
+    profX_errMean->SetMarkerStyle(20);
+    profX_errMean->SetMarkerSize(0.8);
+    profX_errMean->SetMarkerColor(kBlack);
+    profX_errMean->Draw("E1");
+
+    profX_errMean->GetXaxis()->SetTickLength(0.04);
+    profX_errMean->GetYaxis()->SetTickLength(0.03);
+    profX_errMean->GetXaxis()->SetTickSize(0.02);
+    profX_errMean->GetYaxis()->SetTickSize(0.02);
+    profX_errMean->SetStats(0);
+
+    std::string profileErrFilename = std::string(filename);
+    size_t dotPosErr = profileErrFilename.find_last_of(".");
+    if(dotPosErr != std::string::npos){
+            profileErrFilename.insert(dotPosErr, "_profileErrorMean");
+    } else{
+            profileErrFilename += "_profileErrorMean.pdf";
+    }
+
+    ProfileErrCanvas->SaveAs(profileErrFilename.c_str());
 
     TwoDHistCanvas->Clear();
     ProfileCanvas->Clear();
@@ -2653,6 +2683,13 @@ void nuEBackgroundSignalCut_macro(){
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0; double zMax = 509.4;
 
+    TH2D *dirtMuonYVertexBDT_low = new TH2D("dirtMuonYVertexBDT_low", "", 60, yMin-3, (yMin + 27), 80, -20, 20);
+    TH2D *dirtMuonYVertexBDT_high = new TH2D("dirtMuonYVertexBDT_high", "", 60, (yMax - 27), yMax+3, 80, -20, 20);
+    TH2D *dirtMuonYVertexDLUboone_low = new TH2D("dirtMuonYVertexDLUboone_low", "", 60, yMin-3, (yMin + 27), 80, -20, 20);
+    TH2D *dirtMuonYVertexDLUboone_high = new TH2D("dirtMuonYVertexDLUboone_high", "", 60, (yMax - 27), yMax+3, 80, -20, 20);
+    TH2D *dirtMuonYVertexDLNuE_low = new TH2D("dirtMuonYVertexDLNuE_low", "", 60, yMin-3, (yMin + 27), 80, -20, 20);
+    TH2D *dirtMuonYVertexDLNuE_high = new TH2D("dirtMuonYVertexDLNuE_high", "", 60, (yMax - 27), yMax+3, 80, -20, 20);
+
     TH2D *xCoordAngleDifferenceBDT_low = new TH2D("xCoordAngleDifferenceBDT_low", "", 15, xMin, (xMin + 30), 40, 0, 180);
     TH2D *yCoordAngleDifferenceBDT_low = new TH2D("yCoordAngleDifferenceBDT_low", "", 15, yMin, (yMin + 30), 40, 0, 180);
     TH2D *zCoordAngleDifferenceBDT_low = new TH2D("zCoordAngleDifferenceBDT_low", "", 15, zMin, (zMin + 30), 40, 0, 180);
@@ -2943,6 +2980,9 @@ void nuEBackgroundSignalCut_macro(){
                 double highestEnergy_DX = -999999;
                 double highestEnergy_DY = -999999;
                 double highestEnergy_DZ = -999999;
+                double highestEnergy_VX = -999999;
+                double highestEnergy_VY = -999999;
+                double highestEnergy_VZ = -999999;
                 double highestEnergy_completeness = -999999;
                 double highestEnergy_purity = -999999;
                 double highestEnergy_trackscore = -999999;
@@ -2998,6 +3038,9 @@ void nuEBackgroundSignalCut_macro(){
                                     highestEnergy_DX = reco_particleDX->at(pfp);
                                     highestEnergy_DY = reco_particleDY->at(pfp);
                                     highestEnergy_DZ = reco_particleDZ->at(pfp);
+                                    highestEnergy_VX = reco_particleVX->at(pfp);
+                                    highestEnergy_VY = reco_particleVY->at(pfp);
+                                    highestEnergy_VZ = reco_particleVZ->at(pfp);
                                     highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                                     highestEnergy_purity = reco_particlePurity->at(pfp);
                                     highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
@@ -3029,6 +3072,9 @@ void nuEBackgroundSignalCut_macro(){
                                 highestEnergy_DX = reco_particleDX->at(pfp);
                                 highestEnergy_DY = reco_particleDY->at(pfp);
                                 highestEnergy_DZ = reco_particleDZ->at(pfp);
+                                highestEnergy_VX = reco_particleVX->at(pfp);
+                                highestEnergy_VY = reco_particleVY->at(pfp);
+                                highestEnergy_VZ = reco_particleVZ->at(pfp);
                                 highestEnergy_completeness = reco_particleCompleteness->at(pfp);
                                 highestEnergy_purity = reco_particlePurity->at(pfp);
                                 highestEnergy_trackscore = reco_particleTrackScore->at(pfp);
@@ -7456,6 +7502,26 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPrimaryPFPs_splitBDT.dirt->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumNeutrinos_splitBDT.dirt->Fill(numRecoNeutrinos, weight);
 
+                        if((highestEnergy_VX != -999999 && highestEnergy_VY != -999999 && highestEnergy_VZ != -999999) && std::abs(highestEnergy_truePDG) == 13 && highestEnergy_primary == 1){
+                            // Primary dirt muon that has a reco vertex
+                            double trueVX_dirtMuon = reco_sliceTrueVX->at(slice);
+                            double trueVY_dirtMuon = reco_sliceTrueVY->at(slice);
+                            double trueVZ_dirtMuon = reco_sliceTrueVZ->at(slice);
+
+                            if(trueVX_dirtMuon != -999999 && trueVY_dirtMuon != -999999 && trueVZ_dirtMuon != -999999){
+                                // Slice has a true vertex
+                                double xMin_dirtMuon = xMin - 3;    double xMax_dirtMuon = xMax + 3;
+                                double yMin_dirtMuon = yMin - 3;    double yMax_dirtMuon = yMax + 3;
+                                double zMin_dirtMuon = zMin - 3;    double zMax_dirtMuon = zMax + 3;
+
+                                if((trueVX_dirtMuon >= xMin_dirtMuon && trueVX_dirtMuon <= xMax_dirtMuon) && (trueVY_dirtMuon >= yMin_dirtMuon && trueVY_dirtMuon <= yMax_dirtMuon) && (trueVZ_dirtMuon >= zMin_dirtMuon && trueVZ_dirtMuon <= zMax_dirtMuon)){
+                                    // Dirt muon has a true vertex just outside of TPC
+                                    if(trueVY_dirtMuon <= yMin_dirtMuon+30 && trueVY_dirtMuon >= yMin_dirtMuon) dirtMuonYVertexBDT_low->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                    if(trueVY_dirtMuon >= yMax_dirtMuon-30 && trueVY_dirtMuon <= yMax_dirtMuon) dirtMuonYVertexBDT_high->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                }
+                            }
+                        }
+
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitBDT.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitBDT.dirt->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -7511,6 +7577,26 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPs_splitDLUboone.dirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLUboone.dirt->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumNeutrinos_splitDLUboone.dirt->Fill(numRecoNeutrinos, weight);
+
+                        if((highestEnergy_VX != -999999 && highestEnergy_VY != -999999 && highestEnergy_VZ != -999999) && std::abs(highestEnergy_truePDG) == 13 && highestEnergy_primary == 1){
+                            // Primary dirt muon that has a reco vertex
+                            double trueVX_dirtMuon = reco_sliceTrueVX->at(slice);
+                            double trueVY_dirtMuon = reco_sliceTrueVY->at(slice);
+                            double trueVZ_dirtMuon = reco_sliceTrueVZ->at(slice);
+
+                            if(trueVX_dirtMuon != -999999 && trueVY_dirtMuon != -999999 && trueVZ_dirtMuon != -999999){
+                                // Slice has a true vertex
+                                double xMin_dirtMuon = xMin - 3;    double xMax_dirtMuon = xMax + 3;
+                                double yMin_dirtMuon = yMin - 3;    double yMax_dirtMuon = yMax + 3;
+                                double zMin_dirtMuon = zMin - 3;    double zMax_dirtMuon = zMax + 3;
+
+                                if((trueVX_dirtMuon >= xMin_dirtMuon && trueVX_dirtMuon <= xMax_dirtMuon) && (trueVY_dirtMuon >= yMin_dirtMuon && trueVY_dirtMuon <= yMax_dirtMuon) && (trueVZ_dirtMuon >= zMin_dirtMuon && trueVZ_dirtMuon <= zMax_dirtMuon)){
+                                    // Dirt muon has a true vertex just outside of TPC
+                                    if(trueVY_dirtMuon <= yMin_dirtMuon+30 && trueVY_dirtMuon >= yMin_dirtMuon) dirtMuonYVertexDLUboone_low->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                    if(trueVY_dirtMuon >= yMax_dirtMuon-30 && trueVY_dirtMuon <= yMax_dirtMuon) dirtMuonYVertexDLUboone_high->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                }
+                            }
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLUboone.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -7569,6 +7655,26 @@ void nuEBackgroundSignalCut_macro(){
                         sliceNumPFPs_splitDLNuE.dirt->Fill(numPFPsSlice, weight);
                         sliceNumPrimaryPFPs_splitDLNuE.dirt->Fill(numPrimaryPFPsSlice, weight);
                         sliceNumNeutrinos_splitDLNuE.dirt->Fill(numRecoNeutrinos, weight);
+
+                        if((highestEnergy_VX != -999999 && highestEnergy_VY != -999999 && highestEnergy_VZ != -999999) && std::abs(highestEnergy_truePDG) == 13 && highestEnergy_primary == 1){
+                            // Primary dirt muon that has a reco vertex
+                            double trueVX_dirtMuon = reco_sliceTrueVX->at(slice);
+                            double trueVY_dirtMuon = reco_sliceTrueVY->at(slice);
+                            double trueVZ_dirtMuon = reco_sliceTrueVZ->at(slice);
+
+                            if(trueVX_dirtMuon != -999999 && trueVY_dirtMuon != -999999 && trueVZ_dirtMuon != -999999){
+                                // Slice has a true vertex
+                                double xMin_dirtMuon = xMin - 3;    double xMax_dirtMuon = xMax + 3;
+                                double yMin_dirtMuon = yMin - 3;    double yMax_dirtMuon = yMax + 3;
+                                double zMin_dirtMuon = zMin - 3;    double zMax_dirtMuon = zMax + 3;
+
+                                if((trueVX_dirtMuon >= xMin_dirtMuon && trueVX_dirtMuon <= xMax_dirtMuon) && (trueVY_dirtMuon >= yMin_dirtMuon && trueVY_dirtMuon <= yMax_dirtMuon) && (trueVZ_dirtMuon >= zMin_dirtMuon && trueVZ_dirtMuon <= zMax_dirtMuon)){
+                                    // Dirt muon has a true vertex just outside of TPC
+                                    if(trueVY_dirtMuon <= yMin_dirtMuon+30 && trueVY_dirtMuon >= yMin_dirtMuon) dirtMuonYVertexDLNuE_low->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                    if(trueVY_dirtMuon >= yMax_dirtMuon-30 && trueVY_dirtMuon <= yMax_dirtMuon) dirtMuonYVertexDLNuE_high->Fill(trueVY_dirtMuon, (highestEnergy_VY - trueVY_dirtMuon));
+                                }
+                            }
+                        }
 
                         if(highestEnergy_PFPID != -999999){
                             ERecoSumThetaReco_splitDLNuE.dirt->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
@@ -10353,6 +10459,13 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(QSquaredHighest, 0, 1, 999, 999, (base_path + "QSquared_highest_lower").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
     efficiency(QSquaredSum, 0, 1, 999, 999, (base_path + "QSquared_sum_lower").c_str(), "bottomRight", nullptr, &right, 1, txtFileName);
 
+    TwoDHistDraw(dirtMuonYVertexBDT_low, (base_path + "deltaY_dirtMuon_BDT_low.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: BDT Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    TwoDHistDraw(dirtMuonYVertexBDT_high, (base_path + "deltaY_dirtMuon_BDT_high.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: BDT Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    TwoDHistDraw(dirtMuonYVertexDLUboone_low, (base_path + "deltaY_dirtMuon_DLUboone_low.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: DL Uboone Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    TwoDHistDraw(dirtMuonYVertexDLUboone_high, (base_path + "deltaY_dirtMuon_DLUboone_high.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: DL Uboone Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    TwoDHistDraw(dirtMuonYVertexDLNuE_low, (base_path + "deltaY_dirtMuon_DLNuE_low.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: DL Nu+E Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    TwoDHistDraw(dirtMuonYVertexDLNuE_high, (base_path + "deltaY_dirtMuon_DLNuE_high.pdf").c_str(), "Dirt Muon True Vertex Y Coordinate vs Dirt Muon (Reco Y - True Y) Vertex: DL Nu+E Vertexing;True Vertex Y Coordinate (cm);Reco Y - True Y Vertex (cm)");
+    
     TwoDHistDraw(xCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(xCoordAngleDifferenceBDT_high, (base_path + "angleDiffPosition_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(yCoordAngleDifferenceBDT_low, (base_path + "angleDiffPosition_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
