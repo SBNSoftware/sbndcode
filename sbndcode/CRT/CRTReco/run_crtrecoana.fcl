@@ -52,3 +52,6 @@ physics:
   trigger_paths: [ reco ]
   end_paths:     [ ana, stream1 ]
 }
+
+physics.analyzers.crtana.HasBlobs: true
+physics.analyzers.crtana.NoTPC:    true
