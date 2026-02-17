@@ -33,6 +33,7 @@
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTBlob.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
@@ -87,6 +88,8 @@ public:
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec, const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
                         const art::FindOneP<CRTCluster> &spacePointsToClusters, const art::FindManyP<CRTStripHit> &clustersToStripHits);
 
+  void AnalyseCRTBlobs(std::vector<art::Ptr<CRTBlob>> &CRTBlobVec);
+
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                           const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const art::Handle<std::vector<CRTCluster>> &CRTClusterHandle,
                           const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
@@ -104,10 +107,10 @@ private:
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
-    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
+    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fCRTBlobModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
     fTDCModuleLabel, fTimingReferenceModuleLabel;
-  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fTruthMatch;
+  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fHasBlobs, fTruthMatch;
   //! Adding some of the reco parameters to save corrections
   double fPEAttenuation, fTimeWalkNorm, fTimeWalkScale, fPropDelay;
 
@@ -296,6 +299,16 @@ private:
   std::vector<double>                _tr_truth_theta;
   std::vector<double>                _tr_truth_phi;
 
+  // crt blob information
+  std::vector<double>           _bl_ts0;
+  std::vector<double>           _bl_ets0;
+  std::vector<double>           _bl_ts1;
+  std::vector<double>           _bl_ets1;
+  std::vector<double>           _bl_pe;
+  std::vector<int>              _bl_nsps;
+  std::vector<std::vector<int>> _bl_nsps_per_tagger;
+
+  // tpc track information (including crt matching)
   std::vector<double>                _tpc_start_x;
   std::vector<double>                _tpc_start_y;
   std::vector<double>                _tpc_start_z;
@@ -341,12 +354,14 @@ private:
   std::vector<double>                _tpc_tr_end_z;
   std::vector<double>                _tpc_tr_score;
 
+  // ptb information (trigger board)
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
 
   std::vector<uint64_t> _ptb_llt_trigger;
   std::vector<uint64_t> _ptb_llt_timestamp;
 
+  // spec tdc information (timing board)
   std::vector<uint32_t>    _tdc_channel;
   std::vector<uint64_t>    _tdc_timestamp;
   std::vector<uint64_t>    _tdc_offset;
@@ -364,6 +379,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fCRTClusterModuleLabel            = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
   fCRTSpacePointModuleLabel         = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
   fCRTTrackModuleLabel              = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
+  fCRTBlobModuleLabel               = p.get<std::string>("CRTBlobModuleLabel", "crtblobs");
   fTPCTrackModuleLabel              = p.get<std::string>("TPCTrackModuleLabel", "pandoraSCETrack");
   fCRTSpacePointMatchingModuleLabel = p.get<std::string>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
   fCRTTrackMatchingModuleLabel      = p.get<std::string>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
@@ -376,8 +392,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fNoTPC                            = p.get<bool>("NoTPC", false);
   fHasPTB                           = p.get<bool>("HasPTB", false);
   fHasTDC                           = p.get<bool>("HasTDC", false);
+  fHasBlobs                         = p.get<bool>("HasBlobs", false);
   fTruthMatch                       = p.get<bool>("TruthMatch", true);
-  //! Adding some of the reco parameters to save corrections
   fPEAttenuation                    = p.get<double>("PEAttenuation", 1.0);
   fTimeWalkNorm                     = p.get<double>("TimeWalkNorm",  0.0);
   fTimeWalkScale                    = p.get<double>("TimeWalkScale", 0.0);
@@ -576,6 +592,17 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tr_truth_tof", "std::vector<double>", &_tr_truth_tof);
       fTree->Branch("tr_truth_theta", "std::vector<double>", &_tr_truth_theta);
       fTree->Branch("tr_truth_phi", "std::vector<double>", &_tr_truth_phi);
+    }
+
+  if(fHasBlobs)
+    {
+      fTree->Branch("bl_ts0", "std::vector<double>", &_bl_ts0);
+      fTree->Branch("bl_ets0", "std::vector<double>", &_bl_ets0);
+      fTree->Branch("bl_ts1", "std::vector<double>", &_bl_ts1);
+      fTree->Branch("bl_ets1", "std::vector<double>", &_bl_ets1);
+      fTree->Branch("bl_pe", "std::vector<double>", &_bl_pe);
+      fTree->Branch("bl_nsps", "std::vector<int>", &_bl_nsps);
+      fTree->Branch("bl_nsps_per_tagger", "std::vector<std::vector<int>>", &_bl_nsps_per_tagger);
     }
 
   if(!fNoTPC)
@@ -834,6 +861,23 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill CRTTrack variables
   AnalyseCRTTracks(e, CRTTrackVec, tracksToSpacePoints, spacepointsToClusters, clustersToStripHits);
+
+  if(fHasBlobs)
+    {
+      // Get CRTBlobs
+      art::Handle<std::vector<CRTBlob>> CRTBlobHandle;
+      e.getByLabel(fCRTBlobModuleLabel, CRTBlobHandle);
+      if(!CRTBlobHandle.isValid()){
+        std::cout << "CRTBlob product " << fCRTBlobModuleLabel << " not found..." << std::endl;
+        throw std::exception();
+      }
+
+      std::vector<art::Ptr<CRTBlob>> CRTBlobVec;
+      art::fill_ptr_vector(CRTBlobVec, CRTBlobHandle);
+
+      // Fill CRTBlob variables
+      AnalyseCRTBlobs(CRTBlobVec);
+    }
 
   if(fNoTPC)
     {
@@ -1582,6 +1626,34 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
           _tr_truth_theta[i]  = TMath::RadToDeg() * true_dir.Theta();
           _tr_truth_phi[i]    = TMath::RadToDeg() * true_dir.Phi();
         }
+    }
+}
+
+void sbnd::crt::CRTAnalysis::AnalyseCRTBlobs(std::vector<art::Ptr<CRTBlob>> &CRTBlobVec)
+{
+  const unsigned nBlobs = CRTBlobVec.size();
+
+  _bl_ts0.resize(nBlobs);
+  _bl_ets0.resize(nBlobs);
+  _bl_ts1.resize(nBlobs);
+  _bl_ets1.resize(nBlobs);
+  _bl_pe.resize(nBlobs);
+  _bl_nsps.resize(nBlobs);
+  _bl_nsps_per_tagger.resize(nBlobs, std::vector<int>(7));
+
+  for(unsigned i = 0; i < nBlobs; ++i)
+    {
+      const auto blob = CRTBlobVec[i];
+
+      _bl_ts0[i]  = blob->Ts0();
+      _bl_ets0[i] = blob->Ts0Err();
+      _bl_ts1[i]  = blob->Ts1();
+      _bl_ets1[i] = blob->Ts1Err();
+      _bl_pe[i]   = blob->PE();
+      _bl_nsps[i] = blob->TotalSpacePoints();
+
+      for(unsigned j = 0; j < 7; ++j)
+        _bl_nsps_per_tagger[i][j] = blob->SpacePointsInTagger((CRTTagger)j);
     }
 }
 
