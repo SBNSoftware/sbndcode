@@ -212,7 +212,6 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
-
 splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
     TCanvas* canvas = new TCanvas((baseName + "_canvas").c_str(), "Graph Draw Options", 200, 10, 600, 400);
 
@@ -330,7 +329,7 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
                     double ymin, double ymax, double xmin, double xmax,
                     const char* filename, const std::string& legendLocation,
                     int* drawLine = nullptr, int* linePos = nullptr,
-                    bool useLogScale = false){
+                    bool useLogScale = false, bool bestPDGPlot = false){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -350,6 +349,19 @@ void styleDrawPFPSplit(splitPFPHistGroup_struct hists,
                 if (hist->GetBinContent(i) <= 0)
                     hist->SetBinContent(i, 1e-6);
             }
+        }
+    }
+    
+    if(bestPDGPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "e^{-}");
+            hist->GetXaxis()->SetBinLabel(2, "#mu^{-}");
+            hist->GetXaxis()->SetBinLabel(3, "#gamma");
+            hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
+            hist->GetXaxis()->SetBinLabel(5, "p");
+            hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
         }
     }
 
@@ -535,7 +547,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
                     double ymin, double ymax, double xmin, double xmax,
                     const char* filename, const std::string& legendLocation,
                     int* drawLine = nullptr, int* linePos = nullptr,
-                    bool useLogScale = false){
+                    bool useLogScale = false, bool bestPDGPlot = false){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -555,6 +567,19 @@ void styleDrawSplit(splitHistGroup_struct hists,
                 if (hist->GetBinContent(i) <= 0)
                     hist->SetBinContent(i, 1e-6);
             }
+        }
+    }
+    
+    if(bestPDGPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "e^{-}");
+            hist->GetXaxis()->SetBinLabel(2, "#mu^{-}");
+            hist->GetXaxis()->SetBinLabel(3, "#gamma");
+            hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
+            hist->GetXaxis()->SetBinLabel(5, "p");
+            hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
         }
     }
 
@@ -821,7 +846,7 @@ void styleDrawBackSig(histGroup_struct hists,
                       double ymin, double ymax, double xmin, double xmax,
                       const char* filename, const std::string& legendLocation,
                       bool includeCurrent = true, bool includeUboone = true, bool includeNuE = true,
-                      bool useLogScale = false)
+                      bool useLogScale = false, bool bestPDGPlot = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -865,6 +890,19 @@ void styleDrawBackSig(histGroup_struct hists,
         ubooneSignalCombo, ubooneBackgroundCombo,
         nuESignalCombo, nuEBackgroundCombo
     };
+    
+    if(bestPDGPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "e^{-}");
+            hist->GetXaxis()->SetBinLabel(2, "#mu^{-}");
+            hist->GetXaxis()->SetBinLabel(3, "#gamma");
+            hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
+            hist->GetXaxis()->SetBinLabel(5, "p");
+            hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
+        }
+    }
 
     double maxYValue = 0.0;
     for (auto* hist : allHists)
@@ -957,7 +995,7 @@ void styleDrawAll(histGroup_struct hists,
                   bool includeCosmic = true,
                   bool includeDLUboone = true, bool includeDLNuE = true,
                   bool includeBDT = true,
-                  bool useLogScale = false)
+                  bool useLogScale = false, bool bestPDGPlot = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -984,6 +1022,19 @@ void styleDrawAll(histGroup_struct hists,
                 if (hist->GetBinContent(i) <= 0)
                     hist->SetBinContent(i, 1e-6);
             }
+        }
+    }
+
+    if(bestPDGPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "e^{-}");
+            hist->GetXaxis()->SetBinLabel(2, "#mu^{-}");
+            hist->GetXaxis()->SetBinLabel(3, "#gamma");
+            hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
+            hist->GetXaxis()->SetBinLabel(5, "p");
+            hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
         }
     }
 
@@ -2376,6 +2427,7 @@ void nuEBackgroundSignalCut_macro(){
     auto razzledPDG22HighestEnergyPFP = createHistGroup("razzledPDG22HighestEnergyPFP", "Photon Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
     auto razzledPDG211HighestEnergyPFP = createHistGroup("razzledPDG211HighestEnergyPFP", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
     auto razzledPDG2212HighestEnergyPFP = createHistGroup("razzledPDG2212HighestEnergyPFP", "Proton Razzled Score of the PFP in the Slice with the Highest Energy", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP = createHistGroup("razzledBestPDGHighestEnergyPFP", "Razzled Best PDG of the PFP in the Slice with the Highest Energy", "Particle", 6, 0.5, 6.5);
 
     auto trackscoreAllPFPsPFP = createHistGroup("trackscoreAllPFPsPFP", "Trackscore of All PFPs in the Slice (Split By PFP)", "Trackscore", 20, 0, 1);
 
@@ -2455,6 +2507,7 @@ void nuEBackgroundSignalCut_macro(){
     auto razzledPDG22HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitBDT", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
     auto razzledPDG211HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitBDT", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
     auto razzledPDG2212HighestEnergyPFP_splitBDT = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitBDT", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitBDT = createSplitHistGroup("razzledBestPDGHighestEnergyPFP_splitBDT", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Particle", 6, 0.5, 6.5);
 
     // DL Uboone
     auto sliceCompleteness_splitDLUboone = createSplitHistGroup("sliceCompleteness_splitDLUboone", "Slice Completeness: DL Uboone Vertexing", "Completeness", 102, 0, 1.02);
@@ -2480,6 +2533,7 @@ void nuEBackgroundSignalCut_macro(){
     auto razzledPDG22HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitDLUboone", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
     auto razzledPDG211HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitDLUboone", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
     auto razzledPDG2212HighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitDLUboone", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitDLUboone = createSplitHistGroup("razzledBestPDGHighestEnergyPFP_splitDLUboone", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Particle", 6, 0.5, 6.5);
 
     // DL Nu+E
     auto sliceCompleteness_splitDLNuE = createSplitHistGroup("sliceCompleteness_splitDLNuE", "Slice Completeness: DL Nu+E Vertexing", "Completeness", 102, 0, 1.02);
@@ -2505,6 +2559,7 @@ void nuEBackgroundSignalCut_macro(){
     auto razzledPDG22HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG22HighestEnergyPFP_splitDLNuE", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
     auto razzledPDG211HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG211HighestEnergyPFP_splitDLNuE", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
     auto razzledPDG2212HighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledPDG2212HighestEnergyPFP_splitDLNuE", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitDLNuE = createSplitHistGroup("razzledBestPDGHighestEnergyPFP_splitDLNuE", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Particle", 6, 0.5, 6.5);
     
     auto recoX_low_splitDLNuE = createSplitHistGroup("recoX_low_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
     auto recoX_high_splitDLNuE = createSplitHistGroup("recoX_high_splitDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
@@ -2530,6 +2585,14 @@ void nuEBackgroundSignalCut_macro(){
 
     auto trackscoreHighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPBDT", "Trackscore of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Trackscore", 20, 0, 1);
 
+    auto dEdxHighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("dEdxHighestEnergyPFP_splitPFPBDT", "dE/dx of the PFP in the Slice with the Highest Energy: BDT Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledPDG11HighestEnergyPFP_splitPFPBDT", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledPDG13HighestEnergyPFP_splitPFPBDT", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledPDG22HighestEnergyPFP_splitPFPBDT", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledPDG211HighestEnergyPFP_splitPFPBDT", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledPDG2212HighestEnergyPFP_splitPFPBDT", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitPFPBDT = createSplitPFPHistGroup("razzledBestPDGHighestEnergyPFP_splitPFPBDT", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: BDT Vertexing", "Particle", 6, 0.5, 6.5);
+
     // DL Uboone Vertexing
     auto sliceCompleteness_splitPFPDLUboone = createSplitPFPHistGroup("sliceCompleteness_splitPFPDLUboone", "Slice Completeness: DL Uboone Vertexing", "Completeness", 102, 0, 1.02);
     auto slicePurity_splitPFPDLUboone = createSplitPFPHistGroup("slicePurity_splitPFPDLUboone", "Slice Purity: DL Uboone Vertexing", "Purity", 102, 0, 1.02);
@@ -2546,6 +2609,14 @@ void nuEBackgroundSignalCut_macro(){
 
     auto trackscoreHighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPDLUboone", "Trackscore of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Trackscore", 20, 0, 1);
 
+    auto dEdxHighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("dEdxHighestEnergyPFP_splitPFPDLUboone", "dE/dx of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledPDG11HighestEnergyPFP_splitPFPDLUboone", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledPDG13HighestEnergyPFP_splitPFPDLUboone", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledPDG22HighestEnergyPFP_splitPFPDLUboone", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledPDG211HighestEnergyPFP_splitPFPDLUboone", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledPDG2212HighestEnergyPFP_splitPFPDLUboone", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitPFPDLUboone = createSplitPFPHistGroup("razzledBestPDGHighestEnergyPFP_splitPFPDLUboone", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: DL Uboone Vertexing", "Particle", 6, 0.5, 6.5);
+
     // DL Nu+E Vertexing
     auto sliceCompleteness_splitPFPDLNuE = createSplitPFPHistGroup("sliceCompleteness_splitPFPDLNuE", "Slice Completeness: DL Nu+E Vertexing", "Completeness", 102, 0, 1.02);
     auto slicePurity_splitPFPDLNuE = createSplitPFPHistGroup("slicePurity_splitPFPDLNuE", "Slice Purity: DL Nu+E Vertexing", "Purity", 102, 0, 1.02);
@@ -2561,6 +2632,14 @@ void nuEBackgroundSignalCut_macro(){
     auto QSquaredSum_splitPFPDLNuE = createSplitPFPHistGroup("QSquaredSum_splitPFPDLNuE", "Q^{2} Using Sum of PFP Energies in Slice: DL Nu+E Vertexing", "Q^{2} (GeV^{2})", 100, 0, 0.1);
 
     auto trackscoreHighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("trackscoreHighestEnergyPFP_splitPFPDLNuE", "Trackscore of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Trackscore", 20, 0, 1);
+
+    auto dEdxHighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("dEdxHighestEnergyPFP_splitPFPDLNuE", "dE/dx of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "dE/dx", 40, 0, 10);
+    auto razzledPDG11HighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledPDG11HighestEnergyPFP_splitPFPDLNuE", "Electron Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG13HighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledPDG13HighestEnergyPFP_splitPFPDLNuE", "Muon Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG22HighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledPDG22HighestEnergyPFP_splitPFPDLNuE", "Photon Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG211HighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledPDG211HighestEnergyPFP_splitPFPDLNuE", "Charged Pion Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledPDG2212HighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledPDG2212HighestEnergyPFP_splitPFPDLNuE", "Proton Razzled Score of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Score", 20, 0, 1);
+    auto razzledBestPDGHighestEnergyPFP_splitPFPDLNuE = createSplitPFPHistGroup("razzledBestPDGHighestEnergyPFP_splitPFPDLNuE", "Razzled Best PDG of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Particle", 6, 0.5, 6.5);
     
     auto recoX_low_splitPFPDLNuE = createSplitPFPHistGroup("recoX_low_splitPFPDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, -202, -170);
     auto recoX_high_splitPFPDLNuE = createSplitPFPHistGroup("recoX_high_splitPFPDLNuE", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 64, 170, 202);
@@ -4213,6 +4292,31 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.nuEElectron->Fill(highestEnergy_bestPlanedEdx, weight);
+
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4236,6 +4340,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.nuEElectron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4261,6 +4389,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.nuEElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.nuEElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.nuEElectron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4300,6 +4452,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.nuEOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4323,6 +4499,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.nuEOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4359,6 +4559,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.nuEOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.nuEOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.nuEOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4395,6 +4619,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.electron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.electron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4418,6 +4666,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.electron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.electron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4443,6 +4715,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.electron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.electron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.electron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.electron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4479,6 +4775,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.proton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.proton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4502,6 +4822,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.proton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.proton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4527,6 +4871,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.proton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.proton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.proton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.proton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4565,6 +4933,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.muon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.muon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4588,6 +4980,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.muon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.muon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4613,6 +5029,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.muon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.muon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.muon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.muon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4649,6 +5089,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.pi0->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.pi0->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4672,6 +5136,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.pi0->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4697,6 +5185,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.pi0->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.pi0->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.pi0->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4733,6 +5245,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.chargedPi->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4756,6 +5292,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.chargedPi->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4781,6 +5341,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.chargedPi->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.chargedPi->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.chargedPi->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4817,6 +5401,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.photon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.photon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4840,6 +5448,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.photon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.photon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4865,6 +5497,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.photon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.photon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.photon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.photon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4901,6 +5557,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.other->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.other->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4924,6 +5604,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.other->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.other->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4963,6 +5667,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.other->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.other->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.other->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.other->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -4999,6 +5727,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.cosmicMuon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5022,6 +5774,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.cosmicMuon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5047,6 +5823,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.cosmicMuon->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.cosmicMuon->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.cosmicMuon->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5083,6 +5883,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.cosmicPhoton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5106,6 +5930,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.cosmicPhoton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5131,6 +5979,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.cosmicPhoton->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.cosmicPhoton->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.cosmicPhoton->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5168,6 +6040,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.cosmicElectron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5191,6 +6087,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.cosmicElectron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5216,6 +6136,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.cosmicElectron->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.cosmicElectron->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.cosmicElectron->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5252,6 +6196,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPBDT.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPBDT.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPBDT.cosmicOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5275,6 +6243,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLUboone.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLUboone.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_trackscore, weight);
+
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLUboone.cosmicOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5316,6 +6308,30 @@ void nuEBackgroundSignalCut_macro(){
                             ERecoSumThetaReco_splitPFPDLNuE.cosmicOther->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
                             ERecoHighestThetaReco_splitPFPDLNuE.cosmicOther->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
                             trackscoreHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_trackscore, weight);
+                            
+                            if(highestEnergy_razzledPDG11 != -999999){
+                                razzledPDG11HighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(6, weight);
+                                }
+                            }
+
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitPFPDLNuE.cosmicOther->Fill(highestEnergy_bestPlanedEdx, weight);
                         }
 
                         if(Q2HighestValue != -999999){
@@ -5357,14 +6373,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_trackscore, weight);
 
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.cosmic->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.cosmic->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5400,14 +6430,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.cosmic->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.cosmic->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5445,14 +6489,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.cosmic->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.cosmic->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5498,14 +6556,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_e->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.nu_e->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5540,14 +6612,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_e->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.nu_e->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5584,14 +6670,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_e->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.nu_e->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5637,14 +6737,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.NCNpi0->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.NCNpi0->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5679,14 +6793,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.NCNpi0->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5723,14 +6851,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.NCNpi0->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5777,14 +6919,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.otherNC->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.otherNC->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5819,14 +6975,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.otherNC->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.otherNC->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5863,14 +7033,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.otherNC->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.otherNC->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5916,14 +7100,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnumu->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.CCnumu->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -5958,14 +7156,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnumu->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.CCnumu->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6002,14 +7214,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnumu->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.CCnumu->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6055,14 +7281,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.CCnue->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.CCnue->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6097,14 +7337,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.CCnue->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.CCnue->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6142,14 +7396,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_trackscore, weight); 
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.CCnue->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.CCnue->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6195,14 +7463,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.dirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.dirt->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6237,14 +7519,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.dirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.dirt->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6281,14 +7577,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.dirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.dirt->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6334,14 +7644,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.nu_eDirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.nu_eDirt->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6376,14 +7700,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.nu_eDirt->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6420,14 +7758,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.nu_eDirt->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6473,14 +7825,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitBDT.other->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitBDT.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitBDT.other->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.other->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitBDT.other->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6515,14 +7881,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLUboone.other->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLUboone.other->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6559,14 +7939,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_trackscore, weight);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP_splitDLNuE.other->Fill(6, weight);
+                                }
                             }
                             
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP_splitDLNuE.other->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6677,14 +8071,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.currentCosmic->Fill(highestEnergy_trackscore);
                            
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.currentCosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                            
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.currentCosmic->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentCosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentCosmic->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6777,14 +8185,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.ubooneCosmic->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.ubooneCosmic->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneCosmic->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6877,14 +8299,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.nuECosmic->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.nuECosmic->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.nuECosmic->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuECosmic->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuECosmic->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -6964,14 +8400,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.currentSignal->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.currentSignal->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.currentSignal->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignal->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignal->Fill(highestEnergy_bestPlanedEdx, weight);
                            
     
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
@@ -7137,14 +8587,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.ubooneSignal->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.ubooneSignal->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignal->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignal->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignal->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7308,14 +8772,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.nuESignal->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.nuESignal->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.nuESignal->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignal->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignal->Fill(highestEnergy_bestPlanedEdx, weight);
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7482,14 +8960,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.currentSignalFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.currentSignalFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentSignalFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7625,14 +9117,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.ubooneSignalFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.ubooneSignalFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneSignalFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7768,14 +9274,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.nuESignalFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.nuESignalFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuESignalFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                             
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -7898,14 +9418,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.currentBNB->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.currentBNB->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.currentBNB->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNB->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNB->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -8008,14 +9542,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.ubooneBNB->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.ubooneBNB->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNB->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNB->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNB->Fill(highestEnergy_bestPlanedEdx, weight);
                            
 
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
@@ -8119,14 +9667,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.nuEBNB->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.nuEBNB->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.nuEBNB->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNB->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNB->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -8231,14 +9793,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.currentBNBFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.currentBNBFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.currentBNBFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -8340,14 +9916,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.ubooneBNBFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.ubooneBNBFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.ubooneBNBFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -8449,14 +10039,28 @@ void nuEBackgroundSignalCut_macro(){
                             trackscoreHighestEnergyPFPDist.nuEBNBFuzzy->Fill(highestEnergy_trackscore);
                             
                             if(highestEnergy_razzledPDG11 != -999999){
-                                razzledPDG11HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG11);
-                                razzledPDG13HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG13);
-                                razzledPDG22HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG22);
-                                razzledPDG211HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG211);
-                                razzledPDG2212HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG2212);
+                                razzledPDG11HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG11, weight);
+                                razzledPDG13HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG13, weight);
+                                razzledPDG22HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG22, weight);
+                                razzledPDG211HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG211, weight);
+                                razzledPDG2212HighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_razzledPDG2212, weight);
+                                
+                                if(highestEnergy_razzledBestPDG == 11){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(1, weight);
+                                } else if(highestEnergy_razzledBestPDG == 13){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(2, weight);
+                                } else if(highestEnergy_razzledBestPDG == 22){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(3, weight);
+                                } else if(highestEnergy_razzledBestPDG == 211){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(4, weight);
+                                } else if(highestEnergy_razzledBestPDG == 2212){
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(5, weight);
+                                } else{
+                                    razzledBestPDGHighestEnergyPFP.nuEBNBFuzzy->Fill(6, weight);
+                                }
                             }
 
-                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_bestPlanedEdx);
+                            if(highestEnergy_bestPlanedEdx != -999999) dEdxHighestEnergyPFP.nuEBNBFuzzy->Fill(highestEnergy_bestPlanedEdx, weight);
                            
                             for(size_t pfpTrack = 0; pfpTrack < reco_particlePDG->size(); ++pfpTrack){
                                 if(reco_particleSliceID->at(pfpTrack) == reco_sliceID->at(slice)){
@@ -8589,6 +10193,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG211HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(razzledPDG2212HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG2212HighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(razzledBestPDGHighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, true);
+    styleDrawBackSig(razzledBestPDGHighestEnergyPFP, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_Backsig_weighted.pdf").c_str(), "topRight", false, false, true, true, true);
 
     styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, true, true, true);
@@ -8858,6 +10464,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(razzledPDG22HighestEnergyPFP_splitBDT, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG211HighestEnergyPFP_splitBDT, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG2212HighestEnergyPFP_splitBDT, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(razzledBestPDGHighestEnergyPFP_splitBDT, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitBDT.pdf").c_str(), "topRight", nullptr, &right, true, true);
 
     // DL Uboone Vertexing
     styleDrawSplit(sliceCompleteness_splitDLUboone, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -8879,6 +10486,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(razzledPDG22HighestEnergyPFP_splitDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG211HighestEnergyPFP_splitDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG2212HighestEnergyPFP_splitDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(razzledBestPDGHighestEnergyPFP_splitDLUboone, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitDLUboone.pdf").c_str(), "topRight", nullptr, &right, true, true);
     
     // DL Nu+E Vertexing
     styleDrawSplit(sliceCompleteness_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitDLNuE.pdf").c_str(), "bottomRight", nullptr, &right, true);
@@ -8906,6 +10514,7 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(razzledPDG22HighestEnergyPFP_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG211HighestEnergyPFP_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawSplit(razzledPDG2212HighestEnergyPFP_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawSplit(razzledBestPDGHighestEnergyPFP_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitDLNuE.pdf").c_str(), "topRight", nullptr, &right, true, true);
    
     // Plotting split histograms (by PFP)
     // BDT
@@ -8920,6 +10529,12 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(ERecoSumThetaReco_splitPFPBDT, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPBDT, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(dEdxHighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "dEdxHighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG11HighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "razzledPDG11HighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG13HighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "razzledPDG13HighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG22HighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG211HighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledBestPDGHighestEnergyPFP_splitPFPBDT, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitPFPBDT.pdf").c_str(), "topRight", nullptr, &right, true, true);
 
     // DL Uboone
     styleDrawPFPSplit(sliceCompleteness_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -8933,6 +10548,13 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(ERecoSumThetaReco_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(dEdxHighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "dEdxHighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG11HighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG11HighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG13HighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG13HighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG22HighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG211HighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG2212HighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledBestPDGHighestEnergyPFP_splitPFPDLUboone, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitPFPDLUboone.pdf").c_str(), "topRight", nullptr, &right, true, true);
 
     // DL Nu+E
     styleDrawPFPSplit(sliceCompleteness_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
@@ -8946,6 +10568,13 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(ERecoSumThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoHighestThetaReco_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(trackscoreHighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "trackscoreHighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(dEdxHighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "dEdxHighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG11HighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11HighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG13HighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG13HighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG22HighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22HighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG211HighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211HighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledPDG2212HighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212HighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(razzledBestPDGHighestEnergyPFP_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledBestPDGHighestEnergyPFP_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true, true);
     styleDrawPFPSplit(recoX_low_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoX_low_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoX_high_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoX_high_all_weighted_splitPFPDLNuE.pdf").c_str(), "topLeft", nullptr, &right, true);
     styleDrawPFPSplit(recoY_low_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoY_low_all_weighted_splitPFPDLNuE.pdf").c_str(), "topRight", nullptr, &right, true);
