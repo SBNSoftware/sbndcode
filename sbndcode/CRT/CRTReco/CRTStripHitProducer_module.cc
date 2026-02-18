@@ -275,6 +275,10 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
       const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
 
+      // Saturated?
+      const bool sat1 = sipm_adcs[adc_i]   == fADCSaturation;
+      const bool sat2 = sipm_adcs[adc_i+1] == fADCSaturation;
+
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)
         {
@@ -292,7 +296,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           if(pos - err < 0)
             err = pos;
 
-          stripHits.emplace_back(offline_channel_id, t0, t1, ref_time_s, pos, err, adc1, adc2, fADCSaturation);
+          stripHits.emplace_back(offline_channel_id, t0, t1, ref_time_s, pos, err, adc1, adc2, sat1, sat2);
         }
     }
 
