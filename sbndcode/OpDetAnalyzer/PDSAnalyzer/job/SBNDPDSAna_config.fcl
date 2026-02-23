@@ -16,7 +16,7 @@ sbndPDSAna:
 	SaveCosmicId: "false"
 
 	## Configuration parameters
-	Verbosity: 0
+	Verbosity: 1
 	MakePerTrackTree: "false"
 	MakePDSGeoTree: "true"
 	UseSimPhotonsLite: "true"

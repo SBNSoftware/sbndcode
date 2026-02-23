@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+analyzeEventsNu:
+{
+    module_type:              "AnalyzeEventsNu"
+
+   
+    GenieGenModuleLabel:      "generator"
+    MCParticleModuleLabel:    "largeant"
+    MCTrackModuleLabel:       "mcreco"
+    MCShowerModuleLabel:      "mcreco"
+    readTruth:                true
+    readMCParticle:           true
+}
+
+END_PROLOG

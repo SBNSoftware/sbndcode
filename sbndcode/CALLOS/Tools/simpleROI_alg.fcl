@@ -1,0 +1,23 @@
+BEGIN_PROLOG
+
+
+simpleROIAlg:
+{
+  tool_type: "SimpleROIAlg"
+  Debug: false
+  ConstantBaseline: 1500
+  ThresholdLow: 2
+  ThresholdHigh: 3500
+  ThresholdUndersoot: -3
+  BinsBefore: 10
+  InitialWindow: 12
+  FinalWindow: 140
+  F90: 0.6
+  DefaultROI: true
+  BaselineEstimationSegments: 1
+  PeakWindow: true
+  Roi_max: 14
+  Roi_min: 1.2
+}
+
+END_PROLOG

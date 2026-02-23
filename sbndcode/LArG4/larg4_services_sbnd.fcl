@@ -5,10 +5,11 @@ BEGIN_PROLOG
 
 #
 # Physics List
-#
+# PhysicsListName: "SBN_QGSP_BERT_NNC" To run the Pi0 Dalitz Decay
 sbnd_physics_list_fastoptical:
 {
-  PhysicsListName: "QGSP_BERT_HP"
+  #PhysicsListName: "QGSP_BERT_HP"
+  PhysicsListName: "SBN_QGSP_BERT_NNC"  #To run the Pi0 Dalitz Decay
   DumpList: true
   enableNeutronLimit: false
   NeutronTimeLimit: 0.0

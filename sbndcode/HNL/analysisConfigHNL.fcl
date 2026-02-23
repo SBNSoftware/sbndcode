@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+analyzeEventsHNL:
+{
+    module_type:              "AnalyzeEventsHNL"
+
+   
+    GenieGenModuleLabel:      "generator"
+    MCParticleModuleLabel:    "largeant"
+    readTruth:                true
+    readMCParticle:           false
+    ReadMeVPrtl:              true
+}
+
+END_PROLOG

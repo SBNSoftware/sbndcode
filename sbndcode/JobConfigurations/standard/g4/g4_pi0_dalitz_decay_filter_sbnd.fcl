@@ -1,0 +1,28 @@
+#include "larg4particlefilter.fcl"
+#include "standard_g4_sbnd.fcl"
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , simplemerge
+                  , sedlite
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  # , simdrift ## 1D TPC simulation no longer run
+                  , filter # Adding filter
+                  , mcreco
+                  , genericcrt
+                ]
+
+physics.filters.filter: @local::sbnd_larg4particlefilter
+physics.filters.filter.InterestingPDGs: [ 111, -11, 11, 22 ]
+physics.filters.filter.IsPrimary: [ -1, -1, -1, -1  ]
+physics.filters.filter.ParticleMinMomentum:[ -1, -1, -1, -1 ] # Units are GeV. Negative value means ignore check
+physics.filters.filter.ParticleMaxMomentum: [ -1, -1, -1, -1  ] # Units are GeV. Negative value means ignore check
+physics.filters.filter.StartInTPC: [ 0, 0, 0, 0 ]  # 0: don't care if it starts in TPC or not, 1: particle must start in TPC,2: particle must not start in TPC
+physics.filters.filter.StopInTPC: [ 0, 0, 0, 0 ]   # 0: don't care if it stops in TPC or not, 1: particle must stop in TPC,2: particle must not stop in TPC
+physics.filters.filter.ParticleMinTPCLength: [ -1, -1, -1, -1 ] # Minimum particle trajectory length inside of the TPC.Units are cm.  Negative value means ignore check
+physics.filters.filter.RequireAllInterestingParticles:     true    #Require that ALL of the particles defined in the fcl be found in the event.  If set to false only one one of them needs to be found for the event to be saved
+physics.filters.filter.Pi0_DalitzDecay:                    true
+outputs.out1.SelectEvents: [ "simulate" ]

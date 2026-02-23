@@ -1,0 +1,35 @@
+#include "analysisConfigHNL.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: AnalyzeEventsHNL  #Without underscores
+
+source:
+{
+  module_type: RootInput
+  maxEvents: -1
+}
+
+services:
+{
+  TFileService:  { fileName: "HNL_200MeV_gen_2.root" }
+  @table::sbnd_services
+}
+
+physics:
+{
+  analyzers:
+  {
+    analyzeEvents:  @local::analyzeEventsHNL
+  }
+
+  ana:  [ analyzeEvents ]
+  end_paths:  [ ana ]
+}
