@@ -135,7 +135,7 @@ physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
-physics.producers.cafmaker.BlipTag: "blipreco"
+physics.producers.cafmaker.BlipTag: "blipReco"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false

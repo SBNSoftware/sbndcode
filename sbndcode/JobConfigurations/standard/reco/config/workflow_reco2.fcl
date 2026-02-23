@@ -90,7 +90,7 @@ sbnd_reco2_producers:{
     cvnSCE:              @local::standard_sbndcvnevaluatorslc
 
     ### blip
-    blipreco: {
+    blipReco: {
       module_type: "BlipRecoProducer"
       BlipAlg:     @local::sbnd_blipalg
     }
@@ -134,7 +134,7 @@ sbnd_reco2_producer_sequence: [
     , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
-    , blipreco
+    , blipReco
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
