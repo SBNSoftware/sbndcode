@@ -3,8 +3,16 @@ gdml=$2
 author=$3
 email=$4
 edition=$5
+basedir=$6
 
-mkdir /exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/tex_work
+echo $version
+echo $gdml
+echo $author
+echo $email
+echo $edition
+echo $basedir
+
+mkdir ${basedir}/${edition}/tex_work
 
 echo "\documentclass{article}
 \usepackage[a4paper, margin=3cm]{geometry}
@@ -20,7 +28,7 @@ wallnames=(Bottom South North West East "Top Low" "Top High")
 
 for wall in "${walls[@]}"
 do
-    list=$(ls /exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/${wall}_wall/*_front.pdf)
+    list=$(ls ${basedir}/${edition}/${wall}_wall/*_front.pdf)
     echo -n "\newcommand*{\\"$wall"ids}{" >> crt_channel_mapping_evds.tex
 
     for item in ${list}
@@ -63,9 +71,9 @@ do
     \newpage
     \subsection{volCRTModule\x\_\x}
     \begin{center}
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/${walls[i]}_wall/volCRTModule\x_\x_front.pdf}\\\\
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/${walls[i]}_wall/volCRTModule\x_\x_top.pdf}\\\\
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/${walls[i]}_wall/volCRTModule\x_\x_side.pdf}
+            \includegraphics[width=.85\textwidth]{${basedir}/${edition}/${walls[i]}_wall/volCRTModule\x_\x_front.pdf}\\\\
+            \includegraphics[width=.85\textwidth]{${basedir}/${edition}/${walls[i]}_wall/volCRTModule\x_\x_top.pdf}\\\\
+            \includegraphics[width=.85\textwidth]{${basedir}/${edition}/${walls[i]}_wall/volCRTModule\x_\x_side.pdf}
     \end{center}
 }
 \endgroup" >> crt_channel_mapping_evds.tex
@@ -73,5 +81,5 @@ done
 
 echo "\end{document}" >> crt_channel_mapping_evds.tex
 
-pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/tex_work crt_channel_mapping_evds.tex
-pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/${edition}/tex_work crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory ${basedir}/${edition}/tex_work crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory ${basedir}/${edition}/tex_work crt_channel_mapping_evds.tex
