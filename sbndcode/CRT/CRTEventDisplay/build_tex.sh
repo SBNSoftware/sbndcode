@@ -19,7 +19,7 @@ echo "\documentclass{article}
 \usepackage[hidelinks]{hyperref}
 
 \title{SBND CRT Channel Mapping Displays \\\\ \vspace{1em} \small \textit{Produced using} \texttt{sbndcode ${version}} \textit{\&} \texttt{${gdml}}}
-\author{${author} \\\\ \small ${email}}" > crt_channel_mapping_evds.tex
+\author{${author} \\\\ \small ${email}}" > ${basedir}/tex_work/crt_channel_mapping_evds.tex
 
 walls=(bottom south north west east toplow tophigh)
 wallnames=(Bottom South North West East "Top Low" "Top High")
@@ -27,17 +27,17 @@ wallnames=(Bottom South North West East "Top Low" "Top High")
 for wall in "${walls[@]}"
 do
     list=$(ls ${basedir}/${wall}_wall/*_front.pdf)
-    echo -n "\newcommand*{\\"$wall"ids}{" >> crt_channel_mapping_evds.tex
+    echo -n "\newcommand*{\\"$wall"ids}{" >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
 
     for item in ${list}
     do
         name=$(echo $item | cut -d '/' -f 10)
         number=$(echo $name | cut -d '_' -f 2)
-        echo -n $number, >> crt_channel_mapping_evds.tex
+        echo -n $number, >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
     done
 
-    sed -i '$ s/.$//' crt_channel_mapping_evds.tex
-    echo "}" >> crt_channel_mapping_evds.tex
+    sed -i '$ s/.$//' ${basedir}/tex_work/crt_channel_mapping_evds.tex
+    echo "}" >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
 done
 
 echo "\begin{document}
@@ -57,7 +57,7 @@ echo "\begin{document}
 \newpage
 \section{Explanation}
 This document contains a series of illustrations created using the \texttt{CRTEventDisplay} tool originally written by Tom Brooks \& heavily developed by myself. It shows the position of the various CRT modules according to the gdml file used in SBND simulation and reconstruction. The document is split into sections for the different tagger walls. For each module three illustrations are provided: front, top and side views. The axes show detector coordinates (X, Y and Z) and \`\`building coordinates\" (North, West and Up). The relevant module is shown in green. The TPCs are shown in grey in the centre for reference. The black outer is the full tagger wall. The thin grey are other modules in the wall. The red is the FEB position and the blue corresponds to the end of the FEB with channel 0 (the ethernet ports).
-" >> crt_channel_mapping_evds.tex
+" >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
 
 for i in "${!walls[@]}"
 do
@@ -74,10 +74,10 @@ do
             \includegraphics[width=.85\textwidth]{${basedir}/${walls[i]}_wall/volCRTModule\x_\x_side.pdf}
     \end{center}
 }
-\endgroup" >> crt_channel_mapping_evds.tex
+\endgroup" >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
 done
 
-echo "\end{document}" >> crt_channel_mapping_evds.tex
+echo "\end{document}" >> ${basedir}/tex_work/crt_channel_mapping_evds.tex
 
-pdflatex --shell-escape -output-directory ${basedir}/tex_work crt_channel_mapping_evds.tex
-pdflatex --shell-escape -output-directory ${basedir}/tex_work crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory ${basedir}/tex_work ${basedir}/tex_work/crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory ${basedir}/tex_work ${basedir}/tex_work/crt_channel_mapping_evds.tex
