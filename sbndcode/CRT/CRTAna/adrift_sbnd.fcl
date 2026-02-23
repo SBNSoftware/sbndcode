@@ -1,0 +1,31 @@
+BEGIN_PROLOG
+
+adrift_data_sbnd:
+{ 
+  module_type:              "ADRIFT"
+  FEBDataModuleLabel:       "crtdecoder"
+  CRTStripHitModuleLabel:   "crtstrips"
+  CRTClusterModuleLabel:    "crtclustering"
+  CRTSpacePointModuleLabel: "crtspacepoints"
+  CRTTrackModuleLabel:      "crttracks"
+  DAQHeaderModuleLabel:     "daq"
+  DAQHeaderInstanceLabel:   "RawEventHeader"
+  TopSaveDirectory:         "/exp/sbnd/data/users/hlay/crt_comm_summer_2024/plots/adrift"
+  Only2HitSpacePoints:      false
+  SaveAllFits:              false
+  SaveBadFits:              false
+  SaveSubset:               false
+  FEBs:                     true
+  StripHits:                true
+  SpacePoints:              true
+  Tracks:                   true
+  TrackLA:                  true
+  SaveROOTHists:            true
+  AnalysePE:                false
+  TrackAngleLimit:          20
+  PullWindow:               0.05
+  ReconstructionWindow:     3.22e-3
+  RawTSCorrection:          367000
+}
+
+END_PROLOG
