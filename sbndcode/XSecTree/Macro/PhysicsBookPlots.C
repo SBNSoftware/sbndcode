@@ -53,13 +53,16 @@ std::vector<bool> fContainedParticles;
 std::vector<double> fFiducial;
 bool fIsFiducial;
 bool fPlotByFsi;
+int fPRISMBins;
 std::vector<int> fNumProtons;
 std::vector<int> fNumPiPM;
 std::vector<int> fNumPi0;
 std::vector<int> fInteractionType;
+
 // Plotting variable configurations
 std::vector<TString> fStage;
 std::vector<TString> fPlotVariables;
+std::vector<TString> fPRISMBinStrings;
 std::vector<bool> fShowPlots;
 double fPotScale;
 bool fSinglePot;
@@ -108,6 +111,12 @@ const std::vector<std::string> fsi_list = {"0#pi0p", "0#pi1p", "0#pi#geq2p", "1#
 const std::vector<std::string> int_list = {"QE", "MEC", "RES", "DIS", "COH", "other"};
 const std::vector<std::string> nu_list  = {"#nu_{e} CC", "#nu_{e} NC", "#nu_{#mu} CC", "#nu_{#mu} NC", "#bar{#nu}_{e} CC", "#bar{#nu}_{e} NC", "#bar{#nu}_{#mu} CC", "#bar{#nu}_{#mu} NC", "other"};
 
+// Universal plotting quantities
+Int_t font = 132;
+Double_t font_size = 0.036;
+Double_t line_width = 2.;
+Double_t label_offset = 0.01;
+
 // Structure for holding interaction information
 class Interaction
 {
@@ -115,23 +124,27 @@ class Interaction
 
     bool selected;
     bool true_selected;
+    int prism_bin;
     TString stage;
     TString model;
     std::string fsi;
     std::string int_type;
     std::string nu_type;
+    std::string prism_bin_string;
     std::vector<double> variables;
     std::vector<double> true_variables;
 
-    Interaction(bool s, bool ts, TString st, TString mn, std::string f, std::string i, std::string n, std::vector<double> v, std::vector<double> tv)
+    Interaction(bool s, bool ts, int pb, TString st, TString mn, std::string f, std::string i, std::string n, std::string pbs, std::vector<double> v, std::vector<double> tv)
     {
       selected = s;
       true_selected = ts;
+      prism_bin = pb;
       stage = st;
       model = mn;
       fsi = f;
       int_type = i;
       nu_type = n;
+      prism_bin_string = pbs;
       variables = v;
       true_variables = tv;
     }
@@ -180,11 +193,6 @@ class Titles
 
 // Set some global style configurations here
 void SetStyle(){
-
-  Int_t font = 132;
-  Double_t font_size = 0.035;
-  Double_t line_width = 2.;
-  Double_t label_offset = 0.01;
 
   TGaxis::SetMaxDigits(3);
   gStyle->SetOptStat(0);
@@ -314,6 +322,7 @@ void Configure(const std::string config_filename) {
     if(key.find("ContainedParticles") != std::string::npos) fContainedParticles = ToBools(value);
     if(key.find("Fiducial") != std::string::npos)           fFiducial = ToDoubles(value);
     if(key.find("PlotByFsi") != std::string::npos)          fPlotByFsi = (value=="true");
+    if(key.find("PRISMBins") != std::string::npos)          fPRISMBins = stod(value);
     if(key.find("NumProtons") != std::string::npos)         fNumProtons = ToInts(value);
     if(key.find("NumPiPM") != std::string::npos)            fNumPiPM = ToInts(value);
     if(key.find("NumPi0") != std::string::npos)             fNumPi0 = ToInts(value);
@@ -370,6 +379,26 @@ void Configure(const std::string config_filename) {
     fPlotStacked = false;
   }
 
+  // Setup PRISM bins
+  if(fPRISMBins < 2) fPRISMBinStrings.push_back("SBND");
+  else{
+    for(int pb = 0; pb < fPRISMBins; ++pb){
+      // Now allocate the prism bin based on configuration choice
+      int prism_bin = -1;
+      double prism_width = 1.6 / static_cast<double>(fPRISMBins); // in degrees at the front face of the detector
+      for(unsigned int n = 0; n < fPRISMBins; ++n){
+        double lower_edge = n*prism_width;
+        double upper_edge = n*(prism_width)+prism_width;
+        std::cout << lower_edge << " - " << upper_edge << std::endl;
+        ostringstream us, ls;
+        us << std::setprecision(2) << upper_edge;
+        ls << std::setprecision(2) << lower_edge;
+        std::string upper_edge_str = us.str();
+        std::string lower_edge_str = ls.str();
+        fPRISMBinStrings.push_back("OAA "+lower_edge_str+"^{#circ} - "+upper_edge_str+"^{#circ}");
+      }
+    }
+  }
 } // Configure
 // Initialise the intput files
 void Init(){
@@ -694,6 +723,29 @@ std::map< TString, std::map< TString, std::vector<Interaction> > > ReadData(){
           if(*true_nu_pdg == 14 && *true_cc) nu_string = "#nu_{#mu} CC";
           if(*true_nu_pdg == 14 && !*true_cc) nu_string = "#nu_{#mu} NC";
 
+          // Calculate the OAA for this neutrino vertex
+          // account for the shifted x-location of the beam
+          double beamx = 45.7; // cm off axis for flux configuration F
+          double beamy = 0.0;
+          double exp_baseline = 11000.0; // cm
+          double offaxis_true_cm = sqrt( (*vtx_x-beamx)*(*vtx_x-beamx) + (*vtx_y-beamy)*(*vtx_y-beamy));
+          double offaxis_true_deg = atan(offaxis_true_cm/exp_baseline) * (180/M_PI);
+
+          // Now allocate the prism bin based on configuration choice
+          std::string prism_bin_string = "sbnd";
+          int prism_bin = -1;
+          if(fPRISMBins > 1){
+            double prism_width = 1.6 / static_cast<double>(fPRISMBins); // in degrees at the front face of the detector
+            for(unsigned int n = 0; n < fPRISMBins; ++n){
+              double lower_edge = n*prism_width;
+              double upper_edge = n*(prism_width)+prism_width;
+              if(offaxis_true_deg > lower_edge && offaxis_true_deg < upper_edge){
+                prism_bin = n;
+                prism_bin_string = fPRISMBinStrings.at(n);
+              }
+            }
+          }
+          
           // Check that all variables are filled FIXME is this right?
           if(std::find(true_variables.begin(), true_variables.end(), -99999) != true_variables.end()) continue;
 
@@ -701,7 +753,7 @@ std::map< TString, std::map< TString, std::vector<Interaction> > > ReadData(){
           if(!selected && !true_selected)
             continue;
 
-          Interaction interaction(selected, true_selected, s, m, fsi_string, int_string, nu_string, variables, true_variables);
+          Interaction interaction(selected, true_selected, prism_bin, s, m, fsi_string, int_string, nu_string, prism_bin_string, variables, true_variables);
           interactions[s].push_back(interaction);
         }
       }
@@ -1195,7 +1247,7 @@ Titles GetTitles(){
 }
 
 // Draw additional information on to hist
-void DrawInfo(Titles titles, double width, double height, double size, int modelIt){
+void DrawInfo(Titles titles, double width, double height, double size, int modelIt, int align=11){
 
   std::vector<TLatex*> data_type;
   for(const TString &type : titles.data_type){
@@ -1204,64 +1256,56 @@ void DrawInfo(Titles titles, double width, double height, double size, int model
   }
   std::vector<TLatex*> model_name;
   int index = 0;
-  if(modelIt == -1){
-    TLatex *temp_model_name = new TLatex(width, .80*height, "All Models");
-    model_name.push_back(temp_model_name);
-  }
-  else{
+  if(modelIt != -1){
     for(const TString &name : titles.model_name){
       if(modelIt == index){
-        TLatex *temp_model_name = new TLatex(width, .80*height, name);
+        TLatex *temp_model_name = new TLatex(width, .98*height, name);
         model_name.push_back(temp_model_name);
       }
       index++;
     }
   }
 
-  TLatex *POT        = new TLatex(width, .98*height, titles.pot);
-  TLatex *mass       = new TLatex(width, .92*height, titles.mass);
+  TLatex *POT        = new TLatex(width, .92*height, titles.pot);
+  TLatex *mass       = new TLatex(width, .80*height, titles.mass);
   TLatex *is_cc      = new TLatex(width, .74*height, titles.is_cc);
   TLatex *part_cont  = new TLatex(width, .68*height, titles.part_cont);
   TLatex *lep_cont   = new TLatex(width, .62*height, titles.lep_cont);
   TLatex *n_pr       = new TLatex(width, .56*height, titles.n_pr);
   TLatex *n_pipm     = new TLatex(width, .50*height, titles.n_pipm);
   TLatex *n_pi0      = new TLatex(width, .44*height, titles.n_pi0);
-  TLatex *int_type   = new TLatex(width, .38*height, titles.int_type);
+  TLatex *int_type   = new TLatex(width, .56*height, titles.int_type);
+
+  // Setup a vector of latex elements to draw to avoid repetition
+  std::vector<TLatex*> infoBlocks;
+  if(modelIt != -1){
+    for(unsigned int m = 0; m < model_name.size(); ++m){
+      infoBlocks.push_back(model_name.at(m));
+    }
+  }
+  infoBlocks.push_back(POT);
+  for(unsigned int d = 0; d < data_type.size(); ++d){
+    infoBlocks.push_back(data_type.at(d));
+  }
+  infoBlocks.push_back(mass);
+  infoBlocks.push_back(is_cc);
+  infoBlocks.push_back(part_cont);
+  infoBlocks.push_back(lep_cont);
+  if(fPlotByFsi){
+    infoBlocks.push_back(n_pr);
+    infoBlocks.push_back(n_pipm);
+    infoBlocks.push_back(n_pi0);
+  }
+  else
+    infoBlocks.push_back(int_type);
 
   // Set the text size
-  POT->SetTextSize(size);
-  mass->SetTextSize(size);
-  for(unsigned int i = 0; i < data_type.size(); ++i) 
-    data_type[i]->SetTextSize(size);
-  for(unsigned int i = 0; i < model_name.size(); ++i) 
-    model_name[i]->SetTextSize(size);
-  part_cont->SetTextSize(size);
-  lep_cont->SetTextSize(size);
-  is_cc->SetTextSize(size);
-  n_pr->SetTextSize(size);
-  n_pipm->SetTextSize(size);
-  n_pi0->SetTextSize(size);
-  int_type->SetTextSize(size);
+  for(unsigned int i = 0; i < infoBlocks.size(); ++i){
+    infoBlocks.at(i)->SetTextSize(size);
+    infoBlocks.at(i)->SetTextAlign(align);
+    infoBlocks.at(i)->Draw("same");
 
-  // Draw the info text
-  POT->Draw("same");
-  mass->Draw("same");
-  for(unsigned int i = 0; i < data_type.size(); ++i) 
-    data_type[i]->Draw("same");
-  for(unsigned int i = 0; i < model_name.size(); ++i) 
-    model_name[i]->Draw("same");
-  part_cont->Draw("same");
-  lep_cont->Draw("same");
-  is_cc->Draw("same");
-  if(fPlotByFsi){
-    n_pr->Draw("same");
-    n_pipm->Draw("same");
-    n_pi0->Draw("same");
   }
-  else{
-    int_type->Draw("same");
-  }
-
 }
 
 // Get the Y axis title when plotting cross sections
@@ -1291,7 +1335,10 @@ void Plot1DHistWithErrors(TH1D* error_bands,
 
   // Create the canvas
   TString name = total_hist->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,1000);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",800,1000);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
 
   // Split the pad for histogram and error plot
   double pad_split = .3;
@@ -1324,9 +1371,9 @@ void Plot1DHistWithErrors(TH1D* error_bands,
 
   if(fShowErrorBars){
     TH1D *total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
-    total_clone->SetLineWidth(2);
+    total_clone->SetLineWidth(1.5*line_width);
     total_clone->SetMarkerStyle(1);
-    total_clone->Draw("E1 X0 SAME");
+    total_clone->Draw("E2 SAME");
   }
 
   total_hist->SetFillColor(fCols[0]);
@@ -1334,7 +1381,7 @@ void Plot1DHistWithErrors(TH1D* error_bands,
   total_hist->SetLineColor(fCols[0]);
   if(!fPlotFilled){
     total_hist->SetFillColor(0);
-    total_hist->SetLineWidth(2);
+    total_hist->SetLineWidth(1.5*line_width);
     total_hist->SetLineStyle(fLineStyle[0]);
   }
 
@@ -1381,15 +1428,18 @@ void Plot1DHistWithErrors(TH1D* error_bands,
   // Info text
   // Text position and content
   double width = 1.;
+  int align    = 11;
   if(titles.names[i].Contains("cos"))
     width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-  else
-    width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  else{
+    width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    align = 31;
+  }
   double height = total_hist->GetMaximum();
   if(fMaxy.at(i) > -99999.)
     height = fMaxy.at(i)*0.92;
-  double upper_text_size = 0.7*total_hist->GetYaxis()->GetTitleSize();
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
+  double upper_text_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt, align);
 
   // Fill the lower pad with percentage error per bin
   lower_pad->cd();
@@ -1407,7 +1457,7 @@ void Plot1DHistWithErrors(TH1D* error_bands,
   }
   else{
     error_bands->SetFillStyle(0);
-    error_bands->SetLineWidth(3.);
+    error_bands->SetLineWidth(1.5*line_width);
   }
   error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
   if(titles.units[i].IsNull()){
@@ -1472,7 +1522,10 @@ void Plot1DWithErrors(THStack* hstack,
 
   // Create the canvas
   TString name = hstack->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",600,1000);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",800,1000);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
 
   // Split the pad for histogram and error plot
   double pad_split = .3;
@@ -1498,9 +1551,9 @@ void Plot1DWithErrors(THStack* hstack,
   hstack->Draw("HIST");
   hstack->SetTitle("");
   if(fShowErrorBars){
-    total_hist->SetLineWidth(2);
+    total_hist->SetLineWidth(1.5*line_width);
     total_hist->SetMarkerStyle(1);
-    total_hist->Draw("E1 X0 SAME");
+    total_hist->Draw("E2 SAME");
   }
 
   if(fPlotStacked){
@@ -1552,15 +1605,18 @@ void Plot1DWithErrors(THStack* hstack,
   // Info text
   // Text position and content
   double width = 1.;
+  int align    = 11;
   if(titles.names[i].Contains("cos"))
     width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-  else
-    width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  else{
+    width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    align = 31;
+  }
   double height = hstack->GetMaximum();
   if(fMaxy.at(i) > -99999.)
     height = fMaxy.at(i)*0.92;
-  double upper_text_size = 0.7*hstack->GetYaxis()->GetTitleSize();
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
+  double upper_text_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt, align);
 
   // Fill the lower pad with percentage error per bin
   lower_pad->cd();
@@ -1578,7 +1634,7 @@ void Plot1DWithErrors(THStack* hstack,
   }
   else{
     error_bands->SetFillStyle(0);
-    error_bands->SetLineWidth(3.);
+    error_bands->SetLineWidth(1.5*line_width);
   }
   error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
   if(titles.units[i].IsNull()){
@@ -1647,7 +1703,10 @@ void Plot1DHist(Titles titles,
 
   // Create the canvas
   TString name = total_hist->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",900,900);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",1000,900);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
 
   // Split the pad for histogram and error plot
   canvas->SetTopMargin(0.05);
@@ -1670,7 +1729,7 @@ void Plot1DHist(Titles titles,
   total_hist->SetLineColor(fCols[0]);
   if(!fPlotFilled){
     total_hist->SetFillColor(0);
-    total_hist->SetLineWidth(2);
+    total_hist->SetLineWidth(1.5*line_width);
     total_hist->SetLineStyle(fLineStyle[0]);
   }
 
@@ -1691,9 +1750,9 @@ void Plot1DHist(Titles titles,
 
   if(fShowErrorBars){
     TH1D* total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
-    total_clone->SetLineWidth(2);
+    total_clone->SetLineWidth(1.5*line_width);
     total_clone->SetMarkerStyle(1);
-    total_clone->Draw("E1 X0 SAME");
+    total_clone->Draw("E2 SAME");
   }
 
   // Set the titles
@@ -1731,15 +1790,18 @@ void Plot1DHist(Titles titles,
 
   // Text position and content
   double width = 1.;
+  int align    = 11;
   if(titles.names[i].Contains("cos"))
     width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-  else
-    width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  else{
+    width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    align = 31;
+  }
   double height          = total_hist->GetMaximum();
   if(fMaxy.at(i) > -99999.)
     height = fMaxy.at(i)*0.92;
-  double upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
+  double upper_text_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt, align);
 
   TString output_file = fOutputFile;
   name.ReplaceAll(".","p");
@@ -1774,7 +1836,10 @@ void Plot1D(THStack* hstack,
 
   // Create the canvas
   TString name = hstack->GetName();
-  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",900,900);
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",1000,900);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
 
   // Split the pad for histogram and error plot
   canvas->SetTopMargin(0.07);
@@ -1807,10 +1872,10 @@ void Plot1D(THStack* hstack,
 
   if(fShowErrorBars){
     TH1D* total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
-    total_clone->SetLineWidth(2);
+    total_clone->SetLineWidth(1.5*line_width);
     total_clone->SetLineColor(kGray+2);
     total_clone->SetMarkerStyle(1);
-    total_clone->Draw("E1 X0 SAME");
+    total_clone->Draw("E2 SAME");
   }
 
   if(fPlotStacked){
@@ -1857,15 +1922,18 @@ void Plot1D(THStack* hstack,
 
   // Text position and content
   double width = 1.;
+  int align    = 11;
   if(titles.names[i].Contains("cos"))
     width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-  else
-    width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+  else{
+    width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    align = 31;
+  }
   double height          = hstack->GetMaximum();
   if(fMaxy.at(i) > -99999.)
     height = fMaxy.at(i)*0.92;
-  double upper_text_size = 0.6*hstack->GetYaxis()->GetTitleSize();
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt);
+  double upper_text_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt, align);
 
   TString output_file = fOutputFile;
   name.ReplaceAll(".","p");
@@ -1893,6 +1961,144 @@ void Plot1D(THStack* hstack,
   }
 }
 
+// Plot a 1D stack linearised across the number of PRISM bins
+void Plot1DPRISM(std::vector<std::pair<THStack*, TLegend*>> stacks, 
+                 Titles titles, 
+                 std::vector<TH1D*> totals, 
+                 int modelIt, 
+                 int i, 
+                 int j = -1, 
+                 int k = -1){
+
+  // Create the canvas
+  TString name = stacks.at(0).first->GetName();
+  TCanvas *canvas = new TCanvas("canvas_"+name,"canvas",1800,900);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
+
+  // Split the pad for histogram and error plot
+  canvas->SetTopMargin(0.07);
+  canvas->SetBottomMargin(0.12);
+  canvas->SetLeftMargin(0.13);
+  canvas->SetRightMargin(0.03);
+
+  // Divide the canvas according to the number of PRISM bins, then loop over them and plot at usual.
+  canvas->Divide(fPRISMBins,1);
+
+  for(int pb = 0; pb < fPRISMBins; ++pb){
+    canvas->cd(pb+1);
+
+    THStack* hstack = stacks.at(pb).first;
+    TLegend* legend = stacks.at(pb).second;
+    TH1D* total_hist = totals.at(pb);
+
+    // Draw the stacked histogram and legend
+    hstack->SetTitle("");
+    hstack->Draw("HIST");
+
+    double title_size = 1.;
+
+    // X axis config
+    hstack->GetXaxis()->SetTitleOffset(1);
+    hstack->GetXaxis()->SetTickLength(0.02);
+    hstack->GetXaxis()->SetTitleSize(0.05);
+    hstack->GetXaxis()->SetLabelSize(0.035);
+    // Y axis config
+    hstack->GetYaxis()->SetMaxDigits(3.);
+    hstack->GetYaxis()->SetTitleOffset(1.2);
+    hstack->GetYaxis()->SetTickLength(0.015);
+    hstack->GetYaxis()->SetTitleSize(0.05);
+    hstack->GetYaxis()->SetLabelSize(0.035);
+    hstack->GetYaxis()->SetNdivisions(110);
+    if(fMaxy.at(i) > -99999.)
+      hstack->SetMaximum(fMaxy.at(i));
+    else
+      hstack->SetMaximum(1.1*total_hist->GetMaximum());
+
+    if(fShowErrorBars){
+      TH1D* total_clone = static_cast<TH1D*>(total_hist->Clone("total_clone"));
+      total_clone->SetLineWidth(1.5*line_width);
+      total_clone->SetLineColor(kGray+2);
+      total_clone->SetMarkerStyle(1);
+      total_clone->Draw("E2 SAME");
+    }
+
+    if(fPlotStacked){
+      legend->SetNColumns(legend->GetNRows());
+      legend->SetFillStyle(0);
+      legend->Draw();
+      canvas->Update();
+      legend->SetX1NDC(0.21);
+      legend->SetY1NDC(0.94);
+      legend->SetX2NDC(0.97);
+      legend->SetY2NDC(0.99);
+      canvas->Modified();
+    }
+
+    // Set the titles
+    if(fPlotXSec){
+      hstack->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    }
+    else if(fMaxError > 0){
+      hstack->GetYaxis()->SetTitle("Events (/Bin width)");
+    }
+    else{
+      hstack->GetYaxis()->SetTitle("Events");
+    }
+    if(titles.units[i].IsNull()){
+      hstack->GetXaxis()->SetTitle(titles.names[i]);
+    }
+    else{
+      hstack->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+    }
+
+    if(fPlotXSec && fPlotVariables.size()==1){ 
+      title_size = 1.0*hstack->GetYaxis()->GetTitleSize();
+      hstack->GetYaxis()->SetTitleOffset(1.15);
+    }
+    if(fPlotXSec && fPlotVariables.size()==2){ 
+      title_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+      hstack->GetYaxis()->SetTitleOffset(1.25);
+    }
+    if(fPlotXSec && fPlotVariables.size()==3){ 
+      title_size = 0.6*hstack->GetYaxis()->GetTitleSize();
+      hstack->GetYaxis()->SetTitleOffset(1.35);
+    }
+
+    // Text position and content
+    double width = 1.;
+    int align    = 11;
+    if(titles.names[i].Contains("cos"))
+      width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    else{
+      width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+      align = 31;
+    }
+    double height          = hstack->GetMaximum();
+    if(fMaxy.at(i) > -99999.)
+      height = fMaxy.at(i)*0.92;
+    double upper_text_size = 0.8*hstack->GetYaxis()->GetTitleSize();
+    if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, modelIt, align);
+
+  } // PRISM loop
+
+  TString output_file = fOutputFile;
+  name.ReplaceAll(".","p");
+  name.ReplaceAll("-","m");
+  TString canv_name = canvas->GetName();
+  canv_name.ReplaceAll(".","p");
+  canv_name.ReplaceAll("-","m");
+  canvas->SetName(canv_name);
+  output_file.ReplaceAll(".","_"+name+"_stacked_prism.");
+  canvas->SaveAs(output_file);
+  output_file.ReplaceAll(".root",".png");
+  canvas->SaveAs(output_file);
+  output_file.ReplaceAll(".png",".pdf");
+  canvas->SaveAs(output_file);
+}
+
+
 // Plot an overlay of multiple 1D histograms
 void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Titles titles, TString title, int i, int j = -1, int k = -1){
 
@@ -1904,183 +2110,209 @@ void PlotOverlay1D(std::map< TString, std::map<TString, TH1D*> > histograms, Tit
   TString var    = histograms.begin()->second.begin()->second->GetName();
   TString stage0 = histograms.begin()->second.begin()->first;
   TString model0 = histograms.begin()->first;
-  TString canv_name = "canvas_overlay_"+var+"_"+std::to_string(i);
+  TString canv_name = "canvas_overlay_"+var+"_"+TString(i);
   if(j > -1){
     canv_name += "_"+std::to_string(j);
     if(k > -1)
       canv_name += "_"+std::to_string(k);
   }
-  TCanvas *canvas = new TCanvas(canv_name,"",900,900);
+  TCanvas *canvas = new TCanvas(canv_name,"",1000,900);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
   if(j > -1 || k > -1)
     canvas->SetCanvasSize(800,600);
   TLegend *legend = new TLegend(0.21,0.94,0.97,0.99);
 
-  // Split the pad for histogram and error plot
-  canvas->SetTopMargin(0.07);
-  canvas->SetBottomMargin(0.12);
-  canvas->SetLeftMargin(0.13);
-  canvas->SetRightMargin(0.03);
+// Split the pad for histogram and error plot
+canvas->SetTopMargin(0.07);
+canvas->SetBottomMargin(0.12);
+canvas->SetLeftMargin(0.13);
+canvas->SetRightMargin(0.03);
 
-  // Get maximum for range setting
-  double max_y = -1.;
-  for(it_models = histograms.begin(); it_models != histograms.end(); ++it_models){
-    std::map< TString, TH1D*> stage_hists = it_models->second;
-    for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
-      TH1D *total_hist = it->second;
-      if(fPlotAreaNorm && !fPlotXSec)
-        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
-      if(total_hist->GetMaximum() > max_y)
-        max_y = total_hist->GetMaximum();
-    }
+// Get maximum for range setting
+double max_y = -1.;
+for(it_models = histograms.begin(); it_models != histograms.end(); ++it_models){
+  std::map< TString, TH1D*> stage_hists = it_models->second;
+  for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
+    TH1D *total_hist = it->second;
+    if(fPlotAreaNorm && !fPlotXSec)
+      total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
+    if(total_hist->GetMaximum() > max_y)
+      max_y = total_hist->GetMaximum();
   }
+}
 
-  double width = 1.;
-  double height = 1.;
-  double upper_text_size = 1.;
-  unsigned int index = 0;
-  for(it_models = histograms.begin(); it_models != histograms.end(); ++it_models){
-    TString model = it_models->first;
-    std::map< TString, TH1D*> stage_hists = it_models->second;
+int align    = 11;
+double width = 1.;
+double height = 1.;
+double upper_text_size = 1.;
+unsigned int index = 0;
+for(it_models = histograms.begin(); it_models != histograms.end(); ++it_models){
+  TString model = it_models->first;
+  std::map< TString, TH1D*> stage_hists = it_models->second;
 
-    unsigned int stage_index = 0;
-    for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
-      TString stage    = it->first; 
-      TH1D *total_hist = it->second;
-      total_hist->SetTitle("");
-      if(fPlotAreaNorm && !fPlotXSec)
-        total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
-      
-      // Text position and content
-      if(var.Contains("cos"))
-        width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-      else
-        width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-      height = max_y;
-      upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+  unsigned int stage_index = 0;
+  for(it = stage_hists.begin(); it != stage_hists.end(); ++it){
+    TString stage    = it->first; 
+    TH1D *total_hist = it->second;
+    total_hist->SetTitle("");
+    if(fPlotAreaNorm && !fPlotXSec)
+      total_hist->Scale(1/static_cast<double>(total_hist->Integral()));
+    
+    // Text position and content
+    if(var.Contains("cos"))
+      width = 0.1*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+    else{
+      width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+      align = 31;
+    }
+    height = max_y;
+    upper_text_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
 
-      TString name = total_hist->GetName();
+    TString name = total_hist->GetName();
 
-      // Draw the stacked histogram and legend
-      if(index == 0)
+    // Draw the stacked histogram and legend
+    total_hist->SetFillStyle(0);
+    total_hist->SetMarkerStyle(0);
+    total_hist->SetLineColor(fCols[index]);
+    total_hist->SetLineStyle(fLineStyle[stage_index]);
+    total_hist->SetLineWidth(2.);
+
+    if(index == 0){
+      if(!fShowErrorBars)
         total_hist->Draw("HIST");
-      else
-        total_hist->Draw("HIST same");
-
-      total_hist->SetFillStyle(0);
-      total_hist->SetLineColor(fCols[index]);
-      total_hist->SetLineStyle(fLineStyle[stage_index]);
-      total_hist->SetLineWidth(2.);
-
-      // Set the titles
-      if(fPlotXSec){
-        total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
-      }
-      else if(fMaxError > 0){
-        total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
-      }
-      else if(fPlotAreaNorm && !fPlotXSec){
-        total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
-      }
       else{
-        total_hist->GetYaxis()->SetTitle("Events");
+        total_hist->Draw("E2");
+        total_hist->SetFillColor(fCols[index]);
+        total_hist->SetFillStyle(3001);
       }
-      if(titles.units[i].IsNull())
-        total_hist->GetXaxis()->SetTitle(titles.names[i]);
-      else
-        total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
-
-      // X axis config
-      total_hist->GetXaxis()->SetTitleOffset(1);
-      total_hist->GetXaxis()->SetLabelOffset(0.005);
-      total_hist->GetXaxis()->SetTickLength(0.02);
-      total_hist->GetXaxis()->SetTitleSize(0.045);
-      total_hist->GetXaxis()->SetLabelSize(0.035);
-      // Y axis config
-      total_hist->GetYaxis()->SetRangeUser(0., 1.1*max_y);
-      total_hist->GetYaxis()->SetMaxDigits(3.);
-      total_hist->GetYaxis()->SetTickLength(0.015);
-      total_hist->GetYaxis()->SetTitleSize(0.045);
-      total_hist->GetYaxis()->SetLabelSize(0.035);
-      total_hist->GetYaxis()->SetNdivisions(110);
-      total_hist->GetYaxis()->SetTitleOffset(1);
-      if(fPlotXSec)
-      {
-        total_hist->GetYaxis()->SetTitleOffset(1.45);
-        total_hist->GetYaxis()->SetTitleSize(0.04);
-        if(fPlotVariables.size()==1)
-          canvas->Modified();
-      }
-
-      if(fShowErrorBars){
-        total_hist->SetLineWidth(2);
-        total_hist->SetMarkerStyle(1);
-        total_hist->Draw("E1 X0 SAME");
-      }
-      if(fStage.size() == 1)
-        legend->AddEntry(total_hist, model, "l");
-      else if(fModelNames.size() == 1)
-        legend->AddEntry(total_hist, stage, "l");
-      else
-        legend->AddEntry(total_hist, model+" "+stage, "l");
-      
-      if(fSaveAllInOne){
-        TFile f(fOutputFile, "UPDATE");
-        total_hist->Write("total_"+name);
-        f.Close();
-      }
-      stage_index++;
     }
-    index++;
+    else{
+      if(!fShowErrorBars)
+        total_hist->Draw("HIST same");
+      else{
+        total_hist->Draw("E2 same");
+        total_hist->SetFillColor(fCols[index]);
+        total_hist->SetFillStyle(3001);
+      }
+    }
+
+    // Set the titles
+    if(fPlotXSec){
+      total_hist->GetYaxis()->SetTitle(GetXSecTitle(titles, i, j, k));
+    }
+    else if(fMaxError > 0){
+      total_hist->GetYaxis()->SetTitle("Events (/Bin width)");
+    }
+    else if(fPlotAreaNorm && !fPlotXSec){
+      total_hist->GetYaxis()->SetTitle("Events (Area Normalised)");
+    }
+    else{
+      total_hist->GetYaxis()->SetTitle("Events");
+    }
+    if(titles.units[i].IsNull())
+      total_hist->GetXaxis()->SetTitle(titles.names[i]);
+    else
+      total_hist->GetXaxis()->SetTitle(titles.names[i]+" ["+titles.units[i]+"]");
+
+    // X axis config
+    total_hist->GetXaxis()->SetTitleOffset(1);
+    total_hist->GetXaxis()->SetLabelOffset(0.005);
+    total_hist->GetXaxis()->SetTickLength(0.02);
+    total_hist->GetXaxis()->SetTitleSize(0.045);
+    total_hist->GetXaxis()->SetLabelSize(0.035);
+    // Y axis config
+    total_hist->GetYaxis()->SetRangeUser(0., 1.1*max_y);
+    total_hist->GetYaxis()->SetMaxDigits(3.);
+    total_hist->GetYaxis()->SetTickLength(0.015);
+    total_hist->GetYaxis()->SetTitleSize(0.045);
+    total_hist->GetYaxis()->SetLabelSize(0.035);
+    total_hist->GetYaxis()->SetNdivisions(110);
+    total_hist->GetYaxis()->SetTitleOffset(1);
+    if(fPlotXSec)
+    {
+      total_hist->GetYaxis()->SetTitleOffset(1.45);
+      total_hist->GetYaxis()->SetTitleSize(0.04);
+      if(fPlotVariables.size()==1)
+        canvas->Modified();
+    }
+
+    if(fShowErrorBars){
+      TH1D *total_hist_2 = static_cast<TH1D*>(total_hist->Clone("err_line"));
+      total_hist_2->SetLineColor(fCols[index]);
+      total_hist_2->SetLineWidth(1.5*line_width);
+      total_hist_2->SetFillStyle(0);
+      total_hist_2->Draw("HIST SAME");
+    }
+    if(fStage.size() == 1)
+      legend->AddEntry(total_hist, model, "l");
+    else if(fModelNames.size() == 1)
+      legend->AddEntry(total_hist, stage, "l");
+    else
+      legend->AddEntry(total_hist, model+" "+stage, "l");
+    
+    if(fSaveAllInOne){
+      TFile f(fOutputFile, "UPDATE");
+      total_hist->Write("total_"+name);
+      f.Close();
+    }
+    stage_index++;
   }
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, -1);
-  legend->SetNColumns(legend->GetNRows());
-  legend->Draw("same");
-  
-  canv_name.ReplaceAll("-","m");
-  canvas->SetName(canv_name);
-  
-  TString output_file = fOutputFile;
-  output_file.ReplaceAll(".","_"+var+"_overlay.");
-  output_file.ReplaceAll(".root","");
-  output_file.ReplaceAll(".","p");
-  output_file.ReplaceAll("-","m");
-  output_file.Append(".root");
-  canvas->SaveAs(output_file);
-  output_file.ReplaceAll(".root",".png");
-  canvas->SaveAs(output_file);
-  output_file.ReplaceAll(".png",".pdf");
-  canvas->SaveAs(output_file);
-  if(fSaveAllInOne){
-    TFile f(fOutputFile, "UPDATE");
-    canvas->Write();
-    f.Close();
-  }
+  index++;
+}
+if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, -1, align);
+legend->SetNColumns(legend->GetNRows());
+legend->Draw("same");
+
+canv_name.ReplaceAll("-","m");
+canvas->SetName(canv_name);
+
+TString output_file = fOutputFile;
+output_file.ReplaceAll(".","_"+var+"_overlay.");
+output_file.ReplaceAll(".root","");
+output_file.ReplaceAll(".","p");
+output_file.ReplaceAll("-","m");
+output_file.Append(".root");
+canvas->SaveAs(output_file);
+output_file.ReplaceAll(".root",".png");
+canvas->SaveAs(output_file);
+output_file.ReplaceAll(".png",".pdf");
+canvas->SaveAs(output_file);
+if(fSaveAllInOne){
+  TFile f(fOutputFile, "UPDATE");
+  canvas->Write();
+  f.Close();
+}
 }
 
 // Plot a 1D stacked hist with statistical errors on the bottom
 void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histograms, std::map< TString, std::map<TString, TH1D*> >  errors, Titles titles, TString title, int i, int j = -1, int k = -1){
 
-  //Iterators
-  std::map< TString, std::map<TString, TH1D*> >::const_iterator it_models;
-  std::map<TString, TH1D*>::const_iterator it;
+//Iterators
+std::map< TString, std::map<TString, TH1D*> >::const_iterator it_models;
+std::map<TString, TH1D*>::const_iterator it;
 
-  // Create the canvas
-  TString var    = histograms.begin()->second.begin()->second->GetName();
-  TString stage0 = histograms.begin()->second.begin()->first;
-  TString model0 = histograms.begin()->first;
-  TString canv_name = "canvas_overlay_"+var+"_"+std::to_string(i);
-  if(j > -1){
-    canv_name += "_"+std::to_string(j);
-    if(k > -1)
-      canv_name += "_"+std::to_string(j)+"_"+std::to_string(k);
-  }
-  TCanvas *canvas = new TCanvas(canv_name,"",600,1000);
-  if(j > -1 || k > -1)
-    canvas->SetCanvasSize(800,1000);
-  TLegend *legend = new TLegend(0.14, 0.005, 0.94, 0.066);
+// Create the canvas
+TString var    = histograms.begin()->second.begin()->second->GetName();
+TString stage0 = histograms.begin()->second.begin()->first;
+TString model0 = histograms.begin()->first;
+TString canv_name = "canvas_overlay_"+var+"_"+TString(i);
+if(j > -1){
+  canv_name += "_"+std::to_string(j);
+  if(k > -1)
+  canv_name += "_"+std::to_string(j)+"_"+std::to_string(k);
+}
+TCanvas *canvas = new TCanvas(canv_name,"",800,1000);
+// Grid
+canvas->SetGridx();
+canvas->SetGridy();
+if(j > -1 || k > -1)
+  canvas->SetCanvasSize(800,1000);
+TLegend *legend = new TLegend(0.14, 0.005, 0.94, 0.066);
 
   // Split the pad for histogram and error plot
-  double pad_split = .3;
+  double pad_split = .28;
   TPad *upper_pad = new TPad("upper_pad", "" , 0., pad_split, 1.0, 1.0);
   upper_pad->SetTopMargin(0.06);
   upper_pad->SetBottomMargin(0.077);
@@ -2113,6 +2345,7 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
     }
   }
 
+  int align    = 11;
   double width = 1.;
   double height = 1.;
   double upper_text_size = 1.;
@@ -2140,7 +2373,7 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
       total_hist->SetFillStyle(0);
       total_hist->SetLineColor(fCols[index]);
       total_hist->SetLineStyle(fLineStyle[stage_index]);
-      total_hist->SetLineWidth(3.);
+      total_hist->SetLineWidth(1.5*line_width);
 
       // Set the titles
       if(fPlotXSec){
@@ -2201,10 +2434,12 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
       // Text position and content
       if(var.Contains("cos"))
         width = 0.35*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
-      else
-        width = 0.65*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+      else{
+        width = 0.9*(total_hist->GetXaxis()->GetXmax()-total_hist->GetXaxis()->GetXmin())+total_hist->GetXaxis()->GetXmin();
+        align = 31;
+      }
       height = max_y;
-      upper_text_size = 0.6*total_hist->GetYaxis()->GetTitleSize();
+      upper_text_size = 0.8*total_hist->GetYaxis()->GetTitleSize();
 
       if(fStage.size() == 1)
         legend->AddEntry(total_hist, model, "l");
@@ -2222,7 +2457,7 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
     }
     index++;
   }
-  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, -1);
+  if(fShowInfo) DrawInfo(titles, width, height, upper_text_size, -1, align);
   legend->SetNColumns(legend->GetNRows());
   legend->SetFillStyle(0);
   legend->Draw("same");
@@ -2246,16 +2481,17 @@ void PlotOverlay1DWithErrors(std::map< TString, std::map<TString, TH1D*> > histo
 
       error_bands->SetLineColor(fCols[index]);
       error_bands->SetLineStyle(fLineStyle[stage_index]);
+      /*
       if(fPlotFilled){
         error_bands->SetFillColor(fCols[index]);
         error_bands->SetFillStyle(fFillStyle[index+stage_index]);
         error_bands->SetLineStyle(1);
         error_bands->SetLineWidth(2.);
       }
-      else{
+      else{*/
         error_bands->SetFillStyle(0);
-        error_bands->SetLineWidth(3.);
-      }
+        error_bands->SetLineWidth(1.5*line_width);
+      //}
       // Set axis titles
       error_bands->GetYaxis()->SetTitle("#sigma_{stat} (%)");
       if(titles.units[i].IsNull())
@@ -2339,6 +2575,9 @@ void PlotEfficiency(std::map< TString, std::map<TString, TH1D*> > select, std::m
       TGraphAsymmErrors *graph = new TGraphAsymmErrors();
       
       TCanvas *canvas = new TCanvas(name+yaxis+mo+st, "");
+      // Grid
+      canvas->SetGridx();
+      canvas->SetGridy();
       canvas->SetTopMargin(0.1);
       canvas->SetBottomMargin(0.16);
       canvas->SetLeftMargin(0.14);
@@ -2407,8 +2646,11 @@ void PlotEfficiency(std::map< TString, std::map<TString, TH1D*> > select, std::m
 void Plot2D(TH2D* hist, TString name, TString xaxis, TString yaxis){
 
   TCanvas *canvas = new TCanvas(name, "", 700, 650);
-  canvas->SetFrameLineWidth(3.);
-  canvas->SetLineWidth(3.);
+  // Grid
+  canvas->SetGridx();
+  canvas->SetGridy();
+  canvas->SetFrameLineWidth(1.5*line_width);
+  canvas->SetLineWidth(1.5*line_width);
   canvas->SetTickx();
   canvas->SetTicky();
   canvas->SetTopMargin(0.04);
@@ -2513,7 +2755,7 @@ std::pair<THStack*, TLegend*> StackHist1D(std::map<std::string, std::vector<std:
       hist->SetLineColor(fCols[index]);
       if(!fPlotFilled){
         hist->SetFillColor(0);
-        hist->SetLineWidth(2);
+        hist->SetLineWidth(1.5*line_width);
         hist->SetLineStyle(fLineStyle[index]);
       }
       hstack->Add(hist);
@@ -2550,7 +2792,7 @@ TH1D* GetTotalHist(std::vector<std::vector<double>> data, TString name, TString 
   total_hist->SetLineColor(fCols[0]);
   if(!fPlotFilled){
     total_hist->SetFillColor(0);
-    total_hist->SetLineWidth(2);
+    total_hist->SetLineWidth(1.5*line_width);
     total_hist->SetLineStyle(fLineStyle[0]);
   }
 
@@ -2759,11 +3001,15 @@ void PhysicsBookPlots(std::string config = "config.txt"){
   // Get the plotting variable
   std::cout<<"Reading from the tree...\n";
   std::map< TString, std::map< TString, std::vector<Interaction> > > interactions = ReadData();
+  std::map< TString, std::map< TString, std::map< int, std::map< std::string, std::vector<std::vector<double> > > > > > prism_stack_data;
   std::map< TString, std::map< TString, std::map<std::string, std::vector<std::vector<double> > > > > stack_data;
+  std::map< TString, std::map< TString, std::map< int, std::vector<std::vector<double> > > > > prism_total_data;
   std::map< TString, std::map< TString, std::vector<std::vector<double> > > > total_data;
   for(const TString &m : fModelNames){
     std::map< TString, std::map<std::string, std::vector<std::vector<double> > > > model_stack_data;
     std::map< TString, std::vector<std::vector<double> > > model_total_data;
+    std::map< TString, std::map< int, std::map< std::string, std::vector<std::vector<double> > > > > prism_model_stack_data;
+    std::map< TString, std::map< int, std::vector<std::vector<double> > > > prism_model_total_data;
     for(const TString &s : fStage){
       for(auto const& in : interactions.at(m).at(s)){
         if(!in.selected) continue;
@@ -2783,10 +3029,30 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           model_stack_data[s][in.nu_type].push_back(in.variables);
           fStackList = nu_list;
         }
+        // Now loop over the PRISM bins and fill the data accordingly
+        for(int nb = 0; nb < fPRISMBins; ++nb){
+          if(in.prism_bin == nb){
+            prism_model_total_data[s][in.prism_bin].push_back(in.variables);
+            if(!fPlotStacked){
+              prism_model_stack_data[s][in.prism_bin]["all"].push_back(in.variables);
+            }
+            else if(fStackBy == "fsi"){
+              prism_model_stack_data[s][in.prism_bin][in.fsi].push_back(in.variables);
+            }
+            else if(fStackBy == "int"){
+              prism_model_stack_data[s][in.prism_bin][in.int_type].push_back(in.variables);
+            }
+            else if(fStackBy == "nu"){
+              prism_model_stack_data[s][in.prism_bin][in.nu_type].push_back(in.variables);
+            }
+          }
+        }
       }
     }
     total_data.emplace(m,model_total_data);
     stack_data.emplace(m,model_stack_data);
+    prism_total_data.emplace(m,prism_model_total_data);
+    prism_stack_data.emplace(m,prism_model_stack_data);
   }
   std::cout<<"...Finished.\n";
 
@@ -2873,6 +3139,19 @@ void PhysicsBookPlots(std::string config = "config.txt"){
           else
             Plot1DHist(titles, stage_total_hist.at(s), mi, d_i);
         }
+
+        // Now loop over PRISM bins and get a vector of stacked and total histograms for the PRISM bins then pass to a dedicated plotting script
+        if (fPRISMBins < 2) continue;
+        std::vector<std::pair<THStack*, TLegend*>> prism_stack;
+        std::vector<TH1D*> prism_total;
+        for(int p = 0; p < fPRISMBins; ++p){
+          TString prism_bin_tag = "_prism_";
+          prism_bin_tag += p;
+          prism_bin_tag += "_";
+          prism_stack.push_back(StackHist1D(prism_stack_data.at(m).at(s).at(p), fPotScaleFac.at(mi), name_1D_s+prism_bin_tag, title_1D_s+prism_bin_tag, bin_edges, d_i));
+          prism_total.push_back(GetTotalHist(prism_total_data.at(m).at(s).at(p), name_1D_s+prism_bin_tag, title_1D_s+prism_bin_tag, bin_edges, fPotScaleFac.at(mi), d_i));
+        } // PRISM
+        Plot1DPRISM(prism_stack, titles, prism_total, mi, d_i);
       } // Stage
       total_hist.emplace(m, stage_total_hist);
       error_band.emplace(m, stage_error_band);

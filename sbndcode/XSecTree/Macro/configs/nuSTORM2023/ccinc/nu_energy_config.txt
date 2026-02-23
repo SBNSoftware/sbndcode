@@ -21,7 +21,7 @@ TreePath: XSecTree/interaction
 MetaDataPath: XSecTree/metadata
 
 // Name of output file (.root for modifiable canvas)
-OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/thesis/ccinc/protons/protons.root
+OutputFile: /sbnd/data/users/rsjones/PhysicsBook/files/output/sbnd/nuSTORM/ccinc/nu_energy_int/nu_energy_int.root
 
 //------------------------------------------------------------------------
 //          Select neutrino interaction (commas for multiple)
@@ -36,7 +36,7 @@ IsCC: 1
 ContainedLepton: false
 
 // Require secondary particles to be contained
-ContainedParticles: false
+ContainedParticles: true
 
 // Apply a fiducial volume cut to the neutrino vertex (-1 for AV)
 // Cuts +ve values from face: min x, min y, min z, max x, max y, max z [cm]
@@ -95,7 +95,7 @@ Stage: true
 //- delta_alphat (transverse kinematic variable) [rad]
 //- delta_phit (transverse kinematic variable) [rad]
 
-PlotVariable: n_pr
+PlotVariable: nu_energy
 
 // Save the plots for each variable
 ShowPlots: true
@@ -103,8 +103,8 @@ ShowPlots: true
 // Save all historams in a single output file (true), or just in separate files (false)
 SaveAllInOne: true
 
-// Scale to a certain POT (-1 for no scaling) (6.6e20 is nominal)
-PotScale: 6.6e20
+// Scale to a certain POT (-1 for no scaling) (10e20 is nominal)
+PotScale: 10e20
 
 // Whether or not there is a single POT value repeated in the input (true) or the POTs should be summed (false)
 SinglePot: true
@@ -122,10 +122,10 @@ StackBy: int
 MinValue: 0
 
 // Maximum bin (-1 for max tree value)
-MaxValue: 6
+MaxValue: 3
 
 // Number of bins (-1 for automatic)
-NumBins: 6
+NumBins: 80
 
 // Bin edges (separate edges with , and plot variables in [] brackets)
 BinEdges: [-1]
@@ -143,19 +143,19 @@ PlotAreaNorm: false
 PlotFilled: true
 
 // Maximum value on the y axis of each variable, default -99999. means this will not be checked
-Maxy: [2.5e6]
+Maxy: [0.255e6]
 
 //------------------------------------------------------------------------
 //                         Choose plot options
 //------------------------------------------------------------------------
 // Show selection information (true)
-ShowInfo: true
+ShowInfo: false
 
 // Show percentage statistical error (true)
 ShowStatError: false
 
 // Show error bars on histograms (true)
-ShowErrorBars: false
+ShowErrorBars: true
 
 // Show 2D slices (true) or just 2D histogram (false)
 Show2DSlices: false
