@@ -1,0 +1,28 @@
+#include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
+#include "crttophatana_sbnd.fcl"
+
+process_name: CRTTopHatAna
+
+services:
+{
+  TFileService: { fileName: "crttophatana_sbnd.root" }
+  @table::sbnd_basic_services
+  @table::crt_services_data_sbnd
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    crttophatana: @local::crttophatana_data_sbnd
+  }
+
+  ana:       [ crttophatana ]
+  end_paths: [ ana ]
+}

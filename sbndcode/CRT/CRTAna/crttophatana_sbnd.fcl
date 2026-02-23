@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+crttophatana_data_sbnd:
+{ 
+  module_type:            "CRTTopHatAnalysis"
+  CutT0:                  true
+  MinT0:                  -50000
+  MaxT0:                  50000
+  SavePMTSoftwareTrigger: true
+}
+
+END_PROLOG
