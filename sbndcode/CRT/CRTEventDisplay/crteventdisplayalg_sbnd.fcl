@@ -99,7 +99,7 @@ crteventdisplayalg_sbnd_data.MaxTime:         1.5e6
 
 crteventdisplayalg_sbnd_channel_mapping: @local::crteventdisplayalg_sbnd
 
-crteventdisplayalg_sbnd_channel_mapping.DataMode:         true
+crteventdisplayalg_sbnd_channel_mapping.MC:               false
 crteventdisplayalg_sbnd_channel_mapping.SaveRoot:         false
 crteventdisplayalg_sbnd_channel_mapping.SaveViews:        true
 
