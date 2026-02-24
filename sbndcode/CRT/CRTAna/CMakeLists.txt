@@ -8,6 +8,7 @@ art_make(
          sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
          sbnobj::SBND_CRT
          sbnobj::SBND_Timing
+         sbnobj::Common_Reco
          sbndcode_CRT_CRTBackTracker
 )
 
