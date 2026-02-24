@@ -190,6 +190,12 @@ private:
   std::vector<double>   reco_particleTruePDG;
   std::vector<double>   reco_particleTrueOrigin;
   std::vector<double>   reco_particleTrueInteractionType;
+  std::vector<double>   reco_particleTrueVX;
+  std::vector<double>   reco_particleTrueVY;
+  std::vector<double>   reco_particleTrueVZ;
+  std::vector<double>   reco_particleTrueEndX;
+  std::vector<double>   reco_particleTrueEndY;
+  std::vector<double>   reco_particleTrueEndZ;
   std::vector<double>   reco_particleNumHits;
   std::vector<double>   reco_particleNumHitsTruthMatched;
   std::vector<double>   reco_particleNumTruthHits;
@@ -204,6 +210,9 @@ private:
   std::vector<double>   reco_particleRazzledPDG211;
   std::vector<double>   reco_particleRazzledPDG2212;
   std::vector<double>   reco_particleRazzledBestPDG;
+  std::vector<double>   reco_particleShowerLength;
+  std::vector<double>   reco_particleShowerOpenAngle;
+  std::vector<double>   reco_particleShowerBestPlaneEnergy;
   
   std::vector<double>   reco_neutrinoID;
   std::vector<double>   reco_neutrinoPDG;
@@ -346,6 +355,12 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_particleTruePDG", &reco_particleTruePDG);
   NuETree->Branch("reco_particleTrueOrigin", &reco_particleTrueOrigin);
   NuETree->Branch("reco_particleTrueInteractionType", &reco_particleTrueInteractionType);
+  NuETree->Branch("reco_particleTrueVX", &reco_particleTrueVX);
+  NuETree->Branch("reco_particleTrueVY", &reco_particleTrueVY);
+  NuETree->Branch("reco_particleTrueVZ", &reco_particleTrueVZ);
+  NuETree->Branch("reco_particleTrueEndX", &reco_particleTrueEndX);
+  NuETree->Branch("reco_particleTrueEndY", &reco_particleTrueEndY);
+  NuETree->Branch("reco_particleTrueEndZ", &reco_particleTrueEndZ);
   NuETree->Branch("reco_particleNumHits", &reco_particleNumHits);
   NuETree->Branch("reco_particleNumHitsTruthMatched", &reco_particleNumHitsTruthMatched);
   NuETree->Branch("reco_particleNumTruthHits", &reco_particleNumTruthHits);
@@ -360,6 +375,9 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_particleRazzledPDG211", &reco_particleRazzledPDG211);
   NuETree->Branch("reco_particleRazzledPDG2212", &reco_particleRazzledPDG2212);
   NuETree->Branch("reco_particleRazzledBestPDG", &reco_particleRazzledBestPDG);
+  NuETree->Branch("reco_particleShowerLength", &reco_particleShowerLength);
+  NuETree->Branch("reco_particleShowerOpenAngle", &reco_particleShowerOpenAngle);
+  NuETree->Branch("reco_particleShowerBestPlaneEnergy", &reco_particleShowerBestPlaneEnergy);
   
   NuETree->Branch("reco_neutrinoID", &reco_neutrinoID);
   NuETree->Branch("reco_neutrinoPDG", &reco_neutrinoPDG);
@@ -633,6 +651,7 @@ void sbnd::NuE::PFPs(art::Event const& e){
 
                             if(pfpShower.isNonnull()){
                                 std::vector<double> showerDEDX = pfpShower->dEdx();
+                                std::vector<double> showerEnergy = pfpShower->Energy();
                                 std::cout << "Shower Start = (" << pfpShower->ShowerStart().X() << ", " << pfpShower->ShowerStart().Y() << ", " << pfpShower->ShowerStart().Z() << ", Shower Length = " << pfpShower->Length() << ", Shower Opening Angle = " << pfpShower->OpenAngle() << ", Shower Best Plane = " << pfpShower->best_plane() << std::endl;
                                 std::cout << "Plane 0 dE/dx = " << showerDEDX[0] << ", Plane 1 dE/dx = " << showerDEDX[1] << ", Plane 2 dE/dx = " << showerDEDX[2] << ", Best Plane Shower dE/dx = " << showerDEDX[pfpShower->best_plane()] << std::endl; 
                                 
@@ -640,12 +659,18 @@ void sbnd::NuE::PFPs(art::Event const& e){
                                 reco_particlePlane1dEdx.push_back(showerDEDX[1]);
                                 reco_particlePlane2dEdx.push_back(showerDEDX[2]);
                                 reco_particleBestPlanedEdx.push_back(showerDEDX[pfpShower->best_plane()]);
+                                reco_particleShowerLength.push_back(pfpShower->Length());
+                                reco_particleShowerOpenAngle.push_back(pfpShower->OpenAngle());
+                                reco_particleShowerBestPlaneEnergy.push_back(showerEnergy[pfpShower->best_plane()]);
                             } else{
                                 std::cout << "PFPShower = null" << std::endl;
                                 reco_particlePlane0dEdx.push_back(-999999);
                                 reco_particlePlane1dEdx.push_back(-999999);
                                 reco_particlePlane2dEdx.push_back(-999999);
                                 reco_particleBestPlanedEdx.push_back(-999999);
+                                reco_particleShowerLength.push_back(-999999);
+                                reco_particleShowerOpenAngle.push_back(-999999);
+                                reco_particleShowerBestPlaneEnergy.push_back(-999999);
                             }
                            
                             if(trackscoreobj != props.end()){
@@ -678,6 +703,12 @@ void sbnd::NuE::PFPs(art::Event const& e){
                                 
                                 reco_particleTruePDG.push_back(pfpMCParticle->PdgCode());
                                 reco_particleTrueOrigin.push_back(pfpMCTruth->Origin());
+                                reco_particleTrueVX.push_back(pfpMCParticle->Vx());
+                                reco_particleTrueVY.push_back(pfpMCParticle->Vy());
+                                reco_particleTrueVZ.push_back(pfpMCParticle->Vz());
+                                reco_particleTrueEndX.push_back(pfpMCParticle->EndX());
+                                reco_particleTrueEndY.push_back(pfpMCParticle->EndY());
+                                reco_particleTrueEndZ.push_back(pfpMCParticle->EndZ());
                                 if(pfpMCTruth->Origin() == 1){
                                     // From a beam neutrino
                                     reco_particleTrueInteractionType.push_back(pfpMCNeutrino.InteractionType());
@@ -692,6 +723,12 @@ void sbnd::NuE::PFPs(art::Event const& e){
                                 // No truth info associated with the PFP
                                 reco_particleTruePDG.push_back(-999999);
                                 reco_particleTrueOrigin.push_back(-999999);
+                                reco_particleTrueVX.push_back(-999999);
+                                reco_particleTrueVY.push_back(-999999);
+                                reco_particleTrueVZ.push_back(-999999);
+                                reco_particleTrueEndX.push_back(-999999);
+                                reco_particleTrueEndY.push_back(-999999);
+                                reco_particleTrueEndZ.push_back(-999999);
                                 reco_particleTrueInteractionType.push_back(-999999);
                                 std::cout << "PFP has no truth info associated with it, showerID_truth = " << showerID_truth << std::endl;
                             }
@@ -734,6 +771,12 @@ void sbnd::NuE::PFPs(art::Event const& e){
         reco_particleTruePDG.push_back(-999999);
         reco_particleTrueOrigin.push_back(-999999);
         reco_particleTrueInteractionType.push_back(-999999);
+        reco_particleTrueVX.push_back(-999999);
+        reco_particleTrueVY.push_back(-999999);
+        reco_particleTrueVZ.push_back(-999999);
+        reco_particleTrueEndX.push_back(-999999);
+        reco_particleTrueEndY.push_back(-999999);
+        reco_particleTrueEndZ.push_back(-999999);
         reco_particleNumHits.push_back(-999999);
         reco_particleNumHitsTruthMatched.push_back(-999999);
         reco_particleNumTruthHits.push_back(-999999);
@@ -748,6 +791,9 @@ void sbnd::NuE::PFPs(art::Event const& e){
         reco_particleRazzledPDG211.push_back(-999999);
         reco_particleRazzledPDG2212.push_back(-999999);
         reco_particleRazzledBestPDG.push_back(-999999);
+        reco_particleShowerLength.push_back(-999999);
+        reco_particleShowerOpenAngle.push_back(-999999);
+        reco_particleShowerBestPlaneEnergy.push_back(-999999);
     }
 
     if(neutrinoCounter == 0){
@@ -1192,6 +1238,12 @@ void sbnd::NuE::clearVectors(){
     reco_particleTruePDG.clear();
     reco_particleTrueOrigin.clear();
     reco_particleTrueInteractionType.clear();
+    reco_particleTrueVX.clear();
+    reco_particleTrueVY.clear();
+    reco_particleTrueVZ.clear();
+    reco_particleTrueEndX.clear();
+    reco_particleTrueEndY.clear();
+    reco_particleTrueEndZ.clear();
     reco_particleNumHits.clear();
     reco_particleNumHitsTruthMatched.clear();
     reco_particleNumTruthHits.clear();
@@ -1206,6 +1258,9 @@ void sbnd::NuE::clearVectors(){
     reco_particleRazzledPDG211.clear();
     reco_particleRazzledPDG2212.clear();
     reco_particleRazzledBestPDG.clear();
+    reco_particleShowerLength.clear();
+    reco_particleShowerOpenAngle.clear();
+    reco_particleShowerBestPlaneEnergy.clear();
     
     reco_neutrinoID.clear();
     reco_neutrinoPDG.clear();
