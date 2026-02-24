@@ -35,6 +35,8 @@
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/Calibration/CRTDatabaseInterface/CRTCalibrationDatabase.h"
+#include "sbndcode/CRT/CRTReco/CRTClusterCharacterisationAlg.h"
 
 namespace sbnd::crt {
   class CRTTimingAnalysis;
@@ -65,6 +67,15 @@ public:
                              const art::FindOneP<CRTCluster> &spacepointsToClusters,
                              const art::FindManyP<CRTStripHit> &clustersToStripHits);
 
+  void ResetSPVariables();
+
+  void ResizeSPSHVecs(const unsigned n);
+
+  double IntrinsicResolution(const std::vector<int32_t> &_sp_sh_channel_set,
+                             const std::vector<double> &_sp_sh_ts_set,
+                             const std::vector<double> &_sp_sh_time_walk_set,
+                             const std::vector<double> &_sp_sh_prop_delay_set);
+
   void AnalyseCRTTracks(const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec,
                         const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
                         const art::FindOneP<CRTCluster> &spacepointsToClusters,
@@ -80,7 +91,10 @@ public:
 
 private:
 
-  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+  art::ServiceHandle<CRTGeoService>              fCRTGeoService;
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
+  sbndDB::CRTCalibrationDatabase const           *fCRTCalibrationDatabaseService;
+  CRTClusterCharacterisationAlg                  fCRTClusterCharacAlg;
 
   // fcl Controlled Variables
   std::string fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel,
@@ -143,8 +157,9 @@ private:
   std::vector<double>  _sp_sh_ts1_set;
   std::vector<double>  _sp_sh_time_walk_set;
   std::vector<double>  _sp_sh_prop_delay_set;
-  std::vector<double>  _sp_sh_cable_length_set;
+  std::vector<double>  _sp_sh_cable_length_ts0_set;
   std::vector<double>  _sp_sh_calib_offset_ts0_set;
+  std::vector<double>  _sp_sh_cable_length_ts1_set;
   std::vector<double>  _sp_sh_calib_offset_ts1_set;
 
   double  _tr_start_x;
@@ -204,6 +219,7 @@ private:
 
 sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fCRTClusterCharacAlg(p.get<fhicl::ParameterSet>("CRTClusterCharacterisationAlg", fhicl::ParameterSet()))
 {
   fCRTClusterModuleLabel            = p.get<std::string>("CRTClusterModuleLabel");
   fCRTSpacePointModuleLabel         = p.get<std::string>("CRTSpacePointModuleLabel");
@@ -259,8 +275,9 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fSPTree->Branch("sp_sh_ts1_set", "std::vector<double>", &_sp_sh_ts1_set);
   fSPTree->Branch("sp_sh_time_walk_set", "std::vector<double>", &_sp_sh_time_walk_set);
   fSPTree->Branch("sp_sh_prop_delay_set", "std::vector<double>", &_sp_sh_prop_delay_set);
-  fSPTree->Branch("sp_sh_cable_length_set", "std::vector<double>", &_sp_sh_cable_length_set);
+  fSPTree->Branch("sp_sh_cable_length_ts0_set", "std::vector<double>", &_sp_sh_cable_length_ts0_set);
   fSPTree->Branch("sp_sh_calib_offset_ts0_set", "std::vector<double>", &_sp_sh_calib_offset_ts0_set);
+  fSPTree->Branch("sp_sh_cable_length_ts1_set", "std::vector<double>", &_sp_sh_cable_length_ts1_set);
   fSPTree->Branch("sp_sh_calib_offset_ts1_set", "std::vector<double>", &_sp_sh_calib_offset_ts1_set);
 
   fTrTree = fs->make<TTree>("tracks","");
@@ -644,6 +661,137 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTSpacePoints(const std::vector<art::
                                                          const art::FindOneP<CRTCluster> &spacepointsToClusters,
                                                          const art::FindManyP<CRTStripHit> &clustersToStripHits)
 {
+  for(auto const& sp : CRTSpacePointVec)
+    {
+      ResetSPVariables();
+
+      const art::Ptr<CRTCluster> cl = spacepointsToClusters.at(sp.key());
+
+      const std::vector<art::Ptr<CRTStripHit>> shs = clustersToStripHits.at(cl.key());
+      const unsigned n_shs = shs.size();
+      ResizeSPSHVecs(n_shs);
+
+      _sp_nhits                     = cl->NHits();
+      _sp_tagger                    = cl->Tagger();
+      _sp_x                         = sp->X();
+      _sp_y                         = sp->Y();
+      _sp_z                         = sp->Z();
+      _sp_pe                        = sp->PE();
+      _sp_ts0                       = sp->Ts0();
+      _sp_ts0_rwm_ref               = _sp_ts0 + _rwm_etrig_diff;
+      _sp_ts0_ptb_hlt_beam_gate_ref = _sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
+      _sp_ts1                       = sp->Ts1();
+      _sp_ts1_rwm_ref               = _sp_ts1 + _rwm_crt_t1_reset_diff;
+      _sp_ts1_ptb_hlt_beam_gate_ref = _sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+
+      for(unsigned i = 0; i < n_shs; ++i)
+        {
+          const art::Ptr<CRTStripHit> sh = shs[i];
+
+          _sp_sh_channel_set[i]          = sh->Channel();
+          _sp_sh_mac5_set[i]             = fCRTChannelMapService->GetMAC5FromOfflineChannelID(_sp_sh_channel_set[i]);
+          _sp_sh_timing_chain_set[i]     = fCRTChannelMapService->GetTimingChainFromOfflineChannelID(_sp_sh_channel_set[i]);
+          _sp_sh_ts0_set[i]              = sh->Ts0();
+          _sp_sh_ts1_set[i]              = sh->Ts1();
+          _sp_sh_time_walk_set[i]        = fCRTClusterCharacAlg.TimeWalk(sh, {_sp_x, _sp_y, _sp_z});
+          _sp_sh_prop_delay_set[i]       = fCRTClusterCharacAlg.PropagationDelay(sh, {_sp_x, _sp_y, _sp_z});
+          _sp_sh_cable_length_ts0_set[i] = fCRTCalibrationDatabaseService->getT0CableLengthOffset(_sp_sh_mac5_set[i]);
+          _sp_sh_calib_offset_ts0_set[i] = fCRTCalibrationDatabaseService->getT0CalibratedOffset(_sp_sh_mac5_set[i]);
+          _sp_sh_cable_length_ts1_set[i] = fCRTCalibrationDatabaseService->getT1CableLengthOffset(_sp_sh_mac5_set[i]);
+          _sp_sh_calib_offset_ts1_set[i] = fCRTCalibrationDatabaseService->getT1CalibratedOffset(_sp_sh_mac5_set[i]);
+        }
+
+      _sp_dts0 = IntrinsicResolution(_sp_sh_channel_set, _sp_sh_ts0_set, _sp_sh_time_walk_set, _sp_sh_prop_delay_set);
+      _sp_dts1 = IntrinsicResolution(_sp_sh_channel_set, _sp_sh_ts1_set, _sp_sh_time_walk_set, _sp_sh_prop_delay_set);
+
+      std::set<int16_t> timing_chain_set(_sp_sh_timing_chain_set.begin(), _sp_sh_timing_chain_set.end());
+      _sp_single_timing_chain = timing_chain_set.size() == 1;
+      _sp_timing_chain        = _sp_single_timing_chain ? *timing_chain_set.begin() : -1;
+
+      fSPTree->Fill();
+    }
+}
+
+void sbnd::crt::CRTTimingAnalysis::ResetSPVariables()
+{
+  _sp_nhits = std::numeric_limits<uint16_t>::max();
+
+  _sp_tagger = CRTTagger::kUndefinedTagger;
+
+  _sp_x                         = std::numeric_limits<double>::lowest();
+  _sp_y                         = std::numeric_limits<double>::lowest();
+  _sp_z                         = std::numeric_limits<double>::lowest();
+  _sp_pe                        = std::numeric_limits<double>::lowest();
+  _sp_ts0                       = std::numeric_limits<double>::lowest();
+  _sp_ts0_rwm_ref               = std::numeric_limits<double>::lowest();
+  _sp_ts0_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _sp_dts0                      = std::numeric_limits<double>::lowest();
+  _sp_ts1                       = std::numeric_limits<double>::lowest();
+  _sp_ts1_rwm_ref               = std::numeric_limits<double>::lowest();
+  _sp_ts1_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _sp_dts1                      = std::numeric_limits<double>::lowest();
+
+  _sp_single_timing_chain = false;
+
+  _sp_timing_chain = std::numeric_limits<int16_t>::lowest();
+
+  _sp_sh_channel_set.clear();
+  _sp_sh_mac5_set.clear();
+  _sp_sh_timing_chain_set.clear();
+  _sp_sh_ts0_set.clear();
+  _sp_sh_ts1_set.clear();
+  _sp_sh_time_walk_set.clear();
+  _sp_sh_prop_delay_set.clear();
+  _sp_sh_cable_length_ts0_set.clear();
+  _sp_sh_calib_offset_ts0_set.clear();
+  _sp_sh_cable_length_ts1_set.clear();
+  _sp_sh_calib_offset_ts1_set.clear();
+}
+
+void sbnd::crt::CRTTimingAnalysis::ResizeSPSHVecs(const unsigned n)
+{
+  _sp_sh_channel_set.resize(n);
+  _sp_sh_mac5_set.resize(n);
+  _sp_sh_timing_chain_set.resize(n);
+  _sp_sh_ts0_set.resize(n);
+  _sp_sh_ts1_set.resize(n);
+  _sp_sh_time_walk_set.resize(n);
+  _sp_sh_prop_delay_set.resize(n);
+  _sp_sh_cable_length_ts0_set.resize(n);
+  _sp_sh_calib_offset_ts0_set.resize(n);
+  _sp_sh_cable_length_ts1_set.resize(n);
+  _sp_sh_calib_offset_ts1_set.resize(n);
+}
+
+double sbnd::crt::CRTTimingAnalysis::IntrinsicResolution(const std::vector<int32_t> &_sp_sh_channel_set,
+                                                         const std::vector<double> &_sp_sh_ts_set,
+                                                         const std::vector<double> &_sp_sh_time_walk_set,
+                                                         const std::vector<double> &_sp_sh_prop_delay_set)
+{
+  struct SH {
+    int32_t channel;
+    double  ts;
+  };
+
+  std::vector<SH> shs;
+
+  for(unsigned i = 0; i < _sp_sh_channel_set.size(); ++i)
+    shs.push_back(SH({_sp_sh_channel_set[i], _sp_sh_ts_set[i] - _sp_sh_time_walk_set[i] - _sp_sh_prop_delay_set[i]}));
+
+  std::sort(shs.begin(), shs.end(), [](auto &a, auto &b)
+  { return a.channel < b.channel; });
+
+  double sum = 0.;
+
+  for(unsigned int i = 0; i < shs.size(); ++i)
+    {
+      for(unsigned int ii = i + 1; ii < shs.size(); ++ii)
+        sum += (shs[i].ts - shs[ii].ts);
+    }
+
+  sum /= (shs.size() - 1);
+
+  return sum;
 }
 
 void sbnd::crt::CRTTimingAnalysis::AnalyseCRTTracks(const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec,

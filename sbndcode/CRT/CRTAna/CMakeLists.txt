@@ -10,6 +10,8 @@ art_make(
          sbnobj::SBND_Timing
          sbnobj::Common_Reco
          sbndcode_CRT_CRTBackTracker
+         sbndcode_CRT_CRTReco
+         sbndcode_ChannelMaps_CRT_CRTChannelMapService_service
 )
 
 install_fhicl()
