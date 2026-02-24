@@ -65,7 +65,11 @@ namespace sbnd::crt {
     void CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
                      double &t0, double &et0, double &t1, double &et1);
 
-    double TimingCorrectionOffset(const double &dist, const double &pe);
+    double TimingCorrectionOffset(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos);
+
+    double TimeWalk(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos);
+
+    double PropagationDelay(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos);
 
     void AggregatePositions(const std::vector<CRTSpacePoint> &complete_spacepoints, geo::Point_t &pos, geo::Point_t &err);
 
