@@ -355,12 +355,12 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
 
 
   //=================================================================
-  blip::BlipReco MakeBlip( std::vector<blip::HitClust> const& hcs,
+  blip::Blip MakeBlip( std::vector<blip::HitClust> const& hcs,
     detinfo::DetectorPropertiesData const& detProp,
     detinfo::DetectorClocksData const& clockData ){
 
     art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
-    blip::BlipReco  newblip;
+    blip::Blip  newblip;
     
     // ------------------------------------------------
     // Must be 1-3 clusts (no more, no less!)

@@ -95,7 +95,7 @@ namespace blip {
     // TO-DO: make these private and create getters instead
     std::vector<blip::HitInfo>      hitinfo;
     std::vector<blip::HitClust>     hitclust;
-    std::vector<blip::BlipReco>         blips;  
+    std::vector<blip::Blip>         blips;  
     std::vector<blip::TrueBlip>     trueblips;
     std::vector<blip::ParticleInfo> pinfo;
     

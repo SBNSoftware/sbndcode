@@ -611,7 +611,7 @@ class BlipAna : public art::EDAnalyzer
   void    PrintTrueBlipInfo(const blip::TrueBlip&);
   void    PrintClusterInfo(const blip::HitClust&);
   void    PrintHitInfo(const blip::HitInfo&);
-  void    PrintBlipInfo(const blip::BlipReco&);
+  void    PrintBlipInfo(const blip::Blip&);
   float   Truncate(float, double = 0.1);
 
   // --- Data and calo objects ---
@@ -1588,7 +1588,7 @@ void BlipAna::PrintClusterInfo(const blip::HitClust& hc){
   printf("\n");
 }
 
-void BlipAna::PrintBlipInfo(const blip::BlipReco& bl){
+void BlipAna::PrintBlipInfo(const blip::Blip& bl){
   printf("  blipID: %4i, TPC: %i, charge: %8.0i,  recoEnergy: %8.3f MeV, XYZ: %6.1f, %6.1f, %6.1f,   EdepID: %i\n",
   bl.ID,
   bl.TPC,
