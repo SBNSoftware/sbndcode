@@ -64,8 +64,8 @@ namespace BlipUtils {
   float     CalcOverlap(float const&, float const&, float const&, float const&);
   bool      DoHitClustsMatch(blip::HitClust const&, blip::HitClust const&,float);
   blip::HitClust  MakeHitClust(std::vector<blip::HitInfo> const&);
-  //blip::Blip      MakeBlip(std::vector<blip::HitClust> const&);
-  blip::Blip  MakeBlip(std::vector<blip::HitClust> const&,
+  //blip::BlipReco      MakeBlip(std::vector<blip::HitClust> const&);
+  blip::BlipReco  MakeBlip(std::vector<blip::HitClust> const&,
                        detinfo::DetectorPropertiesData const&,
                        detinfo::DetectorClocksData const&);
 

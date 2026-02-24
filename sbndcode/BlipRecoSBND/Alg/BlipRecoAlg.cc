@@ -303,7 +303,7 @@ namespace blip {
   // Main reconstruction procedure.
   //
   // This function does EVERYTHING. The resulting collections of 
-  // blip::HitClusts and blip::Blips can then be retrieved after
+  // blip::HitClusts and blip::BlipRecos can then be retrieved after
   // this function is run.
   //###########################################################
   void BlipRecoAlg::RunBlipReco( const art::Event& evt ) {
@@ -1001,7 +1001,7 @@ namespace blip {
             
             // ----------------------------------------
             // make our new blip, but if it isn't valid, forget it and move on
-            blip::Blip newBlip = BlipUtils::MakeBlip(hcGroup,detProp,clockData);
+            blip::BlipReco newBlip = BlipUtils::MakeBlip(hcGroup,detProp,clockData);
             if( !newBlip.isValid ) continue;
             if( newBlip.NPlanes < fMinMatchedPlanes ) continue;
             

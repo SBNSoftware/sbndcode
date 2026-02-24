@@ -88,11 +88,11 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   // declare what we're going to produce
   produces< std::vector<  recob::SpacePoint > >();
   produces< art::Assns <  recob::Hit, recob::SpacePoint> >();
-  produces< std::vector< blip::Blip > >(); 
+  produces< std::vector< blip::BlipReco > >(); 
   produces< std::vector<blip::HitClust> >();
   
   //produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
-  produces< art::Assns <  blip::Blip,         recob::Hit> >();
+  produces< art::Assns <  blip::BlipReco,         recob::Hit> >();
 
   //produces< std::vector<  recob::Cluster    > >();
   //produces< art::Assns <  recob::Cluster,   recob::SpacePoint> >();
@@ -121,15 +121,15 @@ void BlipRecoProducer::produce(art::Event & evt)
   // Make unique pointers to the vectors of objects 
   // and associations we will create
   //============================================
-  std::unique_ptr< std::vector< blip::Blip> > blip_v(std::make_unique<std::vector<blip::Blip>>());
+  std::unique_ptr< std::vector< blip::BlipReco> > blip_v(std::make_unique<std::vector<blip::BlipReco>>());
   //std::unique_ptr< art::Assns <blip::Blip, recob::SpacePoint> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
-  std::unique_ptr< art::Assns <blip::Blip, recob::Hit> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
+  std::unique_ptr< art::Assns <blip::BlipReco, recob::Hit> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::BlipReco, recob::Hit> >() );
   std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
   std::unique_ptr< std::vector< blip::HitClust> > collection_hitclust(std::make_unique<std::vector<blip::HitClust>>());
   
 
-  art::PtrMaker<blip::Blip> makeBlipPtr(evt);
+  art::PtrMaker<blip::BlipReco> makeBlipPtr(evt);
   //art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(evt);
   //============================================
   // Get hits from input module
@@ -152,7 +152,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   for(size_t i=0; i<fBlipAlg->blips.size(); i++){
     auto& b = fBlipAlg->blips[i];
     blip_v->push_back(b);
-    art::Ptr<blip::Blip> blipPtr = makeBlipPtr(blip_v->size() - 1);
+    art::Ptr<blip::BlipReco> blipPtr = makeBlipPtr(blip_v->size() - 1);
     Double32_t xyz[3];
     Double32_t xyz_err[6];
     Double32_t chiSquare = 0;
