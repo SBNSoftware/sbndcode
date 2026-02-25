@@ -144,14 +144,19 @@ private:
   double               _sp_x;
   double               _sp_y;
   double               _sp_z;
+  double               _sp_front_face_adjustment;
   double               _sp_pe;
   double               _sp_ts0;
   double               _sp_ts0_rwm_ref;
   double               _sp_ts0_ptb_hlt_beam_gate_ref;
+  double               _sp_ts0_rwm_ref_front_face;
+  double               _sp_ts0_ptb_hlt_beam_gate_ref_front_face;
   double               _sp_dts0;
   double               _sp_ts1;
   double               _sp_ts1_rwm_ref;
   double               _sp_ts1_ptb_hlt_beam_gate_ref;
+  double               _sp_ts1_rwm_ref_front_face;
+  double               _sp_ts1_ptb_hlt_beam_gate_ref_front_face;
   double               _sp_dts1;
   bool                 _sp_single_timing_chain;
   int16_t              _sp_timing_chain;
@@ -215,14 +220,26 @@ private:
   double _tpc_opflash_interaction_time_rwm;
   double _tpc_opflash_front_face_rwm;
   double _tpc_crt_sp_score;
+  double _tpc_crt_sp_front_face_adjustment;
+  double _tpc_crt_sp_interaction_time_adjustment;
   double _tpc_crt_sp_ts0;
   double _tpc_crt_sp_ts0_rwm_ref;
   double _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref;
+  double _tpc_crt_sp_ts0_rwm_ref_front_face;
+  double _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_front_face;
+  double _tpc_crt_sp_ts0_rwm_ref_interaction_time;
+  double _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_interaction_time;
   double _tpc_crt_sp_dts0;
   double _tpc_crt_sp_ts1;
   double _tpc_crt_sp_ts1_rwm_ref;
   double _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref;
+  double _tpc_crt_sp_ts1_rwm_ref_front_face;
+  double _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_front_face;
+  double _tpc_crt_sp_ts1_rwm_ref_interaction_time;
+  double _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_interaction_time;
   double _tpc_crt_sp_dts1;
+  double _tpc_crt_ts0_pmt_diff;
+  double _tpc_crt_ts1_pmt_diff;
 
   // Maps
   std::map<unsigned int, int16_t> fSPTaggerMap;
@@ -273,14 +290,19 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fSPTree->Branch("sp_x", &_sp_x);
   fSPTree->Branch("sp_y", &_sp_y);
   fSPTree->Branch("sp_z", &_sp_z);
+  fSPTree->Branch("sp_front_face_adjustment", &_sp_front_face_adjustment);
   fSPTree->Branch("sp_pe", &_sp_pe);
   fSPTree->Branch("sp_ts0", &_sp_ts0);
   fSPTree->Branch("sp_ts0_rwm_ref", &_sp_ts0_rwm_ref);
   fSPTree->Branch("sp_ts0_ptb_hlt_beam_gate_ref", &_sp_ts0_ptb_hlt_beam_gate_ref);
+  fSPTree->Branch("sp_ts0_rwm_ref_front_face", &_sp_ts0_rwm_ref_front_face);
+  fSPTree->Branch("sp_ts0_ptb_hlt_beam_gate_ref_front_face", &_sp_ts0_ptb_hlt_beam_gate_ref_front_face);
   fSPTree->Branch("sp_dts0", &_sp_dts0);
   fSPTree->Branch("sp_ts1", &_sp_ts1);
   fSPTree->Branch("sp_ts1_rwm_ref", &_sp_ts1_rwm_ref);
   fSPTree->Branch("sp_ts1_ptb_hlt_beam_gate_ref", &_sp_ts1_ptb_hlt_beam_gate_ref);
+  fSPTree->Branch("sp_ts1_rwm_ref_front_face", &_sp_ts1_rwm_ref_front_face);
+  fSPTree->Branch("sp_ts1_ptb_hlt_beam_gate_ref_front_face", &_sp_ts1_ptb_hlt_beam_gate_ref_front_face);
   fSPTree->Branch("sp_dts1", &_sp_dts1);
   fSPTree->Branch("sp_single_timing_chain", &_sp_single_timing_chain);
   fSPTree->Branch("sp_timing_chain", &_sp_timing_chain);
@@ -378,14 +400,26 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fTPCTree->Branch("tpc_opflash_interaction_time_rwm", &_tpc_opflash_interaction_time_rwm);
   fTPCTree->Branch("tpc_opflash_front_face_rwm", &_tpc_opflash_front_face_rwm);
   fTPCTree->Branch("tpc_crt_sp_score", &_tpc_crt_sp_score);
+  fTPCTree->Branch("tpc_crt_sp_front_face_adjustment", &_tpc_crt_sp_front_face_adjustment);
+  fTPCTree->Branch("tpc_crt_sp_interaction_time_adjustment", &_tpc_crt_sp_interaction_time_adjustment);
   fTPCTree->Branch("tpc_crt_sp_ts0", &_tpc_crt_sp_ts0);
   fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref", &_tpc_crt_sp_ts0_rwm_ref);
   fTPCTree->Branch("tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref", &_tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref);
+  fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref_front_face", &_tpc_crt_sp_ts0_rwm_ref_front_face);
+  fTPCTree->Branch("tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_front_face", &_tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_front_face);
+  fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref_interaction_time", &_tpc_crt_sp_ts0_rwm_ref_interaction_time);
+  fTPCTree->Branch("tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_interaction_time", &_tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_interaction_time);
   fTPCTree->Branch("tpc_crt_sp_dts0", &_tpc_crt_sp_dts0);
   fTPCTree->Branch("tpc_crt_sp_ts1", &_tpc_crt_sp_ts1);
   fTPCTree->Branch("tpc_crt_sp_ts1_rwm_ref", &_tpc_crt_sp_ts1_rwm_ref);
   fTPCTree->Branch("tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref", &_tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref);
+  fTPCTree->Branch("tpc_crt_sp_ts1_rwm_ref_front_face", &_tpc_crt_sp_ts1_rwm_ref_front_face);
+  fTPCTree->Branch("tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_front_face", &_tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_front_face);
+  fTPCTree->Branch("tpc_crt_sp_ts1_rwm_ref_interaction_time", &_tpc_crt_sp_ts1_rwm_ref_interaction_time);
+  fTPCTree->Branch("tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_interaction_time", &_tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_interaction_time);
   fTPCTree->Branch("tpc_crt_sp_dts1", &_tpc_crt_sp_dts1);
+  fTPCTree->Branch("tpc_crt_ts0_pmt_diff", &_tpc_crt_ts0_pmt_diff);
+  fTPCTree->Branch("tpc_crt_ts1_pmt_diff", &_tpc_crt_ts1_pmt_diff);
 }
 
 void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
@@ -700,18 +734,23 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTSpacePoints(const std::vector<art::
       const unsigned n_shs = shs.size();
       ResizeSPSHVecs(n_shs);
 
-      _sp_nhits                     = cl->NHits();
-      _sp_tagger                    = cl->Tagger();
-      _sp_x                         = sp->X();
-      _sp_y                         = sp->Y();
-      _sp_z                         = sp->Z();
-      _sp_pe                        = sp->PE();
-      _sp_ts0                       = sp->Ts0();
-      _sp_ts0_rwm_ref               = _sp_ts0 + _rwm_etrig_diff;
-      _sp_ts0_ptb_hlt_beam_gate_ref = _sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
-      _sp_ts1                       = sp->Ts1();
-      _sp_ts1_rwm_ref               = _sp_ts1 + _rwm_crt_t1_reset_diff;
-      _sp_ts1_ptb_hlt_beam_gate_ref = _sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+      _sp_nhits                                = cl->NHits();
+      _sp_tagger                               = cl->Tagger();
+      _sp_x                                    = sp->X();
+      _sp_y                                    = sp->Y();
+      _sp_z                                    = sp->Z();
+      _sp_front_face_adjustment                = _sp_z * fSpeedOfLightNanosecondPerCentimeter;
+      _sp_pe                                   = sp->PE();
+      _sp_ts0                                  = sp->Ts0();
+      _sp_ts0_rwm_ref                          = _sp_ts0 + _rwm_etrig_diff;
+      _sp_ts0_ptb_hlt_beam_gate_ref            = _sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
+      _sp_ts0_rwm_ref_front_face               = _sp_ts0_rwm_ref - _sp_front_face_adjustment;
+      _sp_ts0_ptb_hlt_beam_gate_ref_front_face = _sp_ts0_ptb_hlt_beam_gate_ref - _sp_front_face_adjustment;
+      _sp_ts1                                  = sp->Ts1();
+      _sp_ts1_rwm_ref                          = _sp_ts1 + _rwm_crt_t1_reset_diff;
+      _sp_ts1_ptb_hlt_beam_gate_ref            = _sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+      _sp_ts1_rwm_ref_front_face               = _sp_ts1_rwm_ref - _sp_front_face_adjustment;
+      _sp_ts1_ptb_hlt_beam_gate_ref_front_face = _sp_ts1_ptb_hlt_beam_gate_ref - _sp_front_face_adjustment;
 
       for(unsigned i = 0; i < n_shs; ++i)
         {
@@ -753,18 +792,23 @@ void sbnd::crt::CRTTimingAnalysis::ResetSPVariables()
   _sp_tagger       = std::numeric_limits<int16_t>::lowest();
   _sp_timing_chain = std::numeric_limits<int16_t>::lowest();
 
-  _sp_x                         = std::numeric_limits<double>::lowest();
-  _sp_y                         = std::numeric_limits<double>::lowest();
-  _sp_z                         = std::numeric_limits<double>::lowest();
-  _sp_pe                        = std::numeric_limits<double>::lowest();
-  _sp_ts0                       = std::numeric_limits<double>::lowest();
-  _sp_ts0_rwm_ref               = std::numeric_limits<double>::lowest();
-  _sp_ts0_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
-  _sp_dts0                      = std::numeric_limits<double>::lowest();
-  _sp_ts1                       = std::numeric_limits<double>::lowest();
-  _sp_ts1_rwm_ref               = std::numeric_limits<double>::lowest();
-  _sp_ts1_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
-  _sp_dts1                      = std::numeric_limits<double>::lowest();
+  _sp_x                                    = std::numeric_limits<double>::lowest();
+  _sp_y                                    = std::numeric_limits<double>::lowest();
+  _sp_z                                    = std::numeric_limits<double>::lowest();
+  _sp_front_face_adjustment                = std::numeric_limits<double>::lowest();
+  _sp_pe                                   = std::numeric_limits<double>::lowest();
+  _sp_ts0                                  = std::numeric_limits<double>::lowest();
+  _sp_ts0_rwm_ref                          = std::numeric_limits<double>::lowest();
+  _sp_ts0_ptb_hlt_beam_gate_ref            = std::numeric_limits<double>::lowest();
+  _sp_ts0_rwm_ref_front_face               = std::numeric_limits<double>::lowest();
+  _sp_ts0_ptb_hlt_beam_gate_ref_front_face = std::numeric_limits<double>::lowest();
+  _sp_dts0                                 = std::numeric_limits<double>::lowest();
+  _sp_ts1                                  = std::numeric_limits<double>::lowest();
+  _sp_ts1_rwm_ref                          = std::numeric_limits<double>::lowest();
+  _sp_ts1_ptb_hlt_beam_gate_ref            = std::numeric_limits<double>::lowest();
+  _sp_ts1_rwm_ref_front_face               = std::numeric_limits<double>::lowest();
+  _sp_ts1_ptb_hlt_beam_gate_ref_front_face = std::numeric_limits<double>::lowest();
+  _sp_dts1                                 = std::numeric_limits<double>::lowest();
 
   _sp_single_timing_chain = false;
 
@@ -962,6 +1006,8 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseTPCSlices(const std::vector<art::Ptr<r
 {
   for(auto const &sl : TPCSliceVec)
     {
+      ResetTPCVariables();
+
       const art::Ptr<sbn::CorrectedOpFlashTiming> copflash = sliceToCorrectedOpFlash.at(sl.key());
 
       if(copflash.isNonnull())
@@ -971,7 +1017,7 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseTPCSlices(const std::vector<art::Ptr<r
           _tpc_opflash_nutof_light          = copflash->NuToFLight * fMicrosecondToNanosecond;
           _tpc_opflash_nutof_charge         = copflash->NuToFCharge * fMicrosecondToNanosecond;
           _tpc_opflash_t0_corrected         = copflash->OpFlashT0Corrected * fMicrosecondToNanosecond;
-          _tpc_opflash_interaction_time_rwm = _tpc_opflash_t0_corrected + 1738.;
+          _tpc_opflash_interaction_time_rwm = _tpc_opflash_t0_corrected;
           _tpc_opflash_front_face_rwm       = _tpc_opflash_interaction_time_rwm - _tpc_opflash_nutof_charge;
         }
 
@@ -989,19 +1035,54 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseTPCSlices(const std::vector<art::Ptr<r
                 {
                   const anab::T0 spMatch = trackToCRTSpacePoint.data(track.key()).ref();
 
-                  _tpc_has_crt_sp_match                 = true;
-                  _tpc_crt_sp_score                     = spMatch.TriggerConfidence();
-                  _tpc_crt_sp_ts0                       = sp->Ts0();
-                  _tpc_crt_sp_ts0_rwm_ref               = _tpc_crt_sp_ts0 + _rwm_etrig_diff;
-                  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref = _tpc_crt_sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
-                  _tpc_crt_sp_dts0                      = fSPdTs0Map[sp.key()];
-                  _tpc_crt_sp_ts1                       = sp->Ts1();
-                  _tpc_crt_sp_ts1_rwm_ref               = _tpc_crt_sp_ts1 + _rwm_crt_t1_reset_diff;
-                  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref = _tpc_crt_sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
-                  _tpc_crt_sp_dts1                      = fSPdTs1Map[sp.key()];
+                  const geo::Point_t track_start = track->Start();
+                  const geo::Point_t track_end   = track->End();
+                  const geo::Point_t sp_pos      = sp->Pos();
+
+                  geo::Point_t interaction_point = (track_start - sp_pos).R() > (track_end - sp_pos).R() ? track_start : track_end;
+                  const double dist              = (interaction_point - sp_pos).R();
+
+                  if(_tpc_has_crt_sp_match)
+                    {
+                      const double diff     = _tpc_crt_sp_ts0_rwm_ref_interaction_time - _tpc_opflash_interaction_time_rwm - 120;
+                      const double new_crt  = sp->Ts0() + _rwm_etrig_diff - dist * fSpeedOfLightNanosecondPerCentimeter;
+                      const double new_diff = new_crt - _tpc_opflash_interaction_time_rwm - 120;
+
+                      if(new_diff > diff)
+                        continue;
+                    }
+
+                  _tpc_has_crt_sp_match                                  = true;
+                  _tpc_crt_sp_score                                      = spMatch.TriggerConfidence();
+                  _tpc_crt_sp_front_face_adjustment                      = sp_pos.Z() * fSpeedOfLightNanosecondPerCentimeter;
+                  _tpc_crt_sp_interaction_time_adjustment                = dist * fSpeedOfLightNanosecondPerCentimeter;
+                  _tpc_crt_sp_ts0                                        = sp->Ts0();
+                  _tpc_crt_sp_ts0_rwm_ref                                = _tpc_crt_sp_ts0 + _rwm_etrig_diff;
+                  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref                  = _tpc_crt_sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
+                  _tpc_crt_sp_ts0_rwm_ref_front_face                     = _tpc_crt_sp_ts0_rwm_ref - _tpc_crt_sp_front_face_adjustment;
+                  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_front_face       = _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref - _tpc_crt_sp_front_face_adjustment;
+                  _tpc_crt_sp_ts0_rwm_ref_interaction_time               = _tpc_crt_sp_ts0_rwm_ref - _tpc_crt_sp_interaction_time_adjustment;
+                  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_interaction_time = _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref - _tpc_crt_sp_interaction_time_adjustment;
+                  _tpc_crt_sp_dts0                                       = fSPdTs0Map[sp.key()];
+                  _tpc_crt_sp_ts1                                        = sp->Ts1();
+                  _tpc_crt_sp_ts1_rwm_ref                                = _tpc_crt_sp_ts1 + _rwm_crt_t1_reset_diff;
+                  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref                  = _tpc_crt_sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+                  _tpc_crt_sp_ts1_rwm_ref_front_face                     = _tpc_crt_sp_ts1_rwm_ref - _tpc_crt_sp_front_face_adjustment;
+                  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_front_face       = _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref - _tpc_crt_sp_front_face_adjustment;
+                  _tpc_crt_sp_ts1_rwm_ref_interaction_time               = _tpc_crt_sp_ts1_rwm_ref - _tpc_crt_sp_interaction_time_adjustment;
+                  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_interaction_time = _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref - _tpc_crt_sp_interaction_time_adjustment;
+                  _tpc_crt_sp_dts1                                       = fSPdTs1Map[sp.key()];
                 }
             }
         }
+
+      if(_tpc_has_corrected_opflash && _tpc_has_crt_sp_match)
+        {
+          _tpc_crt_ts0_pmt_diff = _tpc_crt_sp_ts0_rwm_ref_interaction_time - _tpc_opflash_interaction_time_rwm;
+          _tpc_crt_ts1_pmt_diff = _tpc_crt_sp_ts1_rwm_ref_interaction_time - _tpc_opflash_interaction_time_rwm;
+        }
+
+      fTPCTree->Fill();
     }
 }
 
@@ -1010,21 +1091,33 @@ void sbnd::crt::CRTTimingAnalysis::ResetTPCVariables()
   _tpc_has_corrected_opflash = false;
   _tpc_has_crt_sp_match      = false;
 
-  _tpc_opflash_t0                       = std::numeric_limits<double>::lowest();
-  _tpc_opflash_nutof_light              = std::numeric_limits<double>::lowest();
-  _tpc_opflash_nutof_charge             = std::numeric_limits<double>::lowest();
-  _tpc_opflash_t0_corrected             = std::numeric_limits<double>::lowest();
-  _tpc_opflash_interaction_time_rwm     = std::numeric_limits<double>::lowest();
-  _tpc_opflash_front_face_rwm           = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_score                     = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts0                       = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts0_rwm_ref               = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_dts0                      = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts1                       = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts1_rwm_ref               = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
-  _tpc_crt_sp_dts1                      = std::numeric_limits<double>::lowest();
+  _tpc_opflash_t0                                        = std::numeric_limits<double>::lowest();
+  _tpc_opflash_nutof_light                               = std::numeric_limits<double>::lowest();
+  _tpc_opflash_nutof_charge                              = std::numeric_limits<double>::lowest();
+  _tpc_opflash_t0_corrected                              = std::numeric_limits<double>::lowest();
+  _tpc_opflash_interaction_time_rwm                      = std::numeric_limits<double>::lowest();
+  _tpc_opflash_front_face_rwm                            = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_score                                      = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_front_face_adjustment                      = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_interaction_time_adjustment                = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0                                        = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_rwm_ref                                = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref                  = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_rwm_ref_front_face                     = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_front_face       = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_rwm_ref_interaction_time               = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref_interaction_time = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_dts0                                       = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1                                        = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_rwm_ref                                = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref                  = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_rwm_ref_front_face                     = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_front_face       = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_rwm_ref_interaction_time               = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref_interaction_time = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_dts1                                       = std::numeric_limits<double>::lowest();
+  _tpc_crt_ts0_pmt_diff                                  = std::numeric_limits<double>::lowest();
+  _tpc_crt_ts1_pmt_diff                                  = std::numeric_limits<double>::lowest();
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTimingAnalysis)
