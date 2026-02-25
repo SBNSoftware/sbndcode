@@ -40,6 +40,8 @@
 
 namespace sbnd::crt {
   class CRTTimingAnalysis;
+
+  constexpr double c = 3.3356e-2; // ns / cm
 }
 
 class sbnd::crt::CRTTimingAnalysis : public art::EDAnalyzer {
@@ -56,6 +58,8 @@ public:
 
   // Required functions.
   void analyze(art::Event const& e) override;
+
+  void ResetMaps();
 
   void AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>> &PTBVec);
 
@@ -77,10 +81,10 @@ public:
                              const std::vector<double> &_sp_sh_prop_delay_set);
 
   void AnalyseCRTTracks(const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec,
-                        const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
-                        const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                        const art::FindManyP<CRTStripHit> &clustersToStripHits);
-    
+                        const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints);
+
+  void ResetTrVariables();
+
   void AnalyseTPCSlices(const std::vector<art::Ptr<recob::Slice>> &TPCSliceVec,
                         const art::FindManyP<sbn::CorrectedOpFlashTiming> &sliceToCorrectedOpFlashes,
                         const art::FindManyP<recob::PFParticle> &sliceToPFPs,
@@ -192,10 +196,12 @@ private:
   int16_t _tr_tagger3;
   int16_t _tr_start_tagger;
   double  _tr_start_dts0;
+  double  _tr_start_dts1;
   bool    _tr_start_single_timing_chain;
   int16_t _tr_start_timing_chain;
   int16_t _tr_end_tagger;
   double  _tr_end_dts0;
+  double  _tr_end_dts1;
   bool    _tr_end_single_timing_chain;
   int16_t _tr_end_timing_chain;
 
@@ -215,6 +221,12 @@ private:
   double _tpc_crt_sp_ts1_rwm_ref;
   double _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref;
   double _tpc_crt_sp_dts1;
+
+  // Maps
+  std::map<unsigned int, int16_t> fSPTaggerMap;
+  std::map<unsigned int, double>  fSPdTs0Map;
+  std::map<unsigned int, double>  fSPdTs1Map;
+  std::map<unsigned int, int16_t> fSPTimingChainMap;
 };
 
 sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
@@ -233,41 +245,43 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fCRTSpacePointMatchingModuleLabel = p.get<std::string>("CRTSpacePointMatchingModuleLabel");
   fAllowedPTBHLTs                   = p.get<std::vector<uint32_t>>("AllowedPTBHLTs");
 
+  fCRTCalibrationDatabaseService = lar::providerFrom<sbndDB::ICRTCalibrationDatabaseService const>();
+
   art::ServiceHandle<art::TFileService> fs;
 
   fSPTree = fs->make<TTree>("spacepoints","");
-  fSPTree->Branch("run", "int", &_run);
-  fSPTree->Branch("subrun", "int", &_subrun);
-  fSPTree->Branch("event", "int", &_event);
-  fSPTree->Branch("crt_timing_reference_type", "int", &_crt_timing_reference_type);
-  fSPTree->Branch("crt_timing_reference_channel", "int", &_crt_timing_reference_channel);
+  fSPTree->Branch("run", &_run);
+  fSPTree->Branch("subrun", &_subrun);
+  fSPTree->Branch("event", &_event);
+  fSPTree->Branch("crt_timing_reference_type", &_crt_timing_reference_type);
+  fSPTree->Branch("crt_timing_reference_channel", &_crt_timing_reference_channel);
 
-  fSPTree->Branch("etrig_good", "bool", &_etrig_good);
-  fSPTree->Branch("rwm_good", "bool", &_rwm_good);
-  fSPTree->Branch("ptb_hlt_beam_gate_good", "bool", &_ptb_hlt_beam_gate_good);
-  fSPTree->Branch("crt_t1_reset_good", "bool", &_crt_t1_reset_good);
-  fSPTree->Branch("rwm_etrig_diff", "double", &_rwm_etrig_diff);
-  fSPTree->Branch("ptb_hlt_beam_gate_etrig_diff", "double", &_ptb_hlt_beam_gate_etrig_diff);
-  fSPTree->Branch("rwm_crt_t1_reset_diff", "double", &_rwm_crt_t1_reset_diff);
-  fSPTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", "double", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
-  fSPTree->Branch("rwm_ptb_hlt_beam_gate_diff", "double", &_rwm_ptb_hlt_beam_gate_diff);
+  fSPTree->Branch("etrig_good", &_etrig_good);
+  fSPTree->Branch("rwm_good", &_rwm_good);
+  fSPTree->Branch("ptb_hlt_beam_gate_good", &_ptb_hlt_beam_gate_good);
+  fSPTree->Branch("crt_t1_reset_good", &_crt_t1_reset_good);
+  fSPTree->Branch("rwm_etrig_diff", &_rwm_etrig_diff);
+  fSPTree->Branch("ptb_hlt_beam_gate_etrig_diff", &_ptb_hlt_beam_gate_etrig_diff);
+  fSPTree->Branch("rwm_crt_t1_reset_diff", &_rwm_crt_t1_reset_diff);
+  fSPTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
+  fSPTree->Branch("rwm_ptb_hlt_beam_gate_diff", &_rwm_ptb_hlt_beam_gate_diff);
 
-  fSPTree->Branch("sp_nhits", "uint16_t", &_sp_nhits);
-  fSPTree->Branch("sp_tagger", "int16_t", &_sp_tagger);
-  fSPTree->Branch("sp_x", "double", &_sp_x);
-  fSPTree->Branch("sp_y", "double", &_sp_y);
-  fSPTree->Branch("sp_z", "double", &_sp_z);
-  fSPTree->Branch("sp_pe", "double", &_sp_pe);
-  fSPTree->Branch("sp_ts0", "double", &_sp_ts0);
-  fSPTree->Branch("sp_ts0_rwm_ref", "double", &_sp_ts0_rwm_ref);
-  fSPTree->Branch("sp_ts0_ptb_hlt_beam_gate_ref", "double", &_sp_ts0_ptb_hlt_beam_gate_ref);
-  fSPTree->Branch("sp_dts0", "double", &_sp_dts0);
-  fSPTree->Branch("sp_ts1", "double", &_sp_ts1);
-  fSPTree->Branch("sp_ts1_rwm_ref", "double", &_sp_ts1_rwm_ref);
-  fSPTree->Branch("sp_ts1_ptb_hlt_beam_gate_ref", "double", &_sp_ts1_ptb_hlt_beam_gate_ref);
-  fSPTree->Branch("sp_dts1", "double", &_sp_dts1);
-  fSPTree->Branch("sp_single_timing_chain", "bool", &_sp_single_timing_chain);
-  fSPTree->Branch("sp_timing_chain", "int16_t", &_sp_timing_chain);
+  fSPTree->Branch("sp_nhits", &_sp_nhits);
+  fSPTree->Branch("sp_tagger", &_sp_tagger);
+  fSPTree->Branch("sp_x", &_sp_x);
+  fSPTree->Branch("sp_y", &_sp_y);
+  fSPTree->Branch("sp_z", &_sp_z);
+  fSPTree->Branch("sp_pe", &_sp_pe);
+  fSPTree->Branch("sp_ts0", &_sp_ts0);
+  fSPTree->Branch("sp_ts0_rwm_ref", &_sp_ts0_rwm_ref);
+  fSPTree->Branch("sp_ts0_ptb_hlt_beam_gate_ref", &_sp_ts0_ptb_hlt_beam_gate_ref);
+  fSPTree->Branch("sp_dts0", &_sp_dts0);
+  fSPTree->Branch("sp_ts1", &_sp_ts1);
+  fSPTree->Branch("sp_ts1_rwm_ref", &_sp_ts1_rwm_ref);
+  fSPTree->Branch("sp_ts1_ptb_hlt_beam_gate_ref", &_sp_ts1_ptb_hlt_beam_gate_ref);
+  fSPTree->Branch("sp_dts1", &_sp_dts1);
+  fSPTree->Branch("sp_single_timing_chain", &_sp_single_timing_chain);
+  fSPTree->Branch("sp_timing_chain", &_sp_timing_chain);
   fSPTree->Branch("sp_sh_channel_set", "std::vector<int32_t>", &_sp_sh_channel_set);
   fSPTree->Branch("sp_sh_mac5_set", "std::vector<int16_t>", &_sp_sh_mac5_set);
   fSPTree->Branch("sp_sh_timing_chain_set", "std::vector<int16_t>", &_sp_sh_timing_chain_set);
@@ -281,96 +295,100 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fSPTree->Branch("sp_sh_calib_offset_ts1_set", "std::vector<double>", &_sp_sh_calib_offset_ts1_set);
 
   fTrTree = fs->make<TTree>("tracks","");
-  fTrTree->Branch("run", "int", &_run);
-  fTrTree->Branch("subrun", "int", &_subrun);
-  fTrTree->Branch("event", "int", &_event);
-  fTrTree->Branch("crt_timing_reference_type", "int", &_crt_timing_reference_type);
-  fTrTree->Branch("crt_timing_reference_channel", "int", &_crt_timing_reference_channel);
+  fTrTree->Branch("run", &_run);
+  fTrTree->Branch("subrun", &_subrun);
+  fTrTree->Branch("event", &_event);
+  fTrTree->Branch("crt_timing_reference_type", &_crt_timing_reference_type);
+  fTrTree->Branch("crt_timing_reference_channel", &_crt_timing_reference_channel);
 
-  fTrTree->Branch("etrig_good", "bool", &_etrig_good);
-  fTrTree->Branch("rwm_good", "bool", &_rwm_good);
-  fTrTree->Branch("ptb_hlt_beam_gate_good", "bool", &_ptb_hlt_beam_gate_good);
-  fTrTree->Branch("crt_t1_reset_good", "bool", &_crt_t1_reset_good);
-  fTrTree->Branch("rwm_etrig_diff", "double", &_rwm_etrig_diff);
-  fTrTree->Branch("ptb_hlt_beam_gate_etrig_diff", "double", &_ptb_hlt_beam_gate_etrig_diff);
-  fTrTree->Branch("rwm_crt_t1_reset_diff", "double", &_rwm_crt_t1_reset_diff);
-  fTrTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", "double", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
-  fTrTree->Branch("rwm_ptb_hlt_beam_gate_diff", "double", &_rwm_ptb_hlt_beam_gate_diff);
+  fTrTree->Branch("etrig_good", &_etrig_good);
+  fTrTree->Branch("rwm_good", &_rwm_good);
+  fTrTree->Branch("ptb_hlt_beam_gate_good", &_ptb_hlt_beam_gate_good);
+  fTrTree->Branch("crt_t1_reset_good", &_crt_t1_reset_good);
+  fTrTree->Branch("rwm_etrig_diff", &_rwm_etrig_diff);
+  fTrTree->Branch("ptb_hlt_beam_gate_etrig_diff", &_ptb_hlt_beam_gate_etrig_diff);
+  fTrTree->Branch("rwm_crt_t1_reset_diff", &_rwm_crt_t1_reset_diff);
+  fTrTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
+  fTrTree->Branch("rwm_ptb_hlt_beam_gate_diff", &_rwm_ptb_hlt_beam_gate_diff);
 
-  fTrTree->Branch("tr_start_x", "double", &_tr_start_x);
-  fTrTree->Branch("tr_start_y", "double", &_tr_start_y);
-  fTrTree->Branch("tr_start_z", "double", &_tr_start_z);
-  fTrTree->Branch("tr_end_x", "double", &_tr_end_x);
-  fTrTree->Branch("tr_end_y", "double", &_tr_end_y);
-  fTrTree->Branch("tr_end_z", "double", &_tr_end_z);
-  fTrTree->Branch("tr_dir_x", "double", &_tr_dir_x);
-  fTrTree->Branch("tr_dir_y", "double", &_tr_dir_y);
-  fTrTree->Branch("tr_dir_z", "double", &_tr_dir_z);
-  fTrTree->Branch("tr_ts0", "double", &_tr_ts0);
-  fTrTree->Branch("tr_ts0_rwm_ref", "double", &_tr_ts0_rwm_ref);
-  fTrTree->Branch("tr_ts0_ptb_hlt_beam_gate_ref", "double", &_tr_ts0_ptb_hlt_beam_gate_ref);
-  fTrTree->Branch("tr_ts1", "double", &_tr_ts1);
-  fTrTree->Branch("tr_ts1_rwm_ref", "double", &_tr_ts1_rwm_ref);
-  fTrTree->Branch("tr_ts1_ptb_hlt_beam_gate_ref", "double", &_tr_ts1_ptb_hlt_beam_gate_ref);
-  fTrTree->Branch("tr_pe", "double", &_tr_pe);
-  fTrTree->Branch("tr_length", "double", &_tr_length);
-  fTrTree->Branch("tr_length_tof", "double", &_tr_length_tof);
-  fTrTree->Branch("tr_tof_ts0", "double", &_tr_tof_ts0);
-  fTrTree->Branch("tr_tof_diff_ts0", "double", &_tr_tof_diff_ts0);
-  fTrTree->Branch("tr_tof_ts1", "double", &_tr_tof_ts1);
-  fTrTree->Branch("tr_tof_diff_ts1", "double", &_tr_tof_diff_ts1);
-  fTrTree->Branch("tr_theta", "double", &_tr_theta);
-  fTrTree->Branch("tr_phi", "double", &_tr_phi);
-  fTrTree->Branch("tr_triple", "bool", &_tr_triple);
-  fTrTree->Branch("tr_tagger1", "int16_t", &_tr_tagger1);
-  fTrTree->Branch("tr_tagger2", "int16_t", &_tr_tagger2);
-  fTrTree->Branch("tr_tagger3", "int16_t", &_tr_tagger3);
-  fTrTree->Branch("tr_start_tagger", "int16_t", &_tr_start_tagger);
-  fTrTree->Branch("tr_start_dts0", "double", &_tr_start_dts0);
-  fTrTree->Branch("tr_start_single_timing_chain", "bool", &_tr_start_single_timing_chain);
-  fTrTree->Branch("tr_start_timing_chain", "int16_t", &_tr_start_timing_chain);
-  fTrTree->Branch("tr_end_tagger", "int16_t", &_tr_end_tagger);
-  fTrTree->Branch("tr_end_dts0", "double", &_tr_end_dts0);
-  fTrTree->Branch("tr_end_single_timing_chain", "bool", &_tr_end_single_timing_chain);
-  fTrTree->Branch("tr_end_timing_chain", "int16_t", &_tr_end_timing_chain);
+  fTrTree->Branch("tr_start_x", &_tr_start_x);
+  fTrTree->Branch("tr_start_y", &_tr_start_y);
+  fTrTree->Branch("tr_start_z", &_tr_start_z);
+  fTrTree->Branch("tr_end_x", &_tr_end_x);
+  fTrTree->Branch("tr_end_y", &_tr_end_y);
+  fTrTree->Branch("tr_end_z", &_tr_end_z);
+  fTrTree->Branch("tr_dir_x", &_tr_dir_x);
+  fTrTree->Branch("tr_dir_y", &_tr_dir_y);
+  fTrTree->Branch("tr_dir_z", &_tr_dir_z);
+  fTrTree->Branch("tr_ts0", &_tr_ts0);
+  fTrTree->Branch("tr_ts0_rwm_ref", &_tr_ts0_rwm_ref);
+  fTrTree->Branch("tr_ts0_ptb_hlt_beam_gate_ref", &_tr_ts0_ptb_hlt_beam_gate_ref);
+  fTrTree->Branch("tr_ts1", &_tr_ts1);
+  fTrTree->Branch("tr_ts1_rwm_ref", &_tr_ts1_rwm_ref);
+  fTrTree->Branch("tr_ts1_ptb_hlt_beam_gate_ref", &_tr_ts1_ptb_hlt_beam_gate_ref);
+  fTrTree->Branch("tr_pe", &_tr_pe);
+  fTrTree->Branch("tr_length", &_tr_length);
+  fTrTree->Branch("tr_length_tof", &_tr_length_tof);
+  fTrTree->Branch("tr_tof_ts0", &_tr_tof_ts0);
+  fTrTree->Branch("tr_tof_diff_ts0", &_tr_tof_diff_ts0);
+  fTrTree->Branch("tr_tof_ts1", &_tr_tof_ts1);
+  fTrTree->Branch("tr_tof_diff_ts1", &_tr_tof_diff_ts1);
+  fTrTree->Branch("tr_theta", &_tr_theta);
+  fTrTree->Branch("tr_phi", &_tr_phi);
+  fTrTree->Branch("tr_triple", &_tr_triple);
+  fTrTree->Branch("tr_tagger1", &_tr_tagger1);
+  fTrTree->Branch("tr_tagger2", &_tr_tagger2);
+  fTrTree->Branch("tr_tagger3", &_tr_tagger3);
+  fTrTree->Branch("tr_start_tagger", &_tr_start_tagger);
+  fTrTree->Branch("tr_start_dts0", &_tr_start_dts0);
+  fTrTree->Branch("tr_start_dts1", &_tr_start_dts1);
+  fTrTree->Branch("tr_start_single_timing_chain", &_tr_start_single_timing_chain);
+  fTrTree->Branch("tr_start_timing_chain", &_tr_start_timing_chain);
+  fTrTree->Branch("tr_end_tagger", &_tr_end_tagger);
+  fTrTree->Branch("tr_end_dts0", &_tr_end_dts0);
+  fTrTree->Branch("tr_end_dts1", &_tr_end_dts1);
+  fTrTree->Branch("tr_end_single_timing_chain", &_tr_end_single_timing_chain);
+  fTrTree->Branch("tr_end_timing_chain", &_tr_end_timing_chain);
 
   fTPCTree = fs->make<TTree>("slices","");
-  fTPCTree->Branch("run", "int", &_run);
-  fTPCTree->Branch("subrun", "int", &_subrun);
-  fTPCTree->Branch("event", "int", &_event);
-  fTPCTree->Branch("crt_timing_reference_type", "int", &_crt_timing_reference_type);
-  fTPCTree->Branch("crt_timing_reference_channel", "int", &_crt_timing_reference_channel);
+  fTPCTree->Branch("run", &_run);
+  fTPCTree->Branch("subrun", &_subrun);
+  fTPCTree->Branch("event", &_event);
+  fTPCTree->Branch("crt_timing_reference_type", &_crt_timing_reference_type);
+  fTPCTree->Branch("crt_timing_reference_channel", &_crt_timing_reference_channel);
 
-  fTPCTree->Branch("etrig_good", "bool", &_etrig_good);
-  fTPCTree->Branch("rwm_good", "bool", &_rwm_good);
-  fTPCTree->Branch("ptb_hlt_beam_gate_good", "bool", &_ptb_hlt_beam_gate_good);
-  fTPCTree->Branch("crt_t1_reset_good", "bool", &_crt_t1_reset_good);
-  fTPCTree->Branch("rwm_etrig_diff", "double", &_rwm_etrig_diff);
-  fTPCTree->Branch("ptb_hlt_beam_gate_etrig_diff", "double", &_ptb_hlt_beam_gate_etrig_diff);
-  fTPCTree->Branch("rwm_crt_t1_reset_diff", "double", &_rwm_crt_t1_reset_diff);
-  fTPCTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", "double", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
-  fTPCTree->Branch("rwm_ptb_hlt_beam_gate_diff", "double", &_rwm_ptb_hlt_beam_gate_diff);
+  fTPCTree->Branch("etrig_good", &_etrig_good);
+  fTPCTree->Branch("rwm_good", &_rwm_good);
+  fTPCTree->Branch("ptb_hlt_beam_gate_good", &_ptb_hlt_beam_gate_good);
+  fTPCTree->Branch("crt_t1_reset_good", &_crt_t1_reset_good);
+  fTPCTree->Branch("rwm_etrig_diff", &_rwm_etrig_diff);
+  fTPCTree->Branch("ptb_hlt_beam_gate_etrig_diff", &_ptb_hlt_beam_gate_etrig_diff);
+  fTPCTree->Branch("rwm_crt_t1_reset_diff", &_rwm_crt_t1_reset_diff);
+  fTPCTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
+  fTPCTree->Branch("rwm_ptb_hlt_beam_gate_diff", &_rwm_ptb_hlt_beam_gate_diff);
 
-  fTPCTree->Branch("tpc_has_corrected_opflash", "bool", &_tpc_has_corrected_opflash);
-  fTPCTree->Branch("tpc_has_crt_sp_match", "bool", &_tpc_has_crt_sp_match);
-  fTPCTree->Branch("tpc_opflash_t0", "double", &_tpc_opflash_t0);
-  fTPCTree->Branch("tpc_opflash_nutof_light", "double", &_tpc_opflash_nutof_light);
-  fTPCTree->Branch("tpc_opflash_nutof_charge", "double", &_tpc_opflash_nutof_charge);
-  fTPCTree->Branch("tpc_opflash_t0_corrected", "double", &_tpc_opflash_t0_corrected);
-  fTPCTree->Branch("tpc_opflash_t0_corrected_rwm", "double", &_tpc_opflash_t0_corrected_rwm);
-  fTPCTree->Branch("tpc_crt_sp_score", "double", &_tpc_crt_sp_score);
-  fTPCTree->Branch("tpc_crt_sp_ts0", "double", &_tpc_crt_sp_ts0);
-  fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref", "double", &_tpc_crt_sp_ts0_rwm_ref);
-  fTPCTree->Branch("tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref", "double", &_tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref);
-  fTPCTree->Branch("tpc_crt_sp_dts0", "double", &_tpc_crt_sp_dts0);
-  fTPCTree->Branch("tpc_crt_sp_ts1", "double", &_tpc_crt_sp_ts1);
-  fTPCTree->Branch("tpc_crt_sp_ts1_rwm_ref", "double", &_tpc_crt_sp_ts1_rwm_ref);
-  fTPCTree->Branch("tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref", "double", &_tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref);
-  fTPCTree->Branch("tpc_crt_sp_dts1", "double", &_tpc_crt_sp_dts1);
+  fTPCTree->Branch("tpc_has_corrected_opflash", &_tpc_has_corrected_opflash);
+  fTPCTree->Branch("tpc_has_crt_sp_match", &_tpc_has_crt_sp_match);
+  fTPCTree->Branch("tpc_opflash_t0", &_tpc_opflash_t0);
+  fTPCTree->Branch("tpc_opflash_nutof_light", &_tpc_opflash_nutof_light);
+  fTPCTree->Branch("tpc_opflash_nutof_charge", &_tpc_opflash_nutof_charge);
+  fTPCTree->Branch("tpc_opflash_t0_corrected", &_tpc_opflash_t0_corrected);
+  fTPCTree->Branch("tpc_opflash_t0_corrected_rwm", &_tpc_opflash_t0_corrected_rwm);
+  fTPCTree->Branch("tpc_crt_sp_score", &_tpc_crt_sp_score);
+  fTPCTree->Branch("tpc_crt_sp_ts0", &_tpc_crt_sp_ts0);
+  fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref", &_tpc_crt_sp_ts0_rwm_ref);
+  fTPCTree->Branch("tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref", &_tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref);
+  fTPCTree->Branch("tpc_crt_sp_dts0", &_tpc_crt_sp_dts0);
+  fTPCTree->Branch("tpc_crt_sp_ts1", &_tpc_crt_sp_ts1);
+  fTPCTree->Branch("tpc_crt_sp_ts1_rwm_ref", &_tpc_crt_sp_ts1_rwm_ref);
+  fTPCTree->Branch("tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref", &_tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref);
+  fTPCTree->Branch("tpc_crt_sp_dts1", &_tpc_crt_sp_dts1);
 }
 
 void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
 {
+  ResetMaps();
+
   _run = e.id().run();
   _subrun = e.id().subRun();
   _event =  e.id().event();
@@ -455,7 +473,7 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   art::FindManyP<CRTSpacePoint> tracksToSpacePoints(CRTTrackHandle, e, fCRTTrackModuleLabel);
 
   // Fill CRTTrack variables
-  AnalyseCRTTracks(CRTTrackVec, tracksToSpacePoints, spacepointsToClusters, clustersToStripHits);
+  AnalyseCRTTracks(CRTTrackVec, tracksToSpacePoints);
 
   // Get TPCSlices
   art::Handle<std::vector<recob::Slice>> TPCSliceHandle;
@@ -496,6 +514,14 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   art::FindOneP<CRTSpacePoint, anab::T0> trackToCRTSpacePoint(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
 
   AnalyseTPCSlices(TPCSliceVec, sliceToCorrectedOpFlashes, sliceToPFPs, pfpToTrack, trackToCRTSpacePoint, spacepointsToClusters, clustersToStripHits);
+}
+
+void sbnd::crt::CRTTimingAnalysis::ResetMaps()
+{
+  fSPTaggerMap.clear();
+  fSPdTs0Map.clear();
+  fSPdTs1Map.clear();
+  fSPTimingChainMap.clear();
 }
 
 void sbnd::crt::CRTTimingAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>> &PTBVec)
@@ -709,6 +735,11 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTSpacePoints(const std::vector<art::
       _sp_timing_chain        = _sp_single_timing_chain ? *timing_chain_set.begin() : -1;
 
       fSPTree->Fill();
+
+      fSPTaggerMap[sp.key()]      = _sp_tagger;
+      fSPdTs0Map[sp.key()]        = _sp_dts0;
+      fSPdTs1Map[sp.key()]        = _sp_dts1;
+      fSPTimingChainMap[sp.key()] = _sp_timing_chain;
     }
 }
 
@@ -716,7 +747,8 @@ void sbnd::crt::CRTTimingAnalysis::ResetSPVariables()
 {
   _sp_nhits = std::numeric_limits<uint16_t>::max();
 
-  _sp_tagger = CRTTagger::kUndefinedTagger;
+  _sp_tagger       = std::numeric_limits<int16_t>::lowest();
+  _sp_timing_chain = std::numeric_limits<int16_t>::lowest();
 
   _sp_x                         = std::numeric_limits<double>::lowest();
   _sp_y                         = std::numeric_limits<double>::lowest();
@@ -732,8 +764,6 @@ void sbnd::crt::CRTTimingAnalysis::ResetSPVariables()
   _sp_dts1                      = std::numeric_limits<double>::lowest();
 
   _sp_single_timing_chain = false;
-
-  _sp_timing_chain = std::numeric_limits<int16_t>::lowest();
 
   _sp_sh_channel_set.clear();
   _sp_sh_mac5_set.clear();
@@ -795,10 +825,126 @@ double sbnd::crt::CRTTimingAnalysis::IntrinsicResolution(const std::vector<int32
 }
 
 void sbnd::crt::CRTTimingAnalysis::AnalyseCRTTracks(const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec,
-                                                    const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
-                                                    const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                                                    const art::FindManyP<CRTStripHit> &clustersToStripHits)
+                                                    const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints)
 {
+  for(auto const &tr : CRTTrackVec)
+    {
+      _tr_start_x                   = tr->Start().X();
+      _tr_start_y                   = tr->Start().Y();
+      _tr_start_z                   = tr->Start().Z();
+      _tr_end_x                     = tr->End().X();
+      _tr_end_y                     = tr->End().Y();
+      _tr_end_z                     = tr->End().Z();
+      _tr_dir_x                     = tr->Direction().X();
+      _tr_dir_y                     = tr->Direction().Y();
+      _tr_dir_z                     = tr->Direction().Z();
+      _tr_ts0                       = tr->Ts0();
+      _tr_ts0_rwm_ref               = _tr_ts0 + _rwm_etrig_diff;
+      _tr_ts0_ptb_hlt_beam_gate_ref = _tr_ts0 + _ptb_hlt_beam_gate_etrig_diff;
+      _tr_ts1                       = tr->Ts1();
+      _tr_ts1_rwm_ref               = _tr_ts1 + _rwm_crt_t1_reset_diff;
+      _tr_ts1_ptb_hlt_beam_gate_ref = _tr_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+      _tr_pe                        = tr->PE();
+      _tr_length                    = tr->Length();
+      _tr_length_tof                = _tr_length * c;
+      _tr_theta                     = tr->Theta();
+      _tr_phi                       = tr->Phi();
+      _tr_triple                    = tr->Triple();
+      _tr_tagger1                   = tr->Taggers()[0];
+      _tr_tagger2                   = tr->Taggers()[1];
+
+      if(_tr_triple)
+        _tr_tagger3 = tr->Taggers()[2];
+
+      std::vector<art::Ptr<CRTSpacePoint>> sps = tracksToSpacePoints.at(tr.key());
+      std::sort(sps.begin(), sps.end(), [](auto &a, auto &b)
+      { return a->Ts0() < b->Ts0(); });
+
+      if((_tr_triple && sps.size() != 3) || (!_tr_triple && sps.size() != 2))
+        {
+          const int expectation = _tr_triple ? 3 : 2;
+          std::cout << "CRTSpacePoint vector wrong size (" << sps.size()
+                    << ") for track expectation (" << expectation << ")" << std::endl;
+          throw std::exception();
+        }
+
+      const art::Ptr<CRTSpacePoint> start = sps[0];
+      const art::Ptr<CRTSpacePoint> end   = _tr_triple ? sps[2] : sps[1];
+
+      _tr_tof_ts0                   = end->Ts0() - start->Ts0();
+      _tr_tof_diff_ts0              = _tr_tof_ts0 - _tr_length_tof;
+      _tr_tof_ts1                   = end->Ts1() - start->Ts1();
+      _tr_tof_diff_ts1              = _tr_tof_ts1 - _tr_length_tof;
+      _tr_start_tagger              = fSPTaggerMap[start.key()];
+      _tr_start_dts0                = fSPdTs0Map[start.key()];
+      _tr_start_dts1                = fSPdTs1Map[start.key()];
+      _tr_start_timing_chain        = fSPTimingChainMap[start.key()];
+      _tr_start_single_timing_chain = _tr_start_timing_chain != -1;
+      _tr_end_tagger                = fSPTaggerMap[end.key()];
+      _tr_end_dts0                  = fSPdTs0Map[end.key()];
+      _tr_end_dts1                  = fSPdTs1Map[end.key()];
+      _tr_end_timing_chain          = fSPTimingChainMap[end.key()];
+      _tr_end_single_timing_chain   = _tr_end_timing_chain != -1;
+
+      if(_tr_start_tagger != _tr_tagger1)
+        {
+          std::cout << "CRTTrack start tagger inconsistent between direct access (" << _tr_tagger1
+                    << ") and associated CRTSpacePoint (" << _tr_start_tagger << ")" << std::endl;
+          throw std::exception();
+        }
+
+      if((_tr_triple && _tr_end_tagger != _tr_tagger3) || (!_tr_triple && _tr_end_tagger != _tr_tagger2))
+        {
+          const int expectation = _tr_triple ? _tr_tagger3 : _tr_tagger2;
+          std::cout << "CRTTrack end tagger inconsistent between direct access (" << expectation
+                    << ") and associated CRTSpacePoint (" << _tr_end_tagger << ")" << std::endl;
+          throw std::exception();
+        }
+    }
+}
+
+void sbnd::crt::CRTTimingAnalysis::ResetTrVariables()
+{
+  _tr_start_x                   = std::numeric_limits<double>::lowest();
+  _tr_start_y                   = std::numeric_limits<double>::lowest();
+  _tr_start_z                   = std::numeric_limits<double>::lowest();
+  _tr_end_x                     = std::numeric_limits<double>::lowest();
+  _tr_end_y                     = std::numeric_limits<double>::lowest();
+  _tr_end_z                     = std::numeric_limits<double>::lowest();
+  _tr_dir_x                     = std::numeric_limits<double>::lowest();
+  _tr_dir_y                     = std::numeric_limits<double>::lowest();
+  _tr_dir_z                     = std::numeric_limits<double>::lowest();
+  _tr_ts0                       = std::numeric_limits<double>::lowest();
+  _tr_ts0_rwm_ref               = std::numeric_limits<double>::lowest();
+  _tr_ts0_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _tr_ts1                       = std::numeric_limits<double>::lowest();
+  _tr_ts1_rwm_ref               = std::numeric_limits<double>::lowest();
+  _tr_ts1_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _tr_pe                        = std::numeric_limits<double>::lowest();
+  _tr_length                    = std::numeric_limits<double>::lowest();
+  _tr_length_tof                = std::numeric_limits<double>::lowest();
+  _tr_tof_ts0                   = std::numeric_limits<double>::lowest();
+  _tr_tof_diff_ts0              = std::numeric_limits<double>::lowest();
+  _tr_tof_ts1                   = std::numeric_limits<double>::lowest();
+  _tr_tof_diff_ts1              = std::numeric_limits<double>::lowest();
+  _tr_theta                     = std::numeric_limits<double>::lowest();
+  _tr_phi                       = std::numeric_limits<double>::lowest();
+  _tr_start_dts0                = std::numeric_limits<double>::lowest();
+  _tr_start_dts1                = std::numeric_limits<double>::lowest();
+  _tr_end_dts0                  = std::numeric_limits<double>::lowest();
+  _tr_end_dts1                  = std::numeric_limits<double>::lowest();
+
+  _tr_triple                    = false;
+  _tr_start_single_timing_chain = false;
+  _tr_end_single_timing_chain   = false;
+
+  _tr_tagger1            = std::numeric_limits<int16_t>::lowest();
+  _tr_tagger2            = std::numeric_limits<int16_t>::lowest();
+  _tr_tagger3            = std::numeric_limits<int16_t>::lowest();
+  _tr_start_tagger       = std::numeric_limits<int16_t>::lowest();
+  _tr_start_timing_chain = std::numeric_limits<int16_t>::lowest();
+  _tr_end_tagger         = std::numeric_limits<int16_t>::lowest();
+  _tr_end_timing_chain   = std::numeric_limits<int16_t>::lowest();
 }
 
 void sbnd::crt::CRTTimingAnalysis::AnalyseTPCSlices(const std::vector<art::Ptr<recob::Slice>> &TPCSliceVec,
