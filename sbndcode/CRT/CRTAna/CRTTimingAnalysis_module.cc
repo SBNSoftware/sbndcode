@@ -41,7 +41,8 @@
 namespace sbnd::crt {
   class CRTTimingAnalysis;
 
-  constexpr double c = 3.3356e-2; // ns / cm
+  constexpr double fSpeedOfLightNanosecondPerCentimeter = 3.3356e-2; // ns / cm
+  constexpr double fMicrosecondToNanosecond             = 1e3;       // ns
 }
 
 class sbnd::crt::CRTTimingAnalysis : public art::EDAnalyzer {
@@ -86,12 +87,12 @@ public:
   void ResetTrVariables();
 
   void AnalyseTPCSlices(const std::vector<art::Ptr<recob::Slice>> &TPCSliceVec,
-                        const art::FindManyP<sbn::CorrectedOpFlashTiming> &sliceToCorrectedOpFlashes,
+                        const art::FindOneP<sbn::CorrectedOpFlashTiming> &sliceToCorrectedOpFlash,
                         const art::FindManyP<recob::PFParticle> &sliceToPFPs,
                         const art::FindOneP<recob::Track> &pfpToTrack,
-                        const art::FindOneP<CRTSpacePoint, anab::T0> &trackToCRTSpacePoint,
-                        const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                        const art::FindManyP<CRTStripHit> &clustersToStripHits);
+                        const art::FindOneP<CRTSpacePoint, anab::T0> &trackToCRTSpacePoint);
+
+  void ResetTPCVariables();
 
 private:
 
@@ -211,7 +212,8 @@ private:
   double _tpc_opflash_nutof_light;
   double _tpc_opflash_nutof_charge;
   double _tpc_opflash_t0_corrected;
-  double _tpc_opflash_t0_corrected_rwm;
+  double _tpc_opflash_interaction_time_rwm;
+  double _tpc_opflash_front_face_rwm;
   double _tpc_crt_sp_score;
   double _tpc_crt_sp_ts0;
   double _tpc_crt_sp_ts0_rwm_ref;
@@ -373,7 +375,8 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fTPCTree->Branch("tpc_opflash_nutof_light", &_tpc_opflash_nutof_light);
   fTPCTree->Branch("tpc_opflash_nutof_charge", &_tpc_opflash_nutof_charge);
   fTPCTree->Branch("tpc_opflash_t0_corrected", &_tpc_opflash_t0_corrected);
-  fTPCTree->Branch("tpc_opflash_t0_corrected_rwm", &_tpc_opflash_t0_corrected_rwm);
+  fTPCTree->Branch("tpc_opflash_interaction_time_rwm", &_tpc_opflash_interaction_time_rwm);
+  fTPCTree->Branch("tpc_opflash_front_face_rwm", &_tpc_opflash_front_face_rwm);
   fTPCTree->Branch("tpc_crt_sp_score", &_tpc_crt_sp_score);
   fTPCTree->Branch("tpc_crt_sp_ts0", &_tpc_crt_sp_ts0);
   fTPCTree->Branch("tpc_crt_sp_ts0_rwm_ref", &_tpc_crt_sp_ts0_rwm_ref);
@@ -486,7 +489,7 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   art::fill_ptr_vector(TPCSliceVec, TPCSliceHandle);
 
   // Get TPCSlice to CorrectedOpFlash Assns
-  art::FindManyP<sbn::CorrectedOpFlashTiming> sliceToCorrectedOpFlashes(TPCSliceHandle, e, fCorrectedOpFlashModuleLabel);
+  art::FindOneP<sbn::CorrectedOpFlashTiming> sliceToCorrectedOpFlash(TPCSliceHandle, e, fCorrectedOpFlashModuleLabel);
 
   // Get TPCSlice to PFP Assns
   art::FindManyP<recob::PFParticle> sliceToPFPs(TPCSliceHandle, e, fTPCSliceModuleLabel);
@@ -513,7 +516,7 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   // Get Track to CRTSpacePoint Assns
   art::FindOneP<CRTSpacePoint, anab::T0> trackToCRTSpacePoint(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
 
-  AnalyseTPCSlices(TPCSliceVec, sliceToCorrectedOpFlashes, sliceToPFPs, pfpToTrack, trackToCRTSpacePoint, spacepointsToClusters, clustersToStripHits);
+  AnalyseTPCSlices(TPCSliceVec, sliceToCorrectedOpFlash, sliceToPFPs, pfpToTrack, trackToCRTSpacePoint);
 }
 
 void sbnd::crt::CRTTimingAnalysis::ResetMaps()
@@ -829,6 +832,8 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTTracks(const std::vector<art::Ptr<C
 {
   for(auto const &tr : CRTTrackVec)
     {
+      ResetTrVariables();
+
       _tr_start_x                   = tr->Start().X();
       _tr_start_y                   = tr->Start().Y();
       _tr_start_z                   = tr->Start().Z();
@@ -846,7 +851,7 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTTracks(const std::vector<art::Ptr<C
       _tr_ts1_ptb_hlt_beam_gate_ref = _tr_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
       _tr_pe                        = tr->PE();
       _tr_length                    = tr->Length();
-      _tr_length_tof                = _tr_length * c;
+      _tr_length_tof                = _tr_length * fSpeedOfLightNanosecondPerCentimeter;
       _tr_theta                     = tr->Theta();
       _tr_phi                       = tr->Phi();
       _tr_triple                    = tr->Triple();
@@ -900,6 +905,8 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTTracks(const std::vector<art::Ptr<C
                     << ") and associated CRTSpacePoint (" << _tr_end_tagger << ")" << std::endl;
           throw std::exception();
         }
+
+      fTrTree->Fill();
     }
 }
 
@@ -948,13 +955,76 @@ void sbnd::crt::CRTTimingAnalysis::ResetTrVariables()
 }
 
 void sbnd::crt::CRTTimingAnalysis::AnalyseTPCSlices(const std::vector<art::Ptr<recob::Slice>> &TPCSliceVec,
-                                                    const art::FindManyP<sbn::CorrectedOpFlashTiming> &sliceToCorrectedOpFlashes,
+                                                    const art::FindOneP<sbn::CorrectedOpFlashTiming> &sliceToCorrectedOpFlash,
                                                     const art::FindManyP<recob::PFParticle> &sliceToPFPs,
                                                     const art::FindOneP<recob::Track> &pfpToTrack,
-                                                    const art::FindOneP<CRTSpacePoint, anab::T0> &trackToCRTSpacePoint,
-                                                    const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                                                    const art::FindManyP<CRTStripHit> &clustersToStripHits)
+                                                    const art::FindOneP<CRTSpacePoint, anab::T0> &trackToCRTSpacePoint)
 {
+  for(auto const &sl : TPCSliceVec)
+    {
+      const art::Ptr<sbn::CorrectedOpFlashTiming> copflash = sliceToCorrectedOpFlash.at(sl.key());
+
+      if(copflash.isNonnull())
+        {
+          _tpc_has_corrected_opflash        = true;
+          _tpc_opflash_t0                   = copflash->OpFlashT0 * fMicrosecondToNanosecond;
+          _tpc_opflash_nutof_light          = copflash->NuToFLight * fMicrosecondToNanosecond;
+          _tpc_opflash_nutof_charge         = copflash->NuToFCharge * fMicrosecondToNanosecond;
+          _tpc_opflash_t0_corrected         = copflash->OpFlashT0Corrected * fMicrosecondToNanosecond;
+          _tpc_opflash_interaction_time_rwm = _tpc_opflash_t0_corrected + 1738.;
+          _tpc_opflash_front_face_rwm       = _tpc_opflash_interaction_time_rwm - _tpc_opflash_nutof_charge;
+        }
+
+      const std::vector<art::Ptr<recob::PFParticle>> pfps = sliceToPFPs.at(sl.key());
+
+      for(auto const &pfp : pfps)
+        {
+          const art::Ptr<recob::Track> track = pfpToTrack.at(pfp.key());
+
+          if(track.isNonnull())
+            {
+              const art::Ptr<CRTSpacePoint> sp = trackToCRTSpacePoint.at(track.key());
+
+              if(sp.isNonnull())
+                {
+                  const anab::T0 spMatch = trackToCRTSpacePoint.data(track.key()).ref();
+
+                  _tpc_has_crt_sp_match                 = true;
+                  _tpc_crt_sp_score                     = spMatch.TriggerConfidence();
+                  _tpc_crt_sp_ts0                       = sp->Ts0();
+                  _tpc_crt_sp_ts0_rwm_ref               = _tpc_crt_sp_ts0 + _rwm_etrig_diff;
+                  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref = _tpc_crt_sp_ts0 + _ptb_hlt_beam_gate_etrig_diff;
+                  _tpc_crt_sp_dts0                      = fSPdTs0Map[sp.key()];
+                  _tpc_crt_sp_ts1                       = sp->Ts1();
+                  _tpc_crt_sp_ts1_rwm_ref               = _tpc_crt_sp_ts1 + _rwm_crt_t1_reset_diff;
+                  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref = _tpc_crt_sp_ts1 + _ptb_hlt_beam_gate_crt_t1_reset_diff;
+                  _tpc_crt_sp_dts1                      = fSPdTs1Map[sp.key()];
+                }
+            }
+        }
+    }
+}
+
+void sbnd::crt::CRTTimingAnalysis::ResetTPCVariables()
+{
+  _tpc_has_corrected_opflash = false;
+  _tpc_has_crt_sp_match      = false;
+
+  _tpc_opflash_t0                       = std::numeric_limits<double>::lowest();
+  _tpc_opflash_nutof_light              = std::numeric_limits<double>::lowest();
+  _tpc_opflash_nutof_charge             = std::numeric_limits<double>::lowest();
+  _tpc_opflash_t0_corrected             = std::numeric_limits<double>::lowest();
+  _tpc_opflash_interaction_time_rwm     = std::numeric_limits<double>::lowest();
+  _tpc_opflash_front_face_rwm           = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_score                     = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0                       = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_rwm_ref               = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts0_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_dts0                      = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1                       = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_rwm_ref               = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_ts1_ptb_hlt_beam_gate_ref = std::numeric_limits<double>::lowest();
+  _tpc_crt_sp_dts1                      = std::numeric_limits<double>::lowest();
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTimingAnalysis)
