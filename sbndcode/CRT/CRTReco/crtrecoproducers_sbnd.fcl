@@ -54,6 +54,9 @@ crtclustercharacterisationalg_sbnd:
    TimeWalkScale:  @local::sbnd_crtsim.DetSimParams.TDelayScale
 }
 
+crtclustercharacterisationalg_data_sbnd: @local::crtclustercharacterisationalg_sbnd
+crtclustercharacterisationalg_data_sbnd.TimeOffset: 0
+
 crtspacepointproducer_sbnd:
 {
    ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
@@ -62,7 +65,7 @@ crtspacepointproducer_sbnd:
 }
 
 crtspacepointproducer_data_sbnd: @local::crtspacepointproducer_sbnd
-crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.TimeOffset: 0
+crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_data_sbnd
 
 crttrackproducer_sbnd:
 {
