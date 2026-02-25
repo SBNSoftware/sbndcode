@@ -27,7 +27,7 @@ void lets_pause()
   // delete timer;
 }
 
-void event_display(const std::vector<float>& inputArray, int starting_tick, int ending_tick, double baseline, double baseline_std, double peak_height, double peak_pos, int wfChannel) {
+void event_display(const std::vector<float>& inputArray, int starting_tick, int ending_tick, double baseline, double baseline_std, double peak_height, double peak_pos, int wfChannel, int FirstBin, int LastBin) {
     int size = inputArray.size();
     baseline = 0;
     std::string title = "Waveform for Channel " + std::to_string(wfChannel);
@@ -76,6 +76,20 @@ void event_display(const std::vector<float>& inputArray, int starting_tick, int 
     //draw the line
 
     v_line2->Draw("same");
+
+    TLine *v_line3= new TLine(FirstBin, h->GetMinimum(), FirstBin, h->GetMaximum());
+    v_line3->SetLineColor(kBlack);
+    v_line3->SetLineWidth(2);
+    v_line3->SetLineStyle(kDashed);
+
+    v_line3->Draw("same");
+
+    TLine *v_line4= new TLine(LastBin, h->GetMinimum(), LastBin, h->GetMaximum());
+    v_line4->SetLineColor(kBlue);
+    v_line4->SetLineWidth(2);
+    v_line4->SetLineStyle(kDashed);
+
+    v_line4->Draw("same");
 
     // draw a horizontal line at the baseline
     TLine *h_line= new TLine(0, baseline, size, baseline);
@@ -134,7 +148,8 @@ void event_display(const std::vector<float>& inputArray, int starting_tick, int 
     legend->AddEntry(h_line2, "Baseline STD", "l");
     legend->AddEntry(h_line4, "Signal amplitude", "l");
     legend->AddEntry(marker, "Alignment point", "p"); // "p" indica punto
-
+    legend->AddEntry(v_line3, "First Bin", "l");
+    legend->AddEntry(v_line4, "Last Bin", "l");
     // Dibujar la leyenda
     legend->Draw();
 
@@ -149,6 +164,8 @@ void event_display(const std::vector<float>& inputArray, int starting_tick, int 
     delete h;
     delete v_line;
     delete v_line2;
+    delete v_line3;
+    delete v_line4;
     delete h_line;
     delete h_line2;
     delete h_line3;

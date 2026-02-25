@@ -679,6 +679,8 @@ void callos::CALLOS::analyze(art::Event const& e)
       double Peak;
       int PeakTick;
       float Pedestalcharge;
+      int FirstBin;
+      int LastBin;
       // std::vector<float> full_wvfm;
       // std::vector<float> derivate;
       if (ROIs.size() == 0){
@@ -705,12 +707,14 @@ void callos::CALLOS::analyze(art::Event const& e)
           Peak = ROIs[i].Peak();
           PeakTick = ROIs[i].PeakTick();
           Pedestalcharge = ROIs[i].PedestalCharge();
-          if (fDEBUG && wfChannel < 764)
+          FirstBin = ROIs[i].FirstBin();
+          LastBin = ROIs[i].LastBin();
+          if (charge < 35 && fDEBUG && wfChannel < 764)
           {
             std::cout<<"CALLOS: Event "<<e.id().event()<<" Channel "<<wfChannel<<" ROI "<<i<<" Charge "<<charge<<std::endl;
             // event_display(wave,startTick,endTick,Baseline,BaselineSTD, Peak, PeakTick, wfChannel);
             std::cout<<"alignment_point "<<PeakTick<<std::endl;
-            event_display(wave,startTick,endTick,Baseline,BaselineSTD, Peak, PeakTick, wfChannel);
+            event_display(wave,startTick,endTick,Baseline,BaselineSTD, Peak, PeakTick, wfChannel, FirstBin, LastBin);
             
             //event_display_fft(wave, wfChannel);
             //event_display_fft(fft_roi);

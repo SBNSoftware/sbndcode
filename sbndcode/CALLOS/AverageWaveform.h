@@ -58,6 +58,10 @@ class SimpleROI :  public std::vector<float>
     double Peak() {return fPeak;}
     void SetPeakTick(unsigned int peakTick) {fPeakTick = peakTick;}
     int PeakTick() {return fPeakTick;}
+    void SetFirstBin(unsigned int firstBin) {fStartTick = firstBin;}
+    int FirstBin() {return fStartTick;}
+    void SetLastBin(unsigned int lastBin) {fEndTick = lastBin;}
+    int LastBin() {return fEndTick;}
     // void SetFFT_ROI(const std::vector<float>& inputArray) {this->assign(inputArray.begin(), inputArray.end());}
     // std::vector<float>& FFT_ROI() { return *this; }
 
@@ -103,6 +107,8 @@ private:
   std::vector<float> waveform;
   std::vector<float> fft_roi;
   double fPedestalCharge;
+  unsigned int fFirstBin;
+  unsigned int fLastBin;
 
 
 

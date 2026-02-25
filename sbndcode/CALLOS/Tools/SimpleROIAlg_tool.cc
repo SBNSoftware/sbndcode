@@ -349,7 +349,8 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> & wvf ,std::vector
 
               // Calcular la pendiente (m) y el intercepto (b)
               float m = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
-              if (m == 0) {
+              
+              if (m <= 0) {
                 i = last_bin;
                 continue;
                 // return false;
@@ -357,7 +358,7 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> & wvf ,std::vector
               float b = (sum_y - m * sum_x) / n;
               float align_fit_pos = - b / m;
 
-              // if (align_fit_pos < first_bin || align_fit_pos > last_bin) {
+              // if (align_fit_pos < (first_bin - 20) || align_fit_pos > (last_bin)) {
               //   i = last_bin;
               //   if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: align_fit_pos out of ROI range"<<std::endl;
               //   continue;
@@ -518,6 +519,8 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> & wvf ,std::vector
               roi.SetWaveform(roi_wvf);
               roi.SetCharge(aux_charge);
               roi.SetPedestalCharge(aux_charge+999);
+              roi.SetFirstBin(first_bin);
+              roi.SetLastBin(last_bin);
               // roi.SetFFT_ROI(roi_fft);
               ROI.push_back(roi);
               i = end_roi;
