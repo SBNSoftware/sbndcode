@@ -2895,8 +2895,8 @@ void nuEBackgroundSignalCut_macro(){
 
     // Plots looking at slices where the highest energy PFP is a muon but has a slow razzled muon score
     double lowMuonScore = 0.06; double highMuonScore = 0.7;
-    TH1F* dEdxHighestEnergyPFP_muonLowMuonScore = new TH1F("dEdxHighestEnergyPFP_muonLowMuonScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Muon);Score;# of Events", 40, 0, 10);
-    TH1F* dEdxHighestEnergyPFP_muonHighMuonScore = new TH1F("dEdxHighestEnergyPFP_muonHighMuonScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Muon);Score;# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_muonLowMuonScore = new TH1F("dEdxHighestEnergyPFP_muonLowMuonScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Muon);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_muonHighMuonScore = new TH1F("dEdxHighestEnergyPFP_muonHighMuonScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Muon);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
     TH1F* energyHighestEnergyPFP_muonLowMuonScore = new TH1F("energyHighestEnergyPFP_muonLowMuonScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Muon);Energy (Mev);# of Events", 400, 0, 800);
     TH1F* energyHighestEnergyPFP_muonHighMuonScore = new TH1F("energyHighestEnergyPFP_muonHighMuonScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Muon);Energy (MeV);# of Events", 400, 0, 800);
     TH1F* showerLengthHighestEnergyPFP_muonLowMuonScore = new TH1F("showerLengthHighestEnergyPFP_muonLowMuonScore", "Shower Length of Highest Energy PFP in Slice (Truth Matched to a Muon);Shower Length;# of Events", 100, 0, 100);
@@ -2912,8 +2912,8 @@ void nuEBackgroundSignalCut_macro(){
     
     // Plots looking at slices where the highest energy PFP is a muon but has a slow razzled muon score
     double lowChargedPiScore = 0.06; double highChargedPiScore = 0.7;
-    TH1F* dEdxHighestEnergyPFP_chargedPiLowChargedPiScore = new TH1F("dEdxHighestEnergyPFP_chargedPiLowChargedPiScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);Score;# of Events", 40, 0, 10);
-    TH1F* dEdxHighestEnergyPFP_chargedPiHighChargedPiScore = new TH1F("dEdxHighestEnergyPFP_chargedPiHighChargedPiScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);Score;# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_chargedPiLowChargedPiScore = new TH1F("dEdxHighestEnergyPFP_chargedPiLowChargedPiScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_chargedPiHighChargedPiScore = new TH1F("dEdxHighestEnergyPFP_chargedPiHighChargedPiScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
     TH1F* energyHighestEnergyPFP_chargedPiLowChargedPiScore = new TH1F("energyHighestEnergyPFP_chargedPiLowChargedPiScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);Energy (Mev);# of Events", 400, 0, 800);
     TH1F* energyHighestEnergyPFP_chargedPiHighChargedPiScore = new TH1F("energyHighestEnergyPFP_chargedPiHighChargedPiScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);Energy (MeV);# of Events", 400, 0, 800);
     TH1F* showerLengthHighestEnergyPFP_chargedPiLowChargedPiScore = new TH1F("showerLengthHighestEnergyPFP_chargedPiLowChargedPiScore", "Shower Length of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);Shower Length;# of Events", 100, 0, 100);
@@ -2929,8 +2929,8 @@ void nuEBackgroundSignalCut_macro(){
     
     // Plots looking at slices where the highest energy PFP is a photon but has a slow razzled electron score
     double lowElectronScore = 0.06; double highElectronScore = 0.7;
-    TH1F* dEdxHighestEnergyPFP_photonLowElectronScore = new TH1F("dEdxHighestEnergyPFP_photonLowElectronScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Photon);Score;# of Events", 40, 0, 10);
-    TH1F* dEdxHighestEnergyPFP_photonHighElectronScore = new TH1F("dEdxHighestEnergyPFP_photonHighElectronScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Photon);Score;# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_photonLowElectronScore = new TH1F("dEdxHighestEnergyPFP_photonLowElectronScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Photon);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
+    TH1F* dEdxHighestEnergyPFP_photonHighElectronScore = new TH1F("dEdxHighestEnergyPFP_photonHighElectronScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Photon);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
     TH1F* energyHighestEnergyPFP_photonLowElectronScore = new TH1F("energyHighestEnergyPFP_photonLowElectronScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Photon);Energy (Mev);# of Events", 400, 0, 800);
     TH1F* energyHighestEnergyPFP_photonHighElectronScore = new TH1F("energyHighestEnergyPFP_photonHighElectronScore", "Energy of Highest Energy PFP in Slice (Truth Matched to a Photon);Energy (MeV);# of Events", 400, 0, 800);
     TH1F* showerLengthHighestEnergyPFP_photonLowElectronScore = new TH1F("showerLengthHighestEnergyPFP_photonLowElectronScore", "Shower Length of Highest Energy PFP in Slice (Truth Matched to a Photon);Shower Length;# of Events", 100, 0, 100);
