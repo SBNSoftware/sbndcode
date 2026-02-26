@@ -1014,8 +1014,8 @@ void sbnd::crt::CRTTimingAnalysis::ResetTrVariables()
   _tr_end_tagger         = std::numeric_limits<int16_t>::lowest();
   _tr_end_timing_chain   = std::numeric_limits<int16_t>::lowest();
 
-  _tr_start_nhits = std::numeric_limits<uint16_t>::lowest();
-  _tr_end_nhits   = std::numeric_limits<uint16_t>::lowest();
+  _tr_start_nhits = std::numeric_limits<uint16_t>::max();
+  _tr_end_nhits   = std::numeric_limits<uint16_t>::max();
 
 }
 
@@ -1148,7 +1148,7 @@ void sbnd::crt::CRTTimingAnalysis::ResetTPCVariables()
   _tpc_crt_sp_tagger       = std::numeric_limits<int16_t>::lowest();
   _tpc_crt_sp_timing_chain = std::numeric_limits<int16_t>::lowest();
 
-  _tpc_crt_sp_nhits = std::numeric_limits<uint16_t>::lowest();
+  _tpc_crt_sp_nhits = std::numeric_limits<uint16_t>::max();
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTimingAnalysis)
