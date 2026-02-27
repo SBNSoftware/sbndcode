@@ -10,7 +10,7 @@ adrift_data_sbnd:
   CRTTrackModuleLabel:      "crttracks"
   DAQHeaderModuleLabel:     "daq"
   DAQHeaderInstanceLabel:   "RawEventHeader"
-  TopSaveDirectory:         "/exp/sbnd/data/users/hlay/crt_comm_summer_2024/plots/adrift"
+  TopSaveDirectory:         "/ENTER/YOUR/SAVE/DIRECTORY/HERE"
   Only2HitSpacePoints:      false
   SaveAllFits:              false
   SaveBadFits:              false
