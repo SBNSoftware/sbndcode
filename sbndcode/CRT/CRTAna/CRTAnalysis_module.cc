@@ -37,13 +37,13 @@
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
-#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/CRT/CRTReco/CRTClusterCharacterisationAlg.h"
 
 namespace sbnd::crt {
   class CRTAnalysis;
@@ -103,16 +103,14 @@ private:
   art::ServiceHandle<CRTGeoService>              fCRTGeoService;
   art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
-  TPCGeoAlg         fTPCGeoAlg;
-  CRTBackTrackerAlg fCRTBackTrackerAlg;
+  CRTBackTrackerAlg             fCRTBackTrackerAlg;
+  CRTClusterCharacterisationAlg fCRTClusterCharacAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fCRTBlobModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
     fTDCModuleLabel, fTimingReferenceModuleLabel;
   bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fHasBlobs, fTruthMatch;
-  //! Adding some of the reco parameters to save corrections
-  double fPEAttenuation, fTimeWalkNorm, fTimeWalkScale, fPropDelay;
 
   TTree* fTree;
 
@@ -197,11 +195,11 @@ private:
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
-  std::vector<std::vector<double>>   _cl_sh_ts0_set; //! To store t0 from x-y coincidences
-  std::vector<std::vector<double>>   _cl_sh_ts1_set; //! To store t1 from x-y coincidences
-  std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
-  std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
-  std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
+  std::vector<std::vector<double>>   _cl_sh_ts0_set;
+  std::vector<std::vector<double>>   _cl_sh_ts1_set;
+  std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set;
+  std::vector<std::vector<double>>   _cl_sh_time_walk_set;
+  std::vector<std::vector<double>>   _cl_sh_prop_delay_set;
   std::vector<int>                   _cl_truth_trackid;
   std::vector<double>                _cl_truth_completeness;
   std::vector<double>                _cl_truth_purity;
@@ -372,6 +370,7 @@ private:
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
+  , fCRTClusterCharacAlg(p.get<fhicl::ParameterSet>("CRTClusterCharacterisationAlg", fhicl::ParameterSet()))
 {
   fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
   fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
@@ -395,10 +394,6 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fHasTDC                           = p.get<bool>("HasTDC", false);
   fHasBlobs                         = p.get<bool>("HasBlobs", false);
   fTruthMatch                       = p.get<bool>("TruthMatch", true);
-  fPEAttenuation                    = p.get<double>("PEAttenuation", 1.0);
-  fTimeWalkNorm                     = p.get<double>("TimeWalkNorm",  0.0);
-  fTimeWalkScale                    = p.get<double>("TimeWalkScale", 0.0);
-  fPropDelay                        = p.get<double>("PropDelay",     0.0);
 
   if(!fDataMode && fTruthMatch)
     fCRTBackTrackerAlg = CRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()));
@@ -1328,25 +1323,10 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sh_ts1_set[i][ii]      = striphit->Ts1();
           _cl_sh_feb_mac5_set[i][ii] = fCRTChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
 
-          /*
-           * The below segment reimplements the CorrectTime() method
-           * from CRTReco/CRTClusterCharacterisationAlg.cc .
-           * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
-           * counters, the time walk and propagation delay are saved as explicit branches here.
-           */
           if(spacepoints.size() == 1)
             {
-              double pe0 = fCRTGeoService->GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
-              double pe1 = fCRTGeoService->GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
-              double pe  = pe0 + pe1;
-
-              double dist = fCRTGeoService->DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
-
-              double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
-              double tw_pe = pe * corr;
-
-              _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
-              _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+              _cl_sh_time_walk_set[i][ii]  = fCRTClusterCharacAlg.TimeWalk(striphit, spacepoints[0]->Pos());
+              _cl_sh_prop_delay_set[i][ii] = fCRTClusterCharacAlg.PropagationDelay(striphit, spacepoints[0]->Pos());
 
               ts0_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts0_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
               ts1_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts1_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
