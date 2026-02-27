@@ -1,10 +1,9 @@
-#ifndef CRTBACKTRACKERALG_H_SEEN
-#define CRTBACKTRACKERALG_H_SEEN
+#ifndef CRTCLUSTERCHARACTERISATIONALG_H_SEEN
+#define CRTCLUSTERCHARACTERISATIONALG_H_SEEN
 
 ///////////////////////////////////////////////
 // CRTClusterCharacterisationAlg.h
 //
-// Truth Matching Utilities for CRT analysis
 // Henry Lay (h.lay@lancaster.ac.uk)
 // November 2022
 ///////////////////////////////////////////////
