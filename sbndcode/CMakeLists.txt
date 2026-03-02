@@ -47,9 +47,9 @@ add_subdirectory(ChannelMaps)
 # for CVN
 add_subdirectory(SBNDCVN)
 
-# Use backup version with nuScore
-add_subdirectory(TPCPMTBarycenterMatchingBackup)
-# add_subdirectory(TPCPMTBarycenterMatching)
+# Use new version (without nuScore in TTree, but has updated PMT efficiency parameters)
+# add_subdirectory(TPCPMTBarycenterMatchingBackup)
+add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(BlipRecoSBND)
 add_subdirectory(LightPropagationCorrection)

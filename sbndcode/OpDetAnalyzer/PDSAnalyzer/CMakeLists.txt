@@ -26,6 +26,7 @@ set(MODULE_LIBRARIES
     sbnobj::Common_Reco
     sbndcode_OpDetSim
 
+    Eigen3::Eigen
 )
 
 cet_build_plugin(SBNDPDSAnalyzer art::Module SOURCE SBNDPDSAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES} )

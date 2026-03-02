@@ -420,3 +420,116 @@ def huber_position_pca_separate(delta_pos=0.1, delta_pca=0.05, weight_pos=1.0, w
         return weight_pos * pos_loss + weight_pca * pca_loss
 
     return loss
+
+
+# =============================================================================
+# NEW: Cosine Similarity Loss for 3D direction vectors
+# =============================================================================
+
+def cosine_similarity_loss_3d(y_true_dir, y_pred_dir):
+    """
+    Cosine similarity loss for 3D direction vectors: 1 - cos(theta).
+
+    Smoother gradients than angular MSE via atan2. For small angles,
+    1 - cos(x) ~ x^2/2, so it approximates angular MSE.
+
+    Parameters:
+    -----------
+    y_true_dir : tensor, shape (batch, 3)
+        True direction vectors (unit vectors)
+    y_pred_dir : tensor, shape (batch, 3)
+        Predicted direction vectors (unit vectors)
+
+    Returns:
+    --------
+    loss : scalar tensor
+        Mean (1 - cosine_similarity) over batch
+    """
+    cosine_sim = tf.reduce_sum(y_true_dir * y_pred_dir, axis=-1)
+    cosine_sim = tf.clip_by_value(cosine_sim, -1.0, 1.0)
+    return tf.reduce_mean(1.0 - cosine_sim)
+
+
+# =============================================================================
+# NEW: Kendall uncertainty weighted loss for multi-task learning
+# =============================================================================
+
+def kendall_weighted_loss_9output(delta_pos=0.1, delta_spread=0.05):
+    """
+    Create multi-task loss with Kendall uncertainty weighting for 9-output model.
+
+    Output layout: [pos(3), dir(3), spread(3)]
+    - Position: Huber loss
+    - Direction: Cosine similarity loss (1 - cos_sim)
+    - Spread: Huber loss (auxiliary)
+
+    Weights are learned via log-variance parameters (Kendall et al. 2018).
+
+    Parameters:
+    -----------
+    delta_pos : float
+        Huber delta for position loss
+    delta_spread : float
+        Huber delta for spread loss
+
+    Returns:
+    --------
+    loss_fn : callable
+        Loss function for model.compile()
+    log_sigma_pos, log_sigma_dir, log_sigma_spread : tf.Variable
+        Learnable log-variance parameters (for inspection after training)
+    """
+    log_sigma_pos = tf.Variable(0.0, trainable=True, name='log_sigma_pos')
+    log_sigma_dir = tf.Variable(0.0, trainable=True, name='log_sigma_dir')
+    log_sigma_spread = tf.Variable(0.0, trainable=True, name='log_sigma_spread')
+
+    def loss(y_true, y_pred):
+        # Position: Huber loss
+        pos_true = y_true[:, :3]
+        pos_pred = y_pred[:, :3]
+        pos_loss = tf.keras.losses.Huber(delta=delta_pos)(pos_true, pos_pred)
+
+        # Direction: Cosine similarity loss
+        dir_true = y_true[:, 3:6]
+        dir_pred = y_pred[:, 3:6]
+        cosine_sim = tf.reduce_sum(dir_true * dir_pred, axis=-1)
+        cosine_sim = tf.clip_by_value(cosine_sim, -1.0, 1.0)
+        dir_loss = tf.reduce_mean(1.0 - cosine_sim)
+
+        # Spread: Huber loss
+        spread_true = y_true[:, 6:9]
+        spread_pred = y_pred[:, 6:9]
+        spread_loss = tf.keras.losses.Huber(delta=delta_spread)(spread_true, spread_pred)
+
+        # Kendall weighting: loss_i / (2 * sigma_i^2) + log(sigma_i)
+        total = (tf.exp(-2.0 * log_sigma_pos) * pos_loss + log_sigma_pos
+               + tf.exp(-2.0 * log_sigma_dir) * dir_loss + log_sigma_dir
+               + tf.exp(-2.0 * log_sigma_spread) * spread_loss + log_sigma_spread)
+
+        return total
+
+    return loss, log_sigma_pos, log_sigma_dir, log_sigma_spread
+
+
+# =============================================================================
+# NEW: Metrics for 9-output model monitoring
+# =============================================================================
+
+def position_mse_9out(y_true, y_pred):
+    """MSE for position only (columns 0-2) in 9-output model."""
+    return tf.reduce_mean(tf.square(y_true[:, :3] - y_pred[:, :3]))
+
+
+def direction_angle_deg_9out(y_true, y_pred):
+    """Mean angular error in degrees for direction (columns 3-5)."""
+    dir_true = y_true[:, 3:6]
+    dir_pred = y_pred[:, 3:6]
+    cosine_sim = tf.reduce_sum(dir_true * dir_pred, axis=-1)
+    cosine_sim = tf.clip_by_value(cosine_sim, -1.0, 1.0)
+    angle_rad = tf.acos(cosine_sim)
+    return tf.reduce_mean(angle_rad * (180.0 / np.pi))
+
+
+def spread_mse_9out(y_true, y_pred):
+    """MSE for spread only (columns 6-8) in 9-output model."""
+    return tf.reduce_mean(tf.square(y_true[:, 6:9] - y_pred[:, 6:9]))

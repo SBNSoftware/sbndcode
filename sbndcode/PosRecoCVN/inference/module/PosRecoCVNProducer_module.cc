@@ -26,12 +26,16 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
     fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
+    fActiveVolumeX( p.get<std::vector<double>>("ActiveVolumeX", {-200.0, 200.0}) ),
+    fActiveVolumeY( p.get<std::vector<double>>("ActiveVolumeY", {-200.0, 200.0}) ),
+    fActiveVolumeZ( p.get<std::vector<double>>("ActiveVolumeZ", {0.0, 500.0}) ),
     fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
     fSavePixelMapVars( p.get<bool>("SavePixelMapVars", true) ),
     fVerbosity( p.get<int>("Verbosity") ),
     fCoatedPMTMapPath("coatedPMT_map.csv"),
     fUncoatedPMTMapPath("uncoatedPMT_map.csv"),
-    fModelPath("saved_model"),
+    fModelPath( p.get<std::string>("ModelPath", "v0223_trained_w_177k_position/saved_model") ),
+    fDirModelPath( p.get<std::string>("DirModelPath", "v0224_trained_w_177k_direction_2d/saved_model") ),
     fProcessingMode( p.get<std::string>("ProcessingMode", "MC_testing") ),
     fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
     fOutputNames( p.get<std::vector<std::string>>("OutputNames", {}) ),
@@ -51,9 +55,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
         std::string model_path = fModelPath;
         std::vector<std::string> search_paths = {
             model_path,
-            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
-            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
-            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/module/" + model_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/module/" + model_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/inference/module/" + model_path,
             "../" + model_path,
             "./" + model_path
         };
@@ -77,7 +81,43 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
             if (!fTFGraph) {
                 std::cerr << "ERROR: Failed to load model from " << model_path << std::endl;
             } else if(fVerbosity > 0) {
-                std::cout << "TensorFlow model loaded: " << model_path << std::endl;
+                std::cout << "TensorFlow position model loaded: " << model_path << std::endl;
+            }
+        }
+    }
+
+    // Load direction model
+    if (!fDirModelPath.empty()) {
+        std::string dir_path = fDirModelPath;
+        std::vector<std::string> dir_search_paths = {
+            dir_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/module/" + dir_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/inference/module/" + dir_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/inference/module/" + dir_path,
+            "../" + dir_path,
+            "./" + dir_path
+        };
+
+        bool dir_found = false;
+        for (const auto& sp : dir_search_paths) {
+            std::ifstream tf_test(sp + "/saved_model.pb");
+            if (tf_test.is_open()) {
+                dir_path = sp;
+                dir_found = true;
+                tf_test.close();
+                break;
+            }
+        }
+
+        if (!dir_found) {
+            std::cerr << "WARNING: Direction model not found: " << fDirModelPath
+                      << " (direction inference disabled)" << std::endl;
+        } else {
+            fTFDirGraph = tf::Graph::create(dir_path.c_str(), {}, {}, true, 1, 2);
+            if (!fTFDirGraph) {
+                std::cerr << "ERROR: Failed to load direction model from " << dir_path << std::endl;
+            } else if(fVerbosity > 0) {
+                std::cout << "TensorFlow direction model loaded: " << dir_path << std::endl;
             }
         }
     }
@@ -102,6 +142,8 @@ void opdet::PosRecoCVNProducer::beginJob()
   fInferenceTree->Branch("pred_y", &fTreeData.predY, "pred_y/D");
   fInferenceTree->Branch("pred_z", &fTreeData.predZ, "pred_z/D");
   fInferenceTree->Branch("selected_tpc", &fTreeData.selectedTPC, "selected_tpc/I");
+  fInferenceTree->Branch("pred_dir_y", &fTreeData.predDirY, "pred_dir_y/D");
+  fInferenceTree->Branch("pred_dir_z", &fTreeData.predDirZ, "pred_dir_z/D");
 
   // MC_testing mode: add ground truth and performance metrics
   if(fProcessingMode == "MC_testing") {
@@ -115,6 +157,9 @@ void opdet::PosRecoCVNProducer::beginJob()
     fInferenceTree->Branch("nuv_t", &fTreeData.nuvT, "nuv_t/D");
     fInferenceTree->Branch("nuv_z", &fTreeData.nuvZ, "nuv_z/D");
     fInferenceTree->Branch("deposited_energy", &fTreeData.dEtpc, "deposited_energy/D");
+    fInferenceTree->Branch("true_dir_y",    &fTreeData.trueDirY,    "true_dir_y/D");
+    fInferenceTree->Branch("true_dir_z",    &fTreeData.trueDirZ,    "true_dir_z/D");
+    fInferenceTree->Branch("angular_error", &fTreeData.angularError, "angular_error/D");
   }
 
   if(fVerbosity > 0) {
@@ -304,7 +349,7 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
   }
 
   // Calculate energy-weighted centroids (dEprom*) and other statistics
-  FillAverageDepositedEnergyVariables(fMCData.energydep,fMCData.energydepX,fMCData.energydepY,fMCData.energydepZ,fMCData.stepT,fMCData.dEtpc,fMCData.dEpromx,fMCData.dEpromy,fMCData.dEpromz,fMCData.dEspreadx,fMCData.dEspready,fMCData.dEspreadz,fMCData.dElowedges,fMCData.dEmaxedges);
+  FillAverageDepositedEnergyVariables(fMCData.energydep,fMCData.energydepX,fMCData.energydepY,fMCData.energydepZ,fMCData.stepT,fMCData.dEtpc,fMCData.dEpromx,fMCData.dEpromy,fMCData.dEpromz,fMCData.dEspreadx,fMCData.dEspready,fMCData.dEspreadz,fMCData.dElowedges,fMCData.dEmaxedges,fMCData.dEdirx,fMCData.dEdiry,fMCData.dEdirz);
 
   if(fVerbosity>1){
     std::cout<<"InTimeCosmic: "<<fMCData.InTimeCosmics<<" | BeamWindow dE: "<<fMCData.neutrinowindow<<" MeV\n"
@@ -401,12 +446,22 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
   // --- Apply event filters: (1) Neutrino multiplicity (MC only), (2) OpHit availability
   bool passFilter1, passFilter2, passFilter;
 
-  // Filter 1: Neutrino count (DATA always passes, MC requires exactly 1 neutrino unless skipped)
+  // Filter 1: Neutrino count (DATA always passes, MC requires exactly 1 neutrino in active volume unless skipped)
   if(fProcessingMode == "DATA_inference") {
     passFilter1 = true;
   } else {
-    passFilter1 = fSkipNeutrinoFilter || (fMCData.nuvT.size() == 1);
-    if(fVerbosity > 0 && !passFilter1) std::cout << "FILTER 1 FAIL: nuvT=" << fMCData.nuvT.size() << " (expected 1)" << std::endl;
+    // Count neutrinos inside active volume (matching training pipeline)
+    int nNeutrinosInActiveVolume = 0;
+    for(size_t i = 0; i < fMCData.nuvT.size(); ++i) {
+      bool inActiveVolume = (fMCData.nuvX[i] >= fActiveVolumeX[0] && fMCData.nuvX[i] <= fActiveVolumeX[1]) &&
+                            (fMCData.nuvY[i] >= fActiveVolumeY[0] && fMCData.nuvY[i] <= fActiveVolumeY[1]) &&
+                            (fMCData.nuvZ[i] >= fActiveVolumeZ[0] && fMCData.nuvZ[i] <= fActiveVolumeZ[1]);
+      if(inActiveVolume) nNeutrinosInActiveVolume++;
+    }
+    passFilter1 = fSkipNeutrinoFilter || (nNeutrinosInActiveVolume == 1);
+    if(fVerbosity > 0 && !passFilter1) {
+      std::cout << "FILTER 1 FAIL: " << nNeutrinosInActiveVolume << " neutrinos in active volume (expected 1), total nuvT=" << fMCData.nuvT.size() << std::endl;
+    }
   }
 
   // Filter 2: At least one flash with OpHits
@@ -942,6 +997,52 @@ void opdet::PosRecoCVNProducer::RunInference(PixelMapVars& pixelmapvars) {
     std::cerr << "ERROR: TensorFlow inference failed: " << e.what() << "\n"
               << "Check: input dimensions, model file, TF version compatibility" << std::endl;
   }
+
+  // Direction model inference
+  if (fTFDirGraph && !fProcessedData.pe_images.empty()) {
+    try {
+      auto dir_preds = fTFDirGraph->run(fProcessedData.pe_images, -1);
+
+      if (dir_preds.empty() || dir_preds[0].empty()) {
+        std::cout << "ERROR: Empty direction predictions from TensorFlow" << std::endl;
+      } else {
+        // dir_preds[event][0] = {dir_y, dir_z} (single output tensor of shape [batch, 2])
+        if (dir_preds[0][0].size() >= 2) {
+          double raw_y = dir_preds[0][0][0];
+          double raw_z = dir_preds[0][0][1];
+          double norm = std::sqrt(raw_y*raw_y + raw_z*raw_z);
+          if (norm > 1e-10) {
+            fTreeData.predDirY = raw_y / norm;
+            fTreeData.predDirZ = raw_z / norm;
+          } else {
+            std::cout << "WARNING: Direction model output has near-zero norm ("
+                      << raw_y << ", " << raw_z << ")" << std::endl;
+          }
+          if(fVerbosity > 1)
+            std::cout << "PredDir raw=(" << raw_y << "," << raw_z
+                      << ") norm=(" << fTreeData.predDirY << "," << fTreeData.predDirZ << ")" << std::endl;
+        } else {
+          // Fallback: two separate output tensors dir_preds[0][0][0] and dir_preds[0][1][0]
+          if (dir_preds[0].size() >= 2 && !dir_preds[0][0].empty() && !dir_preds[0][1].empty()) {
+            double raw_y = dir_preds[0][0][0];
+            double raw_z = dir_preds[0][1][0];
+            double norm = std::sqrt(raw_y*raw_y + raw_z*raw_z);
+            if (norm > 1e-10) {
+              fTreeData.predDirY = raw_y / norm;
+              fTreeData.predDirZ = raw_z / norm;
+            }
+            if(fVerbosity > 1)
+              std::cout << "PredDir (2-tensor) raw=(" << raw_y << "," << raw_z
+                        << ") norm=(" << fTreeData.predDirY << "," << fTreeData.predDirZ << ")" << std::endl;
+          } else {
+            std::cout << "WARNING: Unexpected direction model output shape" << std::endl;
+          }
+        }
+      }
+    } catch (const std::exception& ex) {
+      std::cerr << "ERROR: Direction TF inference failed: " << ex.what() << std::endl;
+    }
+  }
 }
 
 
@@ -1072,9 +1173,37 @@ void opdet::PosRecoCVNProducer::FillInferenceTree(bool passedFilters)
         double dz = fTreeData.predZ - fTreeData.trueZ;
         fTreeData.error3D = std::sqrt(dx*dx + dy*dy + dz*dz);
       }
+
+      // True PCA direction from selected TPC
+      int tpc = fProcessedData.selectedTPC;
+      if(tpc >= 0 && tpc < (int)fMCData.dEdiry.size()) {
+        fTreeData.trueDirY = fMCData.dEdiry[tpc];
+        fTreeData.trueDirZ = fMCData.dEdirz[tpc];
+      }
+
+      // Sign-invariant angular error: atan2(|cross|, |dot|)
+      // (same formula as training notebook angular_loss)
+      if(fTreeData.predDirY != -999.0 && fTreeData.trueDirY != -999.0 &&
+         fTreeData.trueDirY != fDefaultSimIDE) {
+        // Normalize true direction YZ to unit vector
+        double ty = fTreeData.trueDirY, tz = fTreeData.trueDirZ;
+        double tn = std::sqrt(ty*ty + tz*tz);
+        if(tn > 1e-10) { ty /= tn; tz /= tn; }
+
+        double cross = ty * fTreeData.predDirZ - tz * fTreeData.predDirY;
+        double dot   = ty * fTreeData.predDirY + tz * fTreeData.predDirZ;
+        fTreeData.angularError = std::atan2(std::abs(cross), std::abs(dot));
+
+        if(fVerbosity > 0)
+          std::cout << "R" << fEventInfo.runID << " E" << fEventInfo.eventID
+                    << " TrueDir(" << fTreeData.trueDirY << "," << fTreeData.trueDirZ << ")"
+                    << " PredDir(" << fTreeData.predDirY << "," << fTreeData.predDirZ << ")"
+                    << " AngErr=" << fTreeData.angularError << " rad ("
+                    << fTreeData.angularError * (180.0 / acos(-1.0)) << " deg)" << std::endl;
+      }
     }
 
-    // Prediction data (fTreeData.predX/Y/Z) is filled directly in RunInference()
+    // Prediction data (fTreeData.predX/Y/Z, predDirY/Z) is filled directly in RunInference()
   }
 
   // Fill the TTree entry
@@ -1309,7 +1438,8 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   std::vector<std::vector<double>> fenergydepY, std::vector<std::vector<double>> fenergydepZ, std::vector<std::vector<double>> fstepT,
   std::vector<double> &dEtpc, std::vector<double> &dEpromx, std::vector<double> &dEpromy, std::vector<double> &dEpromz,
   std::vector<double> &dEspreadx, std::vector<double> &dEspready, std::vector<double> &dEspreadz,
-  std::vector<std::vector<double>> &dElowedges, std::vector<std::vector<double>> &dEmaxedges)
+  std::vector<std::vector<double>> &dElowedges, std::vector<std::vector<double>> &dEmaxedges,
+  std::vector<double> &dEdirx, std::vector<double> &dEdiry, std::vector<double> &dEdirz)
 {
 
   // Initialize variables
@@ -1318,6 +1448,8 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   dEpromx.resize(2, fDefaultSimIDE); dEpromy.resize(2, fDefaultSimIDE); dEpromz.resize(2, fDefaultSimIDE);
   dEspreadx.clear(); dEspready.clear(); dEspreadz.clear();
   dEspreadx.resize(2, fDefaultSimIDE); dEspready.resize(2, fDefaultSimIDE); dEspreadz.resize(2, fDefaultSimIDE);
+  dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
+  dEdirx.resize(2, 0); dEdiry.resize(2, 0); dEdirz.resize(2, 1);  // Default: z-axis
 
   int ndeps_tpc0=0, ndeps_tpc1=0;
   double dEpromx_tpc0=0, dEpromy_tpc0=0, dEpromz_tpc0=0;
@@ -1329,7 +1461,11 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   double miny_tpc0=1e3, maxy_tpc0=-1e3, miny_tpc1=1e3, maxy_tpc1=-1e3;
   double minx_tpc0=1e3, maxx_tpc0=-1e3, minx_tpc1=1e3, maxx_tpc1=-1e3;
   double dE_tpc0=0, dE_tpc1=0;
-  
+
+  // Store points for PCA calculation (same pattern as SBNDPDSAnalyzer)
+  std::vector<double> x_tpc0, y_tpc0, z_tpc0, w_tpc0;
+  std::vector<double> x_tpc1, y_tpc1, z_tpc1, w_tpc1;
+
   for(size_t k=0; k<fenergydep.size(); k++){
     for(size_t j=0; j<fenergydep.at(k).size(); j++){
       
@@ -1344,7 +1480,13 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
         spreadx_tpc0+=fenergydep.at(k).at(j)*fenergydepX.at(k).at(j)*fenergydepX.at(k).at(j);
         spready_tpc0+=fenergydep.at(k).at(j)*fenergydepY.at(k).at(j)*fenergydepY.at(k).at(j);
         spreadz_tpc0+=fenergydep.at(k).at(j)*fenergydepZ.at(k).at(j)*fenergydepZ.at(k).at(j);
-        
+
+        // Store for PCA
+        x_tpc0.push_back(fenergydepX.at(k).at(j));
+        y_tpc0.push_back(fenergydepY.at(k).at(j));
+        z_tpc0.push_back(fenergydepZ.at(k).at(j));
+        w_tpc0.push_back(fenergydep.at(k).at(j));
+
         // Update min/max values for TPC0
         minx_tpc0 = std::min(minx_tpc0, fenergydepX.at(k).at(j));
         maxx_tpc0 = std::max(maxx_tpc0, fenergydepX.at(k).at(j));
@@ -1364,7 +1506,13 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
         spreadx_tpc1+=fenergydep.at(k).at(j)*fenergydepX.at(k).at(j)*fenergydepX.at(k).at(j);
         spready_tpc1+=fenergydep.at(k).at(j)*fenergydepY.at(k).at(j)*fenergydepY.at(k).at(j);
         spreadz_tpc1+=fenergydep.at(k).at(j)*fenergydepZ.at(k).at(j)*fenergydepZ.at(k).at(j);
-        
+
+        // Store for PCA
+        x_tpc1.push_back(fenergydepX.at(k).at(j));
+        y_tpc1.push_back(fenergydepY.at(k).at(j));
+        z_tpc1.push_back(fenergydepZ.at(k).at(j));
+        w_tpc1.push_back(fenergydep.at(k).at(j));
+
         // Update min/max values for TPC1
         minx_tpc1 = std::min(minx_tpc1, fenergydepX.at(k).at(j));
         maxx_tpc1 = std::max(maxx_tpc1, fenergydepX.at(k).at(j));
@@ -1377,24 +1525,66 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   }
 
   if(ndeps_tpc0!=0){
-    dEpromx_tpc0=std::abs(dEpromx_tpc0/dE_tpc0);
-    dEpromy_tpc0=dEpromy_tpc0/dE_tpc0;
-    dEpromz_tpc0=dEpromz_tpc0/dE_tpc0;
+    // Compute centroid (x without abs for PCA, then apply abs for output)
+    double cx0 = dEpromx_tpc0/dE_tpc0;  // raw centroid X (negative for TPC0)
+    double cy0 = dEpromy_tpc0/dE_tpc0;
+    double cz0 = dEpromz_tpc0/dE_tpc0;
+    dEpromx_tpc0=std::abs(cx0);
+    dEpromy_tpc0=cy0;
+    dEpromz_tpc0=cz0;
     spreadx_tpc0=sqrt( spreadx_tpc0/dE_tpc0-dEpromx_tpc0*dEpromx_tpc0 );
     spready_tpc0=std::sqrt(spready_tpc0/dE_tpc0-dEpromy_tpc0*dEpromy_tpc0);
     spreadz_tpc0=std::sqrt(spreadz_tpc0/dE_tpc0-dEpromz_tpc0*dEpromz_tpc0);
     dEtpc[0]=dE_tpc0;dEpromx[0]=dEpromx_tpc0;dEpromy[0]=dEpromy_tpc0;dEpromz[0]=dEpromz_tpc0;
     dEspreadx[0]=spreadx_tpc0;dEspready[0]=spready_tpc0;dEspreadz[0]=spreadz_tpc0;
+
+    // PCA 3D for TPC0 (ported from SBNDPDSAnalyzer_module.cc:1039-1062)
+    if(ndeps_tpc0 >= 2){
+      Eigen::Matrix3d cov = Eigen::Matrix3d::Zero();
+      for(size_t i = 0; i < x_tpc0.size(); ++i){
+        Eigen::Vector3d pt(x_tpc0[i] - cx0, y_tpc0[i] - cy0, z_tpc0[i] - cz0);
+        cov += std::abs(w_tpc0[i]) * (pt * pt.transpose());
+      }
+      cov /= dE_tpc0;
+      Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(cov);
+      Eigen::Vector3d eigvals = solver.eigenvalues();
+      Eigen::Matrix3d eigvecs = solver.eigenvectors();
+      int maxIdx; eigvals.maxCoeff(&maxIdx);
+      Eigen::Vector3d dir = eigvecs.col(maxIdx);
+      // Sign convention: force dEdirz >= 0 (toward +Z beam direction)
+      if(dir(2) < 0) dir = -dir;
+      dEdirx[0] = dir(0); dEdiry[0] = dir(1); dEdirz[0] = dir(2);
+    }
   }
   if(ndeps_tpc1!=0){
-    dEpromx_tpc1=std::abs(dEpromx_tpc1/dE_tpc1);
-    dEpromy_tpc1=dEpromy_tpc1/dE_tpc1;
-    dEpromz_tpc1=dEpromz_tpc1/dE_tpc1;
+    double cx1 = dEpromx_tpc1/dE_tpc1;
+    double cy1 = dEpromy_tpc1/dE_tpc1;
+    double cz1 = dEpromz_tpc1/dE_tpc1;
+    dEpromx_tpc1=std::abs(cx1);
+    dEpromy_tpc1=cy1;
+    dEpromz_tpc1=cz1;
     spreadx_tpc1=std::sqrt(spreadx_tpc1/dE_tpc1-dEpromx_tpc1*dEpromx_tpc1);
     spready_tpc1=std::sqrt(spready_tpc1/dE_tpc1-dEpromy_tpc1*dEpromy_tpc1);
     spreadz_tpc1=std::sqrt(spreadz_tpc1/dE_tpc1-dEpromz_tpc1*dEpromz_tpc1);
     dEtpc[1]=dE_tpc1;dEpromx[1]=dEpromx_tpc1;dEpromy[1]=dEpromy_tpc1;dEpromz[1]=dEpromz_tpc1;
     dEspreadx[1]=spreadx_tpc1;dEspready[1]=spready_tpc1;dEspreadz[1]=spreadz_tpc1;
+
+    // PCA 3D for TPC1 (ported from SBNDPDSAnalyzer_module.cc:1077-1100)
+    if(ndeps_tpc1 >= 2){
+      Eigen::Matrix3d cov = Eigen::Matrix3d::Zero();
+      for(size_t i = 0; i < x_tpc1.size(); ++i){
+        Eigen::Vector3d pt(x_tpc1[i] - cx1, y_tpc1[i] - cy1, z_tpc1[i] - cz1);
+        cov += std::abs(w_tpc1[i]) * (pt * pt.transpose());
+      }
+      cov /= dE_tpc1;
+      Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(cov);
+      Eigen::Vector3d eigvals = solver.eigenvalues();
+      Eigen::Matrix3d eigvecs = solver.eigenvectors();
+      int maxIdx; eigvals.maxCoeff(&maxIdx);
+      Eigen::Vector3d dir = eigvecs.col(maxIdx);
+      if(dir(2) < 0) dir = -dir;
+      dEdirx[1] = dir(0); dEdiry[1] = dir(1); dEdirz[1] = dir(2);
+    }
   }
 
   dElowedges.clear(); dElowedges.resize(2);

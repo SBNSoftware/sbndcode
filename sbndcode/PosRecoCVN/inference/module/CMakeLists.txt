@@ -31,9 +31,20 @@ set(MODULE_LIBRARIES
     sbndcode_OpDetSim
     sbndcode_PosRecoCVN_inference_tf
 
+    Eigen3::Eigen
+
 )
 
 cet_build_plugin(PosRecoCVNProducer art::Module SOURCE PosRecoCVNProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+
+# NuSliceFilter and NuSliceAnalyzer need larpandora for PFParticleMetadata
+set(SLICE_LIBRARIES
+    ${MODULE_LIBRARIES}
+    larpandora::LArPandoraInterface
+)
+
+cet_build_plugin(NuSliceFilter   art::Module SOURCE NuSliceFilter_module.cc   LIBRARIES ${SLICE_LIBRARIES} )
+cet_build_plugin(NuSliceAnalyzer art::Module SOURCE NuSliceAnalyzer_module.cc LIBRARIES ${SLICE_LIBRARIES} )
 
 # Build ROOT dictionary
 art_dictionary(DICTIONARY_LIBRARIES

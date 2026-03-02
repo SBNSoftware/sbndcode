@@ -1,0 +1,41 @@
+# Minimal FCL for TPCPMTBarycenterMatching with SCE correction
+# Input: reco1 files (with OpFlashes and gaushit)
+# Output: MatchTree from tpcpmtbarycentermatchingSCE
+#
+# Sequence: pandora -> pandoraTrack -> pandoraSCE -> tpcpmtbarycentermatchingSCE
+
+#include "services_sbnd.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "scecorrections.fcl"
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+
+process_name: TPCPMTMatch
+
+services:
+{
+    TFileService: { fileName: "tpcpmtbarycentermatching_hist.root" }
+    @table::sbnd_data_services
+}
+
+physics:
+{
+    producers:
+    {
+        pandora:       @local::sbnd_pandora
+        pandoraTrack:  @local::sbnd_pandoraTrackCreation
+        pandoraSCE:    @local::scecorrection
+        tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
+    }
+
+    reco: [ pandora, pandoraTrack, pandoraSCE, tpcpmtbarycentermatchingSCE ]
+
+    trigger_paths: [ reco ]
+    end_paths: [ ]
+}
+
+# Configure pandoraSCE to use our pandora outputs
+physics.producers.pandoraSCE.PFPLabel: "pandora"
+physics.producers.pandoraSCE.TrackLabel: "pandoraTrack"
+physics.producers.pandoraSCE.T0Labels: []
+physics.producers.pandoraSCE.T0LabelsCorrectT0: []
+physics.producers.pandoraSCE.CorrectNoT0Tag: true

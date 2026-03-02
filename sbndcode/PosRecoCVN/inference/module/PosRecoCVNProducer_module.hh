@@ -63,6 +63,9 @@
 #include "larcore/Geometry/WireReadout.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
+// Eigen for PCA calculation
+#include <Eigen/Dense>
+
 
 #define xdet_size 1000
 #define ydet_size 1000
@@ -107,6 +110,7 @@ namespace opdet {
     std::vector<double> dEpromx, dEpromy, dEpromz;  // [cm]
     std::vector<double> dEtpc;                      // Total energy [MeV]
     std::vector<double> dEspreadx, dEspready, dEspreadz;  // RMS spread [cm]
+    std::vector<double> dEdirx, dEdiry, dEdirz;           // PCA 3D principal direction (unit vector, dEdirz >= 0)
     std::vector<std::vector<double>> dElowedges, dEmaxedges;  // Bounding box [cm]
 
     // Geant4 particle trajectories
@@ -131,6 +135,7 @@ namespace opdet {
       nuvT.clear(); nuvX.clear(); nuvY.clear(); nuvZ.clear(); nuvE.clear();
       dEpromx.clear(); dEpromy.clear(); dEpromz.clear(); dEtpc.clear();
       dEspreadx.clear(); dEspready.clear(); dEspreadz.clear();
+      dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
       dElowedges.clear(); dEmaxedges.clear();
       stepX.clear(); stepY.clear(); stepZ.clear(); stepT.clear();
       dE.clear(); E.clear();
@@ -216,6 +221,10 @@ namespace opdet {
     double diffX = -999.0, diffY = -999.0, diffZ = -999.0;  // Residuals [cm]
     double error3D = -999.0;  // Euclidean error [cm]
 
+    double predDirY = -999.0, predDirZ = -999.0;  // CNN direction prediction (normalized YZ)
+    double trueDirY = -999.0, trueDirZ = -999.0;  // PCA MC truth (YZ components)
+    double angularError = -999.0;                  // Sign-invariant angular error [rad]
+
     double nuvT = -999.0, nuvZ = -999.0, dEtpc = -999.0;
     int selectedTPC = -1;  // Selected TPC (0 or 1) based on flash PE
 
@@ -226,6 +235,9 @@ namespace opdet {
       predX = predY = predZ = -999.0;
       diffX = diffY = diffZ = -999.0;
       error3D = -999.0;
+      predDirY = predDirZ = -999.0;
+      trueDirY = trueDirZ = -999.0;
+      angularError = -999.0;
       nuvT = nuvZ = dEtpc = -999.0;
       selectedTPC = -1;
     }
@@ -374,7 +386,10 @@ private:
     std::vector<double> &dEspready,
     std::vector<double> &dEspreadz,
     std::vector<std::vector<double>> &dElowedges,
-    std::vector<std::vector<double>> &dEmaxedges);
+    std::vector<std::vector<double>> &dEmaxedges,
+    std::vector<double> &dEdirx,
+    std::vector<double> &dEdiry,
+    std::vector<double> &dEdirz);
 
   // Default value for invalid/missing MC truth data
   static constexpr double fDefaultSimIDE = -999.;
@@ -399,6 +414,11 @@ private:
   std::vector<int> fG4BeamWindow;               // Beam timing window [μs]
   std::vector<int> fKeepPDGCode;                // PDG codes to keep in MC particle list
 
+  // Active volume for neutrino vertex filter (training pipeline compatibility)
+  std::vector<double> fActiveVolumeX;           // Neutrino vertex X range [cm] (default: -200, 200)
+  std::vector<double> fActiveVolumeY;           // Neutrino vertex Y range [cm] (default: -200, 200)
+  std::vector<double> fActiveVolumeZ;           // Neutrino vertex Z range [cm] (default: 0, 500)
+
   // Output configuration
   bool fSaveOpHits;                             // Include OpHit details in output
   bool fSavePixelMapVars;                       // Save full PixelMapVars data product
@@ -409,7 +429,8 @@ private:
   std::string fUncoatedPMTMapPath;              // Path to uncoated PMT spatial map CSV
 
   // TensorFlow model configuration
-  std::string fModelPath;                       // Path to frozen TensorFlow model (.pb)
+  std::string fModelPath;                       // Path to position model (relative)
+  std::string fDirModelPath;                    // Path to direction model (relative)
   std::string fProcessingMode;                  // Processing mode: MC_testing, MC_inference, DATA_inference
   std::vector<std::string> fInputNames;         // TensorFlow input tensor names
   std::vector<std::string> fOutputNames;        // TensorFlow output tensor names
@@ -439,7 +460,8 @@ private:
   std::vector<std::vector<int>> fUncoatedPMTMap;  // Uncoated PMT channel map [Y][Z]
 
   // ========== TensorFlow inference ==========
-  std::unique_ptr<tf::Graph> fTFGraph;          // TensorFlow graph for CNN inference
+  std::unique_ptr<tf::Graph> fTFGraph;          // TensorFlow graph for position model
+  std::unique_ptr<tf::Graph> fTFDirGraph;       // TensorFlow graph for direction model
 
   // ========== Output TTree ==========
   TTree* fInferenceTree;                        // Simple TTree for performance analysis
