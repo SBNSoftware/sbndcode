@@ -2148,9 +2148,9 @@ void nuEBackgroundSignalCut_macro(){
     int CRUMBSCut = 1;
     int FVCut = 1;
     int primaryPFPCut = 1;
-    int razzledPDG2212Cut = 1;
-    int razzledPDG13Cut = 1;
-    int razzledPDG211Cut = 1;
+    int razzledPDG2212Cut = 0;
+    int razzledPDG13Cut = 0;
+    int razzledPDG211Cut = 0;
     int razzledPDG22Cut = 0;
     int razzledPDG11Cut = 0;
     int dEdxCut = 0;
@@ -2910,6 +2910,9 @@ void nuEBackgroundSignalCut_macro(){
     TH1F* completenessHighestEnergyPFP_muonLowMuonScore = new TH1F("completenessHighestEnergyPFP_muonLowMuonScore", "Completeness of Highest Energy PFP in Slice (Truth Matched to a Muon);Completeness;# of Events", 50, 0, 1);
     TH1F* completenessHighestEnergyPFP_muonHighMuonScore = new TH1F("completenessHighestEnergyPFP_muonHighMuonScore", "Completeness of Highest Energy PFP in Slice (Truth Matched to a Muon);Completeness;# of Events", 50, 0, 1);
     
+    TH1F* purityHighCompleteness_muonLowMuonScore = new TH1F("purityHighCompleteness_muonLowMuonScore", "Purity of Highest Energy PFP in Slice (Truth Matched to a Muon with Low Completeness and Low Razzled Muon Score);Purity;# of Events", 50, 0, 1);
+    TH1F* purityHighCompleteness_muonHighMuonScore = new TH1F("purityHighCompleteness_muonHighMuonScore", "Purity of Highest Energy PFP in Slice (Truth Matched to a Muon with Low Completeness and Low Razzled Muon Score);Purity;# of Events", 50, 0, 1);
+
     // Plots looking at slices where the highest energy PFP is a muon but has a slow razzled muon score
     double lowChargedPiScore = 0.06; double highChargedPiScore = 0.7;
     TH1F* dEdxHighestEnergyPFP_chargedPiLowChargedPiScore = new TH1F("dEdxHighestEnergyPFP_chargedPiLowChargedPiScore", "dE/dx of Highest Energy PFP in Slice (Truth Matched to a Charged Pion);dE/dx (MeV cm^{-1});# of Events", 40, 0, 10);
@@ -6223,6 +6226,13 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_muonLowMuonScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_muonLowMuonScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_muonLowMuonScore->Fill(highestEnergy_completeness, weight);
+                                   
+                                    if(highestEnergy_completeness > 0.8) purityHighCompleteness_muonLowMuonScore->Fill(highestEnergy_purity, weight);
+
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Muon low razzled muon score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
 
                                 } else if(highestEnergy_razzledPDG13 > 0.7){
                                     // High Muon Score
@@ -6233,6 +6243,11 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_muonHighMuonScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_muonHighMuonScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_muonHighMuonScore->Fill(highestEnergy_completeness, weight);
+                                    
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Muon high razzled muon score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
                                 }
 
                                 if(highestEnergy_razzledBestPDG == 11){
@@ -6564,6 +6579,11 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_chargedPiLowChargedPiScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_chargedPiLowChargedPiScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_chargedPiLowChargedPiScore->Fill(highestEnergy_completeness, weight);
+                                    
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Charged Pi low razzled charged pi score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
 
                                 } else if(highestEnergy_razzledPDG211 > 0.7){
                                     // High Charged Pi Score
@@ -6574,6 +6594,11 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_chargedPiHighChargedPiScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_chargedPiHighChargedPiScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_chargedPiHighChargedPiScore->Fill(highestEnergy_completeness, weight);
+                                    
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Charged Pi high razzled charged pi score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
                                 }
                                 
                                 if(highestEnergy_razzledBestPDG == 11){
@@ -6745,6 +6770,11 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_photonLowElectronScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_photonLowElectronScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_photonLowElectronScore->Fill(highestEnergy_completeness, weight);
+                                    
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Photon low razzled electron score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
 
                                 } else if(highestEnergy_razzledPDG11 > 0.7){
                                     // High Charged Pi Score
@@ -6755,6 +6785,11 @@ void nuEBackgroundSignalCut_macro(){
                                     if(highestEnergy_numHits != -999999) numHitsHighestEnergyPFP_photonHighElectronScore->Fill(highestEnergy_numHits, weight);
                                     if(highestEnergy_purity != -999999) purityHighestEnergyPFP_photonHighElectronScore->Fill(highestEnergy_purity, weight);
                                     if(highestEnergy_completeness != -999999) completenessHighestEnergyPFP_photonHighElectronScore->Fill(highestEnergy_completeness, weight);
+                                
+                                    std::cout << "======" << std::endl;
+                                    std::cout << "Photon high razzled electron score: signal = " << signal << ", DLCurrent = " << DLCurrent << ", runID = " << runID << ", subRunID = " << subRunID << ", eventID = " << eventID << ", slice ID = " << reco_sliceID->at(slice) << ", PFP ID = " << highestEnergy_PFPID << std::endl;
+                                    std::cout << "Razzled Scores: Muon = " << highestEnergy_razzledPDG13 << ", Photon = " << highestEnergy_razzledPDG22 << ", Charged Pion = " << highestEnergy_razzledPDG211 << ", Proton = " << highestEnergy_razzledPDG2212 << ", Electron = " << highestEnergy_razzledPDG11 << std::endl;
+                                    std::cout << "======" << std::endl;
                                 }
                                 
                                 if(highestEnergy_razzledBestPDG == 11){
@@ -12075,6 +12110,7 @@ void nuEBackgroundSignalCut_macro(){
     drawPlotFeatures(numHitsHighestEnergyPFP_muonLowMuonScore, numHitsHighestEnergyPFP_muonHighMuonScore, 999, 999, 999, 999, (base_path + "numHits_muonLowVSHighMuonScore_DLNuE.pdf").c_str(), "topRight", ("Razzled Muon Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowMuonScore).str()).c_str(), ("Razzled Muon Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highMuonScore).str()).c_str(), true);
     drawPlotFeatures(purityHighestEnergyPFP_muonLowMuonScore, purityHighestEnergyPFP_muonHighMuonScore, 999, 999, 999, 999, (base_path + "purity_muonLowVSHighMuonScore_DLNuE.pdf").c_str(), "topRight", ("Razzled Muon Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowMuonScore).str()).c_str(), ("Razzled Muon Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highMuonScore).str()).c_str(), true);
     drawPlotFeatures(completenessHighestEnergyPFP_muonLowMuonScore, completenessHighestEnergyPFP_muonHighMuonScore, 999, 999, 999, 999, (base_path + "completeness_muonLowVSHighMuonScore_DLNuE.pdf").c_str(), "topRight", ("Razzled Muon Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowMuonScore).str()).c_str(), ("Razzled Muon Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highMuonScore).str()).c_str(), true);
+    drawPlotFeatures(purityHighCompleteness_muonLowMuonScore, purityHighCompleteness_muonLowMuonScore, 999, 999, 999, 999, (base_path + "purity_muonHighCompletenessLowMuonScore_DLNuE.pdf").c_str(), "topRight", ("Razzled Muon Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowMuonScore).str()).c_str(), ("Razzled Muon Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highMuonScore).str()).c_str(), true);
     
     drawPlotFeatures(dEdxHighestEnergyPFP_chargedPiLowChargedPiScore, dEdxHighestEnergyPFP_chargedPiHighChargedPiScore, 999, 999, 999, 999, (base_path + "dEdx_chargedPiLowVSHighChargedPiScore_DLNuE.pdf").c_str(), "topRight", ("Razzled #pi^{#pm} Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowChargedPiScore).str()).c_str(), ("Razzled #pi^{#pm} Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highChargedPiScore).str()).c_str(), true);
     drawPlotFeatures(energyHighestEnergyPFP_chargedPiLowChargedPiScore, energyHighestEnergyPFP_chargedPiHighChargedPiScore, 999, 999, 999, 999, (base_path + "energy_chargedPiLowVSHighChargedPiScore_DLNuE.pdf").c_str(), "topRight", ("Razzled #pi^{#pm} Score < " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << lowChargedPiScore).str()).c_str(), ("Razzled #pi^{#pm} Score > " + static_cast<std::ostringstream&&>(std::ostringstream() << std::setprecision(1) << std::defaultfloat << highChargedPiScore).str()).c_str(), true);
