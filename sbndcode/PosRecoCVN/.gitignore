@@ -1,0 +1,4 @@
+# Trained model directories (large binaries — store externally)
+inference/tf/*/saved_model/
+inference/tf/v*/
+inference/module/v*/
