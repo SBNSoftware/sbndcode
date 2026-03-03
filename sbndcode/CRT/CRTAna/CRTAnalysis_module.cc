@@ -342,6 +342,7 @@ private:
   std::vector<bool>                  _tpc_tr_matchable;
   std::vector<bool>                  _tpc_tr_matched;
   std::vector<bool>                  _tpc_tr_good_match;
+  std::vector<double>                _tpc_tr_xshift;
   std::vector<double>                _tpc_tr_ts0;
   std::vector<double>                _tpc_tr_ts1;
   std::vector<std::vector<int>>      _tpc_tr_taggers;
@@ -630,6 +631,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_sp_z", "std::vector<double>", &_tpc_sp_z);
       fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
       fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
+      fTree->Branch("tpc_tr_xshift", "std::vector<double>", &_tpc_tr_xshift);
       fTree->Branch("tpc_tr_ts0", "std::vector<double>", &_tpc_tr_ts0);
       fTree->Branch("tpc_tr_ts1", "std::vector<double>", &_tpc_tr_ts1);
       fTree->Branch("tpc_tr_taggers", "std::vector<std::vector<int>>", &_tpc_tr_taggers);
@@ -1685,6 +1687,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_matchable.resize(nTracks);
   _tpc_tr_matched.resize(nTracks);
   _tpc_tr_good_match.resize(nTracks);
+  _tpc_tr_xshift.resize(nTracks);
   _tpc_tr_ts0.resize(nTracks);
   _tpc_tr_ts1.resize(nTracks);
   _tpc_tr_taggers.resize(nTracks);
@@ -1797,7 +1800,11 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
         {
           const anab::T0 trackMatch = tracksToTrackMatches.data(track.key()).ref();
 
+          const int driftDirection     = TPCGeoUtil::DriftDirectionFromHits(geometryService, trackHits);
+          const double crtShiftingTime = fDataMode ? crttrack->Ts0() * 1e-3 : crttrack->Ts1() * 1e-3;
+
           _tpc_tr_matched[nActualTracks] = true;
+          _tpc_tr_xshift[nActualTracks]  = driftDirection * crtShiftingTime * detProp.DriftVelocity();
           _tpc_tr_ts0[nActualTracks]     = crttrack->Ts0();
           _tpc_tr_ts1[nActualTracks]     = crttrack->Ts1();
           _tpc_tr_score[nActualTracks]   = trackMatch.TriggerConfidence();
@@ -1821,6 +1828,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       else
         {
           _tpc_tr_matched[nActualTracks] = false;
+          _tpc_tr_xshift[nActualTracks]  = -std::numeric_limits<double>::max();
           _tpc_tr_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_score[nActualTracks]   = -std::numeric_limits<double>::max();
