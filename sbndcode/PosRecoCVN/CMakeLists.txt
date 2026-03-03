@@ -1,6 +1,7 @@
-add_subdirectory(inference/module)
-add_subdirectory(inference/tf)
-add_subdirectory(fcls)
+add_subdirectory(3_inference_larsoft_module/module)
+add_subdirectory(3_inference_larsoft_module/tf)
+add_subdirectory(3_inference_larsoft_module/fcls)
 add_subdirectory(pmt_maps)
+add_subdirectory(1_training_data_preparation)
 install_fhicl()
 

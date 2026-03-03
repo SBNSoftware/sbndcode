@@ -1,0 +1,89 @@
+//==============================================================================
+// run_pos_inference_data_nuslice.fcl
+//
+// High-purity neutrino sample: ResNet CNN inference + TPC slice analysis
+//
+// Input:  reco1 data files (gaushit + OpFlashes, NO prior Pandora)
+// Output: TTree with:
+//   - CNN position prediction (from ResNet on optical data)
+//   - TPC charge barycenter and PCA of the selected neutrino slice
+//   - Pandora vertex and NuScore of the selected slice
+//
+// Neutrino selection cuts (applied before ResNet):
+//   - is_clear_cosmic == 0
+//   - nu_score > 0.6
+//   - Pandora vertex inside fiducial volume
+//
+// Processing chain per event:
+//   [pandora]         -> run Pandora on gaushit hits from reco1
+//   [nuselector]      -> NuSliceFilter: discard event if no neutrino slice passes cuts
+//                        produces bestSliceID data product for downstream use
+//   [ResNetInference] -> ResNet CNN: optical position prediction
+//   [nusliceana]      -> NuSliceAnalyzer: reads bestSliceID, TPC SpacePoint PCA, TTree fill
+//==============================================================================
+
+#include "pandoramodules_sbnd.fcl"
+#include "run_pos_dir_inference.fcl"
+
+process_name: PosRecoCVNNuSlice
+
+//==============================================================================
+// PANDORA RECONSTRUCTION (runs on gaushit from reco1)
+//==============================================================================
+physics.producers.pandora: @local::sbnd_pandora
+// Data mode: disable MC particle linking
+physics.producers.pandora.EnableMCParticles: false
+
+//==============================================================================
+// NEUTRINO SLICE FILTER
+//==============================================================================
+physics.filters:
+{
+  nuselector:
+  {
+    module_type:   "NuSliceFilter"
+    PandoraLabel:  "pandora"
+    NuScoreCut:    0.6
+    FiducialVolumeX: [-180.0, 180.0]   # cm
+    FiducialVolumeY: [-185.0, 185.0]   # cm
+    FiducialVolumeZ: [10.0,   490.0]   # cm
+    Verbosity:     0
+  }
+}
+
+//==============================================================================
+// TPC + CNN ANALYZER
+//==============================================================================
+physics.analyzers:
+{
+  nusliceana:
+  {
+    module_type:   "NuSliceAnalyzer"
+    PandoraLabel:  "pandora"
+    FilterLabel:   "nuselector"
+    ResNetLabel:   "ResNetInference"
+    Verbosity:     0
+  }
+}
+
+//==============================================================================
+// EXECUTION PATHS
+//==============================================================================
+// Trigger path: pandora -> filter (drops non-neutrino events) -> ResNet -> analyzer
+// nusliceana runs in the same trigger path so it only fills the TTree for events
+// that pass nuselector (NuScore > 0.6, FV, is_clear_cosmic == 0).
+physics.reco: [ pandora, nuselector, ResNetInference, nusliceana ]
+physics.trigger_paths: [ reco ]
+
+# No end paths needed: both TTrees (ResNetInference + nusliceana) go to TFileService
+physics.end_paths: []
+
+//==============================================================================
+// RESNET OUTPUT CONFIGURATION
+//==============================================================================
+// Enable PixelMapVars data product so NuSliceAnalyzer can read CNN predictions
+physics.producers.ResNetInference.SavePixelMapVars: true
+
+// Keep the TTree output from ResNetInference as well (goes to TFileService)
+// Both TTrees (ResNetInference's and nusliceana's) are written to ttree_analysis_*.root
+// under separate directories by TFileService

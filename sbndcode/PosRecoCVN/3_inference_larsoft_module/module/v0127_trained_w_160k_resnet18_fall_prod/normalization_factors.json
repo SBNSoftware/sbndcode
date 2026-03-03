@@ -1,0 +1,35 @@
+{
+  "normalization_factors": null,
+  "coord_ranges": {
+    "x": [
+      0,
+      200
+    ],
+    "y": [
+      -200,
+      200
+    ],
+    "z": [
+      0,
+      500
+    ],
+    "pca_y": [
+      -1,
+      1
+    ],
+    "pca_z": [
+      -1,
+      1
+    ]
+  },
+  "image_config": {
+    "max_channels": 312,
+    "selection_method": "max"
+  },
+  "model_info": {
+    "epochs_trained": 45,
+    "final_val_loss": 0.011053540743887424,
+    "training_events": 160074,
+    "validation_events": 17785
+  }
+}
