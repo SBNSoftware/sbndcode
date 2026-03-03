@@ -117,7 +117,7 @@ private:
   uint64_t _unix_start, _unix_end;
   int _n_events, _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
   double _area, _y_average, _ped_calib, _gain_calib, _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_peak,
-    _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_peak, _raw_max_chan_rate, _sh_rate, _sp_rate, _tr_rate,
+    _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_peak, _raw_max_chan_rate, _sh_rate, _sp_rate, _tr_rate, _tr_lim_angle_rate,
     _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_pe_peak_fit, _sh_pe_peak_fit_chi2, _sh_pe_peak_peak,
     _sh_sat_rate, _sh_sat_ratio_total, _sh_sat_ratio_peak, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak,
     _sp_pe_peak_fit, _sp_pe_peak_fit_chi2, _sp_pe_peak_peak, _sp_sat_rate, _sp_sat_ratio_total, _sp_sat_ratio_peak,
@@ -270,6 +270,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
     }
   if(fTrackLA)
     {
+      fChannelTree->Branch("tr_lim_angle_rate", &_tr_lim_angle_rate);
       fChannelTree->Branch("tr_lim_angle_peak_fit", &_tr_lim_angle_peak_fit);
       fChannelTree->Branch("tr_lim_angle_peak_fit_chi2", &_tr_lim_angle_peak_fit_chi2);
       fChannelTree->Branch("tr_lim_angle_peak_fit_converged", &_tr_lim_angle_peak_fit_converged);
@@ -992,6 +993,8 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
 
   if(fTrackLA && _tagger != kBottomTagger)
     {
+      Rate(hADCTrLA[window][ch], _tr_lim_angle_rate, window, fReconstructionWindow);
+
       PeakPeak(hADCTrLA[window][ch], _ped_calib, _tr_lim_angle_peak_peak);
       PeakFit(hADCTrLA[window][ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged, _channel_status, window);
 
@@ -1302,6 +1305,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _tr_by_length_peak_fit         = std::numeric_limits<double>::lowest();
   _tr_by_length_peak_fit_chi2    = std::numeric_limits<double>::lowest();
   _tr_by_length_peak_peak        = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_rate             = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_fit         = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_fit_chi2    = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_peak        = std::numeric_limits<double>::lowest();
