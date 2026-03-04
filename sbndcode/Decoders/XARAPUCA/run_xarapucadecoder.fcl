@@ -1,4 +1,6 @@
 #include "xarapucadecoder.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+#include "SBNDPTBDecoderDefaults.fcl"
 #include "frameshift_sbnd_data.fcl"
 
 process_name: XARAPUCADecoder
@@ -23,6 +25,8 @@ outputs: {
 physics: {
 
     producers: {
+        tdcdecoder: @local::spec_tdc_decoder_sbnd
+        ptbdecoder: @local::SBNDPTBDecoderDefaults
         frameshift: @local::frameshift_data
         xarapucadecoder: @local::xarapucadecoder    
     }
@@ -32,7 +36,7 @@ physics: {
     analyzers:{}
 
 
-    reco: [frameshift, xarapucadecoder]
+    reco: [tdcdecoder, ptbdecoder, frameshift, xarapucadecoder]
 
 
     # Defines the output stream, there could be more than one if using filters.
