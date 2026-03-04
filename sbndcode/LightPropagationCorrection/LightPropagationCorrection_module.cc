@@ -13,7 +13,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fOpFlashLabel_tpc1 ( p.get<std::string>("OpFlashLabel_tpc1") ),
     fSpacePointLabel( p.get<std::string>("SpacePointLabel") ),
     fOpHitsModuleLabel( p.get<std::string>("OpHitsModuleLabel") ),
-    fSPECTDCLabel( p.get<std::string>("SPECTDCLabel") ),
     fFlashMatchingTool( p.get<std::string>("FlashMatchingTool") ),
     fSaveCorrectionTree( p.get<bool>("SaveCorrectionTree") ),
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
@@ -25,12 +24,13 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     // 
     // More initializers here.
 {
+    fNOpChannels = fWireReadout.NOpChannels();
     // Initialize the TimeCorrectionVector PerChannel
-    for(size_t i = 0; i < fWireReadout.NOpChannels(); ++i) {
+    for(size_t i = 0; i <fNOpChannels; ++i) {
         fTimeCorrectionPerChannel.push_back(0.0); // Initialize with zero or any default value
     }
 
-    for(unsigned int opch=0; opch<fWireReadout.NOpChannels(); opch++){
+    for(unsigned int opch=0; opch<fNOpChannels; opch++){
         auto pdCenter = fWireReadout.OpDetGeoFromOpChannel(opch).GetCenter();
         fOpDetID.push_back(opch);
         fOpDetX.push_back(pdCenter.X());
@@ -195,25 +195,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         }
         this->GetPropagationTimeCorrectionPerChannel();
         
-        // Get the SPECTDC product required to go to the RWM reference frame
-
-        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-        e.getByLabel(fSPECTDCLabel, tdcHandle);
-        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-            std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            ResetSliceInfo();
-            continue;
-        }
-        else{
-            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-            for (size_t i=0; i<tdc_v.size(); i++){
-                auto tdc = tdc_v[i];
-                const uint32_t  ch = tdc.Channel();
-                const uint64_t  ts = tdc.Timestamp();
-                if(ch == 2) fRWMTime = ts%uint64_t(1e9);
-                if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
-            }
-        }
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
         if(fFlashMatchingTool == "OpT0Finder" ){
@@ -292,10 +273,10 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                                 100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
             newFlashTime = flasht0;
             sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
-            correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+            correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
             correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
             correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
@@ -322,8 +303,6 @@ void sbnd::LightPropagationCorrection::beginJob()
         fTree->Branch("eventID", &fEvent, "eventID/i");
         fTree->Branch("runID", &fRun, "runID/i");
         fTree->Branch("subrunID", &fSubrun, "subrunID/i");
-        fTree->Branch("RWMTime", &fRWMTime);
-        fTree->Branch("EventTriggerTime", &fEventTriggerTime);
         fTree->Branch("NuScore", &fNuScore);
         fTree->Branch("FMScore", &fFMScore);
         fTree->Branch("OpFlashTimeOld", &fOpFlashTimeOld);
@@ -357,8 +336,6 @@ void sbnd::LightPropagationCorrection::ResetEventVars()
         fRun = 0;
         fSubrun = 0;
         _fNuScore = 0.0;
-        fRWMTime=-99999.;
-        fEventTriggerTime=-99999.;
         fNuScore.clear();
         fFMScore.clear();
         fOpFlashTimeOld.clear();
@@ -418,7 +395,7 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fSpacePointY.clear();
     fSpacePointZ.clear();
     fSpacePointIntegral.clear();
-    fTimeCorrectionPerChannel.resize(312, 0.0); // Reset the time correction vector for each channel
+    fTimeCorrectionPerChannel.resize(fNOpChannels, 0.0); // Reset the time correction vector for each channel
     fChargeBarycenterX.assign(2, 0.0);
     fChargeBarycenterY.assign(2, 0.0);
     fChargeBarycenterZ.assign(2, 0.0);

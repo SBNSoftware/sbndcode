@@ -39,6 +39,7 @@
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
@@ -143,7 +144,6 @@ private:
     // TDC stuff
     std::vector<uint64_t> _tdc_ch3;
     std::vector<uint64_t> _tdc_ch3_ps;
-    std::vector<uint64_t> _tdc_ch4;
 
     //PTB stuff
     std::vector<uint64_t> _ptb_hlt_trigger;
@@ -157,7 +157,7 @@ private:
     //---FHICL CONFIG PARAMETERS
     
     // Product label
-    art::InputTag fTimingRefLabel;
+    art::InputTag fFrameShiftLabel;
     art::InputTag fTdcDecodeLabel;
     art::InputTag fPtbDecodeLabel;
     art::InputTag fPmtDecodeLabel;
@@ -169,6 +169,9 @@ private:
 
     //PTB
     std::vector<int> fPtbAllowedHlts; 
+
+    //FrameShift
+    uint64_t _frameDefault;
 
     // DAQ
     double fWfLength;
@@ -233,7 +236,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     : EDProducer{p}  // 
     // More initializers here.
 {
-    fTimingRefLabel = p.get<art::InputTag>("TimingRefLabel", "pmtdecoder");
+    fFrameShiftLabel = p.get<art::InputTag>("FrameShiftLabel", "frameshift");
     fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
     fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
 
@@ -368,27 +371,18 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     if (fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
-    //------------------------PMT Timing--------------------------//
-    art::Handle<raw::TimingReferenceInfo> timingRefHandle;
-    e.getByLabel(fTimingRefLabel, timingRefHandle);
+    //------------------------Frame Shift--------------------------//
+    art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
+    e.getByLabel(fFrameShiftLabel, frameShiftHandle);
 
-    if (!timingRefHandle.isValid()){
-        throw cet::exception("WaveformAlignment") << "No raw::TimingReferenceInfo found w/ tag " << fTimingRefLabel << ". Check data quality!";
+    if (!frameShiftHandle.isValid()){
+        throw cet::exception("WaveformAlignment") << "No sbnd::timing::FrameShiftInfo found w/ tag " << fFrameShiftLabel << ". Check data quality!";
     }
     else{
-        raw::TimingReferenceInfo const& pmt_timing(*timingRefHandle);
-        
-        _pmt_timing_type = pmt_timing.timingType;
-        _pmt_timing_ch = pmt_timing.timingChannel;
-
-        if (fDebugTimeRef){
-            std::cout << "Timing Reference For Decoding PMT" << std::endl;
-            std::cout << "   Type = " << _pmt_timing_type << " (SPECTDC = 0; PTB HLT = 1; CAEN-only = 3)." << std::endl;
-            std::cout << "   Channel = " << _pmt_timing_ch << " (TDC ETRIG = 4; PTB BNB Beam+Light = 2)." << std::endl;
-        }
+        _frameDefault = frameShiftHandle->FrameDefault();
+        _pmt_timing_type = frameShiftHandle->TimingTypeDefault();
     }
-    timingRefHandle.removeProduct();
-    
+
     //---------------------------TDC-----------------------------//
     art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
     e.getByLabel(fTdcDecodeLabel, tdcHandle);
@@ -408,12 +402,9 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             const uint32_t  ch = tdc.Channel();
             const uint64_t  ts = tdc.Timestamp();
 
-            if ((ch == 3) || (ch ==4)){
-                if (ch == 3) {
-                    _tdc_ch3.push_back(ts);
-                    _tdc_ch3_ps.push_back(tdc.TimestampPs());
-                }
-                if (ch == 4) _tdc_ch4.push_back(ts);
+            if (ch == 3){
+                _tdc_ch3.push_back(ts);
+                _tdc_ch3_ps.push_back(tdc.TimestampPs());
 
                 if (fDebugTimeRef) std::cout << "Ch " << name
                                     << " sec (s) = " << ts/uint64_t(1e9)
@@ -560,21 +551,21 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 }else{
                     //TDC as reference frame if timing type is 0 
                     if (_pmt_timing_type == 0){
-                        if (_tdc_ch4.size() == 0 || _tdc_ch3.size() == 0 || _tdc_ch3_ps.size() == 0){
+                        if ( _tdc_ch3.size() == 0 || _tdc_ch3_ps.size() == 0){
                             status = kMissingTDC;
                         }else{
                             double tempShift = 0;
                             if (_tdc_ch3_ps.front() == 0){ //old decode version does not have picosecond
-                                tempShift = ComputeShift( _tdc_ch4.front()
-                                                          , wf->TimeStamp()
+                                tempShift = ComputeShift( _frameDefault //decodeFrame
+                                                          , wf->TimeStamp() //decodeTs
                                                           , tickFtrig
                                                           , _tdc_ch3
                                                           , fTdc3CaenOffset[wf->ChannelNumber()]
                                                           , false
                                                           );
                             }else{
-                                tempShift = ComputeShiftPs( _tdc_ch4.front()
-                                                            , wf->TimeStamp()
+                                tempShift = ComputeShiftPs( _frameDefault //decodeFrame
+                                                            , wf->TimeStamp() //decodeTs
                                                             , tickFtrig
                                                             , _tdc_ch3
                                                             , _tdc_ch3_ps
@@ -597,20 +588,10 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     //OR timing type is 0 but cannot find the TDC frame
                     //TDC status error will be replaced with PTB status error
                     if((_pmt_timing_type == 1) | (status == kMissingTDC) | (status == kOutOfBoundTDC)){
-                        //Find the HLT of ETRIG
-                        uint64_t tsFrame = std::numeric_limits<uint64_t>::min();
-                        for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
-                            for (size_t j = 0; j < fPtbAllowedHlts.size(); j++){
-                                if (_ptb_hlt_trunmask[i] == fPtbAllowedHlts[j]){
-                                    tsFrame = _ptb_hlt_unmask_timestamp[i];
-                                    break;
-                                }
-                            }
-                        }
-                        if(tsFrame == std::numeric_limits<uint64_t>::min() || _ptb_hlt_unmask_timestamp.size() == 0){   
+                        if( _ptb_hlt_unmask_timestamp.size() == 0){   
                             status = kMissingPTB;
                         }else{
-                            double tempShift = ComputeShift( tsFrame
+                            double tempShift = ComputeShift( _frameDefault
                                                             , wf->TimeStamp()
                                                             , tickFtrig
                                                             , _ptb_hlt_unmask_timestamp
@@ -877,7 +858,6 @@ void sbnd::WaveformAlignment::beginJob()
     fTree->Branch("event", &_event);
     fTree->Branch("tdc_ch3", &_tdc_ch3);
     fTree->Branch("tdc_ch3_ps", &_tdc_ch3_ps);
-    fTree->Branch("tdc_ch4", &_tdc_ch4);
 
     fTree->Branch("pmt_timing_type", &_pmt_timing_type);
     fTree->Branch("pmt_timing_ch", &_pmt_timing_ch);
@@ -911,12 +891,13 @@ void sbnd::WaveformAlignment::ResetEventVars()
 {
     _run = -1; _subrun = -1; _event = -1;
 
+   _frameDefault = sbnd::timing::kInvalidTimestamp; 
+
     _pmt_timing_type = std::numeric_limits<uint16_t>::max();
     _pmt_timing_ch = std::numeric_limits<uint16_t>::max();
    
     _tdc_ch3.clear();
     _tdc_ch3_ps.clear();
-    _tdc_ch4.clear();
     
     _ptb_hlt_trigger.clear();
     _ptb_hlt_timestamp.clear();
@@ -1168,7 +1149,7 @@ bool sbnd::WaveformAlignment::CheckShift(const double shift, const int boardId)
     if (boardId == 8){
         if ((shift > fTimingJitterUpperBound) | (shift < fTimingJitterLowerBound)){
             if (fDebugFtrig)  std::cout << "    board id = " << boardId 
-                                        << " has jittering " << shift 
+                                        << " has jittering " << std::setprecision(9) << shift 
                                         << " out of bound [" << fTimingJitterLowerBound << ", " << fTimingJitterUpperBound << "]"
                                         <<  std::endl;
             return false;
@@ -1176,7 +1157,7 @@ bool sbnd::WaveformAlignment::CheckShift(const double shift, const int boardId)
     }else{
         if ((shift > fPmtJitterUpperBound) | (shift < fPmtJitterLowerBound)){
             if (fDebugFtrig)  std::cout << "    board id = " << boardId 
-                                        << " has jittering " << shift 
+                                        << " has jittering " << std::setprecision(9)<< shift 
                                         << " out of bound [" << fPmtJitterLowerBound << ", " << fPmtJitterUpperBound << "]"
                                         <<  std::endl;
             return false;
