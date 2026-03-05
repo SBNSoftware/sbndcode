@@ -70,7 +70,8 @@ public:
 
   void AnalyseCRTSpacePoints(const std::vector<art::Ptr<CRTSpacePoint>> &CRTSpacePointVec,
                              const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                             const art::FindManyP<CRTStripHit> &clustersToStripHits);
+                             const art::FindManyP<CRTStripHit> &clustersToStripHits,
+                             const art::FindOneP<CRTTrack> &spacepointsToTracks);
 
   void ResetSPVariables();
 
@@ -171,6 +172,9 @@ private:
   std::vector<double>  _sp_sh_calib_offset_ts0_set;
   std::vector<double>  _sp_sh_cable_length_ts1_set;
   std::vector<double>  _sp_sh_calib_offset_ts1_set;
+  bool                 _sp_has_track;
+  double               _sp_norm_angle;
+  double               _sp_path_length;
 
   double   _tr_start_x;
   double   _tr_start_y;
@@ -324,6 +328,9 @@ sbnd::crt::CRTTimingAnalysis::CRTTimingAnalysis(fhicl::ParameterSet const& p)
   fSPTree->Branch("sp_sh_calib_offset_ts0_set", "std::vector<double>", &_sp_sh_calib_offset_ts0_set);
   fSPTree->Branch("sp_sh_cable_length_ts1_set", "std::vector<double>", &_sp_sh_cable_length_ts1_set);
   fSPTree->Branch("sp_sh_calib_offset_ts1_set", "std::vector<double>", &_sp_sh_calib_offset_ts1_set);
+  fSPTree->Branch("sp_has_track", &_sp_has_track);
+  fSPTree->Branch("sp_norm_angle", &_sp_norm_angle);
+  fSPTree->Branch("sp_path_length", &_sp_path_length);
 
   fTrTree = fs->make<TTree>("tracks","");
   fTrTree->Branch("run", &_run);
@@ -495,6 +502,9 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   // Get CRTSpacePoint to CRTCluster Assns
   art::FindOneP<CRTCluster> spacepointsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
 
+  // Get CRTSpacePoint to CRTTrack Assns
+  art::FindOneP<CRTTrack> spacepointsToTracks(CRTSpacePointHandle, e, fCRTTrackModuleLabel);
+
   // Get CRTClusters
   art::Handle<std::vector<CRTCluster>> CRTClusterHandle;
   e.getByLabel(fCRTClusterModuleLabel, CRTClusterHandle);
@@ -507,7 +517,7 @@ void sbnd::crt::CRTTimingAnalysis::analyze(art::Event const& e)
   art::FindManyP<CRTStripHit> clustersToStripHits(CRTClusterHandle, e, fCRTClusterModuleLabel);
 
   // Fill CRTSpacePoint variables
-  AnalyseCRTSpacePoints(CRTSpacePointVec, spacepointsToClusters, clustersToStripHits);
+  AnalyseCRTSpacePoints(CRTSpacePointVec, spacepointsToClusters, clustersToStripHits, spacepointsToTracks);
 
   // Get CRTTracks
   art::Handle<std::vector<CRTTrack>> CRTTrackHandle;
@@ -736,13 +746,15 @@ void sbnd::crt::CRTTimingAnalysis::SortReferencing()
 
 void sbnd::crt::CRTTimingAnalysis::AnalyseCRTSpacePoints(const std::vector<art::Ptr<CRTSpacePoint>> &CRTSpacePointVec,
                                                          const art::FindOneP<CRTCluster> &spacepointsToClusters,
-                                                         const art::FindManyP<CRTStripHit> &clustersToStripHits)
+                                                         const art::FindManyP<CRTStripHit> &clustersToStripHits,
+                                                         const art::FindOneP<CRTTrack> &spacepointsToTracks)
 {
   for(auto const& sp : CRTSpacePointVec)
     {
       ResetSPVariables();
 
       const art::Ptr<CRTCluster> cl = spacepointsToClusters.at(sp.key());
+      const art::Ptr<CRTTrack> tr   = spacepointsToTracks.at(sp.key());
 
       const std::vector<art::Ptr<CRTStripHit>> shs = clustersToStripHits.at(cl.key());
       const unsigned n_shs = shs.size();
@@ -790,6 +802,23 @@ void sbnd::crt::CRTTimingAnalysis::AnalyseCRTSpacePoints(const std::vector<art::
       _sp_single_timing_chain = timing_chain_set.size() == 1;
       _sp_timing_chain        = _sp_single_timing_chain ? *timing_chain_set.begin() : -1;
 
+      if(tr.isNonnull())
+        {
+          _sp_has_track = true;
+
+          TVector3 normal;
+          if(_sp_tagger == kBottomTagger || _sp_tagger == kTopLowTagger || _sp_tagger == kTopHighTagger)
+            normal = TVector3(0, 1, 0);
+          else if(_sp_tagger == kWestTagger || _sp_tagger == kEastTagger)
+            normal = TVector3(1, 0, 0);
+          else if(_sp_tagger == kSouthTagger || _sp_tagger == kNorthTagger)
+            normal = TVector3(0, 0, 1);
+
+          const TVector3 tr_dir(tr->Direction().X(), tr->Direction().Y(), tr->Direction().Z());
+          _sp_norm_angle  = TMath::RadToDeg() * normal.Angle(tr_dir);
+          _sp_path_length = 1. / TMath::Cos(normal.Angle(tr_dir));
+        }
+
       fSPTree->Fill();
 
       fSPTaggerMap[sp.key()]      = _sp_tagger;
@@ -824,8 +853,11 @@ void sbnd::crt::CRTTimingAnalysis::ResetSPVariables()
   _sp_ts1_rwm_ref_front_face               = std::numeric_limits<double>::lowest();
   _sp_ts1_ptb_hlt_beam_gate_ref_front_face = std::numeric_limits<double>::lowest();
   _sp_dts1                                 = std::numeric_limits<double>::lowest();
+  _sp_norm_angle                           = std::numeric_limits<double>::lowest();
+  _sp_path_length                          = std::numeric_limits<double>::lowest();
 
   _sp_single_timing_chain = false;
+  _sp_has_track           = false;
 
   _sp_sh_channel_set.clear();
   _sp_sh_mac5_set.clear();
