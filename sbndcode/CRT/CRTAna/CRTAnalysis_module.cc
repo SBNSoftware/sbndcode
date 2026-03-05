@@ -122,7 +122,7 @@ private:
   int _crt_timing_reference_type;
   int _crt_timing_reference_channel;
 
-  //mc truth
+  // True Particles (from G4)
   std::vector<int16_t>              _mc_trackid;
   std::vector<int16_t>              _mc_pdg;
   std::vector<int16_t>              _mc_status;
@@ -145,7 +145,7 @@ private:
   std::vector<double>               _mc_endpz;
   std::vector<double>               _mc_ende;
 
-  //G4 detector id
+  // True Energy Depositions
   std::vector<int16_t> _ide_trackid;
   std::vector<float>   _ide_e;
   std::vector<float>   _ide_entryx;
@@ -157,7 +157,7 @@ private:
   std::vector<float>   _ide_exitz;
   std::vector<float>   _ide_exitt;
 
-  //front end mother board
+  // Raw Readouts (FEBDatas)
   std::vector<uint16_t>              _feb_mac5;
   std::vector<int16_t>               _feb_tagger;
   std::vector<uint16_t>              _feb_flags;
@@ -167,7 +167,7 @@ private:
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
 
-  //strip hit to select the strip which has ADC above threshold
+  // Strip Hits
   std::vector<uint32_t> _sh_channel;
   std::vector<int16_t>  _sh_tagger;
   std::vector<double>   _sh_ts0;
@@ -186,7 +186,7 @@ private:
   std::vector<double>   _sh_truth_energy;
   std::vector<double>   _sh_truth_time;
 
-  //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
+  // Clusters and their corresponding SpacePoints
   std::vector<double>                _cl_ts0;
   std::vector<double>                _cl_ts1;
   std::vector<uint32_t>              _cl_unixs;
@@ -232,7 +232,7 @@ private:
   std::vector<double>                _cl_sp_dts1;
   std::vector<bool>                  _cl_sp_complete;
 
-  //backtrack truth information from reco level
+  // True Deposits per particle per tagger
   std::vector<int>     _td_tag_trackid;
   std::vector<int>     _td_tag_pdg;
   std::vector<int16_t> _td_tag_tagger;
@@ -243,6 +243,7 @@ private:
   std::vector<double>  _td_tag_z;
   std::vector<bool>    _td_tag_reco_status;
 
+  // True Deposits per particle
   std::vector<int>     _td_trackid;
   std::vector<int>     _td_pdg;
   std::vector<double>  _td_energy;
@@ -251,7 +252,7 @@ private:
   std::vector<bool>    _td_reco_status;
   std::vector<bool>    _td_reco_triple;
 
-  //track level information
+  // Tracks
   std::vector<double>                _tr_start_x;
   std::vector<double>                _tr_start_y;
   std::vector<double>                _tr_start_z;
@@ -297,7 +298,7 @@ private:
   std::vector<double>                _tr_truth_theta;
   std::vector<double>                _tr_truth_phi;
 
-  // crt blob information
+  // Blobs
   std::vector<double>           _bl_ts0;
   std::vector<double>           _bl_ets0;
   std::vector<double>           _bl_ts1;
@@ -306,7 +307,7 @@ private:
   std::vector<int>              _bl_nsps;
   std::vector<std::vector<int>> _bl_nsps_per_tagger;
 
-  // tpc track information (including crt matching)
+  // TPC Tracks and their CRT matches
   std::vector<double>                _tpc_start_x;
   std::vector<double>                _tpc_start_y;
   std::vector<double>                _tpc_start_z;
@@ -354,14 +355,15 @@ private:
   std::vector<double>                _tpc_tr_end_z;
   std::vector<double>                _tpc_tr_score;
 
-  // ptb information (trigger board)
+  // Penn Trigger Board HLTs
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
 
+  // Penn Trigger Board LLTs
   std::vector<uint64_t> _ptb_llt_trigger;
   std::vector<uint64_t> _ptb_llt_timestamp;
 
-  // spec tdc information (timing board)
+  // SPEC TDC Timestamps
   std::vector<uint32_t>    _tdc_channel;
   std::vector<uint64_t>    _tdc_timestamp;
   std::vector<uint64_t>    _tdc_offset;
