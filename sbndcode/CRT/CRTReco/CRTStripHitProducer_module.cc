@@ -276,8 +276,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
 
       // Saturated?
-      const bool sat1 = sipm_adcs[adc_i]   == fADCSaturation;
-      const bool sat2 = sipm_adcs[adc_i+1] == fADCSaturation;
+      const bool sat1 = sipm_adcs[adc_i]   >= fADCSaturation;
+      const bool sat2 = sipm_adcs[adc_i+1] >= fADCSaturation;
 
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)
