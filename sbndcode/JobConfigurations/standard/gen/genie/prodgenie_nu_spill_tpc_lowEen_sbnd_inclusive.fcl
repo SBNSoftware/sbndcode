@@ -1,0 +1,58 @@
+# Workflow inspired by Marco del Tutto's 3 fhicls for beamdump DAR studies
+# Adapted to one ghicl (for now) for low energy uDAR neutrinos by Lucy Kotsiopoulou
+
+# Simulates GENIE neutrino interactions from the BNB beam 
+# with the beam spill structure, inside the TPC volume
+# (with a 10 cm padding on each side).
+
+#include "prodgenie_nu_spill_cryostat_sbnd.fcl"
+
+# Interactions in the tpc only
+#include "set_genie_tpc.fcl"
+
+
+
+
+
+
+# Flux in from dk2nu files with low energy uDAR and piDAR enabled
+# Instead of doing this: include "set_flux_lowE_enabled.fcl"
+# and adding tables in genie/gen/genie_sbnd.fcl
+# Set everything here:
+
+
+
+
+
+
+
+# Table that should be added to genie/gen/genie_sbnd/fcl:
+
+#
+# Booster Neutrino Beam, FHC mode, low energy uDAR & piDAR enabled, G4BNB v1.1.1, A                                                                                      
+#                                                                                                                                                                        
+sbnd_flux_g4bnb_1_1_1_lowE_enabled: {
+
+  FluxType:         "dk2nu"                
+  DetectorLocation: "SBND"                
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths: "/pnfs/sbnd/persistent/users/lucykots/G4BNB_muonDAR/1000n_5000p_pidar_udar/production_muDAR_piDAR_BooNE_50m_I174000A/all_NuBeam_files_fhc/"
+
+  FluxFiles: [ "NuBeam_production_muDAR_piDAR_BooNE_50m_I174000A_*.dk2nu.root" ]              
+}
+
+#
+# Booster Neutrino Beam, low energy uDAR & piDAR enabled
+#
+sbnd_flux_bnb_lowE_en: @local::sbnd_flux_g4bnb_1_1_1_lowE_enabled
+
+
+
+
+
+# Snippet in /gen/set_flux_lowE_enabled.fcl
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_lowE_en
+}

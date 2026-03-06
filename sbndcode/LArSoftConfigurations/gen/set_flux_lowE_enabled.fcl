@@ -5,7 +5,7 @@
 # Flux configurations are described here: (? are they)
 # https://sbnsoftware.github.io/sbndcode_wiki/The_SBND_flux_files.html
 
-physics.producers.generator: {
-     @table::physics.producers.generator
-     @table::sbnd_flux_bnb_lowE_en
-}
+# physics.producers.generator: {
+     # @table::physics.producers.generator
+     # @table::sbnd_flux_bnb_lowE_en
+# }
