@@ -155,6 +155,10 @@ private:
   std::vector<std::vector<std::vector<float>>> PE_1_AverageWaveform_SelectedChannels;
   std::vector<std::vector<float>> PE_1_Peak_SelectedChannels;
 
+  // NEW 
+  std::vector<std::vector<float>> NewBaseline_SelectedChannels;
+  std::vector<std::vector<float>> NoiseRMS_SelectedChannels;
+
   float EstimateBaseline(std::vector<float>& wf);
   float BaselineSTD(std::vector<float>& wf, float baseline);
   bool  SingleinPretrigger(std::vector<float>& wf);
@@ -216,6 +220,8 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
     Event_number_SelectedChannels.resize(fNSelectedChannels);
     Amplitude_highPEs_SelectedChannels.resize(fNSelectedChannels);
     TimeStamp_SelectedChannels.resize(fNSelectedChannels);
+    NewBaseline_SelectedChannels.resize(fNSelectedChannels);
+    NoiseRMS_SelectedChannels.resize(fNSelectedChannels);
   }
   if (fPEMode){
     PE_1_AverageWaveform_SelectedChannels.resize(fNSelectedChannels);
@@ -288,7 +294,11 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
       {
         fTree->Branch(("Peak_1PE_ch_" + std::to_string(fSelectedChannels[i])).c_str(), &PE_1_Peak_SelectedChannels[i]);
       }
+      fTree->Branch(("new_baseline_ch_" + std::to_string(fSelectedChannels[i])).c_str(),
+                    &NewBaseline_SelectedChannels[i]);
 
+      fTree->Branch(("noise_rms_ch_" + std::to_string(fSelectedChannels[i])).c_str(),
+                    &NoiseRMS_SelectedChannels[i]);
     }
 
   }
@@ -317,6 +327,71 @@ float callos::CALLOS::BaselineSTD(std::vector<float> &wf, float baseline) {
     return 0.0;
   }
   return std::sqrt(variance);
+}
+
+
+float ComputeMode(const std::vector<float>& values, float binWidth = 0.1)
+{
+    if (values.empty()) return 0.0;
+
+    float minVal = *std::min_element(values.begin(), values.end());
+    float maxVal = *std::max_element(values.begin(), values.end());
+
+    int nBins = static_cast<int>((maxVal - minVal) / binWidth) + 1;
+
+    std::vector<int> hist(nBins, 0);
+
+    for (auto v : values)
+    {
+        int bin = static_cast<int>((v - minVal) / binWidth);
+        if (bin >= 0 && bin < nBins)
+            hist[bin]++;
+    }
+
+    int maxBin = std::distance(hist.begin(),
+                  std::max_element(hist.begin(), hist.end()));
+
+    return minVal + maxBin * binWidth;
+}
+
+void ComputeBaselineMode(
+    const std::vector<float>& wf,
+    float& baseline_mode,
+    float& rms_mode,
+    int window = 15)
+{
+    const int N = wf.size();
+    const int half = window / 2;
+
+    std::vector<float> baseline_values;
+    std::vector<float> rms_values;
+
+    baseline_values.reserve(N);
+    rms_values.reserve(N);
+
+    for (int i = 0; i < N; ++i)
+    {
+        int start = std::max(0, i - half);
+        int end   = std::min(N, i + half + 1);
+
+        float sum = 0.0;
+        for (int j = start; j < end; ++j)
+            sum += wf[j];
+
+        float mean = sum / (end - start);
+
+        float var = 0.0;
+        for (int j = start; j < end; ++j)
+            var += (wf[j] - mean) * (wf[j] - mean);
+
+        var /= (end - start);
+
+        baseline_values.push_back(mean);
+        rms_values.push_back(std::sqrt(var));
+    }
+
+    baseline_mode = ComputeMode(baseline_values, 0.1);
+    rms_mode      = ComputeMode(rms_values, 0.02);
 }
 // bool callos::CALLOS::SingleinPretrigger(std::vector<float> &wf) {
 //   std::vector<float> wf0;
@@ -520,6 +595,7 @@ void callos::CALLOS::analyze(art::Event const& e)
         continue; // Skip waveforms that are too small
       }
 
+
       // std::vector<float> wf2;
       // wf2.assign(wave.begin()+38, wave.begin()+76);
       double baseline1 = std::accumulate(wf1.begin(), wf1.end(), 0.0f) / wf1.size();
@@ -543,6 +619,11 @@ void callos::CALLOS::analyze(art::Event const& e)
         // event_display_fft(wave, wfChannel);
         continue; // Skip noisy waveforms
       }
+
+      float baseline_mode = 0.0;
+      float rms_mode = 0.0;
+
+      ComputeBaselineMode(wave, baseline_mode, rms_mode, 15);
       // if (baselinestd1 > 0.7 && baselinestd1 <= 10.0){
       //   // if (fDEBUG) std::cout << "SimpleROIAlg::ProcessWaveform: baseline std is too high"<<std::endl;
       //   // waveform_wrong_baseline_channel.push_back(wfChannel);
@@ -627,6 +708,8 @@ void callos::CALLOS::analyze(art::Event const& e)
           Event_number_SelectedChannels[index].push_back(e.id().event());
           Amplitude_highPEs_SelectedChannels[index].push_back(max_waveform);
           TimeStamp_SelectedChannels[index].push_back(wfStartTime);
+          NewBaseline_SelectedChannels[index].push_back(baseline_mode);
+          NoiseRMS_SelectedChannels[index].push_back(rms_mode);
           // TimeStamp_SelectedChannels[index].push_back(e.id().event());
         }
         else {
@@ -730,7 +813,14 @@ void callos::CALLOS::analyze(art::Event const& e)
         // 70,70,70,70,70,70,70,70,
         // 70,70,70,70,70,70,70,70
         // };
-        std::vector<float> max_charge_channel_1PE(64, 65.0f);
+        // std::vector<float> max_charge_channel_1PE(64, 65.0f);
+
+        std::vector<float> max_charge_channel_1PE = {63,53,65,68,0,0,
+        64,56,50,63,61,
+        40,60,50,65,65,
+        64,63,45,50,42,
+        45,50,55,50,50,
+        50,50,50,50,65,64};
 
 
         // if (fDEBUG)
@@ -810,6 +900,8 @@ void callos::CALLOS::analyze(art::Event const& e)
       Charge_highPEs_SelectedChannels[i].clear();
       Amplitude_highPEs_SelectedChannels[i].clear();
       TimeStamp_SelectedChannels[i].clear();
+      NewBaseline_SelectedChannels[i].clear();  
+      NoiseRMS_SelectedChannels[i].clear();
       if (fPEMode)
       {
         PE_1_Peak_SelectedChannels[i].clear();
