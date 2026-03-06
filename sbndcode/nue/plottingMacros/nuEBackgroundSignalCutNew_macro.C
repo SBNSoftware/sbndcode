@@ -18,6 +18,12 @@
 #include <stdlib.h>
 #include <TMath.h>
 #include <fstream>
+#include <TLegend.h>
+#include <THStack.h>
+#include <set>
+#include <utility>
+#include <TLine.h>
+#include <TLatex.h>
 
 struct eventCounter_struct{
     double nuE = 0;
@@ -224,7 +230,6 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
-
 splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
     TCanvas* canvas = new TCanvas((baseName + "_canvas").c_str(), "Graph Draw Options", 200, 10, 600, 400);
 
@@ -272,136 +277,87 @@ splitPFPHistGroup_struct createSplitPFPHistGroup(const std::string& baseName, co
 }
 
 void fillHistogram(histGroup_struct* hist, int DLCurrent, int signal, int type, double value, weights_struct* weight){
-    if(!hist) return;
+    if(!hist || DLCurrent != 5) return;
+    
+    TH1* target = nullptr;
 
-    if(DLCurrent == 5){
-        if(type == 0){
-            if(signal == 1) hist->nuECosmic->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuECosmic->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuECosmic->Fill(value, weight->cosmicsNuE);
-        } else if(type == 1 && signal == 1){
-            if(signal == 1) hist->nuESignal->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuESignal->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuESignal->Fill(value, weight->cosmicsNuE);
-        } else if(type == 2 && signal == 1){
-            if(signal == 1) hist->nuESignalFuzzy->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuESignalFuzzy->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuESignalFuzzy->Fill(value, weight->cosmicsNuE);
-        } else if(type == 3){
-            if(signal == 1) hist->nuEBNB->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuEBNB->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuEBNB->Fill(value, weight->cosmicsNuE);
-        } else if(type == 4){
-            if(signal == 1) hist->nuEBNBFuzzy->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuEBNBFuzzy->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuEBNBFuzzy->Fill(value, weight->cosmicsNuE);
-        }
+    switch(type){
+        case 0: target = hist->nuECosmic; break;
+        case 1: if(signal == 1) target = hist->nuESignal; break;
+        case 2: if(signal == 1) target = hist->nuESignalFuzzy; break;
+        case 3: target = hist->nuEBNB; break;
+        case 4: target = hist->nuEBNBFuzzy; break;
     }
 
+    if(!target) return;
+
+    double w = 0.0;
+
+    if(signal == 1) w = weight->signalNuE;
+    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 3) w = weight->cosmicsNuE;
+
+    target->Fill(value, w);
 }
 
 void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signal, int type, double value, weights_struct* weight){
-    if(!hist) return;
+    if(!hist || DLCurrent != 5) return;
 
-    if(DLCurrent == 5){
-        if(type == 0){
-            if(signal == 1) hist->cosmic->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->cosmic->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->cosmic->Fill(value, weight->cosmicsNuE);
-        } else if(type == 1 && signal == 1){
-            if(signal == 1) hist->nu_e->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nu_e->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nu_e->Fill(value, weight->cosmicsNuE);
-        } else if(type == 2){
-            if(signal == 1) hist->NCNpi0->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->NCNpi0->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->NCNpi0->Fill(value, weight->cosmicsNuE);
-        } else if(type == 3){
-            if(signal == 1) hist->otherNC->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->otherNC->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->otherNC->Fill(value, weight->cosmicsNuE);
-        } else if(type == 4){
-            if(signal == 1) hist->CCnumu->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->CCnumu->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->CCnumu->Fill(value, weight->cosmicsNuE);
-        } else if(type == 5){
-            if(signal == 1) hist->CCnue->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->CCnue->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->CCnue->Fill(value, weight->cosmicsNuE);
-        } else if(type == 6){
-            if(signal == 1) hist->dirt->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->dirt->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->dirt->Fill(value, weight->cosmicsNuE);
-        } else if(type == 7 && signal == 1){
-            if(signal == 1) hist->nu_eDirt->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nu_eDirt->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nu_eDirt->Fill(value, weight->cosmicsNuE);
-        } else if(type == 8){
-            if(signal == 1) hist->other->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->other->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->other->Fill(value, weight->cosmicsNuE);
-        }
+    TH1* target = nullptr;
+
+    switch(type){
+        case 0: target = hist->cosmic; break;
+        case 1: if(signal == 1) target = hist->nu_e; break;
+        case 2: target = hist->NCNpi0; break;
+        case 3: target = hist->otherNC; break;
+        case 4: target = hist->CCnumu; break;
+        case 5: target = hist->CCnue; break;
+        case 6: target = hist->dirt; break;
+        case 7: if(signal == 1) target = hist->nu_eDirt; break;
+        case 8: target = hist->other; break;
     }
+
+    if(!target) return;
+
+    double w = 0.0;
+
+    if(signal == 1) w = weight->signalNuE;
+    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 3) w = weight->cosmicsNuE;
+
+    target->Fill(value, w);
 }
 
 void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int signal, int type, double value, weights_struct* weight){
-    if(!hist) return;
+    if(!hist || DLCurrent != 5) return;
 
-    if(DLCurrent == 5){
-        if(type == 0){
-            if(signal == 1) hist->nuEElectron->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuEElectron->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuEElectron->Fill(value, weight->cosmicsNuE);
-        } else if(type == 1){
-            if(signal == 1) hist->nuEOther->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->nuEOther->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->nuEOther->Fill(value, weight->cosmicsNuE);
-        } else if(type == 2){
-            if(signal == 1) hist->electron->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->electron->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->electron->Fill(value, weight->cosmicsNuE);
-        } else if(type == 3){
-            if(signal == 1) hist->proton->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->proton->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->proton->Fill(value, weight->cosmicsNuE);
-        } else if(type == 4){
-            if(signal == 1) hist->muon->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->muon->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->muon->Fill(value, weight->cosmicsNuE);
-        } else if(type == 5){
-            if(signal == 1) hist->pi0->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->pi0->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->pi0->Fill(value, weight->cosmicsNuE);
-        } else if(type == 6){
-            if(signal == 1) hist->chargedPi->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->chargedPi->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->chargedPi->Fill(value, weight->cosmicsNuE);
-        } else if(type == 7){
-            if(signal == 1) hist->photon->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->photon->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->photon->Fill(value, weight->cosmicsNuE);
-        } else if(type == 8){
-            if(signal == 1) hist->other->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->other->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->other->Fill(value, weight->cosmicsNuE);
-        } else if(type == 9){
-            if(signal == 1) hist->cosmicMuon->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->cosmicMuon->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->cosmicMuon->Fill(value, weight->cosmicsNuE);
-        } else if(type == 10){
-            if(signal == 1) hist->cosmicPhoton->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->cosmicPhoton->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->cosmicPhoton->Fill(value, weight->cosmicsNuE);
-        } else if(type == 11){
-            if(signal == 1) hist->cosmicElectron->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->cosmicElectron->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->cosmicElectron->Fill(value, weight->cosmicsNuE);
-        } else if(type == 12){
-            if(signal == 1) hist->cosmicOther->Fill(value, weight->signalNuE);
-            else if(signal == 2) hist->cosmicOther->Fill(value, weight->BNBNuE);
-            else if(signal == 3) hist->cosmicOther->Fill(value, weight->cosmicsNuE);
-        }
+    TH1* target = nullptr;
+
+    switch(type){
+        case 0: if(signal == 1) target = hist->nuEElectron; break;
+        case 1: if(signal == 1) target = hist->nuEOther; break;
+        case 2: target = hist->electron; break;
+        case 3: target = hist->proton; break;
+        case 4: target = hist->muon; break;
+        case 5: target = hist->pi0; break;
+        case 6: target = hist->chargedPi; break;
+        case 7: target = hist->photon; break;
+        case 8: target = hist->other; break;
+        case 9: target = hist->cosmicMuon; break;
+        case 10: target = hist->cosmicPhoton; break;
+        case 11: target = hist->cosmicElectron; break;
+        case 12: target = hist->cosmicOther; break;
     }
+    
+    if(!target) return;
+
+    double w = 0.0;
+
+    if(signal == 1) w = weight->signalNuE;
+    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 3) w = weight->cosmicsNuE;
+
+    target->Fill(value, w);
 }
 
 void styleDrawSplit(splitHistGroup_struct hists,
