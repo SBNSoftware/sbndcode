@@ -1,0 +1,14 @@
+# Copied from Marco del Tutto's fhicl, prodgenie_nu_spill_tpc_beamdump_sbnd.fcl
+# Adapted for low energy uDAR neutrinos by Lucy Kotsiopoulou
+
+# Simulates GENIE neutrino interactions from the BNB beam 
+# with the beam spill structure, inside the TPC volume
+# (with a 10 cm padding on each side).
+
+#include "prodgenie_nu_spill_cryostat_sbnd.fcl"
+
+# Flux in from dk2nu files with low energy uDAR and piDAR enabled
+#include "set_flux_lowE_enabled.fcl"
+
+# Interactions in the tpc only
+#include "set_genie_tpc.fcl"

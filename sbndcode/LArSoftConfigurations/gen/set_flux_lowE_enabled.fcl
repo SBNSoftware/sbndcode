@@ -1,0 +1,11 @@
+# Shared by Marco Del Tutto for beamdump studies
+# Adapted by Lucy Kotsiopoulou for low energy uDAR studies
+
+# Include this file at the bottom of your GENIE fcl to use flux files produced with uDAR and piDAR enabled
+# Flux configurations are described here: (? are they)
+# https://sbnsoftware.github.io/sbndcode_wiki/The_SBND_flux_files.html
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_lowE_en
+}

@@ -295,6 +295,17 @@ sbnd_flux_g4bnb_1_1_1_beamdump: {
 }
 
 
+#
+# Booster Neutrino Beam, FHC mode, low energy uDAR & piDAR enabled, G4BNB v1.1.1 (?), A
+#
+sbnd_flux_g4bnb_1_1_1_lowE_enabled: {
+  FluxType:         "dk2nu"
+  DetectorLocation: "SBND"
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths: "/pnfs/sbnd/persistent/users/lucykots/G4BNB_muonDAR/1000n_5000p_pidar_udar/production_muDAR_piDAR_BooNE_50m_I174000A/all_NuBeam_files_fhc/"
+  FluxFiles: [ "NuBeam_production_muDAR_piDAR_BooNE_50m_I174000A_*.dk2nu.root" ]
+}
+
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -320,6 +331,10 @@ sbnd_flux_bnb_nu_rhc: @local::sbnd_flux_g4bnb_1_0_0_rhc
 #
 sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_1_1_beamdump
 
+#
+# Booster Neutrino Beam, low energy uDAR & piDAR enabled
+#
+sbnd_flux_bnb_lowE_en: @local::sbnd_flux_g4bnb_1_1_1_lowE_enabled
 
 #
 # NuMI Beam (placeholder)
