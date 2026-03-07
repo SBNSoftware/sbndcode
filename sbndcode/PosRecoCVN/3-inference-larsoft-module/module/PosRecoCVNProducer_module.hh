@@ -23,11 +23,11 @@
 #include "art_root_io/TFileService.h"
 
 // TensorFlow includes
-#include "sbndcode/PosRecoCVN/3_inference_larsoft_module/tf/tf_graph.h"
+#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/tf/tf_graph.h"
 #include <sstream>
 
 // Include the data structure definition
-#include "sbndcode/PosRecoCVN/3_inference_larsoft_module/module/PixelMapVars.h"
+#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/module/PixelMapVars.h"
 
 // Services
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -111,6 +111,11 @@ namespace opdet {
     std::vector<double> dEtpc;                      // Total energy [MeV]
     std::vector<double> dEspreadx, dEspready, dEspreadz;  // RMS spread [cm]
     std::vector<double> dEdirx, dEdiry, dEdirz;           // PCA 3D principal direction (unit vector, dEdirz >= 0)
+    // PCA eigenvalues (λ1≥λ2≥λ3, energy-weighted covariance, cm²; λ1 eigenvector = dEdirx/y/z)
+    std::vector<double> dEpcaLam1, dEpcaLam2, dEpcaLam3;
+    // Secondary (v2) and tertiary (v3) PCA eigenvectors (v1 = dEdirx/y/z)
+    std::vector<double> dEpcaV2x, dEpcaV2y, dEpcaV2z;
+    std::vector<double> dEpcaV3x, dEpcaV3y, dEpcaV3z;
     std::vector<std::vector<double>> dElowedges, dEmaxedges;  // Bounding box [cm]
 
     // Geant4 particle trajectories
@@ -136,6 +141,9 @@ namespace opdet {
       dEpromx.clear(); dEpromy.clear(); dEpromz.clear(); dEtpc.clear();
       dEspreadx.clear(); dEspready.clear(); dEspreadz.clear();
       dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
+      dEpcaLam1.clear(); dEpcaLam2.clear(); dEpcaLam3.clear();
+      dEpcaV2x.clear(); dEpcaV2y.clear(); dEpcaV2z.clear();
+      dEpcaV3x.clear(); dEpcaV3y.clear(); dEpcaV3z.clear();
       dElowedges.clear(); dEmaxedges.clear();
       stepX.clear(); stepY.clear(); stepZ.clear(); stepT.clear();
       dE.clear(); E.clear();
@@ -389,7 +397,16 @@ private:
     std::vector<std::vector<double>> &dEmaxedges,
     std::vector<double> &dEdirx,
     std::vector<double> &dEdiry,
-    std::vector<double> &dEdirz);
+    std::vector<double> &dEdirz,
+    std::vector<double> &dEpcaLam1,
+    std::vector<double> &dEpcaLam2,
+    std::vector<double> &dEpcaLam3,
+    std::vector<double> &dEpcaV2x,
+    std::vector<double> &dEpcaV2y,
+    std::vector<double> &dEpcaV2z,
+    std::vector<double> &dEpcaV3x,
+    std::vector<double> &dEpcaV3y,
+    std::vector<double> &dEpcaV3z);
 
   // Default value for invalid/missing MC truth data
   static constexpr double fDefaultSimIDE = -999.;

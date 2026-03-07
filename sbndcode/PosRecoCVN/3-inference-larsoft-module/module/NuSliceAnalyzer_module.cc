@@ -36,7 +36,7 @@
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 
 // PosRecoCVN data product
-#include "sbndcode/PosRecoCVN/3_inference_larsoft_module/module/PixelMapVars.h"
+#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/module/PixelMapVars.h"
 
 // ROOT
 #include "TTree.h"
@@ -77,6 +77,11 @@ private:
   double fSpBaryX, fSpBaryY, fSpBaryZ;
   // SpacePoint PCA first principal axis (unit vector, pcaZ >= 0)
   double fSpPCAx, fSpPCAy, fSpPCAz;
+  // PCA eigenvalues (λ1≥λ2≥λ3, charge-weighted covariance; λ1 eigenvector = spPCAx/y/z)
+  double fSpPCALam1, fSpPCALam2, fSpPCALam3;
+  // Secondary (v2) and tertiary (v3) PCA eigenvectors
+  double fSpPCAv2x, fSpPCAv2y, fSpPCAv2z;
+  double fSpPCAv3x, fSpPCAv3y, fSpPCAv3z;
   int    fNSpacePoints;
   // ResNet CNN predictions (from PixelMapVars data product)
   double fCnnPredX, fCnnPredY, fCnnPredZ;
@@ -102,6 +107,9 @@ void NuSliceAnalyzer::ResetVars() {
   fVtxX = fVtxY = fVtxZ         = -999.0;
   fSpBaryX = fSpBaryY = fSpBaryZ = -999.0;
   fSpPCAx  = fSpPCAy  = fSpPCAz  = -999.0;
+  fSpPCALam1 = fSpPCALam2 = fSpPCALam3 = -999.0;
+  fSpPCAv2x = fSpPCAv2y = fSpPCAv2z = -999.0;
+  fSpPCAv3x = fSpPCAv3y = fSpPCAv3z = -999.0;
   fNSpacePoints = 0;
   fCnnPredX = fCnnPredY = fCnnPredZ = -999.0;
 }
@@ -135,6 +143,17 @@ void NuSliceAnalyzer::beginJob() {
   fTree->Branch("spPCAx", &fSpPCAx, "spPCAx/D");
   fTree->Branch("spPCAy", &fSpPCAy, "spPCAy/D");
   fTree->Branch("spPCAz", &fSpPCAz, "spPCAz/D");
+  // PCA eigenvalues (λ1≥λ2≥λ3, charge-weighted covariance; λ1 eigenvector = spPCAx/y/z)
+  fTree->Branch("spPCALam1", &fSpPCALam1, "spPCALam1/D");
+  fTree->Branch("spPCALam2", &fSpPCALam2, "spPCALam2/D");
+  fTree->Branch("spPCALam3", &fSpPCALam3, "spPCALam3/D");
+  // Secondary (v2) and tertiary (v3) PCA eigenvectors
+  fTree->Branch("spPCAv2x",  &fSpPCAv2x,  "spPCAv2x/D");
+  fTree->Branch("spPCAv2y",  &fSpPCAv2y,  "spPCAv2y/D");
+  fTree->Branch("spPCAv2z",  &fSpPCAv2z,  "spPCAv2z/D");
+  fTree->Branch("spPCAv3x",  &fSpPCAv3x,  "spPCAv3x/D");
+  fTree->Branch("spPCAv3y",  &fSpPCAv3y,  "spPCAv3y/D");
+  fTree->Branch("spPCAv3z",  &fSpPCAv3z,  "spPCAv3z/D");
 
   fTree->Branch("nSpacePoints", &fNSpacePoints, "nSpacePoints/I");
 
@@ -308,6 +327,11 @@ void NuSliceAnalyzer::analyze(art::Event const& e) {
         int maxIdx;
         eigvals.maxCoeff(&maxIdx);
         Eigen::Vector3d dir = eigvecs.col(maxIdx);
+        // Eigen sorts ascending: col(2)=λ1 (dominant), col(1)=λ2, col(0)=λ3
+        fSpPCALam1 = eigvals(2); fSpPCALam2 = eigvals(1); fSpPCALam3 = eigvals(0);
+        Eigen::Vector3d v2 = eigvecs.col(1), v3 = eigvecs.col(0);
+        fSpPCAv2x = v2(0); fSpPCAv2y = v2(1); fSpPCAv2z = v2(2);
+        fSpPCAv3x = v3(0); fSpPCAv3y = v3(1); fSpPCAv3z = v3(2);
 
         // Sign convention: principal axis points in +Z direction (beam direction)
         if (dir(2) < 0) dir = -dir;

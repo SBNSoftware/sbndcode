@@ -79,6 +79,12 @@ namespace opdet {
     std::vector<double> dEtpc;
     std::vector<double> dEspreadx, dEspready, dEspreadz;
     std::vector<double> dEdirx, dEdiry, dEdirz;
+    // PCA eigenvalues (λ1 ≥ λ2 ≥ λ3, energy-weighted covariance matrix, units cm²)
+    // λ1 corresponds to dEdirx/y/z (already saved). λ2,λ3 are the secondary/tertiary.
+    std::vector<double> dEpcaLam1, dEpcaLam2, dEpcaLam3;
+    // Secondary (v2) and tertiary (v3) PCA eigenvectors (v1 = dEdirx/y/z)
+    std::vector<double> dEpcaV2x, dEpcaV2y, dEpcaV2z;
+    std::vector<double> dEpcaV3x, dEpcaV3y, dEpcaV3z;
     std::vector<std::vector<double>> dElowedges, dEmaxedges;
 
     // Geant4 particle trajectories
@@ -90,6 +96,7 @@ namespace opdet {
     std::vector<std::vector<double>> energydep, energydepX, energydepY, energydepZ;
 
     int InTimeCosmics = 0;
+    std::vector<double> InTimeCosmicsTime;
     double neutrinowindow = 0.0;
     std::vector<simb::MCParticle> mcpartVec;
 
@@ -98,6 +105,9 @@ namespace opdet {
       dEpromx.clear(); dEpromy.clear(); dEpromz.clear(); dEtpc.clear();
       dEspreadx.clear(); dEspready.clear(); dEspreadz.clear();
       dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
+      dEpcaLam1.clear(); dEpcaLam2.clear(); dEpcaLam3.clear();
+      dEpcaV2x.clear(); dEpcaV2y.clear(); dEpcaV2z.clear();
+      dEpcaV3x.clear(); dEpcaV3y.clear(); dEpcaV3z.clear();
       dElowedges.clear(); dEmaxedges.clear();
       stepX.clear(); stepY.clear(); stepZ.clear(); stepT.clear();
       dE.clear(); E.clear();
@@ -105,7 +115,7 @@ namespace opdet {
       StartPx.clear(); StartPy.clear(); StartPz.clear();
       EndPx.clear(); EndPy.clear(); EndPz.clear();
       energydep.clear(); energydepX.clear(); energydepY.clear(); energydepZ.clear();
-      InTimeCosmics = 0; neutrinowindow = 0.0; mcpartVec.clear();
+      InTimeCosmics = 0; InTimeCosmicsTime.clear(); neutrinowindow = 0.0; mcpartVec.clear();
     }
   };
 
@@ -215,7 +225,10 @@ private:
     std::vector<double>& dEpromx, std::vector<double>& dEpromy, std::vector<double>& dEpromz,
     std::vector<double>& dEspreadx, std::vector<double>& dEspready, std::vector<double>& dEspreadz,
     std::vector<std::vector<double>>& dElowedges, std::vector<std::vector<double>>& dEmaxedges,
-    std::vector<double>& dEdirx, std::vector<double>& dEdiry, std::vector<double>& dEdirz);
+    std::vector<double>& dEdirx, std::vector<double>& dEdiry, std::vector<double>& dEdirz,
+    std::vector<double>& dEpcaLam1, std::vector<double>& dEpcaLam2, std::vector<double>& dEpcaLam3,
+    std::vector<double>& dEpcaV2x, std::vector<double>& dEpcaV2y, std::vector<double>& dEpcaV2z,
+    std::vector<double>& dEpcaV3x, std::vector<double>& dEpcaV3y, std::vector<double>& dEpcaV3z);
 
   template<typename T>
   std::vector<std::vector<T>> FilterByMask(
@@ -290,6 +303,10 @@ private:
   std::vector<double> fDEtpc;
   std::vector<double> fDEdirX, fDEdirY, fDEdirZ;
   std::vector<double> fDEspreadX, fDEspreadY, fDEspreadZ;
+  // PCA eigenvalues and secondary/tertiary eigenvectors (2 entries: TPC0/TPC1)
+  std::vector<double> fDEpcaLam1, fDEpcaLam2, fDEpcaLam3;
+  std::vector<double> fDEpcaV2x, fDEpcaV2y, fDEpcaV2z;
+  std::vector<double> fDEpcaV3x, fDEpcaV3y, fDEpcaV3z;
 
   // PE flat per channel: [312] summed over all selected flashes
   std::vector<float> fPePerChannel;
@@ -373,6 +390,17 @@ void opdet::PosRecoCVNDataPrep::beginJob()
   fTrainingTree->Branch("dEspread_x",  &fDEspreadX);
   fTrainingTree->Branch("dEspread_y",  &fDEspreadY);
   fTrainingTree->Branch("dEspread_z",  &fDEspreadZ);
+  // PCA eigenvalues (λ1≥λ2≥λ3, cm², energy-weighted covariance; λ1 eigenvector = dEdir_x/y/z)
+  fTrainingTree->Branch("dEpca_lam1",  &fDEpcaLam1);
+  fTrainingTree->Branch("dEpca_lam2",  &fDEpcaLam2);
+  fTrainingTree->Branch("dEpca_lam3",  &fDEpcaLam3);
+  // Secondary (v2) and tertiary (v3) PCA eigenvectors
+  fTrainingTree->Branch("dEpca_v2x",   &fDEpcaV2x);
+  fTrainingTree->Branch("dEpca_v2y",   &fDEpcaV2y);
+  fTrainingTree->Branch("dEpca_v2z",   &fDEpcaV2z);
+  fTrainingTree->Branch("dEpca_v3x",   &fDEpcaV3x);
+  fTrainingTree->Branch("dEpca_v3y",   &fDEpcaV3y);
+  fTrainingTree->Branch("dEpca_v3z",   &fDEpcaV3z);
 
   // ─── PE flat per channel (before image mapping) ────────────────────────────
   fTrainingTree->Branch("pe_per_channel", &fPePerChannel);
@@ -499,7 +527,10 @@ void opdet::PosRecoCVNDataPrep::analyze(art::Event const& e)
     fMCData.dEtpc, fMCData.dEpromx, fMCData.dEpromy, fMCData.dEpromz,
     fMCData.dEspreadx, fMCData.dEspready, fMCData.dEspreadz,
     fMCData.dElowedges, fMCData.dEmaxedges,
-    fMCData.dEdirx, fMCData.dEdiry, fMCData.dEdirz);
+    fMCData.dEdirx, fMCData.dEdiry, fMCData.dEdirz,
+    fMCData.dEpcaLam1, fMCData.dEpcaLam2, fMCData.dEpcaLam3,
+    fMCData.dEpcaV2x, fMCData.dEpcaV2y, fMCData.dEpcaV2z,
+    fMCData.dEpcaV3x, fMCData.dEpcaV3y, fMCData.dEpcaV3z);
 
   LogTiming("ProcessMCParticles", section_start);
 
@@ -720,6 +751,15 @@ void opdet::PosRecoCVNDataPrep::FillTrainingTree(bool passedFilters)
   fDEspreadX = fMCData.dEspreadx;
   fDEspreadY = fMCData.dEspready;
   fDEspreadZ = fMCData.dEspreadz;
+  fDEpcaLam1 = fMCData.dEpcaLam1;
+  fDEpcaLam2 = fMCData.dEpcaLam2;
+  fDEpcaLam3 = fMCData.dEpcaLam3;
+  fDEpcaV2x  = fMCData.dEpcaV2x;
+  fDEpcaV2y  = fMCData.dEpcaV2y;
+  fDEpcaV2z  = fMCData.dEpcaV2z;
+  fDEpcaV3x  = fMCData.dEpcaV3x;
+  fDEpcaV3y  = fMCData.dEpcaV3y;
+  fDEpcaV3z  = fMCData.dEpcaV3z;
 
   // PE flat per channel + flash ophit data + images: only meaningful if passedFilters
   fPePerChannel.assign(312, 0.0f);
@@ -838,7 +878,10 @@ void opdet::PosRecoCVNDataPrep::FillAverageDepositedEnergyVariables(
   std::vector<double>& dEpromx, std::vector<double>& dEpromy, std::vector<double>& dEpromz,
   std::vector<double>& dEspreadx, std::vector<double>& dEspready, std::vector<double>& dEspreadz,
   std::vector<std::vector<double>>& dElowedges, std::vector<std::vector<double>>& dEmaxedges,
-  std::vector<double>& dEdirx, std::vector<double>& dEdiry, std::vector<double>& dEdirz)
+  std::vector<double>& dEdirx, std::vector<double>& dEdiry, std::vector<double>& dEdirz,
+  std::vector<double>& dEpcaLam1, std::vector<double>& dEpcaLam2, std::vector<double>& dEpcaLam3,
+  std::vector<double>& dEpcaV2x, std::vector<double>& dEpcaV2y, std::vector<double>& dEpcaV2z,
+  std::vector<double>& dEpcaV3x, std::vector<double>& dEpcaV3y, std::vector<double>& dEpcaV3z)
 {
   dEtpc.clear(); dEpromx.clear(); dEpromy.clear(); dEpromz.clear();
   dEtpc.resize(2, 0);
@@ -847,6 +890,12 @@ void opdet::PosRecoCVNDataPrep::FillAverageDepositedEnergyVariables(
   dEspreadx.resize(2, fDefaultSimIDE); dEspready.resize(2, fDefaultSimIDE); dEspreadz.resize(2, fDefaultSimIDE);
   dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
   dEdirx.resize(2, 0); dEdiry.resize(2, 0); dEdirz.resize(2, 1);
+  dEpcaLam1.clear(); dEpcaLam2.clear(); dEpcaLam3.clear();
+  dEpcaLam1.resize(2, fDefaultSimIDE); dEpcaLam2.resize(2, fDefaultSimIDE); dEpcaLam3.resize(2, fDefaultSimIDE);
+  dEpcaV2x.clear(); dEpcaV2y.clear(); dEpcaV2z.clear();
+  dEpcaV2x.resize(2, 0); dEpcaV2y.resize(2, 0); dEpcaV2z.resize(2, 0);
+  dEpcaV3x.clear(); dEpcaV3y.clear(); dEpcaV3z.clear();
+  dEpcaV3x.resize(2, 0); dEpcaV3y.resize(2, 0); dEpcaV3z.resize(2, 0);
 
   int ndeps_tpc0 = 0, ndeps_tpc1 = 0;
   double dEpromx_tpc0=0, dEpromy_tpc0=0, dEpromz_tpc0=0;
@@ -919,6 +968,11 @@ void opdet::PosRecoCVNDataPrep::FillAverageDepositedEnergyVariables(
       Eigen::Vector3d dir = eigvecs.col(maxIdx);
       if(dir(2) < 0) dir = -dir;
       dEdirx[0]=dir(0); dEdiry[0]=dir(1); dEdirz[0]=dir(2);
+      // Eigen sorts eigenvalues ascending: col(2)=λ1 (dominant), col(1)=λ2, col(0)=λ3
+      dEpcaLam1[0]=eigvals(2); dEpcaLam2[0]=eigvals(1); dEpcaLam3[0]=eigvals(0);
+      Eigen::Vector3d v2=eigvecs.col(1), v3=eigvecs.col(0);
+      dEpcaV2x[0]=v2(0); dEpcaV2y[0]=v2(1); dEpcaV2z[0]=v2(2);
+      dEpcaV3x[0]=v3(0); dEpcaV3y[0]=v3(1); dEpcaV3z[0]=v3(2);
     }
   }
 
@@ -945,6 +999,10 @@ void opdet::PosRecoCVNDataPrep::FillAverageDepositedEnergyVariables(
       Eigen::Vector3d dir = eigvecs.col(maxIdx);
       if(dir(2) < 0) dir = -dir;
       dEdirx[1]=dir(0); dEdiry[1]=dir(1); dEdirz[1]=dir(2);
+      dEpcaLam1[1]=eigvals(2); dEpcaLam2[1]=eigvals(1); dEpcaLam3[1]=eigvals(0);
+      Eigen::Vector3d v2=eigvecs.col(1), v3=eigvecs.col(0);
+      dEpcaV2x[1]=v2(0); dEpcaV2y[1]=v2(1); dEpcaV2z[1]=v2(2);
+      dEpcaV3x[1]=v3(0); dEpcaV3y[1]=v3(1); dEpcaV3z[1]=v3(2);
     }
   }
 
@@ -1025,7 +1083,7 @@ void opdet::PosRecoCVNDataPrep::LoadPMTMaps()
       std::vector<std::string> candidates = {
         filename,
         "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
-        "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + filename,
+        "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + filename,
         (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
         (getenv("MRB_SOURCE")  ? std::string(getenv("MRB_SOURCE"))  + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
         "../../../PosRecoCVN/pmt_maps/" + filename,
@@ -1272,6 +1330,9 @@ void opdet::PosRecoCVNDataPrep::ClearEventData()
   fDEtpc.clear();
   fDEdirX.clear(); fDEdirY.clear(); fDEdirZ.clear();
   fDEspreadX.clear(); fDEspreadY.clear(); fDEspreadZ.clear();
+  fDEpcaLam1.clear(); fDEpcaLam2.clear(); fDEpcaLam3.clear();
+  fDEpcaV2x.clear(); fDEpcaV2y.clear(); fDEpcaV2z.clear();
+  fDEpcaV3x.clear(); fDEpcaV3y.clear(); fDEpcaV3z.clear();
   fPePerChannel.clear();
   fFlashOphitPE.clear(); fFlashOphitCh.clear(); fFlashOphitTime.clear();
   fImageUncoated.clear(); fImageCoated.clear();

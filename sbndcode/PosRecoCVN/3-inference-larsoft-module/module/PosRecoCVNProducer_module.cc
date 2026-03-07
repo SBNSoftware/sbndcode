@@ -56,9 +56,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
         std::vector<std::string> search_paths = {
             model_path,
             "/pnfs/sbnd/persistent/users/svidales/inference_models/" + model_path,
-            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + model_path,
-            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + model_path,
-            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3_inference_larsoft_module/module/" + model_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
             "../" + model_path,
             "./" + model_path
         };
@@ -93,9 +93,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
         std::vector<std::string> dir_search_paths = {
             dir_path,
             "/pnfs/sbnd/persistent/users/svidales/inference_models/" + dir_path,
-            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + dir_path,
-            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + dir_path,
-            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3_inference_larsoft_module/module/" + dir_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
             "../" + dir_path,
             "./" + dir_path
         };
@@ -351,7 +351,7 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
   }
 
   // Calculate energy-weighted centroids (dEprom*) and other statistics
-  FillAverageDepositedEnergyVariables(fMCData.energydep,fMCData.energydepX,fMCData.energydepY,fMCData.energydepZ,fMCData.stepT,fMCData.dEtpc,fMCData.dEpromx,fMCData.dEpromy,fMCData.dEpromz,fMCData.dEspreadx,fMCData.dEspready,fMCData.dEspreadz,fMCData.dElowedges,fMCData.dEmaxedges,fMCData.dEdirx,fMCData.dEdiry,fMCData.dEdirz);
+  FillAverageDepositedEnergyVariables(fMCData.energydep,fMCData.energydepX,fMCData.energydepY,fMCData.energydepZ,fMCData.stepT,fMCData.dEtpc,fMCData.dEpromx,fMCData.dEpromy,fMCData.dEpromz,fMCData.dEspreadx,fMCData.dEspready,fMCData.dEspreadz,fMCData.dElowedges,fMCData.dEmaxedges,fMCData.dEdirx,fMCData.dEdiry,fMCData.dEdirz,fMCData.dEpcaLam1,fMCData.dEpcaLam2,fMCData.dEpcaLam3,fMCData.dEpcaV2x,fMCData.dEpcaV2y,fMCData.dEpcaV2z,fMCData.dEpcaV3x,fMCData.dEpcaV3y,fMCData.dEpcaV3z);
 
   if(fVerbosity>1){
     std::cout<<"InTimeCosmic: "<<fMCData.InTimeCosmics<<" | BeamWindow dE: "<<fMCData.neutrinowindow<<" MeV\n"
@@ -629,7 +629,7 @@ void opdet::PosRecoCVNProducer::LoadPMTMaps() {
     std::vector<std::string> search_paths = {
       filename,
       "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + filename,
       (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
       (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
       "../../../PosRecoCVN/pmt_maps/" + filename,
@@ -658,7 +658,7 @@ void opdet::PosRecoCVNProducer::LoadPMTMaps() {
     std::vector<std::string> search_paths = {
       filename,
       "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3_inference_larsoft_module/module/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + filename,
       (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
       (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
       "../../../PosRecoCVN/pmt_maps/" + filename,
@@ -1441,7 +1441,10 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   std::vector<double> &dEtpc, std::vector<double> &dEpromx, std::vector<double> &dEpromy, std::vector<double> &dEpromz,
   std::vector<double> &dEspreadx, std::vector<double> &dEspready, std::vector<double> &dEspreadz,
   std::vector<std::vector<double>> &dElowedges, std::vector<std::vector<double>> &dEmaxedges,
-  std::vector<double> &dEdirx, std::vector<double> &dEdiry, std::vector<double> &dEdirz)
+  std::vector<double> &dEdirx, std::vector<double> &dEdiry, std::vector<double> &dEdirz,
+  std::vector<double> &dEpcaLam1, std::vector<double> &dEpcaLam2, std::vector<double> &dEpcaLam3,
+  std::vector<double> &dEpcaV2x, std::vector<double> &dEpcaV2y, std::vector<double> &dEpcaV2z,
+  std::vector<double> &dEpcaV3x, std::vector<double> &dEpcaV3y, std::vector<double> &dEpcaV3z)
 {
 
   // Initialize variables
@@ -1452,6 +1455,12 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
   dEspreadx.resize(2, fDefaultSimIDE); dEspready.resize(2, fDefaultSimIDE); dEspreadz.resize(2, fDefaultSimIDE);
   dEdirx.clear(); dEdiry.clear(); dEdirz.clear();
   dEdirx.resize(2, 0); dEdiry.resize(2, 0); dEdirz.resize(2, 1);  // Default: z-axis
+  dEpcaLam1.clear(); dEpcaLam2.clear(); dEpcaLam3.clear();
+  dEpcaLam1.resize(2, fDefaultSimIDE); dEpcaLam2.resize(2, fDefaultSimIDE); dEpcaLam3.resize(2, fDefaultSimIDE);
+  dEpcaV2x.clear(); dEpcaV2y.clear(); dEpcaV2z.clear();
+  dEpcaV2x.resize(2, 0); dEpcaV2y.resize(2, 0); dEpcaV2z.resize(2, 0);
+  dEpcaV3x.clear(); dEpcaV3y.clear(); dEpcaV3z.clear();
+  dEpcaV3x.resize(2, 0); dEpcaV3y.resize(2, 0); dEpcaV3z.resize(2, 0);
 
   int ndeps_tpc0=0, ndeps_tpc1=0;
   double dEpromx_tpc0=0, dEpromy_tpc0=0, dEpromz_tpc0=0;
@@ -1556,6 +1565,11 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
       // Sign convention: force dEdirz >= 0 (toward +Z beam direction)
       if(dir(2) < 0) dir = -dir;
       dEdirx[0] = dir(0); dEdiry[0] = dir(1); dEdirz[0] = dir(2);
+      // Eigen sorts ascending: col(2)=λ1 (dominant), col(1)=λ2, col(0)=λ3
+      dEpcaLam1[0]=eigvals(2); dEpcaLam2[0]=eigvals(1); dEpcaLam3[0]=eigvals(0);
+      Eigen::Vector3d v2=eigvecs.col(1), v3=eigvecs.col(0);
+      dEpcaV2x[0]=v2(0); dEpcaV2y[0]=v2(1); dEpcaV2z[0]=v2(2);
+      dEpcaV3x[0]=v3(0); dEpcaV3y[0]=v3(1); dEpcaV3z[0]=v3(2);
     }
   }
   if(ndeps_tpc1!=0){
@@ -1586,6 +1600,10 @@ void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<
       Eigen::Vector3d dir = eigvecs.col(maxIdx);
       if(dir(2) < 0) dir = -dir;
       dEdirx[1] = dir(0); dEdiry[1] = dir(1); dEdirz[1] = dir(2);
+      dEpcaLam1[1]=eigvals(2); dEpcaLam2[1]=eigvals(1); dEpcaLam3[1]=eigvals(0);
+      Eigen::Vector3d v2=eigvecs.col(1), v3=eigvecs.col(0);
+      dEpcaV2x[1]=v2(0); dEpcaV2y[1]=v2(1); dEpcaV2z[1]=v2(2);
+      dEpcaV3x[1]=v3(0); dEpcaV3y[1]=v3(1); dEpcaV3z[1]=v3(2);
     }
   }
 
