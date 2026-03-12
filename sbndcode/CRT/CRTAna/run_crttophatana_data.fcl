@@ -1,12 +1,15 @@
 #include "services_sbnd.fcl"
 #include "crttophatana_sbnd.fcl"
 #include "crt_services_sbnd.fcl"
+#include "exposureana_sbnd.fcl"
+#include "sbndbnbdefaults.fcl"
 
 process_name: CRTTopHatAna
 
 services:
 {
   TFileService: { fileName: "crttophatana_sbnd.root" }
+  IFBeam:       {}
   @table::sbnd_basic_services
   @table::crt_services_data_sbnd
 }
@@ -18,11 +21,22 @@ source:
 
 physics:
 {
+  producers:
+  {
+    bnbinfo: @local::sbndbnbspillinfo
+  }
+
   analyzers:
   {
     crttophatana: @local::crttophatana_sbnd
+    exposureana:  @local::exposureana_bnblight_sbnd
   }
 
-  ana:       [ crttophatana ]
-  end_paths: [ ana ]
+  account:   [ bnbinfo ]
+  ana:       [ crttophatana, exposureana ]
+
+  trigger_paths: [ account ]
+  end_paths:     [ ana ]
 }
+
+physics.producers.bnbinfo.module_type: "SBNDBNBRetriever"
