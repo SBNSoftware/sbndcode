@@ -3,7 +3,7 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 #include "Enumerate.h"
 
-const TString baseSaveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots";
+const TString baseSaveDir = "/exp/sbnd/data/users/hlay/thesis/ncpizero/plots";
 const TString baseFileDir = "/pnfs/sbnd/persistent/users/hlay/ncpizero";
 
 const double goalPOT     = 10e20;

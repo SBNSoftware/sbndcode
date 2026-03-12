@@ -1578,11 +1578,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
                 ++nprimdazzlemuons;
               if(dazzlepdg == 211)
                 ++nprimdazzlepions;
-              if(dazzlepdg == 211 && pfpenergy > 32.1)
+              if(dazzlepdg == 211 && pfpenergy > 65.3)
                 ++nprimdazzlepionsthresh;
               if(dazzlepdg == 2212)
                 ++nprimdazzleprotons;
-              if(dazzlepdg == 2212 && pfpenergy > 32.7)
+              if(dazzlepdg == 2212 && pfpenergy > 81.7)
                 ++nprimdazzleprotonsthresh;
               if(dazzlepdg == 0)
                 ++nprimdazzleother;
@@ -1628,11 +1628,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         ++nrazzledphotons;
       if(razzledpdg == 211)
         ++nrazzledpions;
-      if(razzledpdg == 211 && pfpenergy > 32.1)
+      if(razzledpdg == 211 && pfpenergy > 65.3)
         ++nrazzledpionsthresh;
       if(razzledpdg == 2212)
         ++nrazzledprotons;
-      if(razzledpdg == 2212 && pfpenergy > 32.7)
+      if(razzledpdg == 2212 && pfpenergy > 81.7)
         ++nrazzledprotonsthresh;
 
       if(primary_child)
@@ -1645,11 +1645,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++nprimrazzledphotons;
           if(razzledpdg == 211)
             ++nprimrazzledpions;
-          if(razzledpdg == 211 && pfpenergy > 32.1)
+          if(razzledpdg == 211 && pfpenergy > 65.3)
             ++nprimrazzledpionsthresh;
           if(razzledpdg == 2212)
             ++nprimrazzledprotons;
-          if(razzledpdg == 2212 && pfpenergy > 32.7)
+          if(razzledpdg == 2212 && pfpenergy > 81.7)
             ++nprimrazzledprotonsthresh;
         }
     }

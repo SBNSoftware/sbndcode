@@ -3,13 +3,13 @@
 #include "Common.C"
 #include "Selections.h"
 
-void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP);
+void OptimiseCut(const TString productionVersion, const TString saveDirExt, const TString latexName, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP);
 
 void OptimiseCut(const TString productionVersion, const SelectionParams &selectionParams, const int excludingCut, Plot plot, const bool rej_cut, const bool optimiseEPP = false)
 {
   Cut cut = TotalCutExcluding(selectionParams.cuts, excludingCut);
 
-  OptimiseCut(productionVersion, selectionParams.name, plot, selectionParams.categories[0], cut, rej_cut, optimiseEPP);
+  OptimiseCut(productionVersion, selectionParams.name, selectionParams.latex_name, plot, selectionParams.categories[0], cut, rej_cut, optimiseEPP);
 }
 
 void OptimiseCut(const TString productionVersion)
@@ -30,7 +30,7 @@ void OptimiseCut(const TString productionVersion)
   OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[3], false);
 }
 
-void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP)
+void OptimiseCut(const TString productionVersion, const TString saveDirExt, const TString latexName, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP)
 {
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/cut_optimisation/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
@@ -144,7 +144,10 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   line->SetLineWidth(3);
 
   TPaveText *pt = new TPaveText(.25, .62, .5, .75, "NDC");
-  pt->AddText(Form("Optimal Cut: %.4f", optimal_cut));
+  if(plot.name == "slc_opt0_score")
+    pt->AddText(Form("Optimal Cut: %.0f", optimal_cut));
+  else
+    pt->AddText(Form("Optimal Cut: %.3f", optimal_cut));
   pt->AddText(Form("Efficiency x Purity: %.2f %%", maxEP));
   if(optimiseEPP)
     pt->AddText(Form("Efficiency x Purity^2: %.2f %%", maxEPP));
@@ -156,6 +159,15 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   pt->SetBorderSize(0);
   pt->SetLineWidth(0);
   pt->SetTextAlign(11);
+
+  TPaveText *pt2 = new TPaveText(.25, .55, .5, .6, "NDC");
+  pt2->AddText(latexName);
+  pt2->SetTextColor(kBlack);
+  pt2->SetTextSize(0.05);
+  pt2->SetFillColor(kWhite);
+  pt2->SetBorderSize(0);
+  pt2->SetLineWidth(0);
+  pt2->SetTextAlign(11);
 
   TLegend *leg = new TLegend(.25, .77, .85, .82);
   leg->AddEntry(gSelEff, "Efficiency", "p");
@@ -180,6 +192,7 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
     gEPP->Draw("Psame");
   line->Draw();
   pt->Draw();
+  pt2->Draw();
   leg->Draw();
 
   TString name = plot.name;

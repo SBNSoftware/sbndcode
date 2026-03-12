@@ -3,11 +3,14 @@
 
 void MakePlot(const int type, const std::vector<int> &plot_types, const Selections &selections, const TString &saveDir,
               const std::string &weightName = "", const int &nunivs = 0,
-              const std::vector<std::string> &weightNames = std::vector<std::string>());
+              const std::vector<std::string> &weightNames = {});
+
+void MakePlot(const int &type, const Selections &selections, const TString &saveDir, const std::string &weightName,
+	      const int &nunivs = 0, const std::vector<std::string> &weightNames = {});
 
 void MakeCorrelationMatrix(const Selections &selections, const TString &saveDir, const std::string &weightName = "");
 
-void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir);
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName = "");
 
 void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,
                          const std::vector<Syst> &systs);
@@ -67,18 +70,28 @@ void XSec1D(const TString &productionVersion, const TString &saveDirExt, const i
         {
           MakePlot(1, plot_types, selections, saveDir, name, weightSet.nunivs);
           MakePlot(2, plot_types, selections, saveDir, name, weightSet.nunivs);
+          MakePlot(0, selections, saveDir, name, weightSet.nunivs);
 
           MakeCorrelationMatrix(selections, saveDir, name);
         }
 
       if(weightSet.name == "genie")
-        MakePlot(3, plot_types, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	{
+	  MakePlot(3, plot_types, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	  MakePlot(1, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	}
     }
 
   const std::vector<std::string> all_systs_list = SystSetToWeightList(all_systs);
 
   MakePlot(3, plot_types, selections, saveDir, "all", 0, all_systs_list);
+  MakePlot(1, selections, saveDir, "all", 0, all_systs_list);
   MakeSystSummaryPlot(selections, saveDir, "all", all_systs);
+  MakeSummaryPlot(1, selections, saveDir, "all");
+  MakeSummaryPlot(2, selections, saveDir, "all");
+  MakeSummaryPlot(3, selections, saveDir, "all");
+  MakeSummaryPlot(4, selections, saveDir, "all");
+  MakeSummaryPlot(5, selections, saveDir, "all");
 }
 
 void MakePlot(const int type, const std::vector<int> &plot_types, const Selections &selections, const TString &saveDir,
@@ -249,6 +262,118 @@ void MakePlot(const int type, const std::vector<int> &plot_types, const Selectio
     }
 }
 
+void MakePlot(const int &type, const Selections &selections, const TString &saveDir, const std::string &weightName,
+	      const int &nunivs, const std::vector<std::string> &weightNames)
+{
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      TCanvas *canvas = new TCanvas(Form("canvas_%s_vary_all", selection.name.Data()),
+				    Form("canvas_%s_vary_all", selection.name.Data()));
+      canvas->cd();
+
+      const TString saveSubDir = saveDir + "/" + selection.name + "/all";
+      gSystem->Exec("mkdir -p " + saveSubDir);
+
+      gPad->SetTopMargin(0.12);
+      gPad->SetLeftMargin(0.15);
+      gPad->SetRightMargin(0.15);
+
+      TH1F *hist = selection.plot->GetNominalXSecHist(false, false, selection.name);
+      hist->Draw("histe][");
+      gPad->Modified();
+      gPad->Update();
+
+      if(type == 1)
+	selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
+
+      TGraphAsymmErrors *effGraph  = selection.plot->GetCVErrEfficiencyGraph(weightName);
+      TGraphAsymmErrors *purGraph  = selection.plot->GetCVErrPurityGraph(weightName);
+      TGraphAsymmErrors *backGraph = selection.plot->GetCVErrBkgdCountGraph(weightName);
+
+      backGraph->Draw();
+      const float backMax = backGraph->GetYaxis()->GetXmax();
+      purGraph->Draw();
+      const float purMax = purGraph->GetYaxis()->GetXmax();
+
+      purGraph->SetFillColor(kRed+2);
+      purGraph->SetLineColor(kRed+2);
+      purGraph->SetFillStyle(3010);
+      purGraph->SetLineWidth(1);
+      effGraph->SetFillColor(kBlue+2);
+      effGraph->SetLineColor(kBlue+2);
+      effGraph->SetFillStyle(3010);
+      effGraph->SetLineWidth(1);
+      backGraph->SetFillColor(kGreen+2);
+      backGraph->SetLineColor(kGreen+2);
+      backGraph->SetFillStyle(3010);
+      backGraph->SetLineWidth(1);
+
+      TMultiGraph *mg = new TMultiGraph();
+      mg->Add(purGraph);
+      mg->Add(effGraph);
+      mg->Add(backGraph);
+      mg->Draw("PE3");
+
+      gPad->Modified();
+      gPad->Update();
+
+      const float scale = purMax / backMax;
+      backGraph->Scale(scale);
+      const float gap = 0.6 / purMax;
+
+      mg->SetMinimum(0);
+      mg->SetMaximum(0.6);
+
+      mg->Draw("PE3same");
+      mg->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+      mg->GetXaxis()->SetTitleOffset(1.1);
+      mg->GetYaxis()->SetTitle("Fraction");
+      mg->GetXaxis()->SetLabelSize(0.05);
+      mg->GetYaxis()->SetLabelSize(0.05);
+
+      gPad->Modified();
+      gPad->Update();
+      gPad->SetTicky(0);
+
+      TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(),
+				gPad->GetUxmax(), gPad->GetUymax(),
+				0, gap * backMax, 505, "+L");
+      axis->SetTitleSize(0.04);
+
+      std::vector<double> legPos;
+
+      if(selection.plot->GetVar() == "pizero_mom")
+	{
+	  axis->SetLabelSize(0.05);
+	  axis->SetTitleOffset(1.1);
+	  axis->SetTitle(PlotAxisMap.at(3) + " / MeV");
+	  legPos = { .56, .29, .76, .4 };
+	}
+      else
+	{
+	  axis->SetLabelSize(0.045);
+	  axis->SetTitleOffset(1.45);
+	  axis->SetTitle(PlotAxisMap.at(3) + " / 1");
+	  legPos = { .22, .39, .42, .5 };
+	}
+
+      axis->Draw();
+      
+      TLegend *legend = new TLegend(legPos[0], legPos[1], legPos[2], legPos[3]);
+      legend->AddEntry(effGraph, "Efficiency", "f");
+      legend->AddEntry(purGraph, "Purity", "f");
+      legend->AddEntry(backGraph, "Background Count", "f");
+      legend->Draw();
+
+      AddText(canvas, wip, kGray+2, { .8, .895, .85, .905 }, 0.025, 32);
+
+      canvas->SaveAs(saveSubDir + "/varying_all_" + selection.name + "_" + weightName.c_str() + "_cv_err.png");
+      canvas->SaveAs(saveSubDir + "/varying_all_" + selection.name + "_" + weightName.c_str() + "_cv_err.pdf");
+
+      delete canvas;
+    }
+}
+
 void MakeCorrelationMatrix(const Selections &selections, const TString &saveDir, const std::string &weightName)
 {
   for(auto&& [ selection_i, selection ] : enumerate(selections))
@@ -281,7 +406,7 @@ void MakeCorrelationMatrix(const Selections &selections, const TString &saveDir,
     }
 }
 
-void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir)
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName)
 {
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
@@ -292,27 +417,198 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       const TString saveSubDir = saveDir + "/" + selection.name;
       gSystem->Exec("mkdir -p " + saveSubDir);
 
+      const TString covSubDir = saveSubDir + "/covariance_matrices";
+      gSystem->Exec("mkdir -p " + covSubDir);
+
       gPad->SetTopMargin(0.12);
       gPad->SetLeftMargin(0.2);
       gPad->SetRightMargin(0.1);
 
+      std::vector<float> legPos = { .38, .67, .68, .82 };
+      if(selection.plot->GetVar() != "pizero_mom")
+	legPos = { .3, .65, .6, .8 };
+
+      TLegend *leg = new TLegend(legPos[0], legPos[1], legPos[2], legPos[3]);
+
       TH1F *hist = selection.plot->GetNominalXSecHist(type == 0, false, selection.name);
       hist->GetYaxis()->SetTitleOffset(1.5);
       hist->GetYaxis()->SetTitleSize(0.05);
-      hist->Draw("histe][");
+      hist->Draw("hist][");
       hist->SetMinimum(0);
       hist->SetMaximum(1.25 * hist->GetMaximum());
       gPad->Update();
 
+      TH2D *cov_matrix, *genie_cov_matrix;
+
+      unsigned syst_i = 0, genie_syst_i = 0;
+
+      if(type != 0)
+	{
+	  for(WeightSet &weightSet : weightSets)
+	    {
+	      for(std::string &name : weightSet.list)
+		{
+		  TH2D *temp_cov_matrix = selection.plot->CreateCovarianceMatrix(name);
+		  if(syst_i == 0)
+		    cov_matrix = temp_cov_matrix;
+		  else
+		    cov_matrix->Add(temp_cov_matrix);
+
+		  if(name.find("GENIEReWeight") != std::string::npos)
+		    {
+		      if(genie_syst_i == 0)
+			genie_cov_matrix = temp_cov_matrix;
+		      else
+			genie_cov_matrix->Add(temp_cov_matrix);
+
+		      ++genie_syst_i;
+		    }
+
+		  if(type == 1)
+		    {
+		      TCanvas *canvas_cov = new TCanvas(Form("canvas_cov%s", selection.name.Data()),
+							Form("canvas_cov%s", selection.name.Data()));
+		      canvas_cov->cd();
+
+		      gPad->SetTopMargin(0.12);
+		      gPad->SetRightMargin(0.2);
+
+		      temp_cov_matrix->Draw("colztext");
+
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_matrix.png");
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_matrix.pdf");
+
+		      TH2D *norm = NormMatrix(hist, temp_cov_matrix);
+		      norm->Draw("colztext");
+
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_norm_matrix.png");
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_norm_matrix.pdf");
+
+		      TH2D *shape = ShapeMatrix(hist, temp_cov_matrix);
+		      shape->Draw("colztext");
+
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_shape_matrix.png");
+		      canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_" + name.c_str() + "_cov_shape_matrix.pdf");
+
+		      delete norm;
+		      delete shape;
+		      delete canvas_cov;
+		    }
+
+		  ++syst_i;
+		}
+	    }
+
+	  for(int i = 1; i < cov_matrix->GetNbinsX() + 1; ++i)
+	    {
+	      std::cout << cov_matrix->GetBinContent(i, i) << " " << std::pow(0.02 * hist->GetBinContent(i), 2) << " " << std::pow(0.01 * hist->GetBinContent(i), 2) << std::endl;
+	      cov_matrix->SetBinContent(i, i, cov_matrix->GetBinContent(i, i) + std::pow(0.02 * hist->GetBinContent(i), 2)
+					+ std::pow(0.01 * hist->GetBinContent(i), 2));
+	    }
+	}
+
+      if(type == 1)
+	{
+	  TCanvas *canvas_cov = new TCanvas(Form("canvas_cov%s", selection.name.Data()),
+					    Form("canvas_cov%s", selection.name.Data()));
+	  canvas_cov->cd();
+
+	  gPad->SetTopMargin(0.12);
+	  gPad->SetRightMargin(0.2);
+
+	  cov_matrix->Draw("colztext");
+
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_matrix.png");
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_matrix.pdf");
+
+	  TH2D *norm = NormMatrix(hist, cov_matrix);
+	  norm->Draw("colztext");
+
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_norm_matrix.png");
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_norm_matrix.pdf");
+
+	  TH2D *shape = ShapeMatrix(hist, cov_matrix);
+	  shape->Draw("colztext");
+
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_shape_matrix.png");
+	  canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_all_systs_cov_shape_matrix.pdf");
+
+	  delete norm;
+	  delete shape;
+	  delete canvas_cov;
+
+	  TCanvas *genie_canvas_cov = new TCanvas(Form("genie_canvas_cov%s", selection.name.Data()),
+						  Form("genie_canvas_cov%s", selection.name.Data()));
+	  genie_canvas_cov->cd();
+
+	  gPad->SetTopMargin(0.12);
+	  gPad->SetRightMargin(0.2);
+
+	  genie_cov_matrix->Draw("colztext");
+
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_matrix.png");
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_matrix.pdf");
+
+	  TH2D *genie_norm = NormMatrix(hist, genie_cov_matrix);
+	  genie_norm->Draw("colztext");
+
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_norm_matrix.png");
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_norm_matrix.pdf");
+
+	  TH2D *genie_shape = ShapeMatrix(hist, genie_cov_matrix);
+	  genie_shape->Draw("colztext");
+
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_shape_matrix.png");
+	  genie_canvas_cov->SaveAs(covSubDir + "/" + selection.name + "_genie_all_cov_shape_matrix.pdf");
+
+	  delete genie_norm;
+	  delete genie_shape;
+	  delete genie_canvas_cov;
+	}
+
+      canvas->cd();
+
+      if(type == 0)
+	leg->AddEntry(hist, "Nominal + Stat", "le");
+      else if(type == 1)
+	{
+	  TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
+	  graph->Draw("PEsame");
+
+	  leg->AddEntry(graph, "Nominal + Systs", "pe");
+	}
+      else if(type == 2 || type == 4)
+	{
+	  TH2D *norm = NormMatrix(hist, cov_matrix);
+	  TGraphAsymmErrors *graph = selection.plot->GetXSecGraphWithMatrixErrors(hist, norm);
+	  graph->SetLineColor(kRed+2);
+	  graph->Draw("PEsame");
+
+	  leg->AddEntry(graph, "Nominal + Norm Systs", "pe");
+	}
+      else if(type == 3 || type == 5)
+	{
+	  TH2D *shape = ShapeMatrix(hist, cov_matrix);
+	  TGraphAsymmErrors *graph = selection.plot->GetXSecGraphWithMatrixErrors(hist, shape);
+	  graph->SetLineColor(kMagenta-3);
+	  graph->Draw("PEsame");
+
+	  leg->AddEntry(graph, "Nominal + Shape Systs", "pe");
+	}
+
       TH1F *geniePred = selection.plot->GetPredictedXSecHist(selection.name, "genie", 1e-38, true);
       geniePred->SetLineColor(kOrange+2);
       geniePred->SetMarkerStyle(1);
-      geniePred->Draw("histeqsame");
+
+      if(type != 4 && type != 5)
+	geniePred->Draw("histeqsame");
 
       TH1F *nuwroPred = selection.plot->GetPredictedXSecHist(selection.name, "nuwro", 1e-38, true);
       nuwroPred->SetLineColor(kGreen+2);
       nuwroPred->SetMarkerStyle(1);
-      nuwroPred->Draw("histeqsame");
+
+      if(type != 4 && type != 5)
+	nuwroPred->Draw("histeqsame");
 
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
@@ -324,10 +620,19 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
 
       AddText(canvas, wip, kGray+2, {.8, .895, .91, .905}, 0.025, 32);
 
-      TLegend *leg = new TLegend(.35, .6, .7, .8);
-      leg->AddEntry(hist, "Nominal + Stat", "le");
-      leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
-      leg->AddEntry(nuwroPred, "NuWro", "l");
+      if(type == 1)
+	{
+	  const double genieChi2 = Chi2Comp(hist, geniePred, cov_matrix);
+	  const double nuwroChi2 = Chi2Comp(hist, nuwroPred, cov_matrix);
+	  leg->AddEntry(geniePred, Form("GENIEv3 AR23_20i_00_000 (%.2f/%d)", genieChi2, selection.plot->GetNBins()), "l");
+	  leg->AddEntry(nuwroPred, Form("NuWro v21.09.2 (%.2f/%d)", nuwroChi2, selection.plot->GetNBins()), "l");
+	}
+      else if(type != 4 && type != 5)
+	{
+	  leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
+	  leg->AddEntry(nuwroPred, "NuWro v21.09.2", "l");
+	}
+
       leg->Draw();
 
       if(type == 0)
@@ -335,8 +640,32 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
           canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare.png");
           canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare.pdf");
         }
+      else if(type == 1)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs.pdf");
+        }
+      else if(type == 2)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs_norm.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs_norm.pdf");
+        }
+      else if(type == 3)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs_shape.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare_systs_shape.pdf");
+        }
+      else if(type == 4)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_systs_norm.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_systs_norm.pdf");
+        }
+      else if(type == 5)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_systs_shape.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_systs_shape.pdf");
+        }
 
-      delete hist;
       delete canvas;
     }
 }

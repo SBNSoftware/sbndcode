@@ -50,7 +50,7 @@ const PIDTraining razzled_v12 = { "razzled_v12", "/exp/sbnd/data/users/hlay/ncpi
 const PIDTraining razzled_v14 = { "razzled_v14", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv14/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled Av14", kPink+3 };
 
 const std::vector<PIDTraining> razzled_v12_trainings = { { "razzled", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Nominal", kTeal+6 },
-                                                         razzled_v12
+  razzled_v12
 };
 
 const std::vector<PIDTraining> clean_v12_trainings = { { "razzled_v12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled", kPink+3 }
@@ -59,3 +59,13 @@ const std::vector<PIDTraining> clean_v12_trainings = { { "razzled_v12", "/exp/sb
 const std::vector<TString> razzleAxisLabels  = { "", "e^{#pm}", "#gamma", "Track", "Other" };
 const std::vector<TString> dazzleAxisLabels  = { "", "#mu^{#pm}", "#pi^{#pm}", "p", "Shower", "Other" };
 const std::vector<TString> razzledAxisLabels  = { "", "e^{#pm}", "#mu^{#pm}", "#gamma", "#pi^{#pm}", "p" };
+
+const std::vector<PIDTraining> razzle_trainings_thesis = { //{ "nominal_razzle", "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_22_00/PID/Razzle.weights.xml", false, true, false, "Nominal Razzle", kCyan-3 },
+							   { "razzle", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzle/training/dataset/weights/ShowerPIDMVA_BDTG.weights.xml", false, true, false, "Razzle", kCyan-3 },
+							   { "razzled", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled", kMagenta+2 },
+};
+
+const std::vector<PIDTraining> dazzle_trainings_thesis = { //{ "nominal_dazzle", "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_22_00/PID/Dazzle.weights.xml", false, false, true, "Nominal Dazzle", kCyan-3 },
+							   { "dazzle", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/dazzle/training/dataset/weights/TrackPIDMVA_BDTG.weights.xml", false, false, true, "Dazzle", kCyan-3 },
+							   { "razzled", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled", kMagenta+2 },
+};

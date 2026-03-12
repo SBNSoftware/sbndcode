@@ -3,11 +3,14 @@
 
 void MakePlot(const int type, const std::vector<int> &plot_types, const Selections &selections,
               const TString &saveDir, const std::string &weightName = "", const int &nunivs = 0,
-              const std::vector<std::string> &weightNames = std::vector<std::string>());
+              const std::vector<std::string> &weightNames = {});
+
+void MakePlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName,
+	      const int &nunivs = 0, const std::vector<std::string> &weightNames = {});
 
 void MakeTables(Selections &selections, WeightSets &weightSets, const TString &saveDir);
 
-void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir);
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName = "");
 
 void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,
                          const std::vector<Syst> &systs);
@@ -51,16 +54,22 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
         {
           MakePlot(1, plot_types, selections, saveDir, name, weightSet.nunivs);
           MakePlot(2, plot_types, selections, saveDir, name, weightSet.nunivs);
+          MakePlot(0, selections, saveDir, name, weightSet.nunivs);
         }
 
       if(weightSet.name == "genie")
-        MakePlot(3, plot_types, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	{
+	  MakePlot(3, plot_types, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	  MakePlot(1, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+	}
     }
 
   const std::vector<std::string> all_systs_list = SystSetToWeightList(all_systs);
 
   MakePlot(3, plot_types, selections, saveDir, "all", 0, all_systs_list);
+  MakePlot(1, selections, saveDir, "all", 0, all_systs_list);
   MakeSystSummaryPlot(selections, saveDir, "all", all_systs);
+  MakeSummaryPlot(1, selections, saveDir, "all");
 
   MakeTables(selections, weightSets, saveDir);
 }
@@ -226,6 +235,94 @@ void MakePlot(const int type, const std::vector<int> &plot_types, const Selectio
     }
 }
 
+void MakePlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName,
+	      const int &nunivs, const std::vector<std::string> &weightNames)
+{
+  TCanvas *canvas = new TCanvas("canvas_vary_all", "canvas_vary_all");
+  canvas->cd();
+  canvas->Divide(3, 1);
+
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      canvas->cd(selection_i + 1);
+      gPad->SetBottomMargin(0.05);
+      gPad->SetTopMargin(0.1);
+      gPad->SetLeftMargin(0.25);
+      gPad->SetRightMargin(0.05);
+
+      TH1F *hist = selection.plot->GetNominalXSecHist(false);
+      hist->Draw("histe][");
+      gPad->Modified();
+      gPad->Update();
+
+      if(type == 1)
+        selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
+
+      TGraphAsymmErrors *effGraph  = selection.plot->GetCVErrEfficiencyGraph(weightName);
+      TGraphAsymmErrors *purGraph  = selection.plot->GetCVErrPurityGraph(weightName);
+      TGraphAsymmErrors *backGraph = selection.plot->GetCVErrBkgdCountGraph(weightName);
+
+      backGraph->Draw();
+      const float backMax = backGraph->GetYaxis()->GetXmax();
+      purGraph->Draw();
+      const float purMax = purGraph->GetYaxis()->GetXmax();
+
+      purGraph->SetFillColor(kRed+2);
+      purGraph->SetFillStyle(3010);
+      purGraph->SetLineWidth(1);
+      effGraph->SetFillColor(kBlue+2);
+      effGraph->SetFillStyle(3010);
+      effGraph->SetLineWidth(1);
+      backGraph->SetFillColor(kGreen+2);
+      backGraph->SetFillStyle(3010);
+      backGraph->SetLineWidth(1);
+
+      TMultiGraph *mg = new TMultiGraph();
+      mg->Add(purGraph);
+      mg->Add(effGraph);
+      mg->Add(backGraph);
+      mg->Draw("PE3");
+
+      gPad->Modified();
+      gPad->Update();
+
+      const float scale = purMax / backMax;
+      backGraph->Scale(scale);
+
+
+      mg->Draw("PE3same");
+      mg->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+      mg->GetXaxis()->SetTitleOffset(1.1);
+      mg->GetYaxis()->SetTitle("Fraction");
+      mg->GetXaxis()->SetLabelSize(0.05);
+      mg->GetYaxis()->SetLabelSize(0.05);
+
+      gPad->Modified();
+      gPad->Update();
+      gPad->SetTicky(0);
+
+      TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(),
+                                gPad->GetUxmax(), gPad->GetUymax(),
+                                0, backMax, 505, "+L");
+      axis->SetTitleOffset(1.1);
+      axis->SetLabelSize(0.05);
+      axis->SetTitleSize(0.04);
+
+      if(selection.plot->GetVar() == "pizero_mom")
+        axis->SetTitle(PlotAxisMap.at(3) + " / MeV");
+      else
+        axis->SetTitle(PlotAxisMap.at(3) + " / 1");
+      axis->Draw();
+
+      AddText(canvas, wip, kGray+2, { .8, .895, .85, .905 }, 0.025, 32);
+    }
+
+  gSystem->Exec("mkdir -p " + saveDir + "/all");
+  
+  canvas->SaveAs(saveDir + "/all/varying_all_" + weightName.c_str() + "_cv_err.png");
+  canvas->SaveAs(saveDir + "/all/varying_all_" + weightName.c_str() + "_cv_err.pdf");
+}
+
 void MakeTables(Selections &selections, WeightSets &weightSets, const TString &saveDir)
 {
   for(WeightSet &weightSet : weightSets)
@@ -275,7 +372,7 @@ m}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$Np0$\\pi^{\\pm}$} \\\\ \\hline"
     }
 }
 
-void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir)
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir, const std::string &weightName)
 {
   TCanvas *canvas = new TCanvas("canvas", "canvas");
   canvas->cd();
@@ -289,14 +386,26 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       gPad->SetLeftMargin(0.25);
       gPad->SetRightMargin(0.05);
 
+      TLegend *leg = new TLegend(.3, .65, .7, .8);
+
       TH1F *hist = selection.plot->GetNominalXSecHist(type == 0);
       hist->GetYaxis()->SetTitleOffset(1.9);
       hist->GetXaxis()->SetLabelSize(0);
       hist->GetXaxis()->SetLabelOffset(999);
-      hist->Draw("histe][");
+      hist->Draw("hist][");
       hist->SetMinimum(0);
       hist->SetMaximum(5e-40);
       gPad->Update();
+
+      if(type == 0)
+	leg->AddEntry(hist, "Nominal + Stat", "le");
+      else if(type == 1)
+	{
+	  TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
+	  graph->Draw("PEsame");
+
+	  leg->AddEntry(graph, "Nominal + Systs", "pe");
+	}
 
       TH1F *geniePred = selection.plot->GetPredictedXSecHist(selection.name, "genie", 1e-38);
       geniePred->SetLineColor(kOrange+2);
@@ -316,18 +425,30 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       gPad->Modified();
       gPad->Update();
 
+      std::cout << selection.name << " " << geniePred->GetBinContent(1) / hist->GetBinContent(1) << std::endl;
+      std::cout << "\t" << geniePred->GetBinContent(1) << std::endl;
+      std::cout << "\t" << nuwroPred->GetBinContent(1) << std::endl;
+
       if(selection_i == selections.size() - 1)
         {
-          TLegend *leg = new TLegend(.35, .6, .7, .8);
-          leg->AddEntry(hist, "Nominal + Stat", "le");
           leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
-          leg->AddEntry(nuwroPred, "NuWro", "l");
+          leg->AddEntry(nuwroPred, "NuWro v21.09.2", "l");
+	  leg->SetTextSize(0.045);
           leg->Draw();
         }
     }
 
-  canvas->SaveAs(saveDir + "/nominal_generator_compare.png");
-  canvas->SaveAs(saveDir + "/nominal_generator_compare.pdf");
+  if(type == 0)
+    {
+      canvas->SaveAs(saveDir + "/nominal_generator_compare.png");
+      canvas->SaveAs(saveDir + "/nominal_generator_compare.pdf");
+    }
+  else if(type == 1)
+    {
+      canvas->SaveAs(saveDir + "/nominal_generator_compare_systs.png");
+      canvas->SaveAs(saveDir + "/nominal_generator_compare_systs.pdf");
+      canvas->SaveAs(saveDir + "/nominal_generator_compare_systs.C");
+    }
 }
 
 void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,

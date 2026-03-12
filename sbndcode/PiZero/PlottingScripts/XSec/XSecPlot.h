@@ -119,6 +119,11 @@ class XSecPlot {
       return _bins;
     }
 
+  unsigned GetNBins()
+    {
+      return _bins.size();
+    }
+
   std::string GetVar()
     {
       return _var;
@@ -307,6 +312,9 @@ class XSecPlot {
     const std::vector<float> values = GetNominalXSecs();
     const std::vector<float> errors = statErr ? GetNominalStatErrors(values) : std::vector<float>(_bins.size(), 0.);
 
+    if(statErr)
+      std::cout << errors[0] << std::endl;
+
     TH1F* hist = MakeHist(Form("Nominal_XSec_%s", _name.c_str()), values, errors);
 
     TFile* foldFile = new TFile(unfoldFileName, "READ");
@@ -417,6 +425,8 @@ class XSecPlot {
     hist->SetMarkerStyle(0);
     hist->SetLineColor(kBlack);
 
+    std::cout << name << " " << values.size() << " " << values[0] << std::endl;
+
     return hist;
   }
 
@@ -451,6 +461,8 @@ class XSecPlot {
         double low, cv, high;
         std::tie(low, cv, high) = bin->GetSystFracErrorsXSec(weightName);
 
+	std::cout << weightName << " " << low << " " << cv << " " << high << std::endl;
+
         if(cv == 0.)
           continue;
 
@@ -459,6 +471,28 @@ class XSecPlot {
 
         graph->SetPoint(bin_i, centre, cv);
         graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
+
+      }
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
+
+    return graph;
+  }
+
+  TGraphAsymmErrors* GetXSecGraphWithMatrixErrors(const TH1F *hist, const TH2D *matrix)
+  {
+    TGraphAsymmErrors* graph = new TGraphAsymmErrors();
+
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        const double centre = bin->GetVarCenter();
+        const double width  = bin->GetVarWidth();
+
+        graph->SetPoint(bin_i, centre, hist->GetBinContent(bin_i + 1));
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width,
+			     std::sqrt(matrix->GetBinContent(bin_i + 1, bin_i + 1)), std::sqrt(matrix->GetBinContent(bin_i + 1, bin_i + 1)));
 
       }
 
@@ -611,6 +645,39 @@ class XSecPlot {
               }
 
             matrix->SetBinContent(binIndex_i + 1, binIndex_j + 1, sum / (nunivs * xsec_nom_i * xsec_nom_j));
+          }
+      }
+
+    return matrix;
+  }
+
+  TH2D* CreateCovarianceMatrix(const std::string weightName)
+  {
+    TH2D *matrix = new TH2D(Form("CovMat%s", weightName.c_str()), ";Bin;Bin",
+                            _bins.size(), 0.5, _bins.size() + 0.5,
+                            _bins.size(), 0.5, _bins.size() + 0.5);
+
+    for(auto&& [ binIndex_i, bin_i ] : enumerate(_bins))
+      {
+        const double xsec_nom_i = bin_i->GetNominalXSec();
+
+        for(auto&& [ binIndex_j, bin_j ] : enumerate(_bins))
+          {
+            const int nunivs = bin_i->GetNUniverses(weightName);
+
+            const double xsec_nom_j = bin_j->GetNominalXSec();
+
+            double sum = 0.;
+
+            for(int univ = 0; univ < nunivs; ++univ)
+              {
+                const double xsec_i = bin_i->GetUniverseXSec(weightName, univ);
+                const double xsec_j = bin_j->GetUniverseXSec(weightName, univ);
+
+                sum += (xsec_i - xsec_nom_i) * (xsec_j - xsec_nom_j);
+              }
+
+            matrix->SetBinContent(binIndex_i + 1, binIndex_j + 1, sum / nunivs);
           }
       }
 

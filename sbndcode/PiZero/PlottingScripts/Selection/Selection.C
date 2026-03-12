@@ -39,7 +39,7 @@ void Selection(const TString productionVersion, const SelectionParams &selection
   GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
   std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling, selectionParams.rockbox_mask },
-                                          { "ncpizero", ncpizeroEvents, ncpizeroScaling, selectionParams.ncpizero_mask },
+					  { "ncpizero", ncpizeroEvents, ncpizeroScaling, selectionParams.ncpizero_mask },
                                           { "intime", intimeEvents, intimeScaling }
   };
 
@@ -69,7 +69,7 @@ void Selection(const TString productionVersion, const SelectionParams &selection
           const float ylow   = .78;
           const float yhigh  = .87;
 
-          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, yhigh}, ncolumns);
+          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, yhigh}, ncolumns, plot.logy);
 
           const TString wip = "SBND Work-in-progress";
           AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.035, 32);
@@ -78,6 +78,7 @@ void Selection(const TString productionVersion, const SelectionParams &selection
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");
+          canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".C");
 
           delete canvas;
         }

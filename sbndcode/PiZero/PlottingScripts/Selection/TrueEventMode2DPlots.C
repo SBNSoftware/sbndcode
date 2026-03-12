@@ -64,9 +64,9 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                 }
             }
 
-          gStyle->SetPaperSize(30,80);
+	  //	  gStyle->SetPaperSize(60,80);
 
-          TCanvas *canvas = new TCanvas("canvas","canvas", 933, 1000);
+          TCanvas *canvas = new TCanvas("canvas","canvas", 2*933, 2*1000);
           canvas->cd();
           canvas->Draw();
 

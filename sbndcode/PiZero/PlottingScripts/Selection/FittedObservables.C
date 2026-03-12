@@ -303,10 +303,8 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
                 && slc_best_pzc_photon_0_comp->at(slc_i) > .8 && slc_best_pzc_photon_1_comp->at(slc_i) > .8
                 && slc_best_pzc_photon_0_pur->at(slc_i) > .8 && slc_best_pzc_photon_1_pur->at(slc_i) > .8;
 
-              /*
-                if(!goodReco)
+	      if(!goodReco)
                 continue;
-              */
 
               const double shwEn0 = slc_pfp_shower_energy->at(slc_i).at(slc_best_pzc_photon_0_id->at(slc_i));
               const double shwEn1 = slc_pfp_shower_energy->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i));

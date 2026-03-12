@@ -1,0 +1,30 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: SimpleAnalyzer
+
+services:
+{
+  TFileService: { fileName: "simpleana_sbnd.root" }
+  @table::sbnd_basic_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    simpleana: 
+    { 
+      MCTruthModuleLabel:    "generator"
+      MCParticleModuleLabel: "largeant"
+      module_type:           "SimpleAnalyzer"
+    }
+  }
+
+  ana:       [ simpleana ]
+  end_paths: [ ana ]
+}

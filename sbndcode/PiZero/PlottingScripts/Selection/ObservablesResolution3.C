@@ -102,10 +102,8 @@ void ObservablesResolution3(const TString productionVersion)
                 && slc_best_pzc_photon_0_comp->at(slc_i) > .8 && slc_best_pzc_photon_1_comp->at(slc_i) > .8
                 && slc_best_pzc_photon_0_pur->at(slc_i) > .8 && slc_best_pzc_photon_1_pur->at(slc_i) > .8;
 
-              /*
-                if(!goodReco)
+	      if(!goodReco)
                 continue;
-              */
 
               ++nsig;
 

@@ -14,4 +14,6 @@ WeightSets weightSets = { { "flux", flux_weight_names_simple, 1000 },
 };
 
 WeightSets weightSetsTest = { { "flux", tmp_flux_weight_names, 1000 },
+			      { "genie", tmp_genie_weight_names, 500 },
+			      { "geant4", geant4_weight_names, 1000 },
 };

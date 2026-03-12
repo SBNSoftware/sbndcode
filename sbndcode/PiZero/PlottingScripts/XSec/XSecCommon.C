@@ -302,3 +302,107 @@ std::vector<std::string> SystSetToWeightList(const std::vector<Syst> &systs)
 
   return list;
 }
+
+double Chi2Comp(TH1F* observed, TH1F* pred, TH2D* cov)
+{
+  double sum = 0.;
+
+  TMatrixD covmatrix(observed->GetNbinsX(), observed->GetNbinsX());
+
+  for(int i = 1; i < observed->GetNbinsX() + 1; ++i)
+    {
+      for(int j = 1; j < observed->GetNbinsX() + 1; ++j)
+	{
+	  covmatrix[i - 1][j - 1] = cov->GetBinContent(i, j);
+	}
+    }
+  covmatrix *= 1e88;
+  covmatrix.Invert();
+  covmatrix *= 1e88;
+  
+  for(int i = 1; i < observed->GetNbinsX() + 1; ++i)
+    {
+      for(int j = 1; j < observed->GetNbinsX() + 1; ++j)
+	{
+	  sum += (observed->GetBinContent(i) - pred->GetBinContent(i)) * covmatrix[i - 1][j - 1] * (observed->GetBinContent(j) - pred->GetBinContent(j));
+	}
+    }
+
+  return sum;
+}
+
+TH2D* NormMatrix(TH1F *p, TH2D *m)
+{
+  TH2D* n = new TH2D(Form("%s_norm", m->GetName()), ";Bin;Bin", m->GetNbinsX(), .5, m->GetNbinsX() + .5,
+		     m->GetNbinsY(), .5, m->GetNbinsY() + .5);
+
+  double p_sum = 0;
+
+  for(int i = 1; i < p->GetNbinsX() + 1; ++i)
+    {
+      p_sum += p->GetBinContent(i);
+    }
+
+  double m_sum = 0;
+  
+  for(int i = 1; i < m->GetNbinsX() + 1; ++i)
+    {
+      for(int j = 1; j < m->GetNbinsY() + 1; ++j)
+	{
+	  m_sum += m->GetBinContent(i, j);
+	}
+    }
+
+  for(int i = 1; i < m->GetNbinsX() + 1; ++i)
+    {
+      for(int j = 1; j < m->GetNbinsY() + 1; ++j)
+	{
+	  n->SetBinContent(i, j, p->GetBinContent(i) * p->GetBinContent(j) * m_sum / (p_sum * p_sum));
+	}
+    }
+
+  return n;
+}
+
+TH2D* ShapeMatrix(TH1F *p, TH2D *m)
+{
+  TH2D* s = new TH2D(Form("%s_shape", m->GetName()), ";Bin;Bin", m->GetNbinsX(), .5, m->GetNbinsX() + .5,
+		     m->GetNbinsY(), .5, m->GetNbinsY() + .5);
+
+  double p_sum = 0;
+
+  for(int i = 1; i < p->GetNbinsX() + 1; ++i)
+    {
+      p_sum += p->GetBinContent(i);
+    }
+
+  for(int i = 1; i < m->GetNbinsX() + 1; ++i)
+    {
+      for(int j = 1; j < m->GetNbinsY() + 1; ++j)
+	{
+	  double sum_m_ik = 0, sum_m_kj = 0, sum_m_kl = 0;
+
+	  for(int k = 1; k < m->GetNbinsY() + 1; ++k)
+	    sum_m_ik += m->GetBinContent(i, k);
+
+	  for(int k = 1; k < m->GetNbinsX() + 1; ++k)
+	    sum_m_kj += m->GetBinContent(k, j);
+
+	  for(int k = 1; k < m->GetNbinsX() + 1; ++k)
+	    {
+	      for(int l = 1; l < m->GetNbinsY() + 1; ++l)
+		{
+		  sum_m_kl += m->GetBinContent(k, l);
+		}
+	    }
+
+	  double term_1 = (p->GetBinContent(j) / p_sum) * sum_m_ik;
+	  double term_2 = (p->GetBinContent(i) / p_sum) * sum_m_kj;
+	  double term_3 = ((p->GetBinContent(i) * p->GetBinContent(j)) / (p_sum * p_sum)) * sum_m_kl;
+
+	  s->SetBinContent(i, j, m->GetBinContent(i, j) - term_1 - term_2 + term_3);
+	}
+    }
+
+  return s;
+}

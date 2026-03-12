@@ -11,7 +11,7 @@ void RecoEff(const TString productionVersion)
 
   const std::vector<int> colours             = { kMagenta + 2, kRed - 4 };
   const std::vector<TString> names           = { "Reco Eff", "Good Reco Eff" };
-  const std::array<float, 4> legend_position = { .25, .86, .87, .91 };
+  const std::array<float, 4> legend_position = { .25, .85, .87, .91 };
   const int ncolumns                         = 3;
   const double energyBins[14]                = { 0., 50, 100, 150, 200, 250, 300, 400, 500, 750, 1e3, 1.25e3, 1.5e3, 2e3 };
 

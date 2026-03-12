@@ -5,25 +5,26 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
 
 void Compare()
 {
-  Compare(razzled_v12_trainings, "electron", 11);
-  Compare(razzled_v12_trainings, "muon", 13);
-  Compare(razzled_v12_trainings, "photon", 22);
-  Compare(razzled_v12_trainings, "pizero_photon", 22, 111);
-  Compare(razzled_v12_trainings, "pion", 211);
-  Compare(razzled_v12_trainings, "proton", 2212);
+  Compare(razzle_trainings_thesis, "electron", 11);
+  Compare(dazzle_trainings_thesis, "muon", 13);
+  Compare(razzle_trainings_thesis, "photon", 22);
+  Compare(razzle_trainings_thesis, "pizero_photon", 22, 111);
+  Compare(dazzle_trainings_thesis, "pion", 211);
+  Compare(dazzle_trainings_thesis, "proton", 2212);
 
-  Compare(razzled_v12_trainings, "electron_high_quality", 11, -1, 0.8, 0.8);
-  Compare(razzled_v12_trainings, "muon_high_quality", 13, -1, 0.8, 0.8);
-  Compare(razzled_v12_trainings, "photon_high_quality", 22, -1, 0.8, 0.8);
-  Compare(razzled_v12_trainings, "pizero_photon_high_quality", 22, 111, 0.8, 0.8);
-  Compare(razzled_v12_trainings, "pion_high_quality", 211, -1, 0.8, 0.8);
-  Compare(razzled_v12_trainings, "proton_high_quality", 2212, -1, 0.8, 0.8);
+  Compare(razzle_trainings_thesis, "electron_high_quality", 11, -1, 0.8, 0.8);
+  Compare(dazzle_trainings_thesis, "muon_high_quality", 13, -1, 0.8, 0.8);
+  Compare(razzle_trainings_thesis, "photon_high_quality", 22, -1, 0.8, 0.8);
+  Compare(razzle_trainings_thesis, "pizero_photon_high_quality", 22, 111, 0.8, 0.8);
+  Compare(dazzle_trainings_thesis, "pion_high_quality", 211, -1, 0.8, 0.8);
+  Compare(dazzle_trainings_thesis, "proton_high_quality", 2212, -1, 0.8, 0.8);
 }
 
 void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_suffix,
              const int pdg, const int motherPDG, const double purThresh, const double compThresh)
 {
-  const TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/comparisons";
+  //  const TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/comparisons/thesis";
+  const TString save_dir = "/exp/sbnd/data/users/hlay/thesis/ncpizero/plots/NCPiZeroAv12/razzled/comparisons";
   gSystem->Exec("mkdir -p " + save_dir);
   gSystem->Exec("mkdir -p " + save_dir + "/sep");
 
@@ -112,7 +113,8 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
           reader->AddVariable("shw_convGap", &shw_convGap);
           reader->AddVariable("shw_openAngle", &shw_openAngle);
           reader->AddVariable("shw_modHitDensity", &shw_modHitDensity);
-          if(training.name == "razzled_v12")
+	  //          if(training.name == "razzled_v12")
+	  if(training.name == "razzled")
             reader->AddVariable("shw_sqrtEnergyDensity>2.5?2.5:shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
           else
             reader->AddVariable("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
@@ -201,6 +203,7 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
         }
 
       TGraph *ROC = new TGraph(1100, eff, rej);
+      std::cout << ROC->Integral() + 0.5 << std::endl;
       ROC->SetLineColor(training.colour);
       ROC->SetLineWidth(5);
       multi->Add(ROC);

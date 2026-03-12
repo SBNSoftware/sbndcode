@@ -24,7 +24,7 @@ void NuisanceXSecExtract(const TString productionVersion, const TString gen, con
   Int_t  PDGnu, nfsp;
 
   Int_t    pdg[40];
-  Float_t  px[40], py[4], pz[40];
+  Float_t  px[40], py[40], pz[40];
 
   Float_t  weight;
   Double_t scale_factor;

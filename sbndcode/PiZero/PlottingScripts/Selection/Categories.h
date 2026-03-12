@@ -28,6 +28,19 @@ const std::vector<Cut> ncpizero_incl_categories = {
   { "MisRecoSignal", "slc_true_event_type_incl==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
+const std::vector<Cut> ncpizero_incl_multipi_bkgd_categories = {
+  { "Signal", "slc_true_event_type_incl==0 && slc_comp>.5", "Signal (NC 1#pi^{0})", kMagenta+2, 1., "Signal (NC\\,1$\\pi^{0}$)" },
+  { "NCMultiPi0", "slc_true_event_type_incl==2 && ((slc_true_n_neutral_pions + slc_true_n_dalitz_neutral_pions) > 1)", "NC Multi-#pi^{0}", kOrange+2, 1.,  },
+  { "OtherNC", "slc_true_event_type_incl==2 && ((slc_true_n_neutral_pions + slc_true_n_dalitz_neutral_pions) == 0)", "NC 0#pi^{0}", kOrange+1, },
+  { "CCNuMuPiZero", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions > 0", "CC #nu_{#mu} #pi^{0}", kGreen+2, 1., "CC\\,$\\nu_{\\mu} \\pi^{0}$" },
+  { "OtherCCNuMu", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions == 0", "Other CC #nu_{#mu}", kSpring+2, 1., "Other CC\\,$\\nu_{\\mu}$" },
+  { "CCNuE", "slc_true_event_type_incl==4", "CC #nu_{e}", kCyan+2, 1., "CC\\,$\\nu_{e}$" },
+  { "Dirt", "slc_true_event_type_incl==5", "Dirt", kOrange+3 },
+  { "NonFVNu", "slc_true_event_type_incl==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
+  { "Cosmic", "slc_true_event_type_incl==7 || slc_true_event_type_incl==8", "Cosmic", kRed+1 },
+  { "MisRecoSignal", "slc_true_event_type_incl==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
+};
+
 const std::vector<Cut> ncpizero_0p0pi_categories = {
   { "Signal", "slc_true_event_type_0p0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}0p0#pi^{#pm})", kMagenta+2, 1., "Signal (NC\\,1$\\pi^{0}0\\textrm{p}0\\pi^{\\pm}$)" },
   { "NCPiZero", "slc_true_event_type_0p0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC\\,1$\\pi^{0}$" },

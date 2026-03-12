@@ -245,6 +245,33 @@ void ObservablesResolution(const TString productionVersion)
 
   hShowerEnergy2DRecoFractionalResolutionProfile->Write();
 
+  TCanvas *cShowerEnergy2DRecoFractionalResolutionInverted = new TCanvas("cShowerEnergy2DRecoFractionalResolutionInverted", "cShowerEnergy2DRecoFractionalResolutionInverted");
+  cShowerEnergy2DRecoFractionalResolutionInverted->cd();
+  cShowerEnergy2DRecoFractionalResolutionInverted->SetRightMargin(.2);
+
+  TH2F *hShowerEnergy2DRecoFractionalResolutionInverted = new TH2F("hShowerEnergy2DRecoFractionalResolutionInverted", ";Shower E (MeV);E (#frac{True - Reco}{Reco});#gamma", 12, showerEnBins, 40, -1, 1);
+  events->Draw("(slc_pfp_true_energy*1e3 - slc_pfp_shower_energy)/(slc_pfp_shower_energy):slc_pfp_shower_energy>>hShowerEnergy2DRecoFractionalResolutionInverted",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hShowerEnergy2DRecoFractionalResolutionInverted->Draw("colz");
+  hShowerEnergy2DRecoFractionalResolutionInverted->GetYaxis()->SetTitleOffset(1.25);
+
+  cShowerEnergy2DRecoFractionalResolutionInverted->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_inverted.pdf");
+  cShowerEnergy2DRecoFractionalResolutionInverted->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_inverted.png");
+
+  TCanvas *cShowerEnergy2DRecoFractionalResolutionInvertedProfile = new TCanvas("cShowerEnergy2DRecoFractionalResolutionInvertedProfile", "cShowerEnergy2DRecoFractionalResolutionInvertedProfile");
+  cShowerEnergy2DRecoFractionalResolutionInvertedProfile->cd();
+  cShowerEnergy2DRecoFractionalResolutionInvertedProfile->SetRightMargin(.2);
+
+  TH1F *hShowerEnergy2DRecoFractionalResolutionInvertedProfile = (TH1F*) hShowerEnergy2DRecoFractionalResolutionInverted->ProfileX();
+
+  hShowerEnergy2DRecoFractionalResolutionInvertedProfile->SetLineColor(kMagenta+2);
+  hShowerEnergy2DRecoFractionalResolutionInvertedProfile->GetYaxis()->SetTitle("E (#frac{True - Reco}{Reco})");
+  hShowerEnergy2DRecoFractionalResolutionInvertedProfile->Draw("histe][");
+
+  cShowerEnergy2DRecoFractionalResolutionInvertedProfile->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_inverted.profile.pdf");
+  cShowerEnergy2DRecoFractionalResolutionInvertedProfile->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_inverted.profile.png");
+
   TCanvas *cShowerEnergy2DResolution = new TCanvas("cShowerEnergy2DResolution", "cShowerEnergy2DResolution");
   cShowerEnergy2DResolution->cd();
   cShowerEnergy2DResolution->SetRightMargin(.2);

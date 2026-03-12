@@ -70,6 +70,15 @@ public:
       _xsec = 0.;
     else
       _xsec = (_count * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
+
+    std::cout << "\nCount: " << _count << '\n'
+	      << "Scale Factor: " << _scaleFactor << '\n'
+	      << "Purity: " << _purity << '\n'
+	      << "Efficiency: " << _efficiency << '\n'
+	      << "nTargets: " << _nTargets << '\n'
+	      << "Int Flux: " << _intFlux << '\n'
+	      << "Bin Width: " << _binWidth << '\n'
+	      << "XSec: " << _xsec << '\n' << std::endl;
   }
 
   void CalculateXSecPurity(const double alternativeCount)

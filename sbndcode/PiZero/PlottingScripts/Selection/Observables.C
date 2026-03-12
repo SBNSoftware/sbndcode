@@ -43,24 +43,35 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
     {
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
-
+      /*
       const int ncolumns = 3;
       const float xlow   = .24;
       const float xhigh  = .83;
       const float ylow   = .78;
       const float yhigh  = .87;
-
+      */
+      const int ncolumns = 1;
+      const float xlow   = .57;//.24;//.57;
+      const float xhigh  = .83;//.5;//.83;
+      const float ylow   = .47;
+      const float yhigh  = .87;
+      
       MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, yhigh}, ncolumns);
 
-      const TString wip = "SBND Work-in-progress";
+      const TString wip = "SBND Preliminary";
       AddText(canvas, wip, kGray+2, {.2, .92, .25, .93}, 0.035, 12);
       const TString sim = "SBND Simulation";
       AddText(canvas, sim, kGray+2, {.2, .96, .25, .97}, 0.035, 12);
       const TString potString = POTString(false);
       AddText(canvas, potString, kGray+2, {.8, .92, .9, .93}, 0.035, 32);
 
+      const TString genieString1 = "GENIE v03.04.00 AR23\_20i\_00\_000";
+      AddText(canvas, genieString1, kBlack, {.57, .43, .83, .47}, 0.022, 12, 0, kBlack, 52);
+      //      AddText(canvas, genieString1, kBlack, {.24, .43, .5, .47}, 0.022, 12, 0, kBlack, 52);
+
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
+      canvas->SaveAs(saveDir + "/" + plot.name + ".C");
 
       delete canvas;
     }
