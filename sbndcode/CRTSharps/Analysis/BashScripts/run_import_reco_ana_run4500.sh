@@ -1,4 +1,4 @@
-for FILE in `ls /pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run4500/raw_files/*run4534*.root`
+for FILE in `ls /pnfs/sbnd/scratch/users/hlay/crt_sharps_data/run4500/raw_files/*run45[4-7]*.root`
 do
     export FILE=$FILE
     export base_file_name=$(basename $FILE ".root")
