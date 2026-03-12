@@ -80,7 +80,7 @@ void BasicVariables()
                              {"cl_ts1","cl_ts1", ";Ts1 (ns);Clusters",
                               100, 0, 1e7, plotcolour},
                              {"cl_nhits","cl_nhits", ";Hits per cluster;Clusters",
-                              10, 0, 10, plotcolour},
+                              10, -0.5, 9.5, plotcolour},
                              {"cl_composition","cl_composition", ";Composition;Clusters",
                               8, 0, 8, plotcolour, {"Undefined","X", "Y", "XY", "Z", "XZ", "YZ", "XYZ"}, "", true},
                              {"cl_composition_log","cl_composition", ";Composition;Clusters",

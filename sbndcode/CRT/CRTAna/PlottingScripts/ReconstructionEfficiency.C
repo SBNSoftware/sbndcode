@@ -1,6 +1,7 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/reconstructionefficiency";
+  //  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/reconstructionefficiency";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/tmp";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -93,6 +94,9 @@ void ReconstructionEfficiency()
   hTrueDepositEnergyClone->Scale(1 / hTrueDepositEnergyClone->GetMaximum());
   hTrueDepositEnergyClone->SetLineColor(kGray+2);
 
+  std::cout << "Energy Reco Eff" << hTrueDepositEnergyReco->GetEntries() << " " << hTrueDepositEnergy->GetEntries() << " "
+	    << (float)hTrueDepositEnergyReco->GetEntries()/hTrueDepositEnergy->GetEntries() << std::endl;
+  
   TEfficiency *eEnergyRecoEff = new TEfficiency(*hTrueDepositEnergyReco, *hTrueDepositEnergy);
   eEnergyRecoEff->SetTitle(";True energy (MeV);Efficiency");
   eEnergyRecoEff->SetLineColor(kRed+2);
@@ -122,6 +126,9 @@ void ReconstructionEfficiency()
   TH1F *hTrueTrackDepositEnergyClone = (TH1F*) hTrueTrackDepositEnergy->Clone("hTrueTrackDepositEnergyClone");
   hTrueTrackDepositEnergyClone->Scale(1 / hTrueTrackDepositEnergyClone->GetMaximum());
   hTrueTrackDepositEnergyClone->SetLineColor(kGray+2);
+
+  std::cout << "TrackEnergy Reco Eff" << hTrueTrackDepositEnergyReco->GetEntries() << " " << hTrueTrackDepositEnergy->GetEntries() << " "
+	    << (float)hTrueTrackDepositEnergyReco->GetEntries()/hTrueTrackDepositEnergy->GetEntries() << std::endl;
 
   TEfficiency *eTrackEnergyRecoEff = new TEfficiency(*hTrueTrackDepositEnergyReco, *hTrueTrackDepositEnergy);
   eTrackEnergyRecoEff->SetTitle(";True energy (MeV);Efficiency");

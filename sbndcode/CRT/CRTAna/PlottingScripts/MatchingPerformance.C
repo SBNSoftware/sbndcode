@@ -1,6 +1,7 @@
 void MatchingPerformance()
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/matchingperformance";
+  //  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/matchingperformance";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/tmp";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -216,6 +217,9 @@ void MatchingPerformance()
   hSPMatchableEnergyClone->Scale(1 / hSPMatchableEnergyClone->GetMaximum());
   hSPMatchableEnergyClone->SetLineColor(kGray+2);
 
+  std::cout << "SPMatchEff " << hSPMatchableMatchedEnergy->GetEntries() << " " << hSPMatchableEnergy->GetEntries()
+	    << " " << (float)hSPMatchableMatchedEnergy->GetEntries()/hSPMatchableEnergy->GetEntries() << std::endl;
+
   TEfficiency *eSPMatchEffEnergy = new TEfficiency(*hSPMatchableMatchedEnergy, *hSPMatchableEnergy);
   eSPMatchEffEnergy->SetTitle(";True energy (GeV);Efficiency");
   eSPMatchEffEnergy->SetLineColor(kRed+2);
@@ -245,6 +249,9 @@ void MatchingPerformance()
   TH1F *hSPMatchableEnergyLengthCutClone = (TH1F*) hSPMatchableEnergyLengthCut->Clone("hSPMatchableEnergyLengthCut");
   hSPMatchableEnergyLengthCutClone->Scale(1 / hSPMatchableEnergyLengthCutClone->GetMaximum());
   hSPMatchableEnergyLengthCutClone->SetLineColor(kGray+2);
+
+  std::cout << "SPMatchEffLengthCut " << hSPMatchableMatchedEnergyLengthCut->GetEntries() << " " << hSPMatchableEnergyLengthCut->GetEntries()
+	    << " " << (float)hSPMatchableMatchedEnergyLengthCut->GetEntries()/hSPMatchableEnergyLengthCut->GetEntries() << std::endl;
 
   TEfficiency *eSPMatchEffEnergyLengthCut = new TEfficiency(*hSPMatchableMatchedEnergyLengthCut, *hSPMatchableEnergyLengthCut);
   eSPMatchEffEnergyLengthCut->SetTitle(";True energy (GeV);Efficiency");
@@ -276,6 +283,9 @@ void MatchingPerformance()
   hTRMatchableEnergyClone->Scale(1 / hTRMatchableEnergyClone->GetMaximum());
   hTRMatchableEnergyClone->SetLineColor(kGray+2);
 
+  std::cout << "TRMatchEff " << hTRMatchableMatchedEnergy->GetEntries() << " " << hTRMatchableEnergy->GetEntries()
+	    << " " << (float)hTRMatchableMatchedEnergy->GetEntries()/hTRMatchableEnergy->GetEntries() << std::endl;
+
   TEfficiency *eTRMatchEffEnergy = new TEfficiency(*hTRMatchableMatchedEnergy, *hTRMatchableEnergy);
   eTRMatchEffEnergy->SetTitle(";True energy (GeV);Efficiency");
   eTRMatchEffEnergy->SetLineColor(kRed+2);
@@ -305,6 +315,9 @@ void MatchingPerformance()
   TH1F *hTRMatchableEnergyLengthCutClone = (TH1F*) hTRMatchableEnergyLengthCut->Clone("hTRMatchableEnergyLengthCut");
   hTRMatchableEnergyLengthCutClone->Scale(1 / hTRMatchableEnergyLengthCutClone->GetMaximum());
   hTRMatchableEnergyLengthCutClone->SetLineColor(kGray+2);
+
+  std::cout << "TRMatchEffLengthCut " << hTRMatchableMatchedEnergyLengthCut->GetEntries() << " " << hTRMatchableEnergyLengthCut->GetEntries()
+	    << " " << (float)hTRMatchableMatchedEnergyLengthCut->GetEntries()/hTRMatchableEnergyLengthCut->GetEntries() << std::endl;
 
   TEfficiency *eTRMatchEffEnergyLengthCut = new TEfficiency(*hTRMatchableMatchedEnergyLengthCut, *hTRMatchableEnergyLengthCut);
   eTRMatchEffEnergyLengthCut->SetTitle(";True energy (GeV);Efficiency");
@@ -456,6 +469,9 @@ void MatchingPerformance()
   hSPMatchedEnergyClone->Scale(1 / hSPMatchedEnergyClone->GetMaximum());
   hSPMatchedEnergyClone->SetLineColor(kGray+2);
 
+  std::cout << "SPMatchQual" << hSPWellMatchedEnergy->GetEntries() << " " << hSPMatchedEnergy->GetEntries()
+	    << " " << (float)hSPWellMatchedEnergy->GetEntries()/hSPMatchedEnergy->GetEntries() << std::endl;
+
   TEfficiency *eSPMatchQualEnergy = new TEfficiency(*hSPWellMatchedEnergy, *hSPMatchedEnergy);
   eSPMatchQualEnergy->SetTitle(";True energy (GeV);Quality");
   eSPMatchQualEnergy->SetLineColor(kRed+2);
@@ -485,6 +501,9 @@ void MatchingPerformance()
   TH1F *hTRMatchedEnergyClone = (TH1F*) hTRMatchedEnergy->Clone("hTRMatchedEnergy");
   hTRMatchedEnergyClone->Scale(1 / hTRMatchedEnergyClone->GetMaximum());
   hTRMatchedEnergyClone->SetLineColor(kGray+2);
+
+  std::cout << "TRMatchQual" << hTRWellMatchedEnergy->GetEntries() << " " << hTRMatchedEnergy->GetEntries()
+	    << " " << (float)hTRWellMatchedEnergy->GetEntries()/hTRMatchedEnergy->GetEntries() << std::endl;
 
   TEfficiency *eTRMatchQualEnergy = new TEfficiency(*hTRWellMatchedEnergy, *hTRMatchedEnergy);
   eTRMatchQualEnergy->SetTitle(";True energy (GeV);Quality");

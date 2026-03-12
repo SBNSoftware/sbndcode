@@ -1,6 +1,9 @@
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+
 void ReconstructionAccuracy()
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/reconstructionaccuracy";
+  //  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/reconstructionaccuracy";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/tmp";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -167,8 +170,14 @@ void ReconstructionAccuracy()
      50, 0, 1400, 50, 0, 100, "cl_has_sp && cl_sp_complete"},
   };
 
+  std::vector<plttwod> twodplots_thesis_corr = {
+    {"sp_pe_energy_relation_zoom", "cl_truth_energy*1e3:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints (Column Normalised)",
+     50, 0, 700, 50, 0, 20, "cl_has_sp && cl_sp_complete"},
+  };
+
   for(auto const &plot : plots)
     {
+      continue;
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
       canvas->SetTopMargin(.1);
@@ -181,6 +190,8 @@ void ReconstructionAccuracy()
       hist->GetYaxis()->SetNdivisions(507);
       if(plot.yaxisfromzero) hist->SetMinimum(0);
       tree->Draw(plot.var + ">>" + plot.name, plot.req,"histE");
+
+      std::cout << plot.name << " " << hist->GetMean() << " " << hist->GetStdDev() << std::endl;
 
       if(plot.binlabels.size() == plot.nbins)
         {
@@ -198,6 +209,7 @@ void ReconstructionAccuracy()
 
   for(auto const &plot : twodplots)
     {
+      continue;
       gStyle->SetNdivisions(505, "x");
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
@@ -214,6 +226,31 @@ void ReconstructionAccuracy()
         {
           canvas->SaveAs(saveDir + "/" + plot.name + ".png");
           canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
+        }
+      delete canvas, hist;
+    }
+
+  for(auto const &plot : twodplots_thesis_corr)
+    {
+      gStyle->SetNdivisions(505, "x");
+      TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
+      canvas->cd();
+      if(plot.zaxislog) canvas->SetLogz();
+      canvas->SetRightMargin(0.25);
+      gStyle->SetPalette(kBlueRedYellow);
+      TH2F* hist = new TH2F(plot.name, plot.axes_labels, plot.nbinsx, plot.xlow, plot.xhigh,
+                            plot.nbinsy, plot.ylow, plot.yhigh);
+      tree->Draw(plot.var + ">>" + plot.name, plot.req, "colz");
+      NormaliseEntriesByYTotal(hist);
+      hist->Draw("colz");
+      hist->GetYaxis()->SetTitleOffset(1.25);
+      hist->GetZaxis()->SetTitleOffset(1.3);
+      hist->GetZaxis()->SetTitleSize(.055);
+
+      if(save)
+        {
+          canvas->SaveAs(saveDir + "/" + plot.name + "_column_norm.png");
+          canvas->SaveAs(saveDir + "/" + plot.name + "_column_norm.pdf");
         }
       delete canvas, hist;
     }
