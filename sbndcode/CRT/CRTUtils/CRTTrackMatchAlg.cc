@@ -331,6 +331,7 @@ std::pair<sbn::crt::CRTTrack, double> CRTTrackMatchAlg::ClosestCRTTrackByScore(d
             return left.second < right.second;});
 
   if(candidates.size() > 0){
+    
     return candidates[0];
   }
   sbn::crt::CRTTrack track;

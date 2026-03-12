@@ -285,7 +285,7 @@ matchCand CRTT0MatchAlg::GetClosestCRTHit(detinfo::DetectorPropertiesData const&
   std::vector<matchCand> t0Candidates;
 
 
-
+  int i = 0;
   // Loop over all the CRT hits
   for(auto &crtHit : crtHits){
     // Check if hit is within the allowed t0 range
@@ -298,6 +298,7 @@ matchCand CRTT0MatchAlg::GetClosestCRTHit(detinfo::DetectorPropertiesData const&
     }
     //    if (crtTime>3000) std::cout << "crt hit times " << crtTime << std::endl;
     // If track is stitched then try all hits
+    ++i;
     if (!((crtTime >= t0MinMax.first - 10. && crtTime <= t0MinMax.second + 10.) 
             || t0MinMax.first == t0MinMax.second)) continue;
     // cut on CRT hit PE value
@@ -305,7 +306,6 @@ matchCand CRTT0MatchAlg::GetClosestCRTHit(detinfo::DetectorPropertiesData const&
     if (crtHit.x_err>fMaxUncert) continue;
     if (crtHit.y_err>fMaxUncert) continue;
     if (crtHit.z_err>fMaxUncert) continue;
-
     TVector3 crtPoint(crtHit.x_pos, crtHit.y_pos, crtHit.z_pos);
   
     //Calculate Track direction
@@ -346,6 +346,11 @@ matchCand CRTT0MatchAlg::GetClosestCRTHit(detinfo::DetectorPropertiesData const&
     }
 
 
+    if((crtPoint.X() > 60 && crtPoint.X() < 62 && crtPoint.Y() > 900 && crtPoint.Z() > 400 && crtPoint.Z() < 401) ||
+       (crtPoint.X() > 32 && crtPoint.X() < 33 && crtPoint.Y() > 600 && crtPoint.Y() < 700 && crtPoint.Z() > 271 && crtPoint.Z() < 272))
+      std::cout << "\t i = " << i << " with score " << startDist << " or " << endDist
+		<< "\t" << crtPoint.X() << " " << crtPoint.Y() << " " << crtPoint.Z() << std::endl;
+    
     matchCand newmc = makeNULLmc();
     if (startDist<fDistanceLimit || endDist<fDistanceLimit) {
     double distS = (crtPoint-thisstart).Mag();

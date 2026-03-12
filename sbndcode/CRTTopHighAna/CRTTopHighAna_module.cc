@@ -87,6 +87,7 @@ private:
   std::map<int, int> fHitMatchMap;
   std::map<int, std::set<int>> fTrackMatchMap;
   art::Handle<sim::ParticleAncestryMap> fDroppedTrackIDMapHandle;
+  std::map<int, float> fTPCTrackLengthMap;
 
   std::string fMCTruthLabel, fMCParticleLabel, fPFPLabel, fTPCTrackLabel, fHitMatchLabel,
     fTrackMatchLabel, fCRTHitLabel, fCRTTrackLabel, fFEBDataLabel, fCRTDataLabel;
@@ -94,7 +95,7 @@ private:
   TTree* fTree;
   
   int pdg;
-  float energy, angleToVertical, startAngleToVertical;
+  float energy, angleToVertical, startAngleToVertical, tpcTrackLength;
   bool primary;
 
   bool startContained, endContained, intersectsTPC, enters, exits, entersOrExits,
@@ -174,6 +175,7 @@ CRTTopHighAna::CRTTopHighAna(fhicl::ParameterSet const& p)
 
     fTree->Branch("hasTPCTrack", &hasTPCTrack);
     fTree->Branch("hasTPCLongTrack", &hasTPCLongTrack);
+    fTree->Branch("tpcTrackLength", &tpcTrackLength);
     fTree->Branch("hasHitMatch", &hasHitMatch);
     fTree->Branch("hasTrackMatch", &hasTrackMatch);
     fTree->Branch("hasGoodHitMatch", &hasGoodHitMatch);
@@ -187,7 +189,7 @@ CRTTopHighAna::CRTTopHighAna(fhicl::ParameterSet const& p)
 void CRTTopHighAna::analyze(art::Event const& e)
 {
   fTrackRecoSet.clear(); fTrackRecoLongSet.clear(); fHitMatchSet.clear(); fGoodHitMatchSet.clear(); fTrackMatchSet.clear();
-  fGoodTrackMatchSet.clear(); fHitMatchMap.clear(); fTrackMatchMap.clear();
+  fGoodTrackMatchSet.clear(); fHitMatchMap.clear(); fTrackMatchMap.clear(); fTPCTrackLengthMap.clear();
 
   fDroppedTrackIDMapHandle.clear();
 
@@ -254,6 +256,7 @@ void CRTTopHighAna::analyze(art::Event const& e)
   art::FindManyP<sbn::crt::CRTHit> crtTracksToHits(CRTTrackHandle, e, fCRTTrackLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+  std::map<int, int> trackidtopfp;
 
   for(auto const& pfp : PFPVec)
     {
@@ -276,12 +279,22 @@ void CRTTopHighAna::analyze(art::Event const& e)
       if(fDroppedTrackIDMapHandle->Exists(rolledtrackid))
         trackid = rolledtrackid;
       fTrackRecoSet.insert(trackid);
+      fTPCTrackLengthMap[trackid] = track->Length();
+
+      trackidtopfp[trackid] = pfp->Self();
 
       if(track->Length() > 5)
         fTrackRecoLongSet.insert(trackid);
 
       const art::Ptr<anab::T0> hitmatch   = trackToHitMatch.at(track.key());
       const art::Ptr<anab::T0> trackmatch = trackToTrackMatch.at(track.key());
+
+      if(pfp->Self() == 7)
+	std::cout << "PFP: " << pfp->Self() << '\n'
+		  << "Track Length: " << track->Length()  << '\n'
+		  << track->Start() << '\n'
+		  << track->End() << '\n' 
+		  << (track->End() - track->Start()).Unit() << std::endl;
 
       if(hitmatch.isNonnull())
         {
@@ -410,6 +423,7 @@ void CRTTopHighAna::analyze(art::Event const& e)
 
           hasTPCTrack       = fTrackRecoSet.count(trackid) != 0;
           hasTPCLongTrack   = fTrackRecoLongSet.count(trackid) != 0;
+	  tpcTrackLength    = hasTPCTrack ? fTPCTrackLengthMap.at(trackid) : -1.;
           hasHitMatch       = fHitMatchSet.count(trackid) != 0;
           hasTrackMatch     = fTrackMatchSet.count(trackid) != 0;
           hasGoodHitMatch   = fGoodHitMatchSet.count(trackid) != 0;
@@ -445,6 +459,16 @@ void CRTTopHighAna::analyze(art::Event const& e)
                 }
             }
 
+	  if(abs(pdg)==13 && entersOrExits && entersOrExitsCRT && hasTPCLongTrack && (intersectsBottomStrips + intersectsEastStrips + intersectsWestStrips + intersectsNorthStrips + intersectsSouthStrips + intersectsTopLowStrips + intersectsTopHighStrips) > 1 && hasTrackMatch && !hasHitMatch)
+	    {
+	      std::cout << "TrackID " << trackid << " in event " << e.event() << '\n'
+			<< "PFPID: " << trackidtopfp[trackid] << std::endl;
+	      if(hasGoodTrackMatch)
+		std::cout << "IS GOOD" << std::endl;
+	      else
+		std::cout << "IS BAD" << std::endl;
+	    }
+
           fTree->Fill();
         }
     }
@@ -470,7 +494,7 @@ void CRTTopHighAna::ResetVars()
   intersectsExtendedRaisedTopLow          = false; intersectsExtendedRaisedTopLowFullNorth = false;
   intersectsExtendedRaisedTopLowFullSouth = false; 
 
-  hasTPCTrack = false; hasTPCLongTrack = false; hasHitMatch = false; hasTrackMatch = false;
+  hasTPCTrack = false; hasTPCLongTrack = false; tpcTrackLength = -1.; hasHitMatch = false; hasTrackMatch = false;
 
   hitMatchTagger = -1; trackMatchTagger1 = -1; trackMatchTagger2 = -1; trackMatchTagger3 = -1;
 }

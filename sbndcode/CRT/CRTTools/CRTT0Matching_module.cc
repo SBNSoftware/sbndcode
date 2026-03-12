@@ -51,6 +51,7 @@
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 #include "larsim/MCCheater/BackTrackerService.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 
 // ROOT
 #include "TVector3.h"
@@ -147,6 +148,8 @@ namespace sbnd {
     if (event.getByLabel(fTpcTrackModuleLabel,trackListHandle))
       art::fill_ptr_vector(trackList, trackListHandle);   
 
+    art::FindOneP<recob::PFParticle> trackToPFP(trackListHandle, event, fTpcTrackModuleLabel);
+
     mf::LogInfo("CRTT0Matching")
       <<"Number of reconstructed tracks = "<<trackList.size()<<"\n"
       <<"Number of CRT hits = "<<crtList.size();
@@ -158,9 +161,15 @@ namespace sbnd {
       for(size_t track_i = 0; track_i < trackList.size(); track_i++) {
 
         // std::pair<double, double> matchedTime = t0Alg.T0AndDCAFromCRTHits(detProp, *trackList[track_i], crtHits, event);
-        matchCand closest = t0Alg.GetClosestCRTHit(detProp, *trackList[track_i], crtHits, event);
+	auto const& pfp = trackToPFP.at(trackList[track_i].key());
+	if(pfp->Self() == 7)
+	  std::cout << "==== PFP 7" << std::endl;
 
-        if(closest.dca >=0 ){
+	matchCand closest = t0Alg.GetClosestCRTHit(detProp, *trackList[track_i], crtHits, event);
+	if(pfp->Self() == 7)
+	  std::cout << "++++ PFP 7" << std::endl;
+	
+	if(closest.dca >=0 ){
           mf::LogInfo("CRTT0Matching")
             <<"Matched time = "<<closest.t0<<" [us] to track "<<trackList[track_i]->ID()<<" with DCA = "<<closest.dca;
           T0col->push_back(anab::T0(closest.t0*1e3, trackList[track_i]->ID(),  closest.thishit.plane, (int)closest.extrapLen, closest.dca));
@@ -173,6 +182,7 @@ namespace sbnd {
             if (crtList[ic]->ts0_ns==closest.thishit.ts0_ns && crtList[ic]->z_pos==closest.thishit.z_pos && crtList[ic]->peshit==closest.thishit.peshit)
               CRThitIndex=ic;
           }
+
           if (CRThitIndex != std::numeric_limits<unsigned>::max())
             util::CreateAssn(*this, event, *T0col, crtList[CRThitIndex], *t0_crthit_assn);
 

@@ -47,6 +47,7 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardataobj/RawData/ExternalTrigger.h"
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 
 // ROOT
 #include "TVector3.h"
@@ -140,6 +141,8 @@ namespace sbnd {
     if (event.getByLabel(fTpcTrackModuleLabel, tpcTrackListHandle))
       art::fill_ptr_vector(tpcTrackList, tpcTrackListHandle);   
 
+    art::FindOneP<recob::PFParticle> trackToPFP(tpcTrackListHandle, event, fTpcTrackModuleLabel);
+
     // Get track to hit associations
     //art::FindManyP<recob::Hit> findManyHits(tpcTrackListHandle, event, fTpcTrackModuleLabel);
 
@@ -148,6 +151,8 @@ namespace sbnd {
     std::vector<art::Ptr<sbn::crt::CRTTrack> > crtTrackList;
     if (event.getByLabel(fCrtTrackModuleLabel, crtTrackListHandle))
       art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
+
+    art::FindManyP<sbn::crt::CRTHit> trackToHits(crtTrackListHandle, event, fCrtTrackModuleLabel);
 
     std::vector<sbn::crt::CRTTrack> crtTracks;
     for(auto const& crtTrack : crtTrackList){
@@ -170,6 +175,26 @@ namespace sbnd {
         double matchedScore = matchedResult.second;
         
         if(matchedID != -99999){
+	  auto const& pfp = trackToPFP.at(tpcTrackList[tpc_i].key());
+	  if(pfp->Self() == 7)
+	    {
+	      geo::Point_t start(crtTrackList[matchedID]->x1_pos,crtTrackList[matchedID]->y1_pos,crtTrackList[matchedID]->z1_pos);
+	      geo::Point_t end(crtTrackList[matchedID]->x2_pos,crtTrackList[matchedID]->y2_pos,crtTrackList[matchedID]->z2_pos);
+
+	      std::cout << "PFP: " << pfp->Self() << '\n'
+			<< "Matched to CRTTrack: " << matchedID << " with score: " << matchedScore << '\n'
+			<< start << '\n'
+			<< end << '\n'
+			<< (end - start).Unit() << std::endl;
+	      
+	      std::cout << "Comprised of:" << std::endl;
+	      
+	      for(auto const& hit : trackToHits.at(crtTrackList[matchedID].key())){
+		std::cout << '\t' << hit.key() << " - " << hit.id() << std::endl;
+		std::cout << "\t\t" << hit->x_pos << " " << hit->y_pos << " " << hit->z_pos << std::endl;
+	      }
+	    }
+
           double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]
           T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), matchedScore)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackList[tpc_i], *Trackassn);
