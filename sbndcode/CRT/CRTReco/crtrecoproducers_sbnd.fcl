@@ -6,6 +6,7 @@ crtstriphitproducer_sbnd:
 {
    FEBDataModuleLabel:        "crtsim"
    ADCThreshold:              60
+   ADCSaturation:             @local::sbnd_crtsim.DetSimParams.AdcSaturation
    ErrorCoeff:                [ 0.26, -0.27, 0.025 ]
    AllowFlag1:                false
    ApplyTs0Window:            false
@@ -54,6 +55,9 @@ crtclustercharacterisationalg_sbnd:
    TimeWalkScale:  @local::sbnd_crtsim.DetSimParams.TDelayScale
 }
 
+crtclustercharacterisationalg_data_sbnd: @local::crtclustercharacterisationalg_sbnd
+crtclustercharacterisationalg_data_sbnd.TimeOffset: 0
+
 crtspacepointproducer_sbnd:
 {
    ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
@@ -62,7 +66,7 @@ crtspacepointproducer_sbnd:
 }
 
 crtspacepointproducer_data_sbnd: @local::crtspacepointproducer_sbnd
-crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.TimeOffset: 0
+crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_data_sbnd
 
 crttrackproducer_sbnd:
 {
@@ -77,5 +81,16 @@ crttrackproducer_sbnd:
 crttrackproducer_data_sbnd: @local::crttrackproducer_sbnd
 crttrackproducer_data_sbnd.UseTs0:        true
 crttrackproducer_data_sbnd.MaskedTaggers: [ ]
+
+crtblobproducer_sbnd:
+{
+   CRTSpacePointModuleLabel:   "crtspacepoints"
+   CoincidenceTimeRequirement: 100.
+   UseTs0:                     false
+   module_type:                "CRTBlobProducer"
+}
+
+crtblobproducer_data_sbnd: @local::crtblobproducer_sbnd
+crtblobproducer_data_sbnd.UseTs0: true
 
 END_PROLOG
