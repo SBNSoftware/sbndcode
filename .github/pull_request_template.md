@@ -1,11 +1,11 @@
 ## Description 
 Please provide a detailed description of the changes this pull request introduces. 
 
-$${\color{red}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}$$
+$${\color{blue}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}$$
 
-$${\color{red}\bf{\textrm{IMPORTANT UPDATE June 22nd 2025:}}}$$  If you are making a PR which is intended as a patch for the CURRENT production (which started in Spring 2025), you must make two PRs: one for develop and one for the production/v10_06_00 branch.
+$${\color{blue}\bf{\textrm{IMPORTANT UPDATE Feb 2nd 2026:}}}$$  If you are making a PR which is intended as a patch for the CURRENT production for gen 2 SBND analyses, you must make two PRs: one for develop and one for the production/sbnd-gen2 branch.
 
-$${\color{red}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}$$
+$${\color{blue}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}$$
 
 ## Checklist
 - [ ] Added at least 1 label from [available labels](https://github.com/SBNSoftware/sbndcode/issues/labels?sort=name-asc).
