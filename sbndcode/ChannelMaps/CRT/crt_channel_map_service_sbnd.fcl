@@ -2,7 +2,8 @@ BEGIN_PROLOG
 
 crt_channel_map_sbnd:
 {
-  FileName: "SBNDCRTChannelMap_Commissioning_v5.txt"
+  ChannelMapFileName:     "SBNDCRTChannelMap_Commissioning_v5.txt"
+  TimingChainMapFileName: "SBNDCRTTimingChainMap_v1.txt"
 }
 
 crt_channel_map_no_inversion:
