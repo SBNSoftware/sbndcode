@@ -63,7 +63,7 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
           wc.tn(single),
         ],
         grouped_filters: [
-          wc.tn(grouped),
+        //  wc.tn(grouped),
         ],
         channel_status_filters: [
         ],

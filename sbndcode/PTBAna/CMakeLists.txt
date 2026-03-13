@@ -1,7 +1,7 @@
 art_make(
          MODULE_LIBRARIES
-	 ROOT::Tree
+         ROOT::Tree
          larsim::Utils
-	 sbndcode_GeoWrappers
+         art_root_io::TFileService_service
 )
 install_fhicl()

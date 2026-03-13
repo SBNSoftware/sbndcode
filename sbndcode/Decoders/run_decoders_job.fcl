@@ -35,7 +35,7 @@
 #include "NTBDecoderDefaults.fcl"
 
 #include "crt_decoder_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_channel_map_service_sbnd.fcl"
 
 
 process_name: DECODE
@@ -44,7 +44,7 @@ services:
 {
     @table::sbnd_services
     TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
-    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTChannelMapService: @local::crt_channel_map_sbnd
     TFileService: {
         fileName: "decoder_hist.root"
     }

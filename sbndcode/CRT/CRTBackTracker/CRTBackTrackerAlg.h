@@ -33,7 +33,7 @@
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 // sbndcode
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 
 // larsim
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -53,32 +53,28 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
-        Name("CRTGeoAlg"),
-	  };
-
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
-          };
+      };
       fhicl::Atom<art::InputTag> SimDepositModuleLabel {
         Name("SimDepositModuleLabel"),
-          };
+      };
       fhicl::Atom<art::InputTag> FEBDataModuleLabel {
         Name("FEBDataModuleLabel"),
-          };
+      };
       fhicl::Atom<art::InputTag> StripHitModuleLabel {
         Name("StripHitModuleLabel"),
-          };
+      };
       fhicl::Atom<art::InputTag> ClusterModuleLabel {
         Name("ClusterModuleLabel"),
-          };
+      };
       fhicl::Atom<art::InputTag> SpacePointModuleLabel {
         Name("SpacePointModuleLabel"),
-          };
+      };
 
       fhicl::Atom<art::InputTag> TrackModuleLabel {
         Name("TrackModuleLabel"),
-          };
+      };
     };
 
     struct Category {
@@ -196,7 +192,7 @@ namespace sbnd::crt {
     CRTBackTrackerAlg();
 
     CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
-    CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
+      CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
     
     ~CRTBackTrackerAlg();
 
@@ -231,8 +227,8 @@ namespace sbnd::crt {
     void TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time);
 
   private:
-    
-    CRTGeoAlg::Config fCRTGeoAlgConfig;
+
+    art::ServiceHandle<CRTGeoService> fCRTGeoService;
 
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
@@ -252,7 +248,6 @@ namespace sbnd::crt {
     std::map<Category, int>              fMCPStripHitsMap;
     std::map<int, int>                   fTrackIDMotherMap;
     std::map<int, int>                   fStripHitMCPMap;
-    
   };
 }
 

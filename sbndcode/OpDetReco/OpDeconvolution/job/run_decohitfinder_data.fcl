@@ -3,10 +3,10 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "opdeconvolution_sbnd_data.fcl"
-#include "sbnd_flashfinder_deco_data.fcl"
-#include "sbnd_ophitfinder_deco_data.fcl"
-
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "wfalign_sbnd_data.fcl"
 process_name: DecoRecoData
 
 services:
@@ -41,6 +41,7 @@ physics:
 {
   producers:
   {
+    wfalign: @local::wfalign_data
     opdecopmt:     @local::SBNDOpDeconvolutionPMT_data
     ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
     opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0_data
@@ -48,12 +49,12 @@ physics:
   }
 
   reco: [
+    wfalign,
     opdecopmt,
     ophitpmt,
     opflashtpc0,
     opflashtpc1
   ]
-
 
   stream1: [out1]
   trigger_paths: [reco]

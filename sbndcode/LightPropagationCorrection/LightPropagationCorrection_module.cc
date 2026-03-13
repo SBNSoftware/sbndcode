@@ -74,6 +74,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fEvent = e.id().event();
     fRun = e.id().run();
     fSubrun = e.id().subRun();
+    _flashgeo->InitializeFlashGeoAlgo();
 
     std::unique_ptr< std::vector<sbn::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbn::CorrectedOpFlashTiming>);
     art::PtrMaker<sbn::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e};
@@ -128,16 +129,13 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         ResetSliceInfo();
         // --- Get the slice
         auto & slice = sliceVect[ix];
-
-        // --- Get the slice nu score and check whether we want to correct for it
-
         // Now I need to get all the hits associated to this flash and get the timing for all of them
         // Get the slices PFPs
         double _sliceMaxNuScore = -9999.;
         pfpVect = slice_pfp_assns.at(slice.key());
         for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
             if(pfp->IsPrimary() &&( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) ){
-                const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp->Self());
+                const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp.key());
                 for (auto const pfpMeta : pfpMetaVec) {
                     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
                     if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
@@ -150,11 +148,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 fRecoVx= xyz_vertex.X();
                 fRecoVy= xyz_vertex.Y();
                 fRecoVz= xyz_vertex.Z();
-            }            
-            // If correct light propagation time
-
-
-            // Get the SP associated to the PFP and then get the hits associated to the SP. ---> Hits associated to the PFP
+            }
             //Get the spacepoints associated to the PFParticle
             std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
             //Get the SP Hit assns    
@@ -170,7 +164,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                     fSpacePointY.push_back(SP->position().Y());
                     fSpacePointZ.push_back(SP->position().Z());
                     fSpacePointIntegral.push_back(SPHit.at(0)->Integral());
-
                     //Fill Bayrcenter Position
                     if(SP->position().X() < 0){
                         fChargeWeightX[0] += SP->position().X() * SPHit.at(0)->Integral();
@@ -208,7 +201,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         e.getByLabel(fSPECTDCLabel, tdcHandle);
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            return;
+            ResetSliceInfo();
+            continue;
         }
         else{
             const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
@@ -299,11 +293,9 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             newFlashTime = flasht0;
             sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
             correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
-            correctedOpFlashTiming.UpstreamTime_lightonly = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.UpstreamTime_tpczcorr = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.UpstreamTime_propcorr_tpczcorr = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.FMScore = _fFMScore;
-            correctedOpFlashTiming.SliceNuScore = _sliceMaxNuScore;
+            correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
@@ -450,16 +442,16 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
-            //double spToCathode = abs(fSpacePointX[sp]); // Distance from space point to cathode in mm
-            //double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + dy*dy + dz*dz); // Distance from cathode to OpDet in mm
-            //float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
-
             double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
             double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
 
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
-            float lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
+            float lightPropTime = 0;
+            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
+                lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
+            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
+                lightPropTime = lightPropTimeVIS;
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;

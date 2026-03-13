@@ -32,7 +32,6 @@ namespace blip {
       
 
     // Loop over cryostats
-    std::cout<<"NCryostats: "<<fGeom.Ncryostats()<<"\n";
     for(size_t cstat=0; cstat<fGeom.Ncryostats(); cstat++){
       auto const& cryoid = geo::CryostatID(cstat);
 
@@ -41,16 +40,14 @@ namespace blip {
         auto const& tpcid = geo::TPCID(cryoid,tpc);
 
         // Loop planes in TPC 'tpc'
-	auto const& plane0id = geo::PlaneID(cstat,tpc,0);
-	auto const& plane0geo = wireReadoutGeom->Get().Plane(plane0id);
+        auto const& plane0id = geo::PlaneID(cstat,tpc,0);
+        auto const& plane0geo = wireReadoutGeom->Get().Plane(plane0id);
         for(size_t pl=0; pl<wireReadoutGeom->Get().Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
           auto const& planegeo = wireReadoutGeom->Get().Plane(planeid);
           kNumChannels += planegeo.Nwires();
             
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
-          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<planegeo.Nwires()<<" wires\n";
-          std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
          
           kXTicksOffsets[cstat][tpc][pl] = 0;
 
@@ -66,12 +63,9 @@ namespace blip {
             auto const& tpcgeom   = cryostat.TPC(tpc);
             auto const xyz        = plane0geo.GetCenter();
             const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
-	    float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
+            float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
-	    std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
-
             kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
-
 	  } else {
           
             // for the case of 2D wirecell workflow, the plane-to-plane
@@ -82,12 +76,7 @@ namespace blip {
             // we still want to correct for global trigger offset though:
             kXTicksOffsets[cstat][tpc][pl] = clockData.TriggerTime()/kTickPeriod;
 
-          }
-          
-          // additional ad-hoc corrections supplied by user
-          //kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
-          std::cout << " offsetting plane " << pl << " by " << fTimeOffset[pl] << " ticks " << std::endl;
-          
+          }          
         }
       }
     }
@@ -164,18 +153,18 @@ namespace blip {
       for(int i=0; i<kNplanes; i++) {
         if( i == fCaloPlane ) continue;
         h_clust_overlap[iTPC][i]           = hdir.make<TH1D>(Form("t%i_p%i_clust_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
-	h_clust_dt[iTPC][i]                = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
+        h_clust_dt[iTPC][i]                = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
         h_clust_dtfrac[iTPC][i]            = hdir.make<TH1D>(Form("t%i_p%i_clust_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),150,-1.5,1.5);
         
         h_clust_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge",iTPC,i),  
 						 Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
 						 qbins,0,qmax,qbins,0,qmax);
-	h_clust_q[iTPC][i]->SetOption("colz");
+        h_clust_q[iTPC][i]->SetOption("colz");
         
         h_clust_q_cut[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge_cut",iTPC,i),  
 						     Form("Post-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",iTPC,fCaloPlane,i),
 						     qbins,0,qmax,qbins,0,qmax);
-	h_clust_q_cut[iTPC][i]->SetOption("colz");
+        h_clust_q_cut[iTPC][i]->SetOption("colz");
       
         h_clust_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
        
@@ -189,7 +178,7 @@ namespace blip {
         h_clust_truematch_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_truematch_charge",iTPC,i),  
           Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
           qbins,0,qmax,qbins,0,qmax);
-          h_clust_truematch_q[iTPC][i]->SetOption("colz");
+        h_clust_truematch_q[iTPC][i]->SetOption("colz");
         
         h_clust_truematch_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
 
@@ -239,6 +228,7 @@ namespace blip {
   void BlipRecoAlg::reconfigure( fhicl::ParameterSet const& pset ){
     
     fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
+    fHitTruthMatcher    = pset.get<std::string>   ("HitTruthMatcher",   "blipgaushitTruthMatch");
     fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
     fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
@@ -357,30 +347,38 @@ namespace blip {
     if (evt.getByLabel(fGeantProducer,pHandle))
       art::fill_ptr_vector(plist, pHandle);
  
-    // -- SimEnergyDeposits
+    // -- SimEnergyDeposits 
     art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
     if (evt.getByLabel(fSimDepProducer,sedHandle)){
       art::fill_ptr_vector(sedlist, sedHandle);
-    }
-
-    // -- SimChannels (usually dropped in reco)
+     }
+    std::vector<sim::IDE > sIDElist;
+    // -- SimChannels 
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
-    if (evt.getByLabel(fSimChanProducer,simchanHandle)) 
+    if (evt.getByLabel(fSimChanProducer,simchanHandle))
+    { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
-
+      //Loop over channels to get full sIDElist
+      for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
+	    {
+      std::vector<geo::WireID> wids    = wireReadoutGeom->Get().ChannelToWire( (*(simchanlist[chIndex])).Channel() ); //Not sure why this is a vector, but it should have len 1
+      const geo::PlaneID&      planeID = wids[0].planeID();
+      if(int(planeID.Plane) != fCaloPlane) continue; //only take calorimetry plane IDE values 
+      unsigned int MaxTDCTick = UINT_MAX;
+      std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, MaxTDCTick);
+      for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
+	        {
+	        sIDElist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+	       }
+	    }
+    }
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
     if (evt.getByLabel(fHitProducer,hitHandle))
       art::fill_ptr_vector(hitlist, hitHandle);
-
-    // -- hits (from gaushit), these are used in truth-matching of hits
-    art::Handle< std::vector<recob::Hit> > hitHandleGH;
-    std::vector<art::Ptr<recob::Hit> > hitlistGH;
-    if (evt.getByLabel("gaushit",hitHandleGH))
-      art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
     art::Handle< std::vector<recob::Track> > tracklistHandle;
@@ -390,8 +388,8 @@ namespace blip {
   
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
-    art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
+    art::FindManyP<recob::Track> fmtrkGH(hitHandle,evt,fTrkProducer);
+    art::FindMany<simb::MCParticle, anab::BackTrackerHitMatchingData> fmhh(hitHandle,evt,fHitTruthMatcher);
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -427,23 +425,7 @@ namespace blip {
     // use gaushitTruthMatch later on)
     //===============================================================
     std::map< int, int > map_gh;
-    // if input collection is already gaushit, this is trivial
-    if( fHitProducer == "gaushit" ) {
-      for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
-    // ... but if not, find the matching gaushit. There's no convenient
-    // hit ID, so we must loop through and compare channel/time (ugh)
-    } else {
-      std::map<int,std::vector<int>> map_chan_ghid;
-      for(auto& gh : hitlistGH ) map_chan_ghid[gh->Channel()].push_back(gh.key());
-      for(auto& h : hitlist ) {
-        for(auto& igh : map_chan_ghid[h->Channel()]){
-          if( hitlistGH[igh]->PeakTime() != h->PeakTime() ) continue;
-          map_gh[h.key()] = igh;
-          break;
-        }
-      }
-    }
-   
+    for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     //=====================================================
     // Record PDG for every G4 Track ID
     //=====================================================
@@ -512,14 +494,22 @@ namespace blip {
     if( plist.size() ) {
       pinfo.resize(plist.size());
       for(size_t i = 0; i<plist.size(); i++){
-        BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
+        //use sim::EnergyDeposits by default. This is heavy and may be dropped
+        if(sedlist.size()>0)
+        {
+          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
+        }
+        else //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
+        {
+          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sIDElist, fCaloPlane);
+        }
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
+        else pinfo[i].numElectrons = pinfo[i].depElectrons; // JACOB ADDITION Jan22, 2026 for strange channel IDE results
         pinfo[i].index = i;
       }
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
     }
-
 
     //=======================================
     // Map track IDs to the index in the vector
@@ -633,14 +623,8 @@ namespace blip {
       
 
       // find associated track
-      if( fHitProducer == "gaushit" && fmtrk.isValid() ) {
+      if( fmtrk.isValid() ) {
         if(fmtrk.at(i).size()) hitinfo[i].trkid = fmtrk.at(i)[0]->ID();
-      
-      // if the hit collection didn't have associations made
-      // to the tracks, try gaushit instead
-      } else if ( fmtrkGH.isValid() && map_gh.size() ) {
-        int gi = map_gh[i];
-        if (fmtrkGH.at(gi).size()) hitinfo[i].trkid= fmtrkGH.at(gi)[0]->ID(); 
       }
 
       // add to the map
@@ -650,8 +634,7 @@ namespace blip {
       if( hitinfo[i].trkid < 0 ) nhits_untracked++;
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
 
-    }//endloop over hits
-    
+    }//endloop over hits    
     //for(auto& a : tpc_plane_hitsMap ) {
       //for(auto& b : a.second ) 
         //std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
@@ -676,6 +659,7 @@ namespace blip {
     
     
     // Basic track inclusion cut: exclude hits that were tracked
+    int Tracked=0;
     for(size_t i=0; i<hitlist.size(); i++){
       if( hitinfo[i].trkid < 0 ) continue;
       auto it = map_trkid_index.find(hitinfo[i].trkid);
@@ -684,9 +668,9 @@ namespace blip {
       if( tracklist[trkindex]->Length() > fMaxHitTrkLength ) {
         hitIsTracked[i] = true;
         hitIsGood[i] = false;
+        Tracked++;
       }
-    }
-        
+    }        
 
     // Filter based on hit properties. For hits that are a part of
     // multi-gaussian fits (multiplicity > 1), need to re-think this.
@@ -717,7 +701,6 @@ namespace blip {
     // Hit clustering
     // ---------------------------------------------------
     std::map<int,std::map<int,std::vector<int>>> tpc_planeclustsMap;
-   
     for(auto const& tpc_plane_hitsMap : cryo_tpc_plane_hitsMap ) {
     
     for(auto const& plane_hitsMap : tpc_plane_hitsMap.second ) {
@@ -878,7 +861,6 @@ namespace blip {
     
     float _matchQDiffLimit= (fMatchQDiffLimit <= 0 ) ? std::numeric_limits<float>::max() : fMatchQDiffLimit;
     float _matchMaxQRatio = (fMatchMaxQRatio  <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxQRatio;
-     
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
       
       //std::cout
@@ -921,15 +903,15 @@ namespace blip {
               // Check that the two central wires intersect
               // *******************************************
               double y, z;
-	      geo::Point_t intsec_p;
-	      std::vector<geo::WireID> A_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcA.CenterChan);
-	      std::vector<geo::WireID> B_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcB.CenterChan);
+	            geo::Point_t intsec_p;
+	            std::vector<geo::WireID> A_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcA.CenterChan);
+	            std::vector<geo::WireID> B_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcB.CenterChan);
 
-	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireids.at(0),B_wireids.at(0),intsec_p)) continue;
-	      // Save intersect location, so we don't have to
+	            if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireids.at(0),B_wireids.at(0),intsec_p)) continue;
+	            // Save intersect location, so we don't have to
               // make another call to the Geometry service later
-	      y = intsec_p.Y();
-	      z = intsec_p.Z();
+	            y = intsec_p.Y();
+	            z = intsec_p.Z();
               TVector3 xloc(0,y,z);
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
@@ -1032,7 +1014,6 @@ namespace blip {
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].isMatched = true;
               for(auto hit : hitclust[hc.ID].HitIDs) hitinfo[hit].ismatch = true;
-             
               // Diagnostic plots for successful 3-plane matches
               //if( picky && hc.Plane != fCaloPlane ) {
                 //float q1 = (float)newBlip.clusters[fCaloPlane].Charge;
@@ -1082,18 +1063,26 @@ namespace blip {
             // if we made it this far, the blip is good!
             // associate this blip with the hits and clusters within it
             newBlip.ID = blips.size();
-            blips.push_back(newBlip);
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].BlipID = newBlip.ID;
               for( auto& h : hc.HitIDs ) hitinfo[h].blipid = newBlip.ID;
             }
+            //BLIPS HAVE A COPY OF HITCLUSTERS NOT A POINTER
+            //UPDATE THE HITCLUSTER VARS THAT HAVE CHANGED SINCE CONSTRUCTION
+            for(int iclust=0; iclust<int(sizeof(newBlip.clusters)/sizeof(newBlip.clusters[0])); iclust++)
+            {
+              if(newBlip.clusters[iclust].ID>-1){
+                newBlip.clusters[iclust].BlipID = newBlip.ID;
+                newBlip.clusters[iclust].isMatched = true;
+              }
+            }
+            blips.push_back(newBlip);
 
   
           }//endif ncands > 0
         }//endloop over caloplane ("Plane A") clusters
       }//endif calo plane has clusters
     }//endloop over TPCs
-
     // Re-index the clusters after removing unmatched
     if( !keepAllClusts ) {
       std::vector<blip::HitClust> hitclust_filt;

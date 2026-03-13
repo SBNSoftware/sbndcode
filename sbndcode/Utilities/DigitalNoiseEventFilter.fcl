@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+digital_noise_event_filter: {
+
+  module_type:                 "DigitalNoiseEventFilter"
+  TPCChannelInfoDataLabel:     "daq"
+  EvenFractionHighCut:         0.6
+  EvenFractionLowCut:          0.4
+  EvenFractionNumChannelCut:   10
+  RMSCut:                      1100.0
+  RMSNumChannelCut:            50
+  KeepIfNoChannelInfo:         true
+  UseBadChanStatus:            true
+}
+
+END_PROLOG

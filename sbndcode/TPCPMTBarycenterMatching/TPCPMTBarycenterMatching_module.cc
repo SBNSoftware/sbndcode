@@ -59,6 +59,10 @@
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
+// Calibration database includes
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+
 //ROOT includes
 #include <Eigen/Dense>
 #include <vector>
@@ -231,9 +235,9 @@ private:
   bool                      fCollectionOnly;       ///< Only use TPC spacepoints from the collection plane
   double                    fDistanceCandidateFlashes; ///< Maximum distance between candidate flashes to be considered for matching (cm)
   std::vector<double>       fCalAreaConst;         /// Calibration area constants for wire plane
-  std::vector<int>          fSkipChannelList;
-  double                    fOpDetVUVEff;           // Efficiencies for PMT detection
-  double                    fOpDetVISEff;           // Efficiencies for PMT detection
+  double                    fOpDetCoVUVEff;           // Efficiencies for PMT detection (Coated PMT VUV)
+  double                    fOpDetCoVISEff;           // Efficiencies for PMT detection (Coated PMT VIS)
+  double                    fOpDetUncoVISEff;           // Efficiencies for PMT detection (Uncoated PMT VIS)
   bool                      fVerbose;              ///< Print extra info
   bool                      fFillMatchTree;        ///< Fill an output TTree in the supplemental file
   bool                      fDo3DMatching;         ///< Wether to perform the matching in 3D or 2D
@@ -293,6 +297,9 @@ private:
   fhicl::ParameterSet _vis_params;
   std::shared_ptr<phot::OpticalPath> _optical_path_tool;
 
+  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+
+
 };
 
 
@@ -304,8 +311,9 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fCollectionOnly(p.get<bool>("CollectionOnly", true)),
   fDistanceCandidateFlashes(p.get<double>("DistanceCandidateFlashes")), // cm
   fCalAreaConst(p.get<std::vector<double>>("CalAreaConst")),
-  fOpDetVUVEff (p.get<double>("OpDetVUVEff")),
-  fOpDetVISEff (p.get<double>("OpDetVISEff")),
+  fOpDetCoVUVEff (p.get<double>("OpDetCoVUVEff")),
+  fOpDetCoVISEff (p.get<double>("OpDetCoVISEff")),
+  fOpDetUncoVISEff (p.get<double>("OpDetUncoVISEff")),
   fVerbose(p.get<bool>("Verbose")),
   fFillMatchTree(p.get<bool>("FillMatchTree")),
   fDo3DMatching(p.get<bool>("Do3DMatching")),
@@ -389,6 +397,9 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
   _optical_path_tool = std::shared_ptr<phot::OpticalPath>(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool")));
   _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, _optical_path_tool, true, false);
+
+  //Load PMT Calibration Database
+  fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
 }
 
 void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
@@ -890,12 +901,11 @@ double TPCPMTBarycenterMatchProducer::GetFlashLight(double flash_pe, std::vector
   double tot_visibility=0;
 
   for(size_t ch=0; ch<dir_visibility.size(); ch++){
-    if (std::find(fSkipChannelList.begin(), fSkipChannelList.end(), ch) != fSkipChannelList.end()) continue;
-    if(fOpDetType[ch]==0) tot_visibility += fOpDetVUVEff*dir_visibility[ch] + fOpDetVISEff*ref_visibility[ch];
-    else if(fOpDetType[ch]==1) tot_visibility += fOpDetVISEff*ref_visibility[ch];
+    if(!fPMTCalibrationDatabaseService->getReconstructChannel(ch)) continue; // Skip channels not reconstructed
+    if(fOpDetType[ch]==0) tot_visibility += fOpDetCoVUVEff*dir_visibility[ch] + fOpDetCoVISEff*ref_visibility[ch];
+    else if(fOpDetType[ch]==1) tot_visibility += fOpDetUncoVISEff*ref_visibility[ch];
     else continue; // skip other types
   }
-  //std::cout << " The number of PEs in the flash is " << flash_pe << " the total direct visibility is " << total_dir_visibility << " the total reflected visibility is " << total_ref_visibility << " with a VUV QE " << fOpDetVUVEff << " and a vis QE " << fOpDetVISEff << " so the total visibility is " << tot_visibility << std::endl;
   if((flash_pe == 0) || std::isinf(1/tot_visibility))
     return 0.0;
   // deposited light is inverse of visibility * PE count
