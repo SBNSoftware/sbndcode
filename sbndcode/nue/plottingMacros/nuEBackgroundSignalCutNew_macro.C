@@ -24,6 +24,13 @@
 #include <utility>
 #include <TLine.h>
 #include <TLatex.h>
+#include <TROOT.h>
+#include <TEfficiency.h>
+#include <TGraphAsymmErrors.h>
+#include <iomanip>
+#include <TH2D.h>
+#include <TProfile.h>
+
 
 struct eventCounter_struct{
     double nuE = 0;
@@ -201,6 +208,7 @@ struct highestEnergyPFP_struct{
     double trueEndZ = -999999;
     double trueLength = -999999;
     double numHits = -999999;
+    double clearCosmic = -999999;
 };
 
 histGroup_struct createHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
@@ -315,6 +323,7 @@ void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signa
         case 6: target = hist->dirt; break;
         case 7: if(signal == 1) target = hist->nu_eDirt; break;
         case 8: target = hist->other; break;
+        case 15: break;
     }
 
     if(!target) return;
@@ -1156,52 +1165,437 @@ void styleDrawBackSig(histGroup_struct hists,
         delete hist;
 }
 
+TH1F* makeTotalHist(const TH1F* h){
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_totalSum", h->GetName()));
+    hc->Reset();
+
+    double totalSum = h->Integral(0, h->GetNbinsX() + 1);
+    //std::cout << "total sum = " << totalSum << std::endl; 
+    
+    for(int i = 0; i <= hc->GetNbinsX() + 1; ++i){
+        hc->SetBinContent(i, totalSum);
+    }
+
+    return hc;
+}
+
+TH1F* makeCumulative(const TH1F* h, bool keepRight){
+    TH1F* hc = (TH1F*)h->Clone(Form("%s_cumulative", h->GetName()));
+    hc->Reset();
+
+    int n = h->GetNbinsX();
+
+    if (keepRight) {
+        double sum = 0.0;
+        for (int i = n; i >= 1; --i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+            //std::cout << "Bin " << i << ": bin content = " << h->GetBinContent(i) << ", sum = " << sum << std::endl;
+        }
+    } else {
+        double sum = 0.0;
+        for (int i = 1; i <= n; ++i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+            //std::cout << "Bin " << i << ": bin content = " << h->GetBinContent(i) << ", sum = " << sum << std::endl;
+        }
+    }
+
+    return hc;
+}
+
+double getMinValueEfficiency(const TEfficiency* eff, double xmin, double xmax, bool includeErrors = false){
+    if (!eff) return 0.0;
+
+    const TH1* hTotConst = eff->GetTotalHistogram();
+    if (!hTotConst) return 0.0;
+
+    TH1* hTot = const_cast<TH1*>(hTotConst);
+
+    int binMin = hTot->FindBin(xmin);
+    int binMax = hTot->FindBin(xmax);
+
+    binMin = std::max(binMin, 1);
+    binMax = std::min(binMax, hTot->GetNbinsX());
+
+    double minVal = std::numeric_limits<double>::max();
+
+    for (int i = binMin; i <= binMax; ++i) {
+        if (!hTot->GetBinContent(i)) continue;
+
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val -= eff->GetEfficiencyErrorLow(i);
+
+        if (val < minVal)
+            minVal = val;
+    }
+
+    if (minVal == std::numeric_limits<double>::max())
+        return 0.0;
+
+    return minVal;
+}
+
+double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false){
+    double maxVal = 0.0;
+
+    int nBins = eff->GetTotalHistogram()->GetNbinsX();
+    for (int i = 1; i <= nBins; ++i) {
+        if (!eff->GetTotalHistogram()->GetBinContent(i)) continue;
+
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val += eff->GetEfficiencyErrorUp(i);
+
+        if (val > maxVal)
+            maxVal = val;
+    }
+    return maxVal;
+}
+
+void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, double xmin, double xmax, double efficiencyWay = 0.0, bool writeMaxValues = false, const std::string& text_filename = ""){
+    if (!plot) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    double maxVal = getMaxValueEfficiency(plot, false);
+    double minVal = getMinValueEfficiency(plot, xmin, xmax, false);
+    //std::cout << "minVal = " << minVal << ", maxVal = " << maxVal << std::endl;
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+    c->SetLeftMargin(0.15);
+
+    plot->SetMarkerColor(kBlack);
+    plot->SetMarkerSize(0.7); 
+    plot->SetLineWidth(1);
+    plot->SetLineColor(kBlack);
+    plot->SetMarkerStyle(20);
+
+    const TH1* hTotal = plot->GetTotalHistogram();
+    int nBins = hTotal->GetNbinsX();
+    TGraphAsymmErrors* gEff = new TGraphAsymmErrors(nBins);    
+
+    double maxEff = 0;
+    double maxEffBin = 0;
+
+    for(int i = 1; i <= nBins; ++i){
+        double xCenter = hTotal->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal->GetXaxis()->GetBinUpEdge(i) - hTotal->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot->GetEfficiency(i);
+        double yErrLow  = plot->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot->GetEfficiencyErrorUp(i);
+ 
+        if(yEff > maxEff){
+            maxEff = yEff;
+            if(efficiencyWay == 1) maxEffBin = (xCenter + xErr);
+            if(efficiencyWay == -1) maxEffBin = (xCenter - xErr);
+        }
+
+        //std::cout << "Bin " << i << ": yEff = " << yEff << ", yErrLow = " << yErrLow << ", yErrUp = " << yErrUp << ", xErr = " << xErr << ", xCenter = " << xCenter << std::endl; 
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+
+    gEff->SetLineColor(kBlack);
+    gEff->SetMarkerColor(kBlack);
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.7);
+    gEff->SetLineWidth(1);
+    if(xmin != 999){
+        gEff->GetXaxis()->SetLimits(xmin, xmax);
+    }
+    gEff->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
+
+    const TH1* hAxis = plot->GetTotalHistogram();
+    gEff->SetTitle(plot->GetTitle());
+    gEff->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitleOffset(1.6);
+    gEff->Draw("AP");
+
+    plot->Draw("SAME");
+    gPad->Update();
+
+    auto* gBDT = plot->GetPaintedGraph();
+    gBDT->SetMarkerSize(0.8);
+    gBDT->Draw("PE SAME");
+
+    auto* g = plot->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    if(writeMaxValues){
+        std::ofstream outfile(text_filename, std::ios::app);
+        if(outfile.is_open()){
+            outfile << "=======================" << std::endl;
+            outfile << filename << std::endl;
+
+            outfile << "DL Nu+E Vertexing: Max Eff x Pur = " << maxEff << ", Bin Value = " << maxEffBin << std::endl;
+            outfile.close();
+        } else{
+            std::cerr << "Error: couldn't open " << text_filename << " for writing." << std::endl;
+        }
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot, "DL Nu+E", "LEP");
+
+    //leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void efficiency(histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0, const std::string& text_filename = ""){
+    bool keepRight = (efficiencyWay == -1);
+
+    // Total signal before cuts
+    //std::cout << "============================ total signal before cuts ============================" << std::endl;
+    TH1F* hTotalSignalBeforeCuts = makeTotalHist(histBeforeCuts->nuESignal);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total signal kept after cuts (cumulative)
+    //std::cout << "============================ total signal kept after cuts ============================" << std::endl;
+    TH1F* hPassedSignalAfterCuts = makeCumulative(histAfterCuts->nuESignal, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background before cuts
+    //std::cout << "============================ total background before cuts ============================" << std::endl;
+    TH1F* hTotalBackgroundBeforeCutsAdded = (TH1F*) histBeforeCuts->nuECosmic->Clone("hTotalBackgroundBeforeCutsAdded");
+    hTotalBackgroundBeforeCutsAdded->Reset();
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuECosmic);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuEBNB);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuEBNBFuzzy);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuESignalFuzzy);
+    //std::cout << "Number of entries = " << hTotalBackgroundBeforeCutsAdded->GetEntries() << std::endl;
+    TH1F* hTotalBackgroundBeforeCuts = makeTotalHist(hTotalBackgroundBeforeCutsAdded);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background kept after cuts (cumulative)
+    //std::cout << "============================ total background kept after cuts ============================" << std::endl;
+    TH1F* hPassedBackgroundAfterCutsAdded = (TH1F*) histAfterCuts->nuECosmic->Clone("hPassedBackgroundAfterCutsAdded");
+    hPassedBackgroundAfterCutsAdded->Reset();
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuECosmic);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuEBNB);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuEBNBFuzzy);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuESignalFuzzy);
+    TH1F* hPassedBackgroundAfterCuts = makeCumulative(hPassedBackgroundAfterCutsAdded, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background rejected after cuts (cumulative)
+    //std::cout << "============================ total background rejected after cuts ============================" << std::endl;
+    TH1F* hRejectedBackgroundAfterCuts = (TH1F*) hTotalBackgroundBeforeCuts->Clone("hRejectedBackgroundAfterCuts");
+    hRejectedBackgroundAfterCuts->Add(hPassedBackgroundAfterCuts, -1.0);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background + signal kept after cuts (cumulative)
+    //std::cout << "============================ total background + signal after cuts ============================" << std::endl;
+    TH1F* hPassedBackgroundSignalAfterCutsAdded = (TH1F*) histAfterCuts->nuECosmic->Clone("hPassedBackgroundSignalAfterCutsAdded");
+    hPassedBackgroundSignalAfterCutsAdded->Reset();
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuECosmic);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuEBNB);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuEBNBFuzzy);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuESignalFuzzy);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuESignal);
+    TH1F* hPassedBackgroundSignalAfterCuts = makeCumulative(hPassedBackgroundSignalAfterCutsAdded, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    TH1F* hEffPurNumerator = (TH1F*) histAfterCuts->nuESignal->Clone("hEffPurNumerator");
+    hEffPurNumerator->Reset();
+    hEffPurNumerator->Add(hPassedSignalAfterCuts);
+    hEffPurNumerator->Multiply(hPassedSignalAfterCuts);
+
+    TH1F* hEffPurDenominator = (TH1F*) histAfterCuts->nuESignal->Clone("hEffPurDenominator");
+    hEffPurDenominator->Reset();
+    hEffPurDenominator->Add(hTotalSignalBeforeCuts);
+    hEffPurDenominator->Multiply(hPassedBackgroundSignalAfterCuts);
+
+    // Efficiency plot
+    TEfficiency* eff = new TEfficiency(*hPassedSignalAfterCuts, *hTotalSignalBeforeCuts);
+    TEfficiency* rej = new TEfficiency(*hRejectedBackgroundAfterCuts, *hTotalBackgroundBeforeCuts);
+    TEfficiency* pur = new TEfficiency(*hPassedSignalAfterCuts, *hPassedBackgroundSignalAfterCuts);
+    TEfficiency* effPur = new TEfficiency(*hEffPurNumerator, *hEffPurDenominator);
+
+    eff->SetTitle(Form("%s;%s;Efficiency", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    eff->SetStatisticOption(TEfficiency::kFNormal);
+    
+    pur->SetTitle(Form("%s;%s;Purity", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    pur->SetStatisticOption(TEfficiency::kFNormal);
+    
+    rej->SetTitle(Form("%s;%s;Background Rejection", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    rej->SetStatisticOption(TEfficiency::kFNormal);
+    
+    effPur->SetTitle(Form("%s;%s;Efficiency x Purity", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    effPur->SetStatisticOption(TEfficiency::kFNormal);
+
+    std::string filenameEff = std::string(filename) + "_eff.pdf";
+    std::string filenamePur = std::string(filename) + "_pur.pdf";
+    std::string filenameRej = std::string(filename) + "_rej.pdf";
+    std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
+
+    eff->SetUseWeightedEvents(false);
+    pur->SetUseWeightedEvents(false);
+    rej->SetUseWeightedEvents(false);
+    effPur->SetUseWeightedEvents(false);
+    
+    drawEfficiencyErrors(eff, filenameEff, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay, false, text_filename);
+    drawEfficiencyErrors(pur, filenamePur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay, false, text_filename);
+    drawEfficiencyErrors(rej, filenameRej, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay, false, text_filename);
+    drawEfficiencyErrors(effPur, filenameEffPur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay, true, text_filename);
+}
+
+void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
+    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "2D Histogram", 200, 10, 800, 600);
+    TwoDHistCanvas->SetTickx();
+    TwoDHistCanvas->SetTicky();
+
+    hist->SetTitle(title);
+    hist->Draw("COLZ");
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+
+    TwoDHistCanvas->SaveAs(filename);
+
+    TProfile* profX = hist->ProfileX("_pfx", 1, -1, "s");
+
+    TCanvas* ProfileCanvas = new TCanvas("profile_canvas", "TProfile from TH2D", 300, 50, 800, 600);
+    ProfileCanvas->SetTickx();
+    ProfileCanvas->SetTicky();
+
+    profX->SetTitle(Form("ProfileX (Standard Deviation) of %s", title));
+    profX->SetLineColor(kBlack);
+    profX->SetLineWidth(2);
+    profX->SetMarkerStyle(20);
+    profX->SetMarkerSize(0.8);
+    profX->SetMarkerColor(kBlack);
+    profX->Draw("E1");
+
+    profX->GetXaxis()->SetTickLength(0.04);
+    profX->GetYaxis()->SetTickLength(0.03);
+    profX->GetXaxis()->SetTickSize(0.02);
+    profX->GetYaxis()->SetTickSize(0.02);
+    profX->SetStats(0);
+
+    std::string profileFilename = std::string(filename);
+    size_t dotPos = profileFilename.find_last_of(".");
+    if(dotPos != std::string::npos){
+        profileFilename.insert(dotPos, "_profileSD");
+    } else{
+        profileFilename += "_profileSD.pdf"; 
+    }
+
+    ProfileCanvas->SaveAs(profileFilename.c_str());
+
+    TProfile* profX_errMean = hist->ProfileX("_pfx_errMean", 1, -1, "");
+    TCanvas* ProfileErrCanvas = new TCanvas("profileErr_canvas", "TProfile from TH2D (Error on Mean)", 300, 50, 800, 600);
+    ProfileErrCanvas->SetTickx();
+    ProfileErrCanvas->SetTicky();
+
+    profX_errMean->SetTitle(Form("ProfileX (Error on Mean) of %s", title));
+    profX_errMean->SetLineColor(kBlack);
+    profX_errMean->SetLineWidth(2);
+    profX_errMean->SetMarkerStyle(20);
+    profX_errMean->SetMarkerSize(0.8);
+    profX_errMean->SetMarkerColor(kBlack);
+    profX_errMean->Draw("E1");
+
+    profX_errMean->GetXaxis()->SetTickLength(0.04);
+    profX_errMean->GetYaxis()->SetTickLength(0.03);
+    profX_errMean->GetXaxis()->SetTickSize(0.02);
+    profX_errMean->GetYaxis()->SetTickSize(0.02);
+    profX_errMean->SetStats(0);
+
+    std::string profileErrFilename = std::string(filename);
+    size_t dotPosErr = profileErrFilename.find_last_of(".");
+    if(dotPosErr != std::string::npos){
+            profileErrFilename.insert(dotPosErr, "_profileErrorMean");
+    } else{
+            profileErrFilename += "_profileErrorMean.pdf";
+    }
+
+    ProfileErrCanvas->SaveAs(profileErrFilename.c_str());
+
+    TwoDHistCanvas->Clear();
+    ProfileCanvas->Clear();
+}
+
 void nuEBackgroundSignalCut_macro(){
-    std::string txtFileName = "purity_max_values_withoutCuts.txt";
+    //std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0.txt";
+    std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2.txt";
 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLNuE_20Feb.root"); 
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0/";
+    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/merged.root"); 
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0/";
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2/";
+
+    gROOT->SetBatch(true);
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 0;
-    int CRUMBSCut = 0;
-    int FVCut = 0;
-    int primaryPFPCut = 0;
-    int razzledPDG2212Cut = 0;
-    int razzledPDG13Cut = 0;
-    int razzledPDG211Cut = 0;
-    int razzledPDG22Cut = 0;
-    int razzledPDG11Cut = 0;
-    int dEdxCut = 0;
-    int ETheta2Cut = 0;
+    int numRecoNeutrinosCut = 1;
+    int CRUMBSCut = 1;
+    int FVCut = 1;
+    int primaryPFPCut = 1;
+    int razzledPDG2212Cut = 1;
+    int razzledPDG13Cut = 1;
+    int razzledPDG211Cut = 1;
+    int razzledPDG22Cut = 1;
+    int razzledPDG11Cut = 1;
+    int dEdxCut = 1;
+    int ETheta2Cut = 1;
 
     // Cut values
-    double crumbsScoreCut_low = 0;
-    double crumbsScoreCut_high = 0;
+    double crumbsScoreCut_low = 0.12;
+    double crumbsScoreCut_high = 0.84;
 
-    double FVCut_xHigh = 0; 
-    double FVCut_xLow = 0; 
-    double FVCut_xCentre = 0; 
+    double FVCut_xHigh = 195; 
+    double FVCut_xLow = -197; 
+    double FVCut_xCentre = 10; 
 
-    double FVCut_yHigh = 0; 
-    double FVCut_yLow = 0; 
+    double FVCut_yHigh = 194; 
+    double FVCut_yLow = -196; 
     
-    double FVCut_zHigh = 0; 
-    double FVCut_zLow = 0; 
+    double FVCut_zHigh = 450; 
+    double FVCut_zLow = 6.5; 
    
     double primaryPFPCutValue = 1;
 
-    double razzled2212_highestEnergyPFP = 0;
-    double razzled13_highestEnergyPFP = 0;
-    double razzled211_highestEnergyPFP = 0;
-    double razzled22_highestEnergyPFP = 0;
-    double razzled11_highestEnergyPFP = 0;
+    double razzled2212High_highestEnergyPFP = 0.05;
+    double razzled2212Low_highestEnergyPFP = 0;
+    double razzled13High_highestEnergyPFP = 0.05;
+    double razzled13Low_highestEnergyPFP = 0;
+    double razzled211High_highestEnergyPFP = 0.05;
+    double razzled211Low_highestEnergyPFP = 0;
+    double razzled22High_highestEnergyPFP = 0.15;
+    double razzled22Low_highestEnergyPFP = 0;
+    double razzled11High_highestEnergyPFP = 1;
+    double razzled11Low_highestEnergyPFP = 0.85;
     
-    double dEdxHigh_highestEnergyPFP = 0;
-    double dEdxLow_highestEnergyPFP = 0; 
+    double dEdxHigh_highestEnergyPFP = 2;
+    double dEdxLow_highestEnergyPFP = 1; 
 
-    double ETheta2_highestEnergyPFP = 0;
+    double ETheta2High_highestEnergyPFP = 3.066;
+    double ETheta2Low_highestEnergyPFP = 0;
 
 
     // If the directory already exists, delete everything in it
@@ -1596,71 +1990,98 @@ void nuEBackgroundSignalCut_macro(){
     auto pfpPurityAfterCuts_splitDLNuE = createSplitHistGroup("pfpPurity_splitDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);
     auto pfpPurityAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpPurity_splitPFPDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);    
     
-    auto recoVXBeforeCuts = createHistGroup("recoVXBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);
-    auto recoVXAfterCuts = createHistGroup("recoVXAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (After Cuts)", 202, -202, 202);
-    auto recoVXAfterCuts_splitDLNuE = createSplitHistGroup("recoVX_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);
-    auto recoVXAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVX_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);    
+    auto recoVXBeforeCuts = createHistGroup("recoVXBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
+    auto recoVXAfterCuts = createHistGroup("recoVXAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
+    auto recoVXAfterCuts_splitDLNuE = createSplitHistGroup("recoVX_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 202, -202, 202);
+    auto recoVXAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVX_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 202, -202, 202);    
     
-    auto recoVYBeforeCuts = createHistGroup("recoVYBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);
-    auto recoVYAfterCuts = createHistGroup("recoVYAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (After Cuts)", 204, -204, 204);
-    auto recoVYAfterCuts_splitDLNuE = createSplitHistGroup("recoVY_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);
-    auto recoVYAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVY_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);    
+    auto recoVYBeforeCuts = createHistGroup("recoVYBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 204, -204, 204);
+    auto recoVYAfterCuts = createHistGroup("recoVYAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 204, -204, 204);
+    auto recoVYAfterCuts_splitDLNuE = createSplitHistGroup("recoVY_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 204, -204, 204);
+    auto recoVYAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVY_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 204, -204, 204);    
     
-    auto recoVZBeforeCuts = createHistGroup("recoVZBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);
-    auto recoVZAfterCuts = createHistGroup("recoVZAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (After Cuts)", 255, 0, 510);
-    auto recoVZAfterCuts_splitDLNuE = createSplitHistGroup("recoVZ_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);
-    auto recoVZAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZ_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);    
+    auto recoVZBeforeCuts = createHistGroup("recoVZBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 255, 0, 510);
+    auto recoVZAfterCuts = createHistGroup("recoVZAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 255, 0, 510);
+    auto recoVZAfterCuts_splitDLNuE = createSplitHistGroup("recoVZ_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 255, 0, 510);
+    auto recoVZAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZ_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 255, 0, 510);    
     
-    auto recoVXSmallerBinsBeforeCuts = createHistGroup("recoVXSmallerBinsBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);
-    auto recoVXSmallerBinsAfterCuts = createHistGroup("recoVXSmallerBinsAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (After Cuts)", 202, -202, 202);
-    auto recoVXSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVXSmallerBins_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);
-    auto recoVXSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXSmallerBins_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 202, -202, 202);    
+    auto recoVXSmallerBinsBeforeCuts = createHistGroup("recoVXSmallerBinsBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 808, -202, 202);
+    auto recoVXSmallerBinsAfterCuts = createHistGroup("recoVXSmallerBinsAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 808, -202, 202);
+    auto recoVXSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVXSmallerBins_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 808, -202, 202);
+    auto recoVXSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXSmallerBins_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 808, -202, 202);    
     
-    auto recoVYSmallerBinsBeforeCuts = createHistGroup("recoVYSmallerBinsBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);
-    auto recoVYSmallerBinsAfterCuts = createHistGroup("recoVYSmallerBinsAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (After Cuts)", 204, -204, 204);
-    auto recoVYSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVYSmallerBins_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);
-    auto recoVYSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYSmallerBins_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 204, -204, 204);    
+    auto recoVYSmallerBinsBeforeCuts = createHistGroup("recoVYSmallerBinsBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 816, -204, 204);
+    auto recoVYSmallerBinsAfterCuts = createHistGroup("recoVYSmallerBinsAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 816, -204, 204);
+    auto recoVYSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVYSmallerBins_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 816, -204, 204);
+    auto recoVYSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYSmallerBins_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 816, -204, 204);    
     
-    auto recoVZSmallerBinsBeforeCuts = createHistGroup("recoVZSmallerBinsBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);
-    auto recoVZSmallerBinsAfterCuts = createHistGroup("recoVZSmallerBinsAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (After Cuts)", 255, 0, 510);
-    auto recoVZSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVZSmallerBins_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);
-    auto recoVZSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZSmallerBins_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 255, 0, 510);    
+    auto recoVZSmallerBinsBeforeCuts = createHistGroup("recoVZSmallerBinsBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 1020, 0, 510);
+    auto recoVZSmallerBinsAfterCuts = createHistGroup("recoVZSmallerBinsAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 1020, 0, 510);
+    auto recoVZSmallerBinsAfterCuts_splitDLNuE = createSplitHistGroup("recoVZSmallerBins_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 1020, 0, 510);
+    auto recoVZSmallerBinsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZSmallerBins_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 1020, 0, 510);    
     
-    auto recoVXLowBeforeCuts = createHistGroup("recoVXLowBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (Before Cuts)", 40, -202, 182);
-    auto recoVXLowAfterCuts = createHistGroup("recoVXLowAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (After Cuts)", 40, -202, -182);
-    auto recoVXLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVXLow_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 40, -202, -182);
-    auto recoVXLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXLow_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 40, -202, -182);    
+    auto recoVXLowBeforeCuts = createHistGroup("recoVXLowBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 40, -202, 182);
+    auto recoVXLowAfterCuts = createHistGroup("recoVXLowAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 40, -202, -182);
+    auto recoVXLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVXLow_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 40, -202, -182);
+    auto recoVXLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXLow_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) ", 40, -202, -182);    
     
-    auto recoVYLowBeforeCuts = createHistGroup("recoVYLowBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (Before Cuts)", 40, -204, -184);
-    auto recoVYLowAfterCuts = createHistGroup("recoVYLowAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (After Cuts)", 40, -204, -184);
-    auto recoVYLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVYLow_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 40, -204, -184);
-    auto recoVYLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYLow_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 40, -204, -184);    
+    auto recoVYLowBeforeCuts = createHistGroup("recoVYLowBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 40, -204, -184);
+    auto recoVYLowAfterCuts = createHistGroup("recoVYLowAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) ", 40, -204, -184);
+    auto recoVYLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVYLow_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 40, -204, -184);
+    auto recoVYLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYLow_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) ", 40, -204, -184);    
     
-    auto recoVZLowBeforeCuts = createHistGroup("recoVZLowBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (Before Cuts)", 40, 0, 20);
-    auto recoVZLowAfterCuts = createHistGroup("recoVZLowAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (After Cuts)", 40, 0, 20);
-    auto recoVZLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVZLow_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 40, 0, 20);
-    auto recoVZLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZLow_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 40, 0, 20);    
+    auto recoVZLowBeforeCuts = createHistGroup("recoVZLowBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 0, 20);
+    auto recoVZLowAfterCuts = createHistGroup("recoVZLowAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 0, 20);
+    auto recoVZLowAfterCuts_splitDLNuE = createSplitHistGroup("recoVZLow_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 40, 0, 20);
+    auto recoVZLowAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZLow_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 40, 0, 20);    
     
-    auto recoVXHighBeforeCuts = createHistGroup("recoVXHighBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (Before Cuts)", 40, 182, 202);
-    auto recoVXHighAfterCuts = createHistGroup("recoVXHighAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) (After Cuts)", 40, 182, 202);
-    auto recoVXHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVXHigh_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 40, 182, 202);
-    auto recoVXHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXHigh_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm) (Before Cuts)", 40, 182, 202);    
+    auto recoVXHighBeforeCuts = createHistGroup("recoVXHighBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 40, 182, 202);
+    auto recoVXHighAfterCuts = createHistGroup("recoVXHighAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm)", 40, 182, 202);
+    auto recoVXHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVXHigh_splitDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm)", 40, 182, 202);
+    auto recoVXHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVXHigh_splitPFPDLNuE", "X Coordinate of Reco Neutrino: DL Nu+E Vertexing", "x_{Reco} (cm)", 40, 182, 202);    
     
-    auto recoVYHighBeforeCuts = createHistGroup("recoVYHighBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (Before Cuts)", 40, 184, 204);
-    auto recoVYHighAfterCuts = createHistGroup("recoVYHighAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm) (After Cuts)", 40, 184, 204);
-    auto recoVYHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVYHigh_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 40, 184, 204);
-    auto recoVYHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYHigh_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm) (Before Cuts)", 40, 184, 204);    
+    auto recoVYHighBeforeCuts = createHistGroup("recoVYHighBeforeCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 40, 184, 204);
+    auto recoVYHighAfterCuts = createHistGroup("recoVYHighAfterCuts", "Y Coordinate of Reco Neutrino", "y_{Reco} (cm)", 40, 184, 204);
+    auto recoVYHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVYHigh_splitDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm)", 40, 184, 204);
+    auto recoVYHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVYHigh_splitPFPDLNuE", "Y Coordinate of Reco Neutrino: DL Nu+E Vertexing", "y_{Reco} (cm)", 40, 184, 204);    
     
-    auto recoVZHighBeforeCuts = createHistGroup("recoVZHighBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (Before Cuts)", 40, 480, 510);
-    auto recoVZHighAfterCuts = createHistGroup("recoVZHighAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) (After Cuts)", 40, 480, 510);
-    auto recoVZHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVZHigh_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 40, 480, 510);
-    auto recoVZHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZHigh_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) (Before Cuts)", 40, 480, 510);    
+    auto recoVZHighBeforeCuts = createHistGroup("recoVZHighBeforeCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
+    auto recoVZHighAfterCuts = createHistGroup("recoVZHighAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
+    auto recoVZHighAfterCuts_splitDLNuE = createSplitHistGroup("recoVZHigh_splitDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 40, 480, 510);
+    auto recoVZHighAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("recoVZHigh_splitPFPDLNuE", "Z Coordinate of Reco Neutrino: DL Nu+E Vertexing", "z_{Reco} (cm) ", 40, 480, 510);    
     
     auto energyAsymmetryBeforeCuts = createHistGroup("energyAsymmetryBeforeCuts", "Energy Asymmetry of the PFP in the Slice with the Highest Energy (Before Cuts)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
     auto energyAsymmetryAfterCuts = createHistGroup("energyAsymmetryAfterCuts", "Energy Asymmetry of the PFP in the Slice with the Highest Energy (After Cuts)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
     auto energyAsymmetryAfterCuts_splitDLNuE = createSplitHistGroup("energyAsymmetry_splitDLNuE", "Energy Asymmetry of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
     auto energyAsymmetryAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("energyAsymmetry_splitPFPDLNuE", "Energy Asymmetry of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);    
 
+    double xMin = -201.3; double xMax = 201.3;
+    double yMin = -203.8; double yMax = 203.8;
+    double zMin = 0;      double zMax = 509.4;
+
+    TH2D *xCoordAngleDifference = new TH2D("xCoordAngleDifference", "", (int)round((xMax - xMin)/5), xMin, xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifference = new TH2D("yCoordAngleDifference", "", (int)round((yMax - yMin)/5), yMin, yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifference = new TH2D("zCoordAngleDifference", "", (int)round((zMax - zMin)/5), zMin, zMax, 40, 0, 180);
+
+    TH2D *xCoordAngleDifference_low = new TH2D("xCoordAngleDifference_low", "", 15, xMin, (xMin + 30), 40, 0, 180);
+    TH2D *yCoordAngleDifference_low = new TH2D("yCoordAngleDifference_low", "", 15, yMin, (yMin + 30), 40, 0, 180);
+    TH2D *zCoordAngleDifference_low = new TH2D("zCoordAngleDifference_low", "", 15, zMin, (zMin + 30), 40, 0, 180);
+    
+    TH2D *xCoordAngleDifference_high = new TH2D("xCoordAngleDifference_high", "", 15, (xMax - 30), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifference_high = new TH2D("yCoordAngleDifference_high", "", 15, (yMax - 30), yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifference_high = new TH2D("zCoordAngleDifference_high", "", 15, (zMax - 30), zMax, 40, 0, 180);
+
+    TH2D *xCoordEnergyAsymmetry = new TH2D("xCoordEnergyAsymmetry", "", (int)round((xMax - xMin)/5), xMin, xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetry = new TH2D("yCoordEnergyAsymmetry", "", (int)round((yMax - yMin)/5), yMin, yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetry = new TH2D("zCoordEnergyAsymmetry", "", (int)round((zMax - zMin)/5), zMin, zMax, 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetry_low = new TH2D("xCoordEnergyAsymmetry_low", "", 15, xMin, (xMin + 30), 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetry_low = new TH2D("yCoordEnergyAsymmetry_low", "", 15, yMin, (yMin + 30), 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetry_low = new TH2D("zCoordEnergyAsymmetry_low", "", 15, zMin, (zMin + 30), 20, -1, 1);
+    
+    TH2D *xCoordEnergyAsymmetry_high = new TH2D("xCoordEnergyAsymmetry_high", "", 15, (xMax - 30), xMax, 20, -1, 1);
+    TH2D *yCoordEnergyAsymmetry_high = new TH2D("yCoordEnergyAsymmetry_high", "", 15, (yMax - 30), yMax, 20, -1, 1);
+    TH2D *zCoordEnergyAsymmetry_high = new TH2D("zCoordEnergyAsymmetry_high", "", 55, (zMax - 110), zMax, 20, -1, 1);
 
     double numEvents_DLNuECosmic = 0;
     double numEvents_DLNuEBNB = 0;
@@ -1698,26 +2119,41 @@ void nuEBackgroundSignalCut_macro(){
         for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
             if(reco_sliceID->at(slice) == -999999) continue;
             // There is a reco slice in the event
-            
+            //std::cout << "============================== NEW SLICE ==============================" << std::endl;
+
             // Assigning a category to the slices
             // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
             double sliceCategoryPlottingMacro = -999999;
             if(reco_sliceOrigin->at(slice) == 0){
                 // This is a cosmic slice
                 sliceCategoryPlottingMacro = 0;
+                //std::cout << "Cosmic Slice: sliceCategoryPlottingMacro = 0" << std::endl;
             } else if(reco_sliceOrigin->at(slice) == 1){
                 // This is a nu+e elastic scatter slice
                 if(reco_sliceCompleteness->at(slice) > 0.5){
                     sliceCategoryPlottingMacro = 1;
+                    //std::cout << "Nu+E Slice: sliceCategoryPlottingMacro = 1" << std::endl;
                 } else{
                     sliceCategoryPlottingMacro = 2;
+                    //std::cout << "Nu+E Fuzzy Slice: sliceCategoryPlottingMacro = 2" << std::endl;
                 }
             } else if(reco_sliceOrigin->at(slice) == 3){
                 // This is a BNB slice
                 if(reco_sliceCompleteness->at(slice) > 0.5){
                     sliceCategoryPlottingMacro = 3;
+                    //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
                 } else{
                     sliceCategoryPlottingMacro = 4;
+                    //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
+                }
+            }
+
+            //std::cout << "Slice Origin = " << reco_sliceOrigin->at(slice) << ", CCNC = " << reco_sliceTrueCCNC->at(slice) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType->at(slice) << ", Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << ")" << std::endl;
+            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                    if(truth_particleStatusCode->at(trueParticle) == 1){
+                        //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
+                    }
                 }
             }
 
@@ -1782,6 +2218,15 @@ void nuEBackgroundSignalCut_macro(){
                 // This is a cosmic events
                 sliceInteractionType = 0;
             }
+
+            if(sliceInteractionType == -999999){
+                sliceInteractionType = 8;
+            }
+
+            //std::cout << "Slice interaction type assigned = " << sliceInteractionType << std::endl;
+            if(((sliceInteractionType != 1) && sliceInteractionType != 7) && ((sliceCategoryPlottingMacro == 1) || (sliceCategoryPlottingMacro == 2))){
+                //std::cout << "This is a nu+e slice but slice int type is not a nu+e scatter!!" << std::endl;
+            }
             
             double summedEnergy_beforeCuts = 0;
             double numPFPsSlice_beforeCuts = 0;
@@ -1789,12 +2234,14 @@ void nuEBackgroundSignalCut_macro(){
             
             highestEnergyPFP_struct highestEnergyPFP_beforeCuts;
 
+            //std::cout << "------ PFPs before cuts ------" << std::endl;
             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                     // PFP is in the slice
                     numPFPsSlice_beforeCuts++;
                     if(reco_particleIsPrimary->at(pfp) == 1) numPrimaryPFPsSlice_beforeCuts++;
 
+                    //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
                     summedEnergy_beforeCuts += reco_particleBestPlaneEnergy->at(pfp);
 
                     if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_beforeCuts.energy){
@@ -1828,6 +2275,7 @@ void nuEBackgroundSignalCut_macro(){
                         highestEnergyPFP_beforeCuts.trueEndY = reco_particleTrueEndY->at(pfp);
                         highestEnergyPFP_beforeCuts.trueEndZ = reco_particleTrueEndZ->at(pfp);
                         highestEnergyPFP_beforeCuts.numHits = reco_particleNumHits->at(pfp);
+                        highestEnergyPFP_beforeCuts.clearCosmic = reco_particleClearCosmic->at(pfp);
 
                         if(highestEnergyPFP_beforeCuts.trueVX != -999999 && highestEnergyPFP_beforeCuts.trueVY != -999999 && highestEnergyPFP_beforeCuts.trueVZ != -999999 && highestEnergyPFP_beforeCuts.trueEndX != -999999 && highestEnergyPFP_beforeCuts.trueEndY != -999999 && highestEnergyPFP_beforeCuts.trueEndZ != -999999){
                             double xCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVX - highestEnergyPFP_beforeCuts.trueEndX);
@@ -1839,6 +2287,9 @@ void nuEBackgroundSignalCut_macro(){
                     
                 }
             }
+            
+            //std::cout << "------------------------------" << std::endl;
+            //std::cout << "Before Cuts, PFP with Highest Energy: Energy = " << highestEnergyPFP_beforeCuts.energy << ", Clear Cosmic = " << highestEnergyPFP_beforeCuts.clearCosmic << ", True PDG = " << highestEnergyPFP_beforeCuts.truePDG << ", Vertex = (" << highestEnergyPFP_beforeCuts.vx << ", " << highestEnergyPFP_beforeCuts.vy << ", " << highestEnergyPFP_beforeCuts.vz << ")" << std::endl; 
 
             // Looped through all PFPs in the slice and now have the highest energy PFP out
             double angleDifference_beforeCuts = -999999;
@@ -1874,7 +2325,10 @@ void nuEBackgroundSignalCut_macro(){
             } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && signal == 1){
                 // This is something other than an electron from a nu+e elastic scatter
                 slicePFPType_beforeCuts = 1;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+            } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && signal != 1){
+                // This is a nu+e elastic scatter from a file that isn't the signal file, ignore it
+                slicePFPType_beforeCuts = 15;
+            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && highestEnergyPFP_beforeCuts.trueInt != 1098){
                 // This is an electron from a beam neutrino
                 slicePFPType_beforeCuts = 2;
             } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 2212 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
@@ -1946,6 +2400,7 @@ void nuEBackgroundSignalCut_macro(){
 
             // Add to plots before cuts
             //std::cout << "Slice Type = " << sliceCategoryPlottingMacro << ", Interaction Type = " << sliceInteractionType << ", True PDG of Highest Energy PFP in Slice = " << slicePFPType_beforeCuts << std::endl;
+            //std::cout << "Filling histograms before cuts applied ======================================" << std::endl;
             fillHistogram(&sliceCompletenessBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
             fillHistogram(&sliceCRUMBSBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
             fillHistogram(&slicePurityBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
@@ -1974,6 +2429,7 @@ void nuEBackgroundSignalCut_macro(){
             fillHistogram(&recoVXHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
             fillHistogram(&recoVYHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
             fillHistogram(&recoVZHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            //std::cout << "finished =========================================================================================" << std::endl;
             if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1) fillHistogram(&energyAsymmetryBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy)/recoilElectron.energy), &weights);
 
             // Add to plots if no clear cosmic score is cut on
@@ -2095,6 +2551,40 @@ void nuEBackgroundSignalCut_macro(){
                     fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
+                
+                    xCoordEnergyAsymmetry->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                    xCoordAngleDifference->Fill(recoVX, angleDifference_beforeCuts);
+                
+                    yCoordEnergyAsymmetry->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                    yCoordAngleDifference->Fill(recoVY, angleDifference_beforeCuts);
+                
+                    zCoordEnergyAsymmetry->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                    zCoordAngleDifference->Fill(recoVZ, angleDifference_beforeCuts);
+
+                    if(recoVX >= xMin && recoVX <= xMin+30){
+                        xCoordEnergyAsymmetry_low->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        xCoordAngleDifference_low->Fill(recoVX, angleDifference_beforeCuts);
+                    } else if(recoVX <= xMax && recoVX >= xMax-30){
+                        xCoordEnergyAsymmetry_high->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        xCoordAngleDifference_high->Fill(recoVX, angleDifference_beforeCuts);
+                    }
+
+                    if(recoVY >= yMin && recoVY <= yMin+30){
+                        yCoordEnergyAsymmetry_low->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        yCoordAngleDifference_low->Fill(recoVY, angleDifference_beforeCuts);
+                    } else if(recoVY <= yMax && recoVY >= yMax-30){
+                        yCoordEnergyAsymmetry_high->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        yCoordAngleDifference_high->Fill(recoVY, angleDifference_beforeCuts);
+                    }
+
+                    if(recoVZ >= zMin && recoVZ <= zMin+30){
+                        zCoordEnergyAsymmetry_low->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        zCoordAngleDifference_low->Fill(recoVZ, angleDifference_beforeCuts);
+                    } else if(recoVZ <= zMax && recoVZ >= zMax-110){
+                        zCoordEnergyAsymmetry_high->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
+                        zCoordAngleDifference_high->Fill(recoVZ, angleDifference_beforeCuts);
+                    }
+
                 }
             }
 
@@ -2107,56 +2597,64 @@ void nuEBackgroundSignalCut_macro(){
 
                 highestEnergyPFP_struct highestEnergyPFP_afterCuts;
 
+                //std::cout << "------ PFPs after cuts ------" << std::endl;
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
-                    // PFP is in the slice
-                    if(reco_particleClearCosmic->at(pfp) == 0){
-                        // PFP is not a clear cosmic
-                        numPFPsSlice_afterCuts++;
-                        if(reco_particleIsPrimary->at(pfp) == 1) numPrimaryPFPsSlice_afterCuts++; // PFP is a primary PFP
-                        
-                        summedEnergy_afterCuts += reco_particleBestPlaneEnergy->at(pfp);
-                        if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_afterCuts.energy){
-                            highestEnergyPFP_afterCuts.energy = reco_particleBestPlaneEnergy->at(pfp);
-                            highestEnergyPFP_afterCuts.theta = reco_particleTheta->at(pfp);
-                            highestEnergyPFP_afterCuts.PFPID = reco_particleID->at(pfp);
-                            highestEnergyPFP_afterCuts.dx = reco_particleDX->at(pfp);
-                            highestEnergyPFP_afterCuts.dy = reco_particleDY->at(pfp);
-                            highestEnergyPFP_afterCuts.dz = reco_particleDZ->at(pfp);
-                            highestEnergyPFP_afterCuts.vx = reco_particleVX->at(pfp);
-                            highestEnergyPFP_afterCuts.vy = reco_particleVY->at(pfp);
-                            highestEnergyPFP_afterCuts.vz = reco_particleVZ->at(pfp);
-                            highestEnergyPFP_afterCuts.completeness = reco_particleCompleteness->at(pfp);
-                            highestEnergyPFP_afterCuts.purity = reco_particlePurity->at(pfp);
-                            highestEnergyPFP_afterCuts.trackscore = reco_particleTrackScore->at(pfp);
-                            highestEnergyPFP_afterCuts.primary = reco_particleIsPrimary->at(pfp);
-                            highestEnergyPFP_afterCuts.truePDG = reco_particleTruePDG->at(pfp);
-                            highestEnergyPFP_afterCuts.trueOrigin = reco_particleTrueOrigin->at(pfp);
-                            highestEnergyPFP_afterCuts.trueInt = reco_particleTrueInteractionType->at(pfp);
-                            highestEnergyPFP_afterCuts.bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
-                            highestEnergyPFP_afterCuts.razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
-                            highestEnergyPFP_afterCuts.trueVX = reco_particleTrueVX->at(pfp);
-                            highestEnergyPFP_afterCuts.trueVY = reco_particleTrueVY->at(pfp);
-                            highestEnergyPFP_afterCuts.trueVZ = reco_particleTrueVZ->at(pfp);
-                            highestEnergyPFP_afterCuts.trueEndX = reco_particleTrueEndX->at(pfp);
-                            highestEnergyPFP_afterCuts.trueEndY = reco_particleTrueEndY->at(pfp);
-                            highestEnergyPFP_afterCuts.trueEndZ = reco_particleTrueEndZ->at(pfp);
-                            highestEnergyPFP_afterCuts.numHits = reco_particleNumHits->at(pfp);
+                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                        // PFP is in the slice
+                        if(reco_particleClearCosmic->at(pfp) == 0){
+                            // PFP is not a clear cosmic
+                            //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
+                            numPFPsSlice_afterCuts++;
+                            if(reco_particleIsPrimary->at(pfp) == 1) numPrimaryPFPsSlice_afterCuts++; // PFP is a primary PFP
+                            
+                            summedEnergy_afterCuts += reco_particleBestPlaneEnergy->at(pfp);
+                            if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_afterCuts.energy){
+                                highestEnergyPFP_afterCuts.energy = reco_particleBestPlaneEnergy->at(pfp);
+                                highestEnergyPFP_afterCuts.theta = reco_particleTheta->at(pfp);
+                                highestEnergyPFP_afterCuts.PFPID = reco_particleID->at(pfp);
+                                highestEnergyPFP_afterCuts.dx = reco_particleDX->at(pfp);
+                                highestEnergyPFP_afterCuts.dy = reco_particleDY->at(pfp);
+                                highestEnergyPFP_afterCuts.dz = reco_particleDZ->at(pfp);
+                                highestEnergyPFP_afterCuts.vx = reco_particleVX->at(pfp);
+                                highestEnergyPFP_afterCuts.vy = reco_particleVY->at(pfp);
+                                highestEnergyPFP_afterCuts.vz = reco_particleVZ->at(pfp);
+                                highestEnergyPFP_afterCuts.completeness = reco_particleCompleteness->at(pfp);
+                                highestEnergyPFP_afterCuts.purity = reco_particlePurity->at(pfp);
+                                highestEnergyPFP_afterCuts.trackscore = reco_particleTrackScore->at(pfp);
+                                highestEnergyPFP_afterCuts.primary = reco_particleIsPrimary->at(pfp);
+                                highestEnergyPFP_afterCuts.truePDG = reco_particleTruePDG->at(pfp);
+                                highestEnergyPFP_afterCuts.trueOrigin = reco_particleTrueOrigin->at(pfp);
+                                highestEnergyPFP_afterCuts.trueInt = reco_particleTrueInteractionType->at(pfp);
+                                highestEnergyPFP_afterCuts.bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
+                                highestEnergyPFP_afterCuts.razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
+                                highestEnergyPFP_afterCuts.trueVX = reco_particleTrueVX->at(pfp);
+                                highestEnergyPFP_afterCuts.trueVY = reco_particleTrueVY->at(pfp);
+                                highestEnergyPFP_afterCuts.trueVZ = reco_particleTrueVZ->at(pfp);
+                                highestEnergyPFP_afterCuts.trueEndX = reco_particleTrueEndX->at(pfp);
+                                highestEnergyPFP_afterCuts.trueEndY = reco_particleTrueEndY->at(pfp);
+                                highestEnergyPFP_afterCuts.trueEndZ = reco_particleTrueEndZ->at(pfp);
+                                highestEnergyPFP_afterCuts.numHits = reco_particleNumHits->at(pfp);
+                                highestEnergyPFP_afterCuts.clearCosmic = reco_particleClearCosmic->at(pfp);
 
-                            if(highestEnergyPFP_afterCuts.trueVX != -999999 && highestEnergyPFP_afterCuts.trueVY != -999999 && highestEnergyPFP_afterCuts.trueVZ != -999999 && highestEnergyPFP_afterCuts.trueEndX != -999999 && highestEnergyPFP_afterCuts.trueEndY != -999999 && highestEnergyPFP_afterCuts.trueEndZ != -999999){
-                                double xCoordDiff_length = (highestEnergyPFP_afterCuts.trueVX - highestEnergyPFP_afterCuts.trueEndX);
-                                double yCoordDiff_length = (highestEnergyPFP_afterCuts.trueVY - highestEnergyPFP_afterCuts.trueEndY);
-                                double zCoordDiff_length = (highestEnergyPFP_afterCuts.trueVZ - highestEnergyPFP_afterCuts.trueEndZ);
-                                highestEnergyPFP_afterCuts.trueLength = std::sqrt((xCoordDiff_length * xCoordDiff_length) + (yCoordDiff_length * yCoordDiff_length) + (zCoordDiff_length * zCoordDiff_length));
+                                if(highestEnergyPFP_afterCuts.trueVX != -999999 && highestEnergyPFP_afterCuts.trueVY != -999999 && highestEnergyPFP_afterCuts.trueVZ != -999999 && highestEnergyPFP_afterCuts.trueEndX != -999999 && highestEnergyPFP_afterCuts.trueEndY != -999999 && highestEnergyPFP_afterCuts.trueEndZ != -999999){
+                                    double xCoordDiff_length = (highestEnergyPFP_afterCuts.trueVX - highestEnergyPFP_afterCuts.trueEndX);
+                                    double yCoordDiff_length = (highestEnergyPFP_afterCuts.trueVY - highestEnergyPFP_afterCuts.trueEndY);
+                                    double zCoordDiff_length = (highestEnergyPFP_afterCuts.trueVZ - highestEnergyPFP_afterCuts.trueEndZ);
+                                    highestEnergyPFP_afterCuts.trueLength = std::sqrt((xCoordDiff_length * xCoordDiff_length) + (yCoordDiff_length * yCoordDiff_length) + (zCoordDiff_length * zCoordDiff_length));
+                                }
                             }
-                        }
 
+                        }
                     }
                 }
+            
+                //std::cout << "------------------------------" << std::endl;
+                //std::cout << "After Clear Cosmic Cuts, PFP with Highest Energy: Energy = " << highestEnergyPFP_afterCuts.energy << ", Clear Cosmic = " << highestEnergyPFP_afterCuts.clearCosmic << ", True PDG = " << highestEnergyPFP_afterCuts.truePDG << ", Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << ")" << std::endl; 
 
                 // Looped through all the PFPs that aren't clear cosmics and how have the highest energy PFP out
                 double angleDifference_afterCuts = -999999;
@@ -2176,7 +2674,10 @@ void nuEBackgroundSignalCut_macro(){
                 } else if(highestEnergyPFP_afterCuts.trueInt == 1098 && highestEnergyPFP_afterCuts.trueOrigin == 1 && signal == 1){
                     // This is something other than an electron from a nu+e elastic scatter
                     slicePFPType_afterCuts = 1;
-                } else if(std::abs(highestEnergyPFP_afterCuts.truePDG) == 11 && highestEnergyPFP_afterCuts.trueOrigin == 1){
+                } else if(highestEnergyPFP_afterCuts.trueInt == 1098 && signal != 1){
+                    // This is a nu+e elastic scatter not from the signal file
+                    slicePFPType_afterCuts = 15;
+                } else if(std::abs(highestEnergyPFP_afterCuts.truePDG) == 11 && highestEnergyPFP_afterCuts.trueOrigin == 1 && highestEnergyPFP_afterCuts.trueInt != 1098){
                     // This is an electron from a beam neutrino
                     slicePFPType_afterCuts = 2;
                 } else if(std::abs(highestEnergyPFP_afterCuts.truePDG) == 2212 && highestEnergyPFP_afterCuts.trueOrigin == 1){
@@ -2353,7 +2854,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
                 }
 
-                if(razzledPDG2212Cut == 1 && (highestEnergyPFP_afterCuts.razzledPDG2212 > razzled2212_highestEnergyPFP)){
+                if(razzledPDG2212Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG2212 > razzled2212High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG2212 < razzled2212Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 2212 cut
                     continue;
                 }
@@ -2376,7 +2877,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled2212IntSplit.other += weight;
                 }
 
-                if(razzledPDG13Cut == 1 && (highestEnergyPFP_afterCuts.razzledPDG13 > razzled13_highestEnergyPFP)){
+                if(razzledPDG13Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG13 > razzled13High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG13 < razzled13Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 13 cut
                     continue;
                 }
@@ -2399,7 +2900,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled13IntSplit.other += weight;
                 }
 
-                if(razzledPDG211Cut == 1 && (highestEnergyPFP_afterCuts.razzledPDG211 > razzled211_highestEnergyPFP)){
+                if(razzledPDG211Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG211 < razzled211Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 211 cut
                     continue;
                 }
@@ -2422,7 +2923,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled211IntSplit.other += weight;
                 }
 
-                if(razzledPDG22Cut == 1 && (highestEnergyPFP_afterCuts.razzledPDG22 > razzled22_highestEnergyPFP)){
+                if(razzledPDG22Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG22 > razzled22High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG22 < razzled22Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 22 cut
                     continue;
                 }
@@ -2445,7 +2946,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled22IntSplit.other += weight;
                 }
 
-                if(razzledPDG11Cut == 1 && (highestEnergyPFP_afterCuts.razzledPDG11 > razzled11_highestEnergyPFP)){
+                if(razzledPDG11Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG11 < razzled11Low_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG11 > razzled11High_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 11 cut
                     continue;
                 }
@@ -2491,7 +2992,7 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.dEdxIntSplit.other += weight;
                 }
 
-                if(ETheta2Cut == 1 && (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) > ETheta2_highestEnergyPFP){
+                if(ETheta2Cut == 1 && ((highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) > ETheta2High_highestEnergyPFP || (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) < ETheta2Low_highestEnergyPFP)){
                     // Highest energy PFP in slice doesn't pass the ETheta2 cut
                     continue;
                 }
@@ -2515,6 +3016,48 @@ void nuEBackgroundSignalCut_macro(){
                 }
 
                 // Fill histograms here
+                if((signal == 1 && sliceInteractionType == 1) || (signal == 1 && sliceInteractionType == 7)){
+                    if((slicePFPType_afterCuts == 0 || slicePFPType_afterCuts == 1) && (slicePFPType_afterCuts != 1 && slicePFPType_afterCuts != 7)){
+                        //std::cout << "DIFFERENT: sliceInteractionType = " << sliceInteractionType << ", slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", slicePFPType_beforeCuts = " << slicePFPType_beforeCuts << std::endl;
+                        //std::cout << "highestEnergyPFP_afterCuts.truePDG = " << highestEnergyPFP_afterCuts.truePDG << ", highestEnergyPFP_afterCuts.trueInt = " << highestEnergyPFP_afterCuts.trueInt << ", highestEnergyPFP_afterCuts.trueOrigin = " << highestEnergyPFP_afterCuts.trueOrigin << std::endl;
+                        //std::cout << "highestEnergyPFP_beforeCuts.truePDG = " << highestEnergyPFP_beforeCuts.truePDG << ", highestEnergyPFP_beforeCuts.trueInt = " << highestEnergyPFP_beforeCuts.trueInt << ", highestEnergyPFP_beforeCuts.trueOrigin = " << highestEnergyPFP_beforeCuts.trueOrigin << std::endl;
+                        //std::cout << "highestEnergyPFP_beforeCuts.clearCosmic = " << highestEnergyPFP_beforeCuts.clearCosmic << ", highestEnergyPFP_afterCuts.clearCosmic = " << highestEnergyPFP_afterCuts.clearCosmic << std::endl;
+                    }
+                }
+               
+                if((slicePFPType_afterCuts == 0 || slicePFPType_afterCuts == 1) && (sliceInteractionType != 1 && sliceInteractionType != 7)){
+                    std::cout << "HERE!" << std::endl;
+                    std::cout << "slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", sliceInteractionType = " << sliceInteractionType << std::endl;
+                    std::cout << "reco_sliceOrigin->at(slice) = " << reco_sliceOrigin->at(slice) << std::endl;
+                    std::cout << "signal = " << signal << ", sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << std::endl;
+                    std::cout << "Highest energy PFP before clear cosmic: Energy = " << highestEnergyPFP_beforeCuts.energy << ", true origin = " << highestEnergyPFP_beforeCuts.trueOrigin << ", Vertex = (" << highestEnergyPFP_beforeCuts.vx << ", " << highestEnergyPFP_beforeCuts.vy << ", " << highestEnergyPFP_beforeCuts.vz << "), true pdg = " << highestEnergyPFP_beforeCuts.truePDG << ", true origin = " << highestEnergyPFP_beforeCuts.trueOrigin << ", true int = " << highestEnergyPFP_beforeCuts.trueInt << std::endl;
+                    std::cout << "Highest energy PFP after clear cosmic: Enegry = " << highestEnergyPFP_afterCuts.energy << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), true pdg = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << std::endl; 
+                }
+
+                if(slicePFPType_afterCuts == 2){
+                    std::cout << "Electron!! slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", signal = " << signal << ", highestEnergyPFP_afterCuts.truePDG = " << highestEnergyPFP_afterCuts.truePDG << ", highestEnergyPFP_afterCuts.trueInt = " << highestEnergyPFP_afterCuts.trueInt << ", highestEnergyPFP_afterCuts.trueOrigin = " << highestEnergyPFP_afterCuts.trueOrigin << std::endl; 
+                }
+
+                
+                if(sliceInteractionType == 1 && signal == 1){
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Signal" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", num hits = " << highestEnergyPFP_afterCuts.numHits << std::endl;
+                    std::cout << "=============" << std::endl;
+                } else if(sliceInteractionType != 1){
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Background" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", num hits = " << highestEnergyPFP_afterCuts.numHits << std::endl;
+                    std::cout << "=============" << std::endl;
+                } else{
+                    std::cout << "=============" << std::endl;
+                    std::cout << "signal = " << signal << ", true int = " << highestEnergyPFP_afterCuts.trueInt << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+
+
                 fillHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
                 fillSplitPFPHistogram(&sliceCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, reco_sliceCompleteness->at(slice), &weights);
@@ -2626,11 +3169,45 @@ void nuEBackgroundSignalCut_macro(){
                 fillHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
                 fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVZ, &weights);
-               
-                if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1){ 
-                    fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) / recoilElectron.energy), &weights);
-                    fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) / recoilElectron.energy), &weights);
-                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) / recoilElectron.energy), &weights);
+                
+                if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1){
+                    fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
+                    fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
+                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
+                
+                    xCoordEnergyAsymmetry->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                    xCoordAngleDifference->Fill(recoVX, angleDifference_afterCuts);
+                
+                    yCoordEnergyAsymmetry->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                    yCoordAngleDifference->Fill(recoVY, angleDifference_afterCuts);
+                
+                    zCoordEnergyAsymmetry->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                    zCoordAngleDifference->Fill(recoVZ, angleDifference_afterCuts);
+
+                    if(recoVX >= xMin && recoVX <= xMin+30){
+                        xCoordEnergyAsymmetry_low->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        xCoordAngleDifference_low->Fill(recoVX, angleDifference_afterCuts);
+                    } else if(recoVX <= xMax && recoVX >= xMax-30){
+                        xCoordEnergyAsymmetry_high->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        xCoordAngleDifference_high->Fill(recoVX, angleDifference_afterCuts);
+                    }
+
+                    if(recoVY >= yMin && recoVY <= yMin+30){
+                        yCoordEnergyAsymmetry_low->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        yCoordAngleDifference_low->Fill(recoVY, angleDifference_afterCuts);
+                    } else if(recoVY <= yMax && recoVY >= yMax-30){
+                        yCoordEnergyAsymmetry_high->Fill(recoVY, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        yCoordAngleDifference_high->Fill(recoVY, angleDifference_afterCuts);
+                    }
+
+                    if(recoVZ >= zMin && recoVZ <= zMin+30){
+                        zCoordEnergyAsymmetry_low->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        zCoordAngleDifference_low->Fill(recoVZ, angleDifference_afterCuts);
+                    } else if(recoVZ <= zMax && recoVZ >= zMax-110){
+                        zCoordEnergyAsymmetry_high->Fill(recoVZ, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy));
+                        zCoordAngleDifference_high->Fill(recoVZ, angleDifference_afterCuts);
+                    }
+
                 }
             }
 
@@ -2651,13 +3228,19 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCompletenessAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(sliceCompletenessAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
-   
+    efficiency(&sliceCompletenessBeforeCuts, &sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompletenessHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceCompletenessBeforeCuts, &sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompletenessLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
+
     styleDrawAll(sliceCRUMBSBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(sliceCRUMBSAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    //std::cout << "------------------------------------------------------------------------------ CRUMBS ------------------------------------------------------------------------------" << std::endl;
+    efficiency(&sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBSHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    //std::cout << "--------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    efficiency(&sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBSLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(slicePurityBeforeCuts, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(slicePurityBeforeCuts, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2665,6 +3248,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(slicePurityAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(slicePurityAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&slicePurityBeforeCuts, &slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurityHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&slicePurityBeforeCuts, &slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurityLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(sliceNumRecoNeutBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2672,6 +3257,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(sliceNumRecoNeutAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
 
     styleDrawAll(sliceNumPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2679,6 +3266,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(sliceNumPFPsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
 
     styleDrawAll(sliceNumPrimaryPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2686,6 +3275,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2693,6 +3284,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoSumThetaRecoAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&ERecoSumThetaRecoBeforeCuts, &ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&ERecoSumThetaRecoBeforeCuts, &ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
 
     styleDrawAll(ERecoHighestThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2700,6 +3293,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(dEdxBeforeCuts, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxBeforeCuts, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2707,6 +3302,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdx_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(dEdxAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&dEdxBeforeCuts, &dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdxHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&dEdxBeforeCuts, &dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdxLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(razzledPDG11BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2714,6 +3311,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(razzledPDG11AfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&razzledPDG11BeforeCuts, &razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11High").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&razzledPDG11BeforeCuts, &razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11Low").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(razzledPDG13BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG13BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2721,6 +3320,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG13AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(razzledPDG13AfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&razzledPDG13BeforeCuts, &razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13High").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&razzledPDG13BeforeCuts, &razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13Low").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(razzledPDG22BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG22BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2728,6 +3329,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG22AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(razzledPDG22AfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&razzledPDG22BeforeCuts, &razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22High").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&razzledPDG22BeforeCuts, &razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22Low").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(razzledPDG211BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2735,6 +3338,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(razzledPDG211AfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&razzledPDG211BeforeCuts, &razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211High").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&razzledPDG211BeforeCuts, &razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211Low").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(razzledPDG2212BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG2212BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2742,6 +3347,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG2212AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(razzledPDG2212AfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&razzledPDG2212BeforeCuts, &razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212High").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&razzledPDG2212BeforeCuts, &razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212Low").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(pfpCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2749,6 +3356,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpCompletenessAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(pfpCompletenessAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&pfpCompletenessBeforeCuts, &pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompletenessHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&pfpCompletenessBeforeCuts, &pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompletenessLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(pfpPurityBeforeCuts, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpPurityBeforeCuts, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2756,6 +3365,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpPurityAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(pfpPurityAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&pfpPurityBeforeCuts, &pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurityHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&pfpPurityBeforeCuts, &pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurityLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2763,6 +3374,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVXAfterCuts, 999, 999, 999, 999, (base_path + "recoVX_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVXAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVX_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVXAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVX_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVXBeforeCuts, &recoVXAfterCuts, 999, 999, 190, 200, (base_path + "recoVXHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVXBeforeCuts, &recoVXAfterCuts, 999, 999, -200, -190, (base_path + "recoVXLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVYBeforeCuts, 999, 999, 999, 999, (base_path + "recoVY_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVYBeforeCuts, 999, 999, 999, 999, (base_path + "recoVY_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2770,6 +3383,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVYAfterCuts, 999, 999, 999, 999, (base_path + "recoVY_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVYAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVY_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVYAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVY_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVYBeforeCuts, &recoVYAfterCuts, 999, 999, 192, 202, (base_path + "recoVYHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVYBeforeCuts, &recoVYAfterCuts, 999, 999, -202, -192, (base_path + "recoVYLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVZBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZ_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVZBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZ_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2777,6 +3392,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVZAfterCuts, 999, 999, 999, 999, (base_path + "recoVZ_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVZAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVZ_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVZAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVZ_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVZBeforeCuts, &recoVZAfterCuts, 999, 999, 486, 510, (base_path + "recoVZHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVZBeforeCuts, &recoVZAfterCuts, 999, 999, 0, 16, (base_path + "recoVZLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVXSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2784,6 +3401,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVXSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "recoVXSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVXSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVXSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVXSmallerBinsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVXSmallerBins_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVXSmallerBinsBeforeCuts, &recoVXSmallerBinsAfterCuts, 999, 999, -202, -190, (base_path + "recoVXSmallerBinsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVXSmallerBinsBeforeCuts, &recoVXSmallerBinsAfterCuts, 999, 999, 190, 202, (base_path + "recoVXSmallerBinsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVYSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVYSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2791,6 +3410,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVYSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "recoVYSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVYSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVYSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVYSmallerBinsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVYSmallerBins_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVYSmallerBinsBeforeCuts, &recoVYSmallerBinsAfterCuts, 999, 999, -204, -192, (base_path + "recoVYSmallerBinsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVYSmallerBinsBeforeCuts, &recoVYSmallerBinsAfterCuts, 999, 999, 192, 204, (base_path + "recoVYSmallerBinsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVZSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVZSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2798,6 +3419,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVZSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "recoVZSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVZSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVZSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVZSmallerBinsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVZSmallerBins_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVZSmallerBinsBeforeCuts, &recoVZSmallerBinsAfterCuts, 999, 999, 0, 16, (base_path + "recoVZSmallerBinsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVZSmallerBinsBeforeCuts, &recoVZSmallerBinsAfterCuts, 999, 999, 486, 510, (base_path + "recoVZSmallerBinsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVXLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2805,6 +3428,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVXLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVXLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVXLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVXLowAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVXLow_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVXLowBeforeCuts, &recoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVXLowHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVXLowBeforeCuts, &recoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVXLowLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVYLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVYLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2812,6 +3437,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVYLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVYLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVYLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVYLowAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVYLow_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVYLowBeforeCuts, &recoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVYLowHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVYLowBeforeCuts, &recoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVYLowLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVZLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVZLowBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2819,6 +3446,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVZLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVZLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVZLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVZLowAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVZLow_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVZLowBeforeCuts, &recoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVZLowHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVZLowBeforeCuts, &recoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "recoVZLowLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVXHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2826,6 +3455,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVXHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVXHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVXHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVXHighAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVXHigh_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVXHighBeforeCuts, &recoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVXHighHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVXHighBeforeCuts, &recoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVXHighLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVYHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVYHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVYHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2833,6 +3464,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVYHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVYHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVYHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVYHighAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVYHigh_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVYHighBeforeCuts, &recoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVYHighHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVYHighBeforeCuts, &recoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVYHighLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "recoVZHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2840,6 +3473,8 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawBackSig(recoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVZHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(recoVZHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "recoVZHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(recoVZHighAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "recoVZHigh_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&recoVZHighBeforeCuts, &recoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVZHighHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&recoVZHighBeforeCuts, &recoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "recoVZHighLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
     styleDrawBackSig(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -2848,6 +3483,225 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawSplit(energyAsymmetryAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     styleDrawPFPSplit(energyAsymmetryAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
 
+
+    TwoDHistDraw(xCoordAngleDifference, (base_path + "xCoordAngleDifference.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifference, (base_path + "yCoordAngleDifference.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifference, (base_path + "zCoordAngleDifference.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifference_low, (base_path + "xCoordAngleDifference_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifference_low, (base_path + "yCoordAngleDifference_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifference_low, (base_path + "zCoordAngleDifference_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    
+    TwoDHistDraw(xCoordAngleDifference_high, (base_path + "xCoordAngleDifference_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifference_high, (base_path + "yCoordAngleDifference_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifference_high, (base_path + "zCoordAngleDifference_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    TwoDHistDraw(xCoordEnergyAsymmetry, (base_path + "xCoordEnergyAsymmetry.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetry, (base_path + "yCoordEnergyAsymmetry.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetry, (base_path + "zCoordEnergyAsymmetry.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+
+    TwoDHistDraw(xCoordEnergyAsymmetry_low, (base_path + "xCoordEnergyAsymmetry_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetry_low, (base_path + "yCoordEnergyAsymmetry_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetry_low, (base_path + "zCoordEnergyAsymmetry_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+
+    TwoDHistDraw(xCoordEnergyAsymmetry_high, (base_path + "xCoordEnergyAsymmetry_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex X Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(yCoordEnergyAsymmetry_high, (base_path + "yCoordEnergyAsymmetry_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Y Coordinate (cm);Energy Asymmetry");
+    TwoDHistDraw(zCoordEnergyAsymmetry_high, (base_path + "zCoordEnergyAsymmetry_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Energy Asymmetry of Highest Energy PFP in Slice;Reco Neutrino Vertex Z Coordinate (cm);Energy Asymmetry");
+
     std::cout << "Numbers of events (DL Nu+E): BNB = " << numEvents_DLNuEBNB << ", Intime Cosmics = " << numEvents_DLNuECosmic << ", Nu+E Elastic Scatters = " << numEvents_DLNuENuE << std::endl;
+
+    std::cout << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
+    std::cout << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
+    std::cout << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << std::endl;
+
+
+    std::ofstream out_file(txtFileName, std::ios::app);
+    if(out_file.is_open()){
+        out_file << "==================" << std::endl;
+        out_file << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
+        out_file << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
+        out_file << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << std::endl;
+        out_file << "==================" << std::endl;
+        out_file.close();
+    } else{
+        std::cerr << "Error: couldn't open txt file" << std::endl;
+    }
+
+    std::ofstream out_tablefile(tableFileName, std::ios::app);
+    if(out_tablefile.is_open()){
+        // DL Nu+E Table 
+        out_tablefile << "=========== DL Nu+E Vertexing ===========" << std::endl;
+        out_tablefile << "\\begin{table}[h!]" << std::endl;
+        out_tablefile << "\\centering" << std::endl;
+        out_tablefile << "\\resizebox{\\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\\begin{tabular}{|c|c|c|c|c|c|}" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << "\\textbf{Cut Name} & \\textbf{$\\epsilon$ (\\%)} & \\textbf{$\\rho$ (\\%)} & \\textbf{$\\epsilon\\rho$}& Signal Left & Background Left \\\\" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << std::defaultfloat << std::setprecision(7) << "No Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background) << " & " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal) << " & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.signal << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << "\\%)" << std::fixed << std::setprecision(0) << " & " << eventsBeforeCuts_DLNuE.background << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsBeforeCuts_DLNuE.background/eventsBeforeCuts_DLNuE.background << "\\%)" << " \\\\ " << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+       
+        if(clearCosmicCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Remove Clear Cosmic PFPs & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/(eventsAfterCuts_DLNuE.clearCosmicsSig+eventsAfterCuts_DLNuE.clearCosmicsBack) << " & " << (eventsAfterCuts_DLNuE.clearCosmicsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.clearCosmicsSig/(eventsAfterCuts_DLNuE.clearCosmicsSig+eventsAfterCuts_DLNuE.clearCosmicsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(numPFPs0Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "PFPs in Slice != 0 & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back) << " & " << (eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numPFPs0Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal << std::fixed << std::setprecision(0) << "\\%) & " << eventsAfterCuts_DLNuE.numPFPs0Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(numRecoNeutrinosCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "1 Reco Neutrino in Slice & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back) << " & " << (eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.numRecoNeut0Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numRecoNeut0Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(CRUMBSCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack) << " & " << (eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+       
+        if(FVCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack) << " & " << (eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(primaryPFPCut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCutValue << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack) << " & " << (eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG2212Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Proton Score $\\leq$ " << razzled2212High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled2212Sig/(eventsAfterCuts_DLNuE.razzled2212Sig+eventsAfterCuts_DLNuE.razzled2212Back) << " & " << (eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled2212Sig/(eventsAfterCuts_DLNuE.razzled2212Sig+eventsAfterCuts_DLNuE.razzled2212Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG13Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Muon Score $\\leq$ " << razzled13High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled13Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled13Sig/(eventsAfterCuts_DLNuE.razzled13Sig+eventsAfterCuts_DLNuE.razzled13Back) << " & " << (eventsAfterCuts_DLNuE.razzled13Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled13Sig/(eventsAfterCuts_DLNuE.razzled13Sig+eventsAfterCuts_DLNuE.razzled13Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled13Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled13Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG211Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back) << " & " << (eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG22Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\geq$ " << razzled22Low_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back) << " & " << (eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG11Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back) << " & " << (eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(dEdxCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " MeV cm^{-1} & " << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack) << " & " << (eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(ETheta2Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        out_tablefile << "\\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\\end{table}" << std::endl;
+       
+        out_tablefile << "" << std::endl;
+        out_tablefile << "" << std::endl;
+        out_tablefile << "" << std::endl;
+        // ======================================== 
+        // Put split interaction table here
+        
+        out_tablefile << "\\begin{table}[h!]" << std::endl;
+        out_tablefile << "\\centering" << std::endl;
+        out_tablefile << "\\resizebox{\\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << "\\multicolumn{10}{|c|}{\\textbf{Number of Events Left}} \\\\" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << "\\textbf{Cut Name} & \\textbf{$\\boldsymbol{\\nu+e}$} & \\textbf{NCN$\\boldsymbol{\\pi^0}$} & \\textbf{Other NC} & \\textbf{CC$\\boldsymbol{\\nu_\\mu}$} & \\textbf{CC$\\boldsymbol{\\nu_e}$} & \\textbf{Dirt} & \\textbf{$\\boldsymbol{\\nu+e}$ Dirt} & \\textbf{Cosmic} & \\textbf{Other}\\\\" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << "No Cut & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsBeforeCuts_DLNuE.splitInt.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << std::defaultfloat << std::setprecision(4) << "(" << 100*eventsBeforeCuts_DLNuE.splitInt.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.otherNC << " (" << 100*eventsBeforeCuts_DLNuE.splitInt.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.CCnumu << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.CCnue << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.dirt << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.nuEDirt << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.cosmic << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.splitInt.other << " (" << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.splitInt.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        if(clearCosmicCut == 1){
+            out_tablefile << "Remove Clear Cosmic PFPs & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(numPFPs0Cut == 1){
+            out_tablefile << "PFPs in Slice != 0 & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(numRecoNeutrinosCut == 1){
+            out_tablefile << "1 Reco Neutrino in Slice & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+       
+        if(CRUMBSCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+       
+        if(FVCut == 1){
+            out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+
+        if(primaryPFPCut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice = " << primaryPFPCutValue << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG2212Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Proton Score $\\leq$ " << razzled2212High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG13Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Muon Score $\\leq$ " << razzled13High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled13IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled13IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled13IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG211Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG22Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\geq$ " << razzled22Low_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(razzledPDG11Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(dEdxCut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << " MeV cm^{-1} & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+       
+        if(ETheta2Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        out_tablefile << "\\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\\end{table}" << std::endl;
+
+        out_tablefile << "" << std::endl;
+        out_tablefile << "\\newpage" << std::endl;
+        out_tablefile << "" << std::endl; 
+
+    }
+
+    std::cout << "eventsBeforeCuts_DLNuE.splitInt.other = " << eventsBeforeCuts_DLNuE.splitInt.other << ", eventsAfterCuts_DLNuE.ETheta2IntSplit.other = " << eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::endl;
 
 }
