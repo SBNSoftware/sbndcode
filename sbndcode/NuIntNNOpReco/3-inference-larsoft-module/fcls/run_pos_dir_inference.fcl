@@ -1,0 +1,188 @@
+//==============================================================================
+// PosRecoCVN Position Reconstruction Configuration
+//
+// This FCL file configures CNN-based neutrino position reconstruction using
+// optical detector data (PMT hits and flashes) in SBND.
+//==============================================================================
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+//==============================================================================
+// PROLOG: ResNet inference module configuration (reusable by downstream FCLs)
+//==============================================================================
+BEGIN_PROLOG
+
+sbnd_ResNetInference:
+{
+  module_type: "PosRecoCVNProducer"
+
+  #------------------------------------------------------------------------
+  # PROCESSING MODE CONFIGURATION (REQUIRED)
+  #------------------------------------------------------------------------
+  # "MC_testing"    = Full MC analysis with ground truth comparison
+  # "MC_inference"  = MC inference only, skip ground truth calculation
+  # "DATA_inference" = Real data processing
+  ProcessingMode: "DATA_inference"
+
+  #------------------------------------------------------------------------
+  # VERBOSITY CONFIGURATION
+  #------------------------------------------------------------------------
+  # 0 = Minimal output (events pass/fail only)
+  # 1 = Basic processing info + flash timing details
+  # 2 = Detailed processing information
+  # >2 = Debug mode with TensorFlow details
+  Verbosity: 0
+
+  #------------------------------------------------------------------------
+  # VERSION CONTROL
+  #------------------------------------------------------------------------
+  SbndcodeVersion: "v10_14_02"
+
+  #------------------------------------------------------------------------
+  # DATA PRODUCT LABELS
+  #------------------------------------------------------------------------
+  # Monte Carlo truth (used in MC modes)
+  MCTruthModuleLabel: ["generator"]
+  MCTruthInstanceLabel: [""]
+  MCModuleLabel: "largeant"
+
+  # Optical detector data
+  OpHitsModuleLabel: ["ophitpmt"]
+  OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
+
+  #------------------------------------------------------------------------
+  # EVENT SELECTION CRITERIA (MC modes only)
+  #------------------------------------------------------------------------
+  MCTruthOrigin: [1, 4]              # BNB neutrinos and single particles
+  MCTruthPDG: [12, 14, -12, -14]     # All neutrino types
+  KeepPDGCode: []                    # Empty = keep all particles
+
+  # Fiducial volume cuts for particle trajectories (cm)
+  G4BufferBoxX: [-300, 300]
+  G4BufferBoxY: [-400, 400]
+  G4BufferBoxZ: [-100, 600]
+
+  # Time window cuts (ns)
+  G4BeamWindow: [-10000, 12000]
+
+  # Active volume for neutrino vertex filter (matching training pipeline)
+  # Events pass only if exactly 1 neutrino vertex is inside this volume
+  ActiveVolumeX: [-200.0, 200.0]     # cm
+  ActiveVolumeY: [-200.0, 200.0]     # cm
+  ActiveVolumeZ: [0.0, 500.0]        # cm
+
+  #------------------------------------------------------------------------
+  # CNN INFERENCE CONFIGURATION
+  #------------------------------------------------------------------------
+  # CNN model paths (relative - searched in inference/module/ subdirectory)
+  ModelPath:    "v0223_trained_w_177k_position/saved_model"
+  DirModelPath: "v0224_trained_w_177k_direction_2d/saved_model"
+
+  # Image normalization factor (from training)
+  # Source: PosRecoCVN_Training.ipynb (177k events, global max PE)
+  CustomNormFactor: 210603.0
+
+  #------------------------------------------------------------------------
+  # OUTPUT CONFIGURATION
+  #------------------------------------------------------------------------
+  # SavePixelMapVars: Controls whether PixelMapVars object is created in memory
+  #   false = Optimal for inference-only
+  #   true  = Creates full data product with images, PE matrices, metadata
+  #
+  # MUST be coordinated with physics.stream setting below:
+  #
+  # | SavePixelMapVars | stream   | Result                                    |
+  # |------------------|----------|-------------------------------------------|
+  # | false            | []       | Optimal: No object, no file            |
+  # | false            | [out1]   | Waste: Empty 211K file created         |
+  # | true             | []       | Waste: Object in RAM but not saved     |
+  # | true             | [out1]   | Full output: Object created and saved  |
+  #
+
+  SavePixelMapVars: false
+
+  #------------------------------------------------------------------------
+  # AUTO-CONFIGURED PATHS
+  #------------------------------------------------------------------------
+  # The following are automatically configured by the module:
+  # - CNN model path
+  # - PMT channel map files
+  # - If error not found on one on this try to set them manually
+}
+
+END_PROLOG
+
+process_name: PosRecoCVNProd
+
+//==============================================================================
+// SERVICES CONFIGURATION
+//==============================================================================
+services:
+{
+  # TTree output for inference results (only inference, no other dataproducts)
+  TFileService: { fileName: "ttree_analysis_%p-%tc.root" }
+
+  # Standard SBND services
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+
+  # MC truth services (needed for MC modes)
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+//==============================================================================
+// INPUT CONFIGURATION
+//==============================================================================
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Process all events (-1) or limit number for testing
+}
+
+//==============================================================================
+// PHYSICS CONFIGURATION
+//==============================================================================
+physics:
+{
+  producers:
+  {
+    ResNetInference: @local::sbnd_ResNetInference
+  }
+
+  #----------------------------------------------------------------------------
+  # EXECUTION PATHS
+  #----------------------------------------------------------------------------
+  prod: [ResNetInference]         # Producer modules to run
+  stream: []                      # Empty = no RootOutput (only TTree saved)
+                                  # Set to [out1] if SavePixelMapVars: true
+
+  trigger_paths: [prod]
+  end_paths: [stream]
+}
+
+//==============================================================================
+// OUTPUT CONFIGURATION
+//==============================================================================
+
+# see OUTPUT CONFIGURATION above for details on stream setting
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName: "pixelmap_variables_%p-%tc.root"   # %p=process, %tc=timestamp
+    dataTier: "reconstructed"
+    streamName: "out"
+
+    # Output only the PixelMapVars data product (saves space)
+    outputCommands: [
+      "drop *",                                              # Drop everything first
+      "keep PixelMapVars_ResNetInference__PosRecoCVNProd*"  # Keep only our analysis product
+    ]
+  }
+}

@@ -1,0 +1,132 @@
+#==============================================================================
+# NuIntNNOpReco Training Data Preparation
+#
+# Produces TTrees with MC truth labels and optical data (raw, un-normalized)
+# ready for CNN/Transformer training - replaces the preprocess_images.py step.
+#
+# Input:  MC reco1-stage files (requires OpHits, OpFlashes, MCTruth, MCParticles)
+# Output (TFileService): training_data.root with 4 subdirectories:
+#   labels/tree   - event ID + MC truth + training labels  (lightweight)
+#   temporal/tree - temporal sequence features             (medium)
+#   ophits/tree   - per-flash optical hit data             (medium)
+#   images/tree   - 2D images + pe_per_channel             (heavy)
+#==============================================================================
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_NuIntNNDataPrep:
+{
+    module_type: "NuIntNNDataPrep"
+
+    #------------------------------------------------------------------------
+    # VERSION CONTROL (used for PMT map path search)
+    #------------------------------------------------------------------------
+    SbndcodeVersion: "v10_14_02"
+
+    #------------------------------------------------------------------------
+    # VERBOSITY
+    # 0 = quiet, 1 = per-event pass/fail + timing, 2 = flash/filter debug
+    #------------------------------------------------------------------------
+    Verbosity: 0
+
+    #------------------------------------------------------------------------
+    # MC TRUTH SELECTION
+    #------------------------------------------------------------------------
+    MCTruthOrigin:        [1]                    # 1=BNB neutrino
+    MCTruthPDG:           [12, 14, -12, -14]     # all neutrino flavors
+    MCTruthModuleLabel:   ["generator"]
+    MCTruthInstanceLabel: [""]
+    MCModuleLabel:        "largeant"
+
+    #------------------------------------------------------------------------
+    # OPTICAL DATA INPUT
+    #------------------------------------------------------------------------
+    OpHitsModuleLabel:    ["ophitpmt"]
+    OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
+
+    #------------------------------------------------------------------------
+    # PARTICLE TRAJECTORY CUTS (used to extract energy deposits for labels)
+    #------------------------------------------------------------------------
+    G4BufferBoxX:    [-300, 300]      # cm
+    G4BufferBoxY:    [-400, 400]      # cm
+    G4BufferBoxZ:    [-100, 600]      # cm
+    G4BeamWindow:    [-10000, 12000]  # ns
+    FlashTimeWindow: [0.15, 1.75]    # us - OpFlash AbsTime selection (beam gate)
+
+    #------------------------------------------------------------------------
+    # ACTIVE VOLUME (neutrino vertex must be inside for event to pass)
+    # Must match the training data selection used when training the network
+    #------------------------------------------------------------------------
+    ActiveVolumeX:  [-200.0, 200.0]  # cm
+    ActiveVolumeY:  [-200.0, 200.0]  # cm
+    ActiveVolumeZ:  [0.0, 500.0]     # cm
+
+    #------------------------------------------------------------------------
+    # PARTICLE FILTER
+    # Empty = keep all particles in MCParticle trajectory loop
+    #------------------------------------------------------------------------
+    KeepPDGCode:    []
+
+    #------------------------------------------------------------------------
+    # OPTICAL HIT STORAGE
+    # true = save per-flash ophit data (flash_ophit_pe/ch/time) in TTree
+    #------------------------------------------------------------------------
+    SaveOpHits: true
+
+    #------------------------------------------------------------------------
+    # TEMPORAL SEQUENCE (for nuvT Transformer/LSTM training)
+    # Output: temporal_features (seq_len*7 floats) + temporal_mask (seq_len int8)
+    # Features: [t_us, PE_raw, det_type, x_norm, y_norm, z_norm, delta_t_us]
+    #   PE is saved raw (un-normalized); normalization parameters saved by training notebook
+    # seq_len = TemporalNumFlashes * TemporalMaxOphits
+    #------------------------------------------------------------------------
+    TemporalMaxOphits:       10      # ophits per flash kept (sorted by time)
+    TemporalNumFlashes:      2       # flashes concatenated
+    TemporalUseEnergyVertex: false   # false = MC true vertex, true = dEprom energy-weighted centroid
+}
+
+END_PROLOG
+
+process_name: NuIntNNDataPrep
+
+#==============================================================================
+# SERVICES
+#==============================================================================
+services:
+{
+    TFileService: { fileName: "training_data.root" }
+
+    @table::sbnd_basic_services
+    @table::sbnd_simulation_services
+
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+#==============================================================================
+# INPUT
+#==============================================================================
+source:
+{
+    module_type: RootInput
+    maxEvents:  -1
+}
+
+#==============================================================================
+# PHYSICS
+#==============================================================================
+physics:
+{
+    analyzers:
+    {
+        dataprep: @local::sbnd_NuIntNNDataPrep
+    }
+
+    ana:       [dataprep]
+    end_paths: [ana]
+}
