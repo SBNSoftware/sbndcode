@@ -87,6 +87,12 @@ struct eventCounting_struct{
     double dEdxSig = 0;
     double dEdxBack = 0;
     eventCounter_struct dEdxIntSplit;
+    double fracHitsContainedSig = 0;
+    double fracHitsContainedBack = 0;
+    eventCounter_struct fracHitsContainedIntSplit;
+    double numHitsSig = 0;
+    double numHitsBack = 0;
+    eventCounter_struct numHitsIntSplit;
     double trackscoreSig = 0;
     double trackscoreBack = 0;
     eventCounter_struct trackscoreIntSplit;
@@ -1539,14 +1545,13 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 }
 
 void nuEBackgroundSignalCut_macro(){
-    //std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0.txt";
-    std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2.txt";
+    std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_containedHits_numHits.txt";
+    //std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2.txt";
 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLNuE_20Feb.root"); 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/merged.root"); 
-    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0/";
-    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_numRecoNeut0_crumbs_fv_primaryPFP_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_ETheta2/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_containedHits_numHits/";
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2/";
 
     gROOT->SetBatch(true);
 
@@ -1556,17 +1561,48 @@ void nuEBackgroundSignalCut_macro(){
     int CRUMBSCut = 1;
     int FVCut = 1;
     int primaryPFPCut = 1;
+    int ETheta2Cut = 1;
     int razzledPDG2212Cut = 1;
     int razzledPDG13Cut = 1;
     int razzledPDG211Cut = 1;
     int razzledPDG22Cut = 1;
     int razzledPDG11Cut = 1;
     int dEdxCut = 1;
-    int ETheta2Cut = 1;
+    int fracHitsContainedCut = 1;
+    int numHitsCut = 1;
+
+    int printLowRazzledMuonMuons = 1;
+    int printHighRazzledMuonMuons = 1;
+
+    int printLowRazzledElectronElectrons = 1;
+    int printHighRazzledElectronElectrons = 1;
+
+    int printLowRazzledPhotonPhotons = 1;
+    int printHighRazzledPhotonPhotons = 1;
+    int printHighRazzledElectronPhotons = 1;
+
+    int printLowRazzledChargedPiChargedPis = 1;
+    int printHighRazzledChargedPiChargedPis = 1;
+
+    int crumbsPrint = 1;
+    int FVCutPrint = 1;
+    int primaryPFPPrint = 1;
+    int ETheta2Print = 1;
+    int razzledProtonPrint = 1;
+    int razzledMuonPrint = 1;
+    int razzledChargedPiPrint = 1;
+    int razzledPhotonPrint = 1;
+    int razzledElectronPrint = 1;
+    int dEdxPrint = 1;
+    int fracHitsPrint = 1;
+    int numHitsPrint = 1;
+
+    double numSignalSlicesPFPCountMoreThan1 = 0;
+    double numSignalSlicesPFPCount = 0; 
 
     // Cut values
     double crumbsScoreCut_low = 0.12;
-    double crumbsScoreCut_high = 0.84;
+    double crumbsScoreCut_high = 0.6;
 
     double FVCut_xHigh = 195; 
     double FVCut_xLow = -197; 
@@ -1591,10 +1627,16 @@ void nuEBackgroundSignalCut_macro(){
     double razzled11High_highestEnergyPFP = 1;
     double razzled11Low_highestEnergyPFP = 0.85;
     
-    double dEdxHigh_highestEnergyPFP = 2;
-    double dEdxLow_highestEnergyPFP = 1; 
+    double dEdxHigh_highestEnergyPFP = 4;
+    double dEdxLow_highestEnergyPFP = 0.25;
 
-    double ETheta2High_highestEnergyPFP = 3.066;
+    double numContainedHits_high = 1;
+    double numContainedHits_low = 0.7; 
+    
+    double numHits_high = 2990;
+    double numHits_low = 400; 
+
+    double ETheta2High_highestEnergyPFP = 2.044;
     double ETheta2Low_highestEnergyPFP = 0;
 
 
@@ -1940,6 +1982,16 @@ void nuEBackgroundSignalCut_macro(){
     auto sliceNumPrimaryPFPsAfterCuts_splitDLNuE = createSplitHistGroup("sliceNumPrimaryPFPs_splitDLNuE", "Number of Primary PFPs in Slice: DL Nu+E Vertexing", "Number of Primary PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumPrimaryPFPs_splitPFPDLNuE", "Number of Primary PFPs in Slice: DL Nu+E Vertexing", "Number of Primary PFPs", 20, 0, 20);    
     
+    auto sliceFracHitsInPFPsBeforeCuts = createHistGroup("sliceFracHitsInPFPsBeforeCuts", "Fraction of Hits in Slice Contained in PFPs (Before Cuts)", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInPFPsAfterCuts = createHistGroup("sliceFracHitsInPFPsAfterCuts", "Fraction of Hits in Slice Contained in PFPs (After Cuts)", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInPFPsAfterCuts_splitDLNuE = createSplitHistGroup("sliceFracHitsInPFPs_splitDLNuE", "Fraction of Hits in Slice Contained in PFPs: DL Nu+E Vertexing", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("sliceFracHitsInPFPs_splitPFPDLNuE", "Fraction of Hits in Slice Contained in PFPs: DL Nu+E Vertexing", "Fraction", 20, 0, 1);    
+    
+    auto sliceFracHitsInHighestEnergyPFPsBeforeCuts = createHistGroup("sliceFracHitsInHighestEnergyPFPsBeforeCuts", "Fraction of Hits in Slice Contained in Highest Energy PFP in Slice (Before Cuts)", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInHighestEnergyPFPsAfterCuts = createHistGroup("sliceFracHitsInHighestEnergyPFPsAfterCuts", "Fraction of Hits in Slice Contained in Highest Energy PFP in Slice (After Cuts)", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE = createSplitHistGroup("sliceFracHitsInHighestEnergyPFPs_splitDLNuE", "Fraction of Hits in Slice Contained in Highest Energy PFP in Slice: DL Nu+E Vertexing", "Fraction", 20, 0, 1);
+    auto sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("sliceFracHitsInHighestEnergyPFPs_splitPFPDLNuE", "Fraction of Hits in Slice Contained in Highest Energy PFP in Slice: DL Nu+E Vertexing", "Fraction", 20, 0, 1);    
+    
     auto ERecoSumThetaRecoBeforeCuts = createHistGroup("ERecoSumThetaRecoBeforeCuts", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice (Before Cuts)", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoSumThetaRecoAfterCuts = createHistGroup("ERecoSumThetaRecoAfterCuts", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice (After Cuts)", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
     auto ERecoSumThetaRecoAfterCuts_splitDLNuE = createSplitHistGroup("ERecoSumThetaReco_splitDLNuE", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: DL Nu+E Vertexing", "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 27, 0, 13.797);
@@ -1989,6 +2041,11 @@ void nuEBackgroundSignalCut_macro(){
     auto pfpPurityAfterCuts = createHistGroup("pfpPurityAfterCuts", "Purity of the PFP in the Slice with the Highest Energy (After Cuts)", "Purity", 50, 0, 1);
     auto pfpPurityAfterCuts_splitDLNuE = createSplitHistGroup("pfpPurity_splitDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);
     auto pfpPurityAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpPurity_splitPFPDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);    
+    
+    auto pfpNumHitsBeforeCuts = createHistGroup("pfpNumHitsBeforeCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (Before Cuts)", "Number of Hits", 300, 0, 3000);
+    auto pfpNumHitsAfterCuts = createHistGroup("pfpNumHitsAfterCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (After Cuts)", "Number of Hits", 300, 0, 3000);
+    auto pfpNumHitsAfterCuts_splitDLNuE = createSplitHistGroup("pfpNumHits_splitDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);
+    auto pfpNumHitsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpNumHits_splitPFPDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);    
     
     auto recoVXBeforeCuts = createHistGroup("recoVXBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
     auto recoVXAfterCuts = createHistGroup("recoVXAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
@@ -2231,6 +2288,7 @@ void nuEBackgroundSignalCut_macro(){
             double summedEnergy_beforeCuts = 0;
             double numPFPsSlice_beforeCuts = 0;
             double numPrimaryPFPsSlice_beforeCuts = 0;
+            double numHitsInPFPs_beforeCuts = 0;
             
             highestEnergyPFP_struct highestEnergyPFP_beforeCuts;
 
@@ -2240,6 +2298,7 @@ void nuEBackgroundSignalCut_macro(){
                     // PFP is in the slice
                     numPFPsSlice_beforeCuts++;
                     if(reco_particleIsPrimary->at(pfp) == 1) numPrimaryPFPsSlice_beforeCuts++;
+                    numHitsInPFPs_beforeCuts += reco_particleNumHits->at(pfp);
 
                     //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
                     summedEnergy_beforeCuts += reco_particleBestPlaneEnergy->at(pfp);
@@ -2326,7 +2385,7 @@ void nuEBackgroundSignalCut_macro(){
                 // This is something other than an electron from a nu+e elastic scatter
                 slicePFPType_beforeCuts = 1;
             } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && signal != 1){
-                // This is a nu+e elastic scatter from a file that isn't the signal file, ignore it
+                // This is a nu+e elastic scatter not from the signal file
                 slicePFPType_beforeCuts = 15;
             } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && highestEnergyPFP_beforeCuts.trueInt != 1098){
                 // This is an electron from a beam neutrino
@@ -2407,6 +2466,8 @@ void nuEBackgroundSignalCut_macro(){
             fillHistogram(&sliceNumRecoNeutBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
             fillHistogram(&sliceNumPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_beforeCuts, &weights);
             fillHistogram(&sliceNumPrimaryPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_beforeCuts, &weights);
+            fillHistogram(&sliceFracHitsInPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
+            fillHistogram(&sliceFracHitsInHighestEnergyPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
             fillHistogram(&ERecoSumThetaRecoBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
             fillHistogram(&ERecoHighestThetaRecoBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
             fillHistogram(&dEdxBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
@@ -2417,6 +2478,7 @@ void nuEBackgroundSignalCut_macro(){
             fillHistogram(&razzledPDG2212BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
             fillHistogram(&pfpCompletenessBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.completeness, &weights);
             fillHistogram(&pfpPurityBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.purity, &weights);
+            fillHistogram(&pfpNumHitsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.numHits, &weights);
             fillHistogram(&recoVXBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
             fillHistogram(&recoVYBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
             fillHistogram(&recoVZBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
@@ -2459,6 +2521,14 @@ void nuEBackgroundSignalCut_macro(){
                 fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_beforeCuts, &weights);
                 fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPsSlice_beforeCuts, &weights);
                 
+                fillHistogram(&sliceFracHitsInPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitIntHistogram(&sliceFracHitsInPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
+                
+                fillHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitIntHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                
                 fillHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoSumThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 fillSplitPFPHistogram(&ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
@@ -2498,6 +2568,10 @@ void nuEBackgroundSignalCut_macro(){
                 fillHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.purity, &weights);
                 fillSplitIntHistogram(&pfpPurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.purity, &weights);
                 fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.purity, &weights);
+                
+                fillHistogram(&pfpNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.numHits, &weights);
+                fillSplitIntHistogram(&pfpNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.numHits, &weights);
+                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.numHits, &weights);
                 
                 fillHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
@@ -2594,6 +2668,7 @@ void nuEBackgroundSignalCut_macro(){
                 double summedEnergy_afterCuts = 0;
                 double numPFPsSlice_afterCuts = 0;
                 double numPrimaryPFPsSlice_afterCuts = 0;
+                double numHitsInPFPs_afterCuts = 0;
 
                 highestEnergyPFP_struct highestEnergyPFP_afterCuts;
 
@@ -2606,7 +2681,8 @@ void nuEBackgroundSignalCut_macro(){
                             //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
                             numPFPsSlice_afterCuts++;
                             if(reco_particleIsPrimary->at(pfp) == 1) numPrimaryPFPsSlice_afterCuts++; // PFP is a primary PFP
-                            
+                            numHitsInPFPs_afterCuts += reco_particleNumHits->at(pfp);
+
                             summedEnergy_afterCuts += reco_particleBestPlaneEnergy->at(pfp);
                             if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_afterCuts.energy){
                                 highestEnergyPFP_afterCuts.energy = reco_particleBestPlaneEnergy->at(pfp);
@@ -2675,7 +2751,7 @@ void nuEBackgroundSignalCut_macro(){
                     // This is something other than an electron from a nu+e elastic scatter
                     slicePFPType_afterCuts = 1;
                 } else if(highestEnergyPFP_afterCuts.trueInt == 1098 && signal != 1){
-                    // This is a nu+e elastic scatter not from the signal file
+                    // This is a nu+e elastic scatter that isn't from the signal file
                     slicePFPType_afterCuts = 15;
                 } else if(std::abs(highestEnergyPFP_afterCuts.truePDG) == 11 && highestEnergyPFP_afterCuts.trueOrigin == 1 && highestEnergyPFP_afterCuts.trueInt != 1098){
                     // This is an electron from a beam neutrino
@@ -2782,6 +2858,18 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low || reco_sliceScore->at(slice) > crumbsScoreCut_high)){
                     // This is a slice with a CRUMBS score outside cut values
+                    if(sliceInteractionType == 1 && signal == 1 && crumbsPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails CRUMBS Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "True Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << ")" << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
                 
@@ -2807,6 +2895,17 @@ void nuEBackgroundSignalCut_macro(){
                 if(FVCut == 1){
                     if(!(recoVX < FVCut_xHigh && recoVX > FVCut_xLow  && std::abs(recoVX) > FVCut_xCentre && recoVY < FVCut_yHigh && recoVY > FVCut_yLow && recoVZ > FVCut_zLow && recoVZ < FVCut_zHigh)){
                         // Doesn't pass the FV cut values
+                        if(sliceInteractionType == 1 && signal == 1 && FVCutPrint == 1){
+                            std::cout << "=============" << std::endl;
+                            std::cout << "Signal Fails FV Cut" << std::endl;
+                            std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                            std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                            std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                            std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                            std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                            std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                            std::cout << "=============" << std::endl;
+                        }
                         continue;
                     }
                 }
@@ -2832,6 +2931,17 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(primaryPFPCut == 1 && numPrimaryPFPsSlice_afterCuts != primaryPFPCutValue){
                     // Slice has more than 1 primary PFP in it
+                    if(sliceInteractionType == 1 && signal == 1 && primaryPFPPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Primary PFP Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2853,9 +2963,69 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt += weight;
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
                 }
+                
+                if(ETheta2Cut == 1 && ((highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) > ETheta2High_highestEnergyPFP || (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) < ETheta2Low_highestEnergyPFP)){
+                    // Highest energy PFP in slice doesn't pass the ETheta2 cut
+                    if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails ETheta2 Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
+
+                    continue;
+                }
+                    
+                if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Signal Passes ETheta2 Cut" << std::endl;
+                    std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+
+                if(DLCurrent == 5){
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
+                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+    
+                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
+                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
+                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
+                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
+                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
+                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
+                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
+                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
+                }
+
 
                 if(razzledPDG2212Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG2212 > razzled2212High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG2212 < razzled2212Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 2212 cut
+                    if(sliceInteractionType == 1 && signal == 1 && razzledProtonPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Razzled Proton Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
+
                     continue;
                 }
                 
@@ -2879,6 +3049,17 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(razzledPDG13Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG13 > razzled13High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG13 < razzled13Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 13 cut
+                    if(sliceInteractionType == 1 && signal == 1 && razzledMuonPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Razzled Muon Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2902,6 +3083,17 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(razzledPDG211Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG211 < razzled211Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 211 cut
+                    if(sliceInteractionType == 1 && signal == 1 && razzledChargedPiPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Razzled Charged Pi Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2925,6 +3117,17 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(razzledPDG22Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG22 > razzled22High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG22 < razzled22Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 22 cut
+                    if(sliceInteractionType == 1 && signal == 1 && razzledPhotonPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Razzled Photon Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2946,8 +3149,19 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled22IntSplit.other += weight;
                 }
 
-                if(razzledPDG11Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG11 < razzled11Low_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG11 > razzled11High_highestEnergyPFP))){
+                if(razzledPDG11Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG11 < razzled11Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 11 cut
+                    if(sliceInteractionType == 1 && signal == 1 && razzledElectronPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Razzled Electron Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2971,6 +3185,17 @@ void nuEBackgroundSignalCut_macro(){
 
                 if(dEdxCut == 1 && (highestEnergyPFP_afterCuts.bestPlanedEdx > dEdxHigh_highestEnergyPFP || highestEnergyPFP_afterCuts.bestPlanedEdx < dEdxLow_highestEnergyPFP)){
                     // Highest energy PFP in slice doesn't pass the dE/dx cut
+                    if(sliceInteractionType == 1 && signal == 1 && dEdxPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails dE/dx Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
@@ -2992,27 +3217,72 @@ void nuEBackgroundSignalCut_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.dEdxIntSplit.other += weight;
                 }
 
-                if(ETheta2Cut == 1 && ((highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) > ETheta2High_highestEnergyPFP || (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) < ETheta2Low_highestEnergyPFP)){
-                    // Highest energy PFP in slice doesn't pass the ETheta2 cut
+                if(fracHitsContainedCut == 1 && (((numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) > numContainedHits_high) || ((numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) < numContainedHits_low))){
+                    // Highest energy PFP in slice doesn't pass the number of hits contained in PFPs cut
+                    if(sliceInteractionType == 1 && signal == 1 && fracHitsPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Frac Hits Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
                     continue;
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
-                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedSig += weight;
+                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
-                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
-                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
-                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
-                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
-                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
-                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
-                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
-                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
+                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.cosmic += weight;
+                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuE += weight;
+                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.NCNPi0 += weight;
+                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.otherNC += weight;
+                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnumu += weight;
+                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnue += weight;
+                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.dirt += weight;
+                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuEDirt += weight;
+                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.other += weight;
+                }
+
+                if(numHitsCut == 1 && ((highestEnergyPFP_afterCuts.numHits > numHits_high) || (highestEnergyPFP_afterCuts.numHits < numHits_low))){
+                    // Highest energy PFP in slice doesn't pass the number of hits contained in PFPs cut
+                    if(sliceInteractionType == 1 && signal == 1 && numHitsPrint == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails Number of Hits Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
+                    continue;
+                }
+
+                if(DLCurrent == 5){
+                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numHitsSig += weight;
+                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numHitsBack += weight;
+    
+                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numHitsIntSplit.cosmic += weight;
+                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numHitsIntSplit.nuE += weight;
+                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numHitsIntSplit.NCNPi0 += weight;
+                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numHitsIntSplit.otherNC += weight;
+                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.numHitsIntSplit.CCnumu += weight;
+                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.numHitsIntSplit.CCnue += weight;
+                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.numHitsIntSplit.dirt += weight;
+                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.numHitsIntSplit.nuEDirt += weight;
+                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numHitsIntSplit.other += weight;
                 }
 
                 // Fill histograms here
@@ -3035,7 +3305,7 @@ void nuEBackgroundSignalCut_macro(){
                 }
 
                 if(slicePFPType_afterCuts == 2){
-                    std::cout << "Electron!! slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", signal = " << signal << ", highestEnergyPFP_afterCuts.truePDG = " << highestEnergyPFP_afterCuts.truePDG << ", highestEnergyPFP_afterCuts.trueInt = " << highestEnergyPFP_afterCuts.trueInt << ", highestEnergyPFP_afterCuts.trueOrigin = " << highestEnergyPFP_afterCuts.trueOrigin << std::endl; 
+                    std::cout << "Electron!! slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", signal = " << signal << ", highestEnergyPFP_afterCuts.truePDG = " << highestEnergyPFP_afterCuts.truePDG << ", highestEnergyPFP_afterCuts.trueInt = " << highestEnergyPFP_afterCuts.trueInt << ", highestEnergyPFP_afterCuts.trueOrigin = " << highestEnergyPFP_afterCuts.trueOrigin << std::endl;
                 }
 
                 
@@ -3046,6 +3316,7 @@ void nuEBackgroundSignalCut_macro(){
                     std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
                     std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
                     std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
                     std::cout << "=============" << std::endl;
                 } else if(sliceInteractionType != 1){
                     std::cout << "=============" << std::endl;
@@ -3054,13 +3325,13 @@ void nuEBackgroundSignalCut_macro(){
                     std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
                     std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
                     std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
                     std::cout << "=============" << std::endl;
                 } else{
                     std::cout << "=============" << std::endl;
                     std::cout << "signal = " << signal << ", true int = " << highestEnergyPFP_afterCuts.trueInt << std::endl;
                     std::cout << "=============" << std::endl;
                 }
-
 
                 fillHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
@@ -3081,10 +3352,49 @@ void nuEBackgroundSignalCut_macro(){
                 fillHistogram(&sliceNumPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPFPsSlice_afterCuts, &weights);
                 fillSplitPFPHistogram(&sliceNumPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPFPsSlice_afterCuts, &weights);
+
+                if(sliceInteractionType == 1 && signal == 1){
+                    numSignalSlicesPFPCount++;
+
+                    if(numPFPsSlice_afterCuts > 1){
+                        numSignalSlicesPFPCountMoreThan1++;
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Has More Than 1 PFP in Slice" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        // Loop through the PFPs
+                        std::cout << "" << std::endl;
+    
+                        int pfpCount = 0;
+                        for(size_t pfpLoop = 0; pfpLoop < reco_particlePDG->size(); ++pfpLoop){
+                            if(reco_particleSliceID->at(pfpLoop) == reco_sliceID->at(slice)){
+                                if(reco_particleClearCosmic->at(pfpLoop) == 0){
+                                    pfpCount++;
+                                    std::cout << "PFP " << pfpCount << ": "
+                                }
+                            }
+                        }
+
+                        std::cout << "=============" << std::endl;
+                    }
+
+                }
+
+                fillHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_afterCuts, &weights);
+                fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPsSlice_afterCuts, &weights);
                 
-                fillHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_beforeCuts, &weights);
-                fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPsSlice_beforeCuts, &weights);
+                fillHistogram(&sliceFracHitsInPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitIntHistogram(&sliceFracHitsInPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
+                
+                fillHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitIntHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
                 
                 fillHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoSumThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
@@ -3101,23 +3411,131 @@ void nuEBackgroundSignalCut_macro(){
                 fillHistogram(&razzledPDG11AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
                 fillSplitIntHistogram(&razzledPDG11AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
                 fillSplitPFPHistogram(&razzledPDG11AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
+               
+                if(printLowRazzledElectronElectrons == 1 && (highestEnergyPFP_afterCuts.razzledPDG11 < 0.06) && (slicePFPType_afterCuts == 2)){
+                    // This is a electron with a low razzled electron score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Electron with a low razzled electron score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+               
+                if(printHighRazzledElectronElectrons == 1 && (highestEnergyPFP_afterCuts.razzledPDG11 > 0.7) && (slicePFPType_afterCuts == 2)){
+                    // This is a electron with a high razzled electron score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Electron with a high razzled electron score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
                 
                 fillHistogram(&razzledPDG13AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
                 fillSplitIntHistogram(&razzledPDG13AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
                 fillSplitPFPHistogram(&razzledPDG13AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
+               
+                if(printLowRazzledMuonMuons == 1 && (highestEnergyPFP_afterCuts.razzledPDG13 < 0.06) && (slicePFPType_afterCuts == 4)){
+                    // This is a muon with a low razzled muon score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Muon with a low razzled muon score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+                
+                if(printHighRazzledMuonMuons == 1 && (highestEnergyPFP_afterCuts.razzledPDG13 > 0.7) && (slicePFPType_afterCuts == 4)){
+                    // This is a muon with a high razzled muon score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Muon with a high razzled muon score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
                 
                 fillHistogram(&razzledPDG22AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
                 fillSplitIntHistogram(&razzledPDG22AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
                 fillSplitPFPHistogram(&razzledPDG22AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
+               
+                if(printLowRazzledPhotonPhotons == 1 && (highestEnergyPFP_afterCuts.razzledPDG22 < 0.06) && (slicePFPType_afterCuts == 7)){
+                    // This is a photon with a low razzled photon score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Photon with a low razzled photon score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+                
+                if(printHighRazzledPhotonPhotons == 1 && (highestEnergyPFP_afterCuts.razzledPDG22 < 0.06) && (slicePFPType_afterCuts == 7)){
+                    // This is a photon with a low razzled photon score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Photon with a high razzled photon score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+                
+                if(printHighRazzledElectronPhotons == 1 && (highestEnergyPFP_afterCuts.razzledPDG11 > 0.7) && (slicePFPType_afterCuts == 7)){
+                    // This is a photon with a high razzled electron score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Photon with a high razzled electron score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
                 
                 fillHistogram(&razzledPDG211AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
                 fillSplitIntHistogram(&razzledPDG211AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
                 fillSplitPFPHistogram(&razzledPDG211AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
                 
+                if(printLowRazzledChargedPiChargedPis == 1 && (highestEnergyPFP_afterCuts.razzledPDG211 < 0.06) && (slicePFPType_afterCuts == 6)){
+                    // This is a charged pion with a low razzled charged pion score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Charged pion with a low razzled charged pion score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+                
+                if(printHighRazzledChargedPiChargedPis == 1 && (highestEnergyPFP_afterCuts.razzledPDG211 > 0.7) && (slicePFPType_afterCuts == 6)){
+                    // This is a charged pion with a high razzled charged pion score
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Charged pion with a high razzled charged pion score" << std::endl;
+                    std::cout << "Survives Cuts: eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << ", completeness = " << highestEnergyPFP_afterCuts.completeness << ", purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+
                 fillHistogram(&razzledPDG2212AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
                 fillSplitIntHistogram(&razzledPDG2212AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
                 fillSplitPFPHistogram(&razzledPDG2212AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
-                
+
                 fillHistogram(&pfpCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.completeness, &weights);
                 fillSplitIntHistogram(&pfpCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.completeness, &weights);
                 fillSplitPFPHistogram(&pfpCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.completeness, &weights);
@@ -3125,6 +3543,10 @@ void nuEBackgroundSignalCut_macro(){
                 fillHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.purity, &weights);
                 fillSplitIntHistogram(&pfpPurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.purity, &weights);
                 fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.purity, &weights);
+                
+                fillHistogram(&pfpNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.numHits, &weights);
+                fillSplitIntHistogram(&pfpNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.numHits, &weights);
+                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.numHits, &weights);
                 
                 fillHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
@@ -3281,6 +3703,24 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(&sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(&sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
+
+    styleDrawAll(sliceFracHitsInPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceFracHitsInPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(sliceFracHitsInPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceFracHitsInPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawSplit(sliceFracHitsInPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPs_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&sliceFracHitsInPFPsBeforeCuts, &sliceFracHitsInPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceFracHitsInPFPsBeforeCuts, &sliceFracHitsInPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInPFPsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
+
+    styleDrawAll(sliceFracHitsInHighestEnergyPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceFracHitsInHighestEnergyPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(sliceFracHitsInHighestEnergyPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceFracHitsInHighestEnergyPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawSplit(sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPs_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&sliceFracHitsInHighestEnergyPFPsBeforeCuts, &sliceFracHitsInHighestEnergyPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&sliceFracHitsInHighestEnergyPFPsBeforeCuts, &sliceFracHitsInHighestEnergyPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceFracHitsInHighestEnergyPFPsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3371,6 +3811,15 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(pfpPurityAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(&pfpPurityBeforeCuts, &pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurityHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(&pfpPurityBeforeCuts, &pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurityLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
+    
+    styleDrawAll(pfpNumHitsBeforeCuts, 999, 999, 999, 999, (base_path + "pfpNumHits_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(pfpNumHitsBeforeCuts, 999, 999, 999, 999, (base_path + "pfpNumHits_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHits_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHits_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawSplit(pfpNumHitsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpNumHits_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawPFPSplit(pfpNumHitsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "pfpNumHits_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(&pfpNumHitsBeforeCuts, &pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHitsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
+    efficiency(&pfpNumHitsBeforeCuts, &pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHitsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
     styleDrawAll(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3516,7 +3965,7 @@ void nuEBackgroundSignalCut_macro(){
 
     std::cout << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
     std::cout << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
-    std::cout << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << std::endl;
+    std::cout << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << ", frac hits contained = " << fracHitsContainedCut << ", num hits = " << numHitsCut << std::endl;
 
 
     std::ofstream out_file(txtFileName, std::ios::app);
@@ -3524,7 +3973,7 @@ void nuEBackgroundSignalCut_macro(){
         out_file << "==================" << std::endl;
         out_file << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
         out_file << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
-        out_file << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << std::endl;
+        out_file << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << ", frac hits contained = " << fracHitsContainedCut << ", num hits = " << numHitsCut << std::endl;
         out_file << "==================" << std::endl;
         out_file.close();
     } else{
@@ -3575,6 +4024,11 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
         
+        if(ETheta2Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
         if(razzledPDG2212Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Proton Score $\\leq$ " << razzled2212High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled2212Sig/(eventsAfterCuts_DLNuE.razzled2212Sig+eventsAfterCuts_DLNuE.razzled2212Back) << " & " << (eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled2212Sig/(eventsAfterCuts_DLNuE.razzled2212Sig+eventsAfterCuts_DLNuE.razzled2212Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -3591,7 +4045,7 @@ void nuEBackgroundSignalCut_macro(){
         }
         
         if(razzledPDG22Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\geq$ " << razzled22Low_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back) << " & " << (eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\leq$ " << razzled22High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back) << " & " << (eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled22Sig/(eventsAfterCuts_DLNuE.razzled22Sig+eventsAfterCuts_DLNuE.razzled22Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -3604,9 +4058,14 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " MeV cm^{-1} & " << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack) << " & " << (eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-
-        if(ETheta2Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+        
+        if(fracHitsContainedCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Slice has " << numContainedHits_low << " $\\leq$ Fraction of Hits Contained in PFPs $\\leq$ " << numContainedHits_high << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.fracHitsContainedSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.fracHitsContainedSig/(eventsAfterCuts_DLNuE.fracHitsContainedSig+eventsAfterCuts_DLNuE.fracHitsContainedBack) << " & " << (eventsAfterCuts_DLNuE.fracHitsContainedSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.fracHitsContainedSig/(eventsAfterCuts_DLNuE.fracHitsContainedSig+eventsAfterCuts_DLNuE.fracHitsContainedBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.fracHitsContainedSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.fracHitsContainedBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(numHitsCut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << numHits_low << " $\\leq$ Number of Hits in Highest Energy PFP in Slice $\\leq$ " << numHits_high << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.numHitsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numHitsSig/(eventsAfterCuts_DLNuE.numHitsSig+eventsAfterCuts_DLNuE.numHitsBack) << " & " << (eventsAfterCuts_DLNuE.numHitsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numHitsSig/(eventsAfterCuts_DLNuE.numHitsSig+eventsAfterCuts_DLNuE.numHitsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numHitsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsSig/eventsBeforeCuts_DLNuE.signal << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numHitsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -3661,6 +4120,11 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
         
+        if(ETheta2Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
         if(razzledPDG2212Cut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Proton Score $\\leq$ " << razzled2212High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled2212IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled2212IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled2212IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -3677,7 +4141,7 @@ void nuEBackgroundSignalCut_macro(){
         }
         
         if(razzledPDG22Cut == 1){ 
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\geq$ " << razzled22Low_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Photon Score $\\leq$ " << razzled22High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled22IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled22IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled22IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -3690,9 +4154,14 @@ void nuEBackgroundSignalCut_macro(){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << " MeV cm^{-1} & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-       
-        if(ETheta2Cut == 1){ 
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+        
+        if(fracHitsContainedCut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "Slice has " << numContainedHits_low << " $\\leq$ Fraction of Hits Contained in PFPs $\\leq$ " << numContainedHits_high << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(numHitsCut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << numHits_low << " $\\leq$ Number of Hits in Highest Energy PFP in Slice $\\leq$ " << numHits_high << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numHitsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numHitsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numHitsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -3705,7 +4174,5 @@ void nuEBackgroundSignalCut_macro(){
         out_tablefile << "" << std::endl; 
 
     }
-
-    std::cout << "eventsBeforeCuts_DLNuE.splitInt.other = " << eventsBeforeCuts_DLNuE.splitInt.other << ", eventsAfterCuts_DLNuE.ETheta2IntSplit.other = " << eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::endl;
 
 }
