@@ -58,6 +58,6 @@ outputs.out1.outputCommands:
   "drop *_largeantcosmic_*_*",
 
   "drop *_fullOscGen_*_*",
-  "drop *_fullspillGen_*_*",
+  "drop *_unOscGen_*_*",
   "drop *_fullOscGenFirst_*_*"
 ]
