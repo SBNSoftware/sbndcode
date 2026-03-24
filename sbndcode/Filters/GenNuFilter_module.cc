@@ -25,6 +25,8 @@ namespace filt{
       std::vector<int> fLepPDGs;
       bool fCC;
       bool fNC;
+      bool fOscOnly;
+      std::string fGenieModuleLabel;
 
   };
 
@@ -42,42 +44,44 @@ namespace filt{
     fLepPDGs = pset.get<std::vector<int>>("LepPDGs");
     fCC = pset.get<bool>("CC");
     fNC = pset.get<bool>("NC");
+    fOscOnly = pset.get<bool>("OscOnly", false);
+    fGenieModuleLabel = pset.get<std::string>("GenieModuleLabel");
   }
 
 
   bool GenNuFilter::filter(art::Event & e){
     //std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
     //e.getManyByType(mclists);
-    auto mclists = e.getMany< std::vector<simb::MCTruth> >();
-    for (unsigned int i = 0; i < mclists.size() ; i++){
-      for (unsigned int j = 0; j < mclists[i]->size(); j++){
-        //Should have the truth record for the event now
-        const art::Ptr<simb::MCTruth> mc_truth(mclists[i],j);
-        if(mc_truth->Origin() == simb::kBeamNeutrino){
-          simb::MCNeutrino nu = mc_truth->GetNeutrino();
-          // Check vertex in TPC
-          double vtxX = nu.Nu().Vx();
-          double vtxY = nu.Nu().Vy();
-          double vtxZ = nu.Nu().Vz();
-          TVector3 vtx(vtxX, vtxY, vtxZ);
-          if(fVtxInTPC && !RecoUtils::IsInsideTPC(vtx, 0)) continue;
-          // Check if CC or NC specified
-          if(!(fCC && fNC)){
-            if(fCC && nu.CCNC() == simb::kNC) continue;
-            if(fNC && nu.CCNC() == simb::kCC) continue;
-          }
-          // Check which flavour of interaction
-          int lepPdg = nu.Lepton().PdgCode();
-          if(fLepPDGs.size() > 0){
-            if(fLepPDGs[0] != 0){
-              if(std::find(fLepPDGs.begin(), fLepPDGs.end(), lepPdg) == fLepPDGs.end()) continue;
-            }
-          }
-          return true;
+    art::Handle<std::vector<simb::MCTruth>> mclist;
+    e.getByLabel(fGenieModuleLabel, mclist);
+    size_t end = fOscOnly ? 1 : mclist->size();
+
+    for (size_t i = 0; i < end; ++i) {
+      //Should have the truth record for the event now
+      const art::Ptr<simb::MCTruth> mc_truth(mclist,i);
+      if(mc_truth->Origin() == simb::kBeamNeutrino){
+        simb::MCNeutrino nu = mc_truth->GetNeutrino();
+        // Check vertex in TPC
+        double vtxX = nu.Nu().Vx();
+        double vtxY = nu.Nu().Vy();
+        double vtxZ = nu.Nu().Vz();
+        TVector3 vtx(vtxX, vtxY, vtxZ);
+        if(fVtxInTPC && !RecoUtils::IsInsideTPC(vtx, 0)) continue;
+        // Check if CC or NC specified
+        if(!(fCC && fNC)){
+          if(fCC && nu.CCNC() == simb::kNC) continue;
+          if(fNC && nu.CCNC() == simb::kCC) continue;
         }
+        // Check which flavour of interaction
+        int lepPdg = nu.Lepton().PdgCode();
+        if(fLepPDGs.size() > 0){
+          if(fLepPDGs[0] != 0){
+            if(std::find(fLepPDGs.begin(), fLepPDGs.end(), lepPdg) == fLepPDGs.end()) continue;
+          }
+        }
+        return true;
       }
     }
-
     return false;
   }
 
