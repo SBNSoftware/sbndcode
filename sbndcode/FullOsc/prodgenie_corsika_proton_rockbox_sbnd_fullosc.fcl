@@ -1,0 +1,63 @@
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+process_name: GenieOscPileupOverlay
+
+physics.producers.fullOscGen:
+{
+  @table::sbnd_genie_simple_rockbox
+  MixerConfig: "map 14:12 -14:-12 12:14 -12:-14"
+}
+
+physics.producers.unOscGen:
+{
+  @table::sbnd_genie_simple_rockbox
+}
+
+physics.producers.fullOscGenFirst:
+{
+  module_type: GENIEFirst
+  InputTag:  fullOscGen
+}
+
+physics.producers.generator:
+{
+  module_type: GENIEOscPileup
+  FullOscTag:  fullOscGen
+  UnOscTag:  unOscGen
+}
+
+physics.filters.tpcfilter.OscOnly: true                     #only place filters on the first/oscillated neutrino
+physics.filters.tpcfilter.GenieModuleLabel: "generator"
+
+physics.filters.nuefilter:
+{
+  module_type:              "GenNuFilter"
+  VtxInTPC:                 false
+  LepPDGs:                  [12, -12]                       #only take neutrinos oscillated from (anti)numu to (anti)nue
+  CC:                       true
+  NC:                       true 
+  OscOnly:                  true                            #only place filters on the first/oscillated neutrino
+  GenieModuleLabel:         "generator"
+}
+
+physics.producers.largeantnuosc: @local::sbnd_larg4
+physics.producers.largeantnuosc.inputCollections: [ "fullOscGenFirst" ]
+physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnuosc:LArG4DetectorServicevolTPCActive"
+physics.filters.dirtfilter.EnergyDeposit: 1                 # Minimum energy deposit in TPC for trigger [MeV]
+
+physics.simulatetpc:   [ rns, fullOscGen, unOscGen, generator, nuefilter, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge ]
+physics.simulatedirt:  [ rns, fullOscGen, fullOscGenFirst, unOscGen, generator, nuefilter, loader, largeantnu, largeantnuosc, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge ]
+
+outputs.out1.outputCommands:
+[
+  "keep *_*_*_*",
+
+  # drop intermediate G4 collections
+  "drop *_largeantnuosc_*_*",
+  "drop *_largeantnu_*_*",
+  "drop *_largeantcosmic_*_*",
+
+  "drop *_fullOscGen_*_*",
+  "drop *_fullspillGen_*_*",
+  "drop *_fullOscGenFirst_*_*"
+]
