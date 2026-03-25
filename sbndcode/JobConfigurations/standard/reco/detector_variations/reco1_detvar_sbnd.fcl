@@ -2,6 +2,7 @@
 
 process_name: Reco1Var
 
+<<<<<<< HEAD
 physics.producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:dnnsp"
 physics.producers.simplemerge: @local::sbnd_simplemerge
 physics.producers.simplemerge.InputSourcesLabels: ["largeant","largeantdropped"]
@@ -30,3 +31,4 @@ sbnd_reco1_producer_sequence_DetVar: [
 
 physics.reco1:          @local::sbnd_reco1_producer_sequence_DetVar
 physics.analyzers.supera.supera_params: "sbnd_supera_parameters.fcl"
+sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:dnnsp"
