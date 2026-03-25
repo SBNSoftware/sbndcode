@@ -1,4 +1,4 @@
-#include "standard_detsim_sbnd.fcl"
+#include "detsim_detvar_PDSonly_sbnd.fcl"
 #factor of 0.94
 physics.producers.opdaq.PMTCoatedVUVEff_tpc0: 0.03685
 physics.producers.opdaq.PMTCoatedVISEff_tpc0: 0.02444

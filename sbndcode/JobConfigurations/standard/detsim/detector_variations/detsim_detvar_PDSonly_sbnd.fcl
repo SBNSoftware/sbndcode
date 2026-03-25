@@ -9,10 +9,12 @@ producers:
 	{
 rns:       { module_type: "RandomNumberSaver" }
 opdaq:     @local::sbnd_opdetdigitizer
+pmtpulseoscillation: @local::sbnd_pmtpulseoscillation
+pmtmetricmc: @local::sbnd_pmtmcmetricproducer
 	}
 
 #define the producer and filter modules for this path, order matters,
-simulate: [rns, opdaq]
+simulate: [rns, opdaq, pmtpulseoscillation, pmtmetricmc]
 
 #define the output stream, there could be more than one if using filters
 				 stream1:   [ out1 ]
