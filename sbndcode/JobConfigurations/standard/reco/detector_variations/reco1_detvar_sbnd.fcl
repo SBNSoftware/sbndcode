@@ -2,4 +2,31 @@
 
 process_name: Reco1Var
 
-sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:dnnsp"
+physics.producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:dnnsp"
+physics.producers.simplemerge: @local::sbnd_simplemerge
+physics.producers.simplemerge.InputSourcesLabels: ["largeant","largeantdropped"]
+
+sbnd_reco1_producer_sequence: [
+	rns
+	, simplemerge
+	, opdecopmt
+#, opdecoxarapuca
+	, ophitpmt
+#, ophitxarapuca
+	, opflashtpc0
+	, opflashtpc1
+#, opflashtpc0xarapuca
+#, opflashtpc1xarapuca
+	, gaushit
+	, gaushitTruthMatch
+	, specialblipgaushit
+	, blipgaushitTruthMatch
+	, crtstrips
+	, crtclustering
+	, crtspacepoints
+	, crttracks
+	, cluster3d
+]
+
+physics.reco1:          @local::sbnd_reco1_producer_sequenceVar
+physics.analyzers.supera.supera_params: "sbnd_supera_parameters.fcl"
