@@ -1395,13 +1395,33 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
     for(int i = 1; i <= nBins; ++i){
         double xCenter = numerator->GetXaxis()->GetBinCenter(i);
         double xErr = (numerator->GetXaxis()->GetBinUpEdge(i) - numerator->GetXaxis()->GetBinLowEdge(i))/ 2.0;
-        
+       
+        double denom = denominator->GetBinContent(i);
+
+        double yEff, yErrLow, yErrUp;
+
+        if (denom == 0) {
+            // your desired behaviour
+            yEff = 0;
+            yErrLow = 0;
+            yErrUp = 0;
+        } else {
+            yEff = efficiency->GetEfficiency(i);
+            yErrLow = efficiency->GetEfficiencyErrorLow(i);
+            yErrUp = efficiency->GetEfficiencyErrorUp(i);
+        }
+
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+
+        /*
         double yEff = efficiency->GetEfficiency(i);
         double yErrLow = efficiency->GetEfficiencyErrorLow(i);
         double yErrUp = efficiency->GetEfficiencyErrorUp(i);
 
         gEff->SetPoint(i-1, xCenter, yEff);
         gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+        */
     }
 
     gEff->SetLineColor(kBlack);
