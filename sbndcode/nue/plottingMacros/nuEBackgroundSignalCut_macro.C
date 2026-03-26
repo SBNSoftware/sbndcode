@@ -1422,6 +1422,7 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
     gEff->GetYaxis()->SetTitleOffset(1.6);
     gEff->Draw("AP");
 
+    /*
     efficiency->Draw("SAME");
     gPad->Update();
 
@@ -1435,6 +1436,13 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
         g->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
     } else{
         g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+    */
+
+    if(lowY == -999999 && highY == -999999){
+        gEff->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
+    } else{
+        gEff->GetYaxis()->SetRangeUser(lowY, highY);
     }
 
     double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
