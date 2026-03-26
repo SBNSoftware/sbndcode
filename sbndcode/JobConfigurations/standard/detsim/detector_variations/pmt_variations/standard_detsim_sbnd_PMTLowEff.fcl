@@ -1,7 +1,8 @@
-#include "standard_detsim_sbnd.fcl"
-physics.producers.opdaq.PMTCoatedVUVEff_tpc0: 0.021
-physics.producers.opdaq.PMTCoatedVISEff_tpc0: 0.02329
-physics.producers.opdaq.PMTUncoatedEff_tpc0: 0.0225
-physics.producers.opdaq.PMTCoatedVUVEff_tpc1: 0.018
-physics.producers.opdaq.PMTCoatedVISEff_tpc1: 0.02329
-physics.producers.opdaq.PMTUncoatedEff_tpc1: 0.0225
+#include "detsim_detvar_PDSonly_sbnd.fcl"
+#factor of 0.94
+physics.producers.opdaq.PMTCoatedVUVEff_tpc0: 0.03685
+physics.producers.opdaq.PMTCoatedVISEff_tpc0: 0.02444
+physics.producers.opdaq.PMTUncoatedEff_tpc0: 0.03356
+physics.producers.opdaq.PMTCoatedVUVEff_tpc1: 0.03685
+physics.producers.opdaq.PMTCoatedVISEff_tpc1: 0.02444
+physics.producers.opdaq.PMTUncoatedEff_tpc1: 0.03356
