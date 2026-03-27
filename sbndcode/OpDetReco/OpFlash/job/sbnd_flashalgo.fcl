@@ -15,7 +15,7 @@ SimpleFlashStandard:
   TPC:               0
   #PD:                ["pmt_coated", "pmt_uncoated", "xarapuca", "xarapuca_vuv", "xarapuca_vis"]
   PD:                ["pmt_coated", "pmt_uncoated"]
-  DebugMode:         true
+  DebugMode:         false
 
   MinPECoincRepeated:     20 
   MinTimeBefore:     0.5
