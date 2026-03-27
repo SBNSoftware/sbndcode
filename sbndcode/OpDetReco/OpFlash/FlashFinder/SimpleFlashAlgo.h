@@ -37,7 +37,6 @@ namespace lightana
     double _time_res;       // time resolution of pe sum
     double _pre_sample;     // time pre-sample
     int    _tpc;            // tpc
-
     double _min_pe_repeated;           // Minimum PE in one bin to declare a repeated flash during an existing OpFlash
     double _min_time_before;           // minimum time separation to declare a repeated flash before an existing OpFlash
     double _time_dif_flash_before;     // minimum time separation to declare a repeated flash before an existing OpFlash

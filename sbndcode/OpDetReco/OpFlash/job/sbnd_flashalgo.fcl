@@ -18,11 +18,8 @@ SimpleFlashStandard:
   DebugMode:         true
 
   MinPECoincRepeated:     20 
-  #MinTimeRepeated:   0.5 
   MinTimeBefore:     0.5
   TimeDifferenceFlashBefore:  0.05
-  #TimeIntervalAfter: 0.3
-  #TimeIntervalBefore: 0.5
 }
 
 SimpleFlashTPC0: @local::SimpleFlashStandard

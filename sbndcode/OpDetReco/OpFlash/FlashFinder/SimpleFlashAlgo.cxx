@@ -35,28 +35,9 @@ namespace lightana{
         //_pe_baseline_v.clear();
         //_pe_baseline_v = p.get<std::vector<double> >("PEBaseline",_pe_baseline_v);
 
-
-
-
-
-
-
-
-
-
-
         _min_pe_repeated = p.get<double>("MinPECoincRepeated", 20);              // Minimum PE in one bin to declare a repeated flash during an existing OpFlash
         _min_time_before = p.get<double>("MinTimeBefore", 0.5);             // minimum time separation to declare a repeated flash before an existing OpFlash
         _time_dif_flash_before = p.get<double>("TimeDifferenceFlashBefore", 0.05);             // minimum time separation to declare a repeated flash before an existing OpFlash
-
-
-
-
-
-
-
-
-
 
         // Check that integral_time > veto_time (they are set equal)
         if(_integral_time > _veto_time) {
