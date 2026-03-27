@@ -1398,8 +1398,9 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
         double yErrLow = efficiency->GetEfficiencyErrorLow(i);
         double yErrUp = efficiency->GetEfficiencyErrorUp(i);
 
-        std::cout << "bin " << i-1 << ": xCenter = " << xCenter << ", numerator = " << numerator->GetBinContent(i) << ", denominator = " << denominator->GetBinContent(i) << std::endl; 
+        //std::cout << "bin " << i-1 << ": xCenter = " << xCenter << ", numerator = " << numerator->GetBinContent(i) << ", denominator = " << denominator->GetBinContent(i) << std::endl; 
 
+        /*
         if(numerator->GetBinContent(i) <= 1e-06 && denominator->GetBinContent(i) <= 1e-06){
             gEff->SetPoint(i-1, xCenter, 0);
             gEff->SetPointError(i-1, xErr, xErr, 0, 0);
@@ -1409,6 +1410,10 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
             gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
             std::cout << "setting to " << yEff << std::endl;
         }
+        */
+
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
 
     }
 
@@ -1426,7 +1431,7 @@ void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, dou
 
     gEff->SetTitle(numerator->GetTitle());
     gEff->GetXaxis()->SetTitle(numerator->GetXaxis()->GetTitle());
-    gEff->GetYaxis()->SetTitle(numerator->GetYaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle("Efficiency");
     gEff->GetYaxis()->SetTitleOffset(1.6);
 
     gEff->Draw("AP");
@@ -1645,13 +1650,13 @@ void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
 
 void nuEBackgroundSignalCut_macro(){
     //std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_containedHits_numHits.txt";
-    std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_CRUMBS.txt";
+    std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx.txt";
     //std::string txtFileName = "purity_max_values_withCuts_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2.txt";
 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_IntimeBNBNuE_DLNuE_20Feb.root"); 
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/merged.root"); 
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx_containedHits_numHits/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_CRUMBS/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_ETheta2_razzled2212_razzled13_razzled211_razzled22_razzled11_dEdx/";
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFix_clearCosmic_numPFPs0_recoNeut_harsherCrumbs_fv_primaryPFP_ETheta2/";
 
     gROOT->SetBatch(true);
@@ -1660,15 +1665,15 @@ void nuEBackgroundSignalCut_macro(){
     int numPFPs0Cut = 1;
     int numRecoNeutrinosCut = 1;
     int CRUMBSCut = 1;
-    int FVCut = 0;
-    int primaryPFPCut = 0;
-    int ETheta2Cut = 0;
-    int razzledPDG2212Cut = 0;
-    int razzledPDG13Cut = 0;
-    int razzledPDG211Cut = 0;
-    int razzledPDG22Cut = 0;
-    int razzledPDG11Cut = 0;
-    int dEdxCut = 0;
+    int FVCut = 1;
+    int primaryPFPCut = 1;
+    int ETheta2Cut = 1;
+    int razzledPDG2212Cut = 1;
+    int razzledPDG13Cut = 1;
+    int razzledPDG211Cut = 1;
+    int razzledPDG22Cut = 1;
+    int razzledPDG11Cut = 1;
+    int dEdxCut = 1;
     int fracHitsContainedCut = 0;
     int numHitsCut = 0;
 
@@ -1694,7 +1699,7 @@ void nuEBackgroundSignalCut_macro(){
     int razzledChargedPiPrint = 0;
     int razzledPhotonPrint = 0;
     int razzledElectronPrint = 0;
-    int dEdxPrint = 0;
+    int dEdxPrint = 1;
     int fracHitsPrint = 0;
     int numHitsPrint = 0;
 
@@ -1705,7 +1710,7 @@ void nuEBackgroundSignalCut_macro(){
 
     // Cut values
     double crumbsScoreCut_low = 0.12;
-    double crumbsScoreCut_high = 0.6;
+    double crumbsScoreCut_high = 0.84;
 
     double FVCut_xHigh = 195; 
     double FVCut_xLow = -197; 
@@ -2145,18 +2150,18 @@ void nuEBackgroundSignalCut_macro(){
     auto pfpPurityAfterCuts_splitDLNuE = createSplitHistGroup("pfpPurity_splitDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);
     auto pfpPurityAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpPurity_splitPFPDLNuE", "Purity of the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Purity", 50, 0, 1);    
     
-    auto pfpNumHitsBeforeCuts = createHistGroup("pfpNumHitsBeforeCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (Before Cuts)", "Number of Hits", 300, 0, 3000);
-    auto pfpNumHitsAfterCuts = createHistGroup("pfpNumHitsAfterCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (After Cuts)", "Number of Hits", 300, 0, 3000);
-    auto pfpNumHitsAfterCuts_splitDLNuE = createSplitHistGroup("pfpNumHits_splitDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);
-    auto pfpNumHitsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpNumHits_splitPFPDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);    
+    auto pfpNumHitsBeforeCuts = createHistGroup("pfpNumHitsBeforeCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (Before Cuts)", "Number of Hits", 60, 0, 3000);
+    auto pfpNumHitsAfterCuts = createHistGroup("pfpNumHitsAfterCuts", "Number of Hits in the PFP in the Slice with the Highest Energy (After Cuts)", "Number of Hits", 60, 0, 3000);
+    auto pfpNumHitsAfterCuts_splitDLNuE = createSplitHistGroup("pfpNumHits_splitDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 60, 0, 3000);
+    auto pfpNumHitsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("pfpNumHits_splitPFPDLNuE", "Number of Hits in the PFP in the Slice with the Highest Energy: DL Nu+E Vertexing", "Number of Hits", 60, 0, 3000);    
     
-    auto sliceNumHitsBeforeCuts = createHistGroup("sliceNumHitsBeforeCuts", "Number of Hits in the Slice (Before Cuts)", "Number of Hits", 300, 0, 3000);
-    auto sliceNumHitsAfterCuts = createHistGroup("sliceNumHitsAfterCuts", "Number of Hits in the Slice (After Cuts)", "Number of Hits", 300, 0, 3000);
-    auto sliceNumHitsAfterCuts_splitDLNuE = createSplitHistGroup("sliceNumHits_splitDLNuE", "Number of Hits in the Slice: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);
-    auto sliceNumHitsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumHits_splitPFPDLNuE", "Number of Hits in the Slice: DL Nu+E Vertexing", "Number of Hits", 300, 0, 3000);    
+    auto sliceNumHitsBeforeCuts = createHistGroup("sliceNumHitsBeforeCuts", "Number of Hits in the Slice (Before Cuts)", "Number of Hits", 60, 0, 3000);
+    auto sliceNumHitsAfterCuts = createHistGroup("sliceNumHitsAfterCuts", "Number of Hits in the Slice (After Cuts)", "Number of Hits", 60, 0, 3000);
+    auto sliceNumHitsAfterCuts_splitDLNuE = createSplitHistGroup("sliceNumHits_splitDLNuE", "Number of Hits in the Slice: DL Nu+E Vertexing", "Number of Hits", 60, 0, 3000);
+    auto sliceNumHitsAfterCuts_splitPFPDLNuE = createSplitPFPHistGroup("sliceNumHits_splitPFPDLNuE", "Number of Hits in the Slice: DL Nu+E Vertexing", "Number of Hits", 60, 0, 3000);    
     
-    auto trueRecoilElectronEnergyBeforeCuts = createHistGroup("trueRecoilElectronEnergyBeforeCuts", "Energy of True Recoil Electron (Before Cuts)", "Energy", 200, 0, 1000);
-    auto trueRecoilElectronEnergyAfterCuts = createHistGroup("trueRecoilElectronEnergyAfterCuts", "Energy of True Recoil Electron (After Cuts)", "Energy", 200, 0, 1000);
+    auto trueRecoilElectronEnergyBeforeCuts = createHistGroup("trueRecoilElectronEnergyBeforeCuts", "Energy of True Recoil Electron (Before Cuts)", "Energy", 20, 0, 1000);
+    auto trueRecoilElectronEnergyAfterCuts = createHistGroup("trueRecoilElectronEnergyAfterCuts", "Energy of True Recoil Electron (After Cuts)", "Energy", 20, 0, 1000);
     
     auto trueRecoilElectronAngleBeforeCuts = createHistGroup("trueRecoilElectronAngleBeforeCuts", "Angle of True Recoil Electron (Before Cuts)", "Angle (degrees)", 20, 0, 20);
     auto trueRecoilElectronAngleAfterCuts = createHistGroup("trueRecoilElectronAngleAfterCuts", "Angle of True Recoil Electron (After Cuts)", "Angle (degrees)", 20, 0, 20);
@@ -2310,8 +2315,17 @@ void nuEBackgroundSignalCut_macro(){
             } else if(reco_sliceOrigin->at(slice) == 1){
                 // This is a nu+e elastic scatter slice
                 if(reco_sliceCompleteness->at(slice) > 0.5){
-                    sliceCategoryPlottingMacro = 1;
-                    //std::cout << "Nu+E Slice: sliceCategoryPlottingMacro = 1" << std::endl;
+                    if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                        // True neutrino vertex is within the active volume (this is the signal definition if we aren't using the FV cuts
+                        // -201.3 < x < 201.3, -203.8 < y < 203.8, 0 < z < 509.5
+                        sliceCategoryPlottingMacro = 1;
+                        //std::cout << "Nu+E Slice: sliceCategoryPlottingMacro = 1" << std::endl;
+                    } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
+                        // True neutrino vertex is within the FV (this is signal definition if we are using the FV cut)
+                        sliceCategoryPlottingMacro = 1;
+                    } else{
+                        sliceCategoryPlottingMacro = 2;
+                    }
                 } else{
                     sliceCategoryPlottingMacro = 2;
                     //std::cout << "Nu+E Fuzzy Slice: sliceCategoryPlottingMacro = 2" << std::endl;
@@ -3436,9 +3450,11 @@ void nuEBackgroundSignalCut_macro(){
                     std::cout << "Highest energy PFP after clear cosmic: Enegry = " << highestEnergyPFP_afterCuts.energy << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), true pdg = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << std::endl; 
                 }
 
+                /*
                 if(slicePFPType_afterCuts == 2){
                     std::cout << "Electron!! slicePFPType_afterCuts = " << slicePFPType_afterCuts << ", signal = " << signal << ", highestEnergyPFP_afterCuts.truePDG = " << highestEnergyPFP_afterCuts.truePDG << ", highestEnergyPFP_afterCuts.trueInt = " << highestEnergyPFP_afterCuts.trueInt << ", highestEnergyPFP_afterCuts.trueOrigin = " << highestEnergyPFP_afterCuts.trueOrigin << std::endl;
                 }
+                */
 
                 
                 if(sliceInteractionType == 1 && signal == 1){
@@ -4144,7 +4160,6 @@ void nuEBackgroundSignalCut_macro(){
     drawTEff(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "pfpNumHitsSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
     drawTEff(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "sliceNumHitsSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
     drawTEff(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergySignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
-    std::cout << "Recoil angle here" << std::endl;
     drawTEff(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngleSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
 
 
