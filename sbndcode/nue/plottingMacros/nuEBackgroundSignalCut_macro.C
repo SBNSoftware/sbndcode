@@ -30,7 +30,7 @@
 #include <iomanip>
 #include <TH2D.h>
 #include <TProfile.h>
-
+#include <TGaxis.h>
 
 struct eventCounter_struct{
     double nuE = 0;
@@ -1366,6 +1366,64 @@ void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double
 
     c->SaveAs(filename.c_str());
     delete c;
+}
+
+void drawTEfficiency(TH1F* numerator, TH1F* denominator, const char* filename) {
+    if (!numerator || !denominator) return;
+
+    // Create TEfficiency with proper binomial errors
+    TEfficiency* eff = new TEfficiency(*numerator, *denominator);
+    eff->SetTitle(Form("%s; %s; Counts / Efficiency", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
+    eff->SetStatisticOption(TEfficiency::kFCP);   // Clopper-Pearson for correct binomial errors
+    eff->SetUseWeightedEvents(false);
+
+    // Create canvas
+    TCanvas* c = new TCanvas("c_eff", "Efficiency Plot", 800, 600);
+    c->SetTicks();
+    c->SetLeftMargin(0.15);
+
+    // Draw denominator histogram in the background (left y-axis)
+    TH1F* denomCopy = (TH1F*)denominator->Clone("denominator_copy");
+    denomCopy->SetLineColor(kGray+2);
+    denomCopy->SetFillColor(kGray+1);
+    denomCopy->SetMarkerSize(0);
+    denomCopy->SetStats(0);
+    denomCopy->SetTitle("");
+    denomCopy->GetYaxis()->SetTitle("# of Events");
+    denomCopy->GetYaxis()->SetTitleOffset(1.5);
+    denomCopy->Draw("HIST");
+
+    // Create secondary axis for efficiency (right y-axis)
+    // Scale efficiency 0-1 to match pad coordinates
+    double y1min = c->GetUymin();
+    double y1max = c->GetUymax();
+    TGaxis* axis = new TGaxis(c->GetUxmax(), y1min, c->GetUxmax(), y1max, 0, 1, 510, "+L");
+    axis->SetTitle("Efficiency");
+    axis->SetTitleOffset(1.2);
+    axis->Draw();
+
+    // Draw efficiency on top
+    eff->SetMarkerStyle(20);
+    eff->SetMarkerSize(0.8);
+    eff->SetLineWidth(2);
+    eff->SetLineColor(kBlack);
+    eff->Draw("PE SAME");
+
+    // Legend
+    TLegend* leg = new TLegend(0.65,0.75,0.88,0.88);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(eff, "Efficiency", "PE");
+    leg->AddEntry(denomCopy, "Denominator", "F");
+    leg->Draw();
+
+    // Save canvas
+    c->SaveAs(filename);
+
+    // Clean up
+    delete c;
+    delete eff;
+    delete denomCopy;
 }
 
 void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
@@ -4162,6 +4220,10 @@ void nuEBackgroundSignalCut_macro(){
     drawTEff(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergySignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
     drawTEff(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngleSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
 
+    drawTEfficiency(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, (base_path + "pfpNumHitsSignalEfficiencyDenominator.pdf").c_str());
+    drawTEfficiency(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, (base_path + "sliceNumHitsSignalEfficiencyDenominator.pdf").c_str());
+    drawTEfficiency(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, (base_path + "trueRecoilElectronEnergySignalEfficiencyDenominator.pdf").c_str());
+    drawTEfficiency(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, (base_path + "trueRecoilElectronAngleSignalEfficiencyDenominator.pdf").c_str());
 
     std::ofstream out_file(txtFileName, std::ios::app);
     if(out_file.is_open()){
