@@ -1368,113 +1368,6 @@ void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double
     delete c;
 }
 
-/*
-void drawTEfficiency(TH1F* numerator, TH1F* denominator, const char* filename) {
-    if (!numerator || !denominator) return;
-
-    // Create TEfficiency
-    TEfficiency* eff = new TEfficiency(*numerator, *denominator);
-    eff->SetStatisticOption(TEfficiency::kFCP);
-    eff->SetUseWeightedEvents(false);
-
-    // Canvas
-    TCanvas* c = new TCanvas("c_eff", "Efficiency Plot", 800, 600);
-    c->SetLeftMargin(0.15);
-    c->SetRightMargin(0.12);
-
-    // IMPORTANT: only left y-axis ticks (fix double ticks issue)
-    gPad->SetTicks(1, 0);
-
-    // Clone denominator
-    TH1F* denomCopy = (TH1F*)denominator->Clone("denominator_copy");
-    denomCopy->SetLineColor(kGray+2);
-    denomCopy->SetFillColor(kGray);
-    denomCopy->SetStats(0);
-
-    denomCopy->SetTitle(Form("%s;%s;# of Events",
-        numerator->GetTitle(),
-        numerator->GetXaxis()->GetTitle()));
-
-    denomCopy->GetYaxis()->SetTitleOffset(1.5);
-
-    // ---- FIX Y-SCALE (avoid huge empty range) ----
-    double maxVal = 0;
-    for (int i = 1; i <= denomCopy->GetNbinsX(); ++i) {
-        double val = denomCopy->GetBinContent(i);
-        if (val > maxVal) maxVal = val;
-    }
-    denomCopy->SetMaximum(maxVal * 1.3);  // tighter scaling
-
-    denomCopy->Draw("HIST");
-
-    // Update pad so coordinates are valid
-    gPad->Update();
-
-    double ymin = gPad->GetUymin();
-    double ymax = gPad->GetUymax();
-
-    // ---- Create and scale efficiency graph ----
-    TGraphAsymmErrors* gEff = eff->CreateGraph();
-
-    int n = gEff->GetN();
-    for (int i = 0; i < n; ++i) {
-        double x, y;
-        gEff->GetPoint(i, x, y);
-
-        double yScaled = ymin + y * (ymax - ymin);
-
-        double eyl = gEff->GetErrorYlow(i) * (ymax - ymin);
-        double eyh = gEff->GetErrorYhigh(i) * (ymax - ymin);
-
-        gEff->SetPoint(i, x, yScaled);
-        gEff->SetPointError(i,
-            gEff->GetErrorXlow(i),
-            gEff->GetErrorXhigh(i),
-            eyl, eyh);
-    }
-
-    gEff->SetMarkerStyle(20);
-    gEff->SetMarkerSize(0.8);
-    gEff->SetLineWidth(2);
-    gEff->SetLineColor(kBlack);
-    gEff->Draw("PE SAME");
-
-    // ---- RIGHT AXIS (clean styling, no bold, no 0 tick) ----
-    TGaxis* axis = new TGaxis(
-        gPad->GetUxmax(), ymin,
-        gPad->GetUxmax(), ymax,
-        0.001, 1.0,   // remove 0
-        510, "+L"
-    );
-
-    axis->SetTitle("Efficiency");
-    axis->SetTitleOffset(1.2);
-
-    // remove bold look
-    axis->SetLabelFont(42);
-    axis->SetTitleFont(42);
-
-    axis->SetLabelSize(0.035);
-    axis->SetTitleSize(0.04);
-
-    axis->Draw();
-
-    // Legend
-    TLegend* leg = new TLegend(0.65,0.75,0.88,0.88);
-    leg->SetBorderSize(0);
-    leg->SetFillStyle(0);
-    leg->AddEntry(gEff, "Efficiency", "PE");
-    leg->AddEntry(denomCopy, "Denominator", "F");
-    leg->Draw();
-
-    c->SaveAs(filename);
-
-    delete c;
-    delete eff;
-    delete denomCopy;
-}
-*/
-
 void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& filename) {
     if (!numerator || !denominator) return;
 
@@ -1508,26 +1401,21 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
             numerator->GetTitle(),
             numerator->GetXaxis()->GetTitle()));
 
-        double maxVal = denomCopy->GetMaximum();
-        std::cout << "maxVal = " << maxVal << std::endl; 
-
-        maxVal = 0;
+        double maxVal = 0;
         for(int i = 1; i <= denomCopy->GetNbinsX(); ++i){
             double val = denomCopy->GetBinContent(i);
             if(val > maxVal) maxVal = val;
         }
-        
-        std::cout << "New maxVal = " << maxVal << std::endl;
+
         denomCopy->SetMaximum(maxVal * 1.3);
 
-        // Draw histogram first
         denomCopy->Draw("HIST");
 
         gPad->Update();
         double ymin = gPad->GetUymin();
         double ymax = gPad->GetUymax();
 
-        // Scale efficiency to histogram axis
+        // Scale efficiency
         TGraphAsymmErrors* gScaled = (TGraphAsymmErrors*)gEff->Clone("gScaled1");
         for (int i = 0; i < gScaled->GetN(); ++i) {
             double x, y;
@@ -1544,7 +1432,6 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
                 eyl, eyh);
         }
 
-        // Draw efficiency LAST
         gScaled->Draw("PE SAME");
 
         TGaxis* axis = new TGaxis(
@@ -1562,10 +1449,19 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
         axis->SetTitleSize(0.04);
         axis->Draw();
 
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.75, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(denomCopy, "Denominator", "F");
+        leg->AddEntry(gScaled, "Efficiency", "PE");
+        leg->Draw();
+
         c->SaveAs((filename + "Denominator.pdf").c_str());
 
         delete gScaled;
         delete denomCopy;
+        delete leg;
         delete c;
     }
 
@@ -1587,9 +1483,17 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
 
         gEff->Draw("PE SAME");
 
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.75, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(gEff, "Efficiency", "PE");
+        leg->Draw();
+
         c->SaveAs((filename + ".pdf").c_str());
 
         delete frame;
+        delete leg;
         delete c;
     }
 
@@ -1618,10 +1522,14 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
             numerator->GetTitle(),
             numerator->GetXaxis()->GetTitle()));
 
-        double maxVal = denomCopy->GetMaximum();
+        double maxVal = 0;
+        for(int i = 1; i <= denomCopy->GetNbinsX(); ++i){
+            double val = denomCopy->GetBinContent(i);
+            if(val > maxVal) maxVal = val;
+        }
+
         denomCopy->SetMaximum(maxVal * 1.3);
 
-        // Draw order: bottom → middle
         denomCopy->Draw("HIST");
         numCopy->Draw("HIST SAME");
 
@@ -1646,10 +1554,8 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
                 eyl, eyh);
         }
 
-        // Draw efficiency LAST (top layer)
         gScaled->Draw("PE SAME");
 
-        // Right axis = efficiency
         TGaxis* axis = new TGaxis(
             gPad->GetUxmax(), ymin,
             gPad->GetUxmax(), ymax,
@@ -1665,11 +1571,21 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& file
         axis->SetTitleSize(0.04);
         axis->Draw();
 
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.70, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(denomCopy, "Denominator", "F");
+        leg->AddEntry(numCopy, "Numerator", "F");
+        leg->AddEntry(gScaled, "Efficiency", "PE");
+        leg->Draw();
+
         c->SaveAs((filename + "DenominatorNumerator.pdf").c_str());
 
         delete gScaled;
         delete denomCopy;
         delete numCopy;
+        delete leg;
         delete c;
     }
 
@@ -2368,8 +2284,8 @@ void nuEBackgroundSignalCut_macro(){
     auto trueRecoilElectronEnergyBeforeCuts = createHistGroup("trueRecoilElectronEnergyBeforeCuts", "Energy of True Recoil Electron (Before Cuts)", "Energy", 20, 0, 1000);
     auto trueRecoilElectronEnergyAfterCuts = createHistGroup("trueRecoilElectronEnergyAfterCuts", "Energy of True Recoil Electron (After Cuts)", "Energy", 20, 0, 1000);
     
-    auto trueRecoilElectronAngleBeforeCuts = createHistGroup("trueRecoilElectronAngleBeforeCuts", "Angle of True Recoil Electron (Before Cuts)", "Angle (degrees)", 20, 0, 20);
-    auto trueRecoilElectronAngleAfterCuts = createHistGroup("trueRecoilElectronAngleAfterCuts", "Angle of True Recoil Electron (After Cuts)", "Angle (degrees)", 20, 0, 20);
+    auto trueRecoilElectronAngleBeforeCuts = createHistGroup("trueRecoilElectronAngleBeforeCuts", "Angle of True Recoil Electron (Before Cuts)", "Angle (degrees)", 16, 0, 16);
+    auto trueRecoilElectronAngleAfterCuts = createHistGroup("trueRecoilElectronAngleAfterCuts", "Angle of True Recoil Electron (After Cuts)", "Angle (degrees)", 16, 0, 16);
 
     auto recoVXBeforeCuts = createHistGroup("recoVXBeforeCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
     auto recoVXAfterCuts = createHistGroup("recoVXAfterCuts", "X Coordinate of Reco Neutrino", "x_{Reco} (cm) ", 202, -202, 202);
