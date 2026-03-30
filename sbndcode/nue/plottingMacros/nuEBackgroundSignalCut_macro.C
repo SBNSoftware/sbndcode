@@ -1368,6 +1368,7 @@ void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double
     delete c;
 }
 
+/*
 void drawTEfficiency(TH1F* numerator, TH1F* denominator, const char* filename) {
     if (!numerator || !denominator) return;
 
@@ -1471,6 +1472,209 @@ void drawTEfficiency(TH1F* numerator, TH1F* denominator, const char* filename) {
     delete c;
     delete eff;
     delete denomCopy;
+}
+*/
+
+void drawTEfficiency(TH1F* numerator, TH1F* denominator, const std::string& filename) {
+    if (!numerator || !denominator) return;
+
+    // Create TEfficiency
+    TEfficiency* eff = new TEfficiency(*numerator, *denominator);
+    eff->SetStatisticOption(TEfficiency::kFCP);
+    eff->SetUseWeightedEvents(false);
+
+    // Build efficiency graph once
+    TGraphAsymmErrors* gEff = eff->CreateGraph();
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.8);
+    gEff->SetLineWidth(2);
+    gEff->SetLineColor(kBlack);
+
+    // =========================================================
+    // 1. Denominator + Efficiency (RIGHT axis = efficiency)
+    // =========================================================
+    {
+        TCanvas* c = new TCanvas("c1", "Denominator + Efficiency", 800, 600);
+        c->SetLeftMargin(0.15);
+        c->SetRightMargin(0.12);
+        gPad->SetTicks(1, 0);
+
+        TH1F* denomCopy = (TH1F*)denominator->Clone("denom_copy1");
+        denomCopy->SetFillColor(kAzure-4);
+        denomCopy->SetLineColor(kAzure-5);
+        denomCopy->SetStats(0);
+
+        denomCopy->SetTitle(Form("%s;%s;# of Events",
+            numerator->GetTitle(),
+            numerator->GetXaxis()->GetTitle()));
+
+        double maxVal = denomCopy->GetMaximum();
+        std::cout << "maxVal = " << maxVal << std::endl; 
+
+        maxVal = 0;
+        for(int i = 1; i <= denomCopy->GetNbinsX(); ++i){
+            double val = denomCopy->GetBinContent(i);
+            if(val > maxVal) maxVal = val;
+        }
+        
+        std::cout << "New maxVal = " << maxVal << std::endl;
+        denomCopy->SetMaximum(maxVal * 1.3);
+
+        // Draw histogram first
+        denomCopy->Draw("HIST");
+
+        gPad->Update();
+        double ymin = gPad->GetUymin();
+        double ymax = gPad->GetUymax();
+
+        // Scale efficiency to histogram axis
+        TGraphAsymmErrors* gScaled = (TGraphAsymmErrors*)gEff->Clone("gScaled1");
+        for (int i = 0; i < gScaled->GetN(); ++i) {
+            double x, y;
+            gScaled->GetPoint(i, x, y);
+
+            double yScaled = ymin + y * (ymax - ymin);
+            double eyl = gScaled->GetErrorYlow(i) * (ymax - ymin);
+            double eyh = gScaled->GetErrorYhigh(i) * (ymax - ymin);
+
+            gScaled->SetPoint(i, x, yScaled);
+            gScaled->SetPointError(i,
+                gScaled->GetErrorXlow(i),
+                gScaled->GetErrorXhigh(i),
+                eyl, eyh);
+        }
+
+        // Draw efficiency LAST
+        gScaled->Draw("PE SAME");
+
+        TGaxis* axis = new TGaxis(
+            gPad->GetUxmax(), ymin,
+            gPad->GetUxmax(), ymax,
+            0.0, 1.0,
+            510, "+L"
+        );
+
+        axis->SetTitle("Efficiency");
+        axis->SetTitleOffset(1.2);
+        axis->SetLabelFont(42);
+        axis->SetTitleFont(42);
+        axis->SetLabelSize(0.035);
+        axis->SetTitleSize(0.04);
+        axis->Draw();
+
+        c->SaveAs((filename + "Denominator.pdf").c_str());
+
+        delete gScaled;
+        delete denomCopy;
+        delete c;
+    }
+
+    // =========================================================
+    // 2. Efficiency only (LEFT axis 0 → 1)
+    // =========================================================
+    {
+        TCanvas* c = new TCanvas("c2", "Efficiency Only", 800, 600);
+        c->SetLeftMargin(0.15);
+
+        TH1F* frame = (TH1F*)numerator->Clone("frame");
+        frame->Reset();
+        frame->SetTitle(Form("%s;%s;Efficiency",
+            numerator->GetTitle(),
+            numerator->GetXaxis()->GetTitle()));
+        frame->SetMinimum(0.0);
+        frame->SetMaximum(1.0);
+        frame->Draw();
+
+        gEff->Draw("PE SAME");
+
+        c->SaveAs((filename + ".pdf").c_str());
+
+        delete frame;
+        delete c;
+    }
+
+    // =========================================================
+    // 3. Denominator (bottom) + Numerator (middle) + Efficiency (top)
+    //    LEFT axis = #Events, RIGHT axis = Efficiency
+    // =========================================================
+    {
+        TCanvas* c = new TCanvas("c3", "Num + Denom + Efficiency", 800, 600);
+        c->SetLeftMargin(0.15);
+        c->SetRightMargin(0.12);
+        gPad->SetTicks(1, 0);
+
+        TH1F* denomCopy = (TH1F*)denominator->Clone("denom_copy3");
+        TH1F* numCopy   = (TH1F*)numerator->Clone("num_copy3");
+
+        denomCopy->SetFillColor(kAzure-4);
+        denomCopy->SetLineColor(kAzure-5);
+        numCopy->SetFillColor(kOrange+6);
+        numCopy->SetLineColor(kOrange+7);
+
+        denomCopy->SetStats(0);
+        numCopy->SetStats(0);
+
+        denomCopy->SetTitle(Form("%s;%s;# of Events",
+            numerator->GetTitle(),
+            numerator->GetXaxis()->GetTitle()));
+
+        double maxVal = denomCopy->GetMaximum();
+        denomCopy->SetMaximum(maxVal * 1.3);
+
+        // Draw order: bottom → middle
+        denomCopy->Draw("HIST");
+        numCopy->Draw("HIST SAME");
+
+        gPad->Update();
+        double ymin = gPad->GetUymin();
+        double ymax = gPad->GetUymax();
+
+        // Scale efficiency
+        TGraphAsymmErrors* gScaled = (TGraphAsymmErrors*)gEff->Clone("gScaled3");
+        for (int i = 0; i < gScaled->GetN(); ++i) {
+            double x, y;
+            gScaled->GetPoint(i, x, y);
+
+            double yScaled = ymin + y * (ymax - ymin);
+            double eyl = gScaled->GetErrorYlow(i) * (ymax - ymin);
+            double eyh = gScaled->GetErrorYhigh(i) * (ymax - ymin);
+
+            gScaled->SetPoint(i, x, yScaled);
+            gScaled->SetPointError(i,
+                gScaled->GetErrorXlow(i),
+                gScaled->GetErrorXhigh(i),
+                eyl, eyh);
+        }
+
+        // Draw efficiency LAST (top layer)
+        gScaled->Draw("PE SAME");
+
+        // Right axis = efficiency
+        TGaxis* axis = new TGaxis(
+            gPad->GetUxmax(), ymin,
+            gPad->GetUxmax(), ymax,
+            0.0, 1.0,
+            510, "+L"
+        );
+
+        axis->SetTitle("Efficiency");
+        axis->SetTitleOffset(1.2);
+        axis->SetLabelFont(42);
+        axis->SetTitleFont(42);
+        axis->SetLabelSize(0.035);
+        axis->SetTitleSize(0.04);
+        axis->Draw();
+
+        c->SaveAs((filename + "DenominatorNumerator.pdf").c_str());
+
+        delete gScaled;
+        delete denomCopy;
+        delete numCopy;
+        delete c;
+    }
+
+    delete gEff;
+    delete eff;
 }
 
 void efficiency(histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0, const std::string& text_filename = ""){
@@ -4012,11 +4216,11 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawAll(sliceNumHitsBeforeCuts, 0, 20, 999, 999, (base_path + "sliceNumHits_beforeCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     styleDrawAll(sliceNumHitsAfterCuts, 0, 20, 999, 999, (base_path + "sliceNumHits_afterCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     
-    styleDrawAll(trueRecoilElectronEnergyBeforeCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawAll(trueRecoilElectronEnergyAfterCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(trueRecoilElectronEnergyBeforeCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(trueRecoilElectronEnergyAfterCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     
-    styleDrawAll(trueRecoilElectronAngleBeforeCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngle_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawAll(trueRecoilElectronAngleAfterCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngle_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(trueRecoilElectronAngleBeforeCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngle_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(trueRecoilElectronAngleAfterCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngle_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     
     styleDrawAll(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(recoVXBeforeCuts, 999, 999, 999, 999, (base_path + "recoVX_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -4164,10 +4368,12 @@ void nuEBackgroundSignalCut_macro(){
     std::cout << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
     std::cout << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << ", frac hits contained = " << fracHitsContainedCut << ", num hits = " << numHitsCut << std::endl;
 
-    drawTEfficiency(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, (base_path + "pfpNumHitsSignalEfficiencyDenominator.pdf").c_str());
-    drawTEfficiency(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, (base_path + "sliceNumHitsSignalEfficiencyDenominator.pdf").c_str());
-    drawTEfficiency(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, (base_path + "trueRecoilElectronEnergySignalEfficiencyDenominator.pdf").c_str());
-    drawTEfficiency(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, (base_path + "trueRecoilElectronAngleSignalEfficiencyDenominator.pdf").c_str());
+    drawTEfficiency(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, (base_path + "pfpNumHitsSignalEfficiency").c_str());
+    drawTEfficiency(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, (base_path + "sliceNumHitsSignalEfficiency").c_str());
+    std::cout << "drawTEfficiency true recoil electron energy:" << std::endl;
+    drawTEfficiency(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, (base_path + "trueRecoilElectronEnergySignalEfficiency").c_str());
+    std::cout << "drawTEfficiency true recoil angle energy:" << std::endl;
+    drawTEfficiency(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, (base_path + "trueRecoilElectronAngleSignalEfficiency").c_str());
 
     std::ofstream out_file(txtFileName, std::ios::app);
     if(out_file.is_open()){
