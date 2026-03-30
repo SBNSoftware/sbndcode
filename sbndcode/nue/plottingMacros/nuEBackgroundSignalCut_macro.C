@@ -1371,163 +1371,106 @@ void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double
 void drawTEfficiency(TH1F* numerator, TH1F* denominator, const char* filename) {
     if (!numerator || !denominator) return;
 
-    // Create TEfficiency with proper binomial errors
+    // Create TEfficiency
     TEfficiency* eff = new TEfficiency(*numerator, *denominator);
-    eff->SetTitle(Form("%s; %s; Counts / Efficiency", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
-    eff->SetStatisticOption(TEfficiency::kFCP);   // Clopper-Pearson for correct binomial errors
+    eff->SetStatisticOption(TEfficiency::kFCP);
     eff->SetUseWeightedEvents(false);
 
-    // Create canvas
+    // Canvas
     TCanvas* c = new TCanvas("c_eff", "Efficiency Plot", 800, 600);
-    c->SetTicks();
     c->SetLeftMargin(0.15);
+    c->SetRightMargin(0.12);
 
-    // Draw denominator histogram in the background (left y-axis)
+    // IMPORTANT: only left y-axis ticks (fix double ticks issue)
+    gPad->SetTicks(1, 0);
+
+    // Clone denominator
     TH1F* denomCopy = (TH1F*)denominator->Clone("denominator_copy");
     denomCopy->SetLineColor(kGray+2);
-    denomCopy->SetFillColor(kGray+1);
-    denomCopy->SetMarkerSize(0);
+    denomCopy->SetFillColor(kGray);
     denomCopy->SetStats(0);
-    denomCopy->SetTitle("");
-    denomCopy->GetYaxis()->SetTitle("# of Events");
+
+    denomCopy->SetTitle(Form("%s;%s;# of Events",
+        numerator->GetTitle(),
+        numerator->GetXaxis()->GetTitle()));
+
     denomCopy->GetYaxis()->SetTitleOffset(1.5);
+
+    // ---- FIX Y-SCALE (avoid huge empty range) ----
+    double maxVal = 0;
+    for (int i = 1; i <= denomCopy->GetNbinsX(); ++i) {
+        double val = denomCopy->GetBinContent(i);
+        if (val > maxVal) maxVal = val;
+    }
+    denomCopy->SetMaximum(maxVal * 1.3);  // tighter scaling
+
     denomCopy->Draw("HIST");
 
-    // Create secondary axis for efficiency (right y-axis)
-    // Scale efficiency 0-1 to match pad coordinates
-    double y1min = c->GetUymin();
-    double y1max = c->GetUymax();
-    TGaxis* axis = new TGaxis(c->GetUxmax(), y1min, c->GetUxmax(), y1max, 0, 1, 510, "+L");
+    // Update pad so coordinates are valid
+    gPad->Update();
+
+    double ymin = gPad->GetUymin();
+    double ymax = gPad->GetUymax();
+
+    // ---- Create and scale efficiency graph ----
+    TGraphAsymmErrors* gEff = eff->CreateGraph();
+
+    int n = gEff->GetN();
+    for (int i = 0; i < n; ++i) {
+        double x, y;
+        gEff->GetPoint(i, x, y);
+
+        double yScaled = ymin + y * (ymax - ymin);
+
+        double eyl = gEff->GetErrorYlow(i) * (ymax - ymin);
+        double eyh = gEff->GetErrorYhigh(i) * (ymax - ymin);
+
+        gEff->SetPoint(i, x, yScaled);
+        gEff->SetPointError(i,
+            gEff->GetErrorXlow(i),
+            gEff->GetErrorXhigh(i),
+            eyl, eyh);
+    }
+
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.8);
+    gEff->SetLineWidth(2);
+    gEff->SetLineColor(kBlack);
+    gEff->Draw("PE SAME");
+
+    // ---- RIGHT AXIS (clean styling, no bold, no 0 tick) ----
+    TGaxis* axis = new TGaxis(
+        gPad->GetUxmax(), ymin,
+        gPad->GetUxmax(), ymax,
+        0.001, 1.0,   // remove 0
+        510, "+L"
+    );
+
     axis->SetTitle("Efficiency");
     axis->SetTitleOffset(1.2);
-    axis->Draw();
 
-    // Draw efficiency on top
-    eff->SetMarkerStyle(20);
-    eff->SetMarkerSize(0.8);
-    eff->SetLineWidth(2);
-    eff->SetLineColor(kBlack);
-    eff->Draw("PE SAME");
+    // remove bold look
+    axis->SetLabelFont(42);
+    axis->SetTitleFont(42);
+
+    axis->SetLabelSize(0.035);
+    axis->SetTitleSize(0.04);
+
+    axis->Draw();
 
     // Legend
     TLegend* leg = new TLegend(0.65,0.75,0.88,0.88);
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
-    leg->AddEntry(eff, "Efficiency", "PE");
+    leg->AddEntry(gEff, "Efficiency", "PE");
     leg->AddEntry(denomCopy, "Denominator", "F");
     leg->Draw();
 
-    // Save canvas
     c->SaveAs(filename);
 
-    // Clean up
     delete c;
     delete eff;
     delete denomCopy;
-}
-
-void drawTEff(TH1F* numerator, TH1F* denominator, double lowY, double highY, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
-    TEfficiency* efficiency = new TEfficiency(*numerator, *denominator);
-    efficiency->SetTitle(Form("%s;%s;Efficiency", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
-    efficiency->SetStatisticOption(TEfficiency::kFNormal);
-    efficiency->SetUseWeightedEvents(false);
-
-    double maxVal = getMaxValueEfficiency(efficiency, false);
-    double minVal = getMinValueEfficiency(efficiency, xmin, xmax, false);
-
-    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
-    c->SetTicks();
-    c->SetLeftMargin(0.15);
-
-    efficiency->SetMarkerColor(kBlack);
-    efficiency->SetMarkerSize(0.7); 
-    efficiency->SetLineWidth(1);
-    efficiency->SetLineColor(kBlack);
-    efficiency->SetMarkerStyle(20);
-
-    int nBins = numerator->GetNbinsX();
-    TGraphAsymmErrors* gEff = new TGraphAsymmErrors(nBins);
-
-    for (int i = 1; i <= nBins; ++i) {
-        double xCenter = numerator->GetXaxis()->GetBinCenter(i);
-        double xErr = (numerator->GetXaxis()->GetBinUpEdge(i) - numerator->GetXaxis()->GetBinLowEdge(i)) / 2.0;
-
-        double yEff = efficiency->GetEfficiency(i);
-        double yErrLow = efficiency->GetEfficiencyErrorLow(i);
-        double yErrUp = efficiency->GetEfficiencyErrorUp(i);
-
-        //std::cout << "bin " << i-1 << ": xCenter = " << xCenter << ", numerator = " << numerator->GetBinContent(i) << ", denominator = " << denominator->GetBinContent(i) << std::endl; 
-
-        /*
-        if(numerator->GetBinContent(i) <= 1e-06 && denominator->GetBinContent(i) <= 1e-06){
-            gEff->SetPoint(i-1, xCenter, 0);
-            gEff->SetPointError(i-1, xErr, xErr, 0, 0);
-            std::cout << "setting to 0" << std::endl;
-        } else{
-            gEff->SetPoint(i-1, xCenter, yEff);
-            gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
-            std::cout << "setting to " << yEff << std::endl;
-        }
-        */
-
-        gEff->SetPoint(i-1, xCenter, yEff);
-        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
-
-    }
-
-    gEff->SetLineColor(kBlack);
-    gEff->SetMarkerColor(kBlack);
-    gEff->SetMarkerStyle(20);
-    gEff->SetMarkerSize(0.7);
-    gEff->SetLineWidth(1);
-
-    if (xmin != 999) {
-        gEff->GetXaxis()->SetLimits(xmin, xmax);
-    }
-
-    gEff->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
-
-    gEff->SetTitle(numerator->GetTitle());
-    gEff->GetXaxis()->SetTitle(numerator->GetXaxis()->GetTitle());
-    gEff->GetYaxis()->SetTitle("Efficiency");
-    gEff->GetYaxis()->SetTitleOffset(1.6);
-
-    gEff->Draw("AP");
-
-    efficiency->Draw("SAME");
-    gPad->Update();
-
-    auto gBDT = efficiency->GetPaintedGraph();
-    gBDT->SetMarkerSize(0.8);
-    gBDT->Draw("PE SAME");
-
-    auto* g = efficiency->GetPaintedGraph();
-
-    if (lowY == -999999 && highY == -999999) {
-        g->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
-    } else {
-        g->GetYaxis()->SetRangeUser(lowY, highY);
-    }
-
-    double Lxmin = 0, Lxmax = 0, Lymin = 0, Lymax = 0;
-    if (legendLocation == "topRight") {
-        Lxmin = 0.69; Lymax = 0.863; Lxmax = 0.87; Lymin = 0.74;
-    } else if (legendLocation == "topLeft") {
-        Lxmin = 0.13; Lymax = 0.863; Lxmax = 0.31; Lymin = 0.74;
-    } else if (legendLocation == "bottomRight") {
-        Lxmin = 0.69; Lymax = 0.26; Lxmax = 0.87; Lymin = 0.137;
-    } else if (legendLocation == "bottomLeft") {
-        Lxmin = 0.13; Lymax = 0.26; Lxmax = 0.31; Lymin = 0.137;
-    }
-
-    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
-    leg->SetBorderSize(0);
-    leg->SetFillStyle(0);
-    leg->AddEntry(efficiency, "DL Nu+E", "LEP");
-    // leg->Draw();
-
-    c->SaveAs(filename);
-    delete c; 
 }
 
 void efficiency(histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0, const std::string& text_filename = ""){
@@ -4054,6 +3997,9 @@ void nuEBackgroundSignalCut_macro(){
     efficiency(&pfpNumHitsBeforeCuts, &pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHitsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(&pfpNumHitsBeforeCuts, &pfpNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "pfpNumHitsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
     
+    styleDrawAll(pfpNumHitsBeforeCuts, 0, 22, 999, 999, (base_path + "pfpNumHits_beforeCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(pfpNumHitsAfterCuts, 0, 22, 999, 999, (base_path + "pfpNumHits_afterCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    
     styleDrawAll(sliceNumHitsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumHits_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumHitsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumHits_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawAll(sliceNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumHits_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
@@ -4062,6 +4008,9 @@ void nuEBackgroundSignalCut_macro(){
     styleDrawPFPSplit(sliceNumHitsAfterCuts_splitPFPDLNuE, 999, 999, 999, 999, (base_path + "sliceNumHits_afterCuts_splitPDG.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(&pfpNumHitsBeforeCuts, &sliceNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumHitsHigh").c_str(), "topRight", nullptr, &right, -1, txtFileName);
     efficiency(&pfpNumHitsBeforeCuts, &sliceNumHitsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumHitsLow").c_str(), "topRight", nullptr, &right, 1, txtFileName);
+    
+    styleDrawAll(sliceNumHitsBeforeCuts, 0, 20, 999, 999, (base_path + "sliceNumHits_beforeCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(sliceNumHitsAfterCuts, 0, 20, 999, 999, (base_path + "sliceNumHits_afterCuts_signalOnly.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     
     styleDrawAll(trueRecoilElectronEnergyBeforeCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawAll(trueRecoilElectronEnergyAfterCuts, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergy_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
@@ -4214,11 +4163,6 @@ void nuEBackgroundSignalCut_macro(){
     std::cout << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
     std::cout << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
     std::cout << "razzled 11 = " << razzledPDG11Cut << ", dE/dx = " << dEdxCut << ", ETheta2 = " << ETheta2Cut << ", frac hits contained = " << fracHitsContainedCut << ", num hits = " << numHitsCut << std::endl;
-
-    drawTEff(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "pfpNumHitsSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
-    drawTEff(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "sliceNumHitsSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
-    drawTEff(trueRecoilElectronEnergyAfterCuts.nuESignal, trueRecoilElectronEnergyBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronEnergySignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
-    drawTEff(trueRecoilElectronAngleAfterCuts.nuESignal, trueRecoilElectronAngleBeforeCuts.nuESignal, 999, 999, 999, 999, (base_path + "trueRecoilElectronAngleSignalEfficiency.pdf").c_str(), "topRight", nullptr, &right);
 
     drawTEfficiency(pfpNumHitsAfterCuts.nuESignal, pfpNumHitsBeforeCuts.nuESignal, (base_path + "pfpNumHitsSignalEfficiencyDenominator.pdf").c_str());
     drawTEfficiency(sliceNumHitsAfterCuts.nuESignal, sliceNumHitsBeforeCuts.nuESignal, (base_path + "sliceNumHitsSignalEfficiencyDenominator.pdf").c_str());
