@@ -95,6 +95,7 @@ public:
   void PFPs(art::Event const& e); 
   void MCParticles(art::Event const& e);  
   void Hits(art::Event const& e);
+  void SpacePoints(art::Event const& e);
   void clearVectors();
  
   // Selected optional functions.
@@ -123,6 +124,12 @@ private:
   std::vector<double>   hit_uvz;
   std::vector<double>   hit_sliceID;
   std::vector<double>   hit_PFPID;
+
+  std::vector<double> spacepoint_x;
+  std::vector<double> spacepoint_y;
+  std::vector<double> spacepoint_z;
+  std::vector<double> spacepoint_sliceID;
+  std::vector<double> spacepoint_PFPID;
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<geo::Geometry> theGeometry;
@@ -188,10 +195,15 @@ void sbnd::NuEHits::analyze(art::Event const& e)
     MCParticles(e);
     PFPs(e);
     Hits(e);
+    SpacePoints(e);
 
     NuEHitsTree->Fill();
 }
 
+void sbnd::NuEHits::SpacePoints(art::Event const& e){
+    std::cout << "_________ SpacePoints _________" << std::endl;
+    std::cout << "_______________________________" << std::endl;
+}
 
 void sbnd::NuEHits::PFPs(art::Event const& e){
     std::cout << "_________ PFParticles _________" << std::endl;
