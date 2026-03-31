@@ -142,6 +142,7 @@ private:
   const std::string hitLabel;
   const std::string showerLabel;
   const std::string TruthLabel;
+  const std::string spacePointLabel;
   double DLCurrent;
   double signal;
 
@@ -159,6 +160,7 @@ sbnd::NuEHits::NuEHits(fhicl::ParameterSet const& p)
   hitLabel(p.get<std::string>("HitLabel")),
   showerLabel(p.get<std::string>("ShowerLabel")),
   TruthLabel(p.get<std::string>("TruthLabel")),
+  spacePointLabel(p.get<std::string>("SpacePointLabel")),
   DLCurrent(p.get<double>("DLCurrent")),
   signal(p.get<double>("Signal"))
 {
@@ -181,6 +183,11 @@ sbnd::NuEHits::NuEHits(fhicl::ParameterSet const& p)
   NuEHitsTree->Branch("hit_uvz", &hit_uvz);
   NuEHitsTree->Branch("hit_sliceID", &hit_sliceID);
   NuEHitsTree->Branch("hit_PFPID", &hit_PFPID);
+  NuEHitsTree->Branch("spacepoint_x", &spacepoint_x);
+  NuEHitsTree->Branch("spacepoint_y", &spacepoint_y);
+  NuEHitsTree->Branch("spacepoint_z", &spacepoint_z);
+  NuEHitsTree->Branch("spacepoint_sliceID", &spacepoint_sliceID);
+  NuEHitsTree->Branch("spacepoint_PFPID", &spacepoint_PFPID);
     
 }
 
@@ -202,6 +209,60 @@ void sbnd::NuEHits::analyze(art::Event const& e)
 
 void sbnd::NuEHits::SpacePoints(art::Event const& e){
     std::cout << "_________ SpacePoints _________" << std::endl;
+    art::Handle<std::vector<recob::SpacePoint>> spacePointHandle;
+    std::vector<art::Ptr<recob::SpacePoint>> spacePointVec;
+    if(e.getByLabel(spacePointLabel, spacePointHandle))
+        art::fill_ptr_vector(spacePointVec, spacePointHandle);
+
+    art::Handle<std::vector<recob::PFParticle>> PFPHandle;
+    std::vector<art::Ptr<recob::PFParticle>> PFPVec;
+    if(e.getByLabel(PFParticleLabel, PFPHandle))
+        art::fill_ptr_vector(PFPVec, PFPHandle);
+
+    std::cout << "Number of spacepoints in event = " << spacePointVec.size() << std::endl;
+    if(!spacePointVec.empty()){
+        // Get association between spacepoint and PFP
+        art::FindManyP<recob::PFParticle> spacePointPFPAssns(spacePointVec, e, spacePointLabel);
+        
+        // Get association between PFP and Slice
+        art::FindManyP<recob::Slice> PFPSliceAssns(PFPVec, e, sliceSCELabel);
+
+        // Loop through the spacepoints
+        for(const art::Ptr<recob::SpacePoint> &spacePoint : spacePointVec){
+            // Getting the PFP associated with the SpacePoint
+            const std::vector<art::Ptr<recob::PFParticle>> spacePointPFPs(spacePointPFPAssns.at(spacePoint.key()));
+            if(spacePointPFPs.size() != 0){
+                // There is a PFP associated with the SpacePoint
+                art::Ptr<recob::PFParticle> spacePointPFP = spacePointPFPs.at(0);
+                spacepoint_PFPID.push_back(spacePointPFP->Self());
+
+                const std::vector<art::Ptr<recob::Slice>> spacePointSlices(PFPSliceAssns.at(spacePointPFP.key()));
+                if(spacePointSlices.size() != 0){
+                    // There is a slice associated with the SpacePoint
+                    art::Ptr<recob::Slice> spacePointSlice = spacePointSlices.at(0);
+                    spacepoint_sliceID.push_back(spacePointSlice->ID());
+                } else{
+                    spacepoint_sliceID.push_back(-999999);
+                }
+            } else{
+                spacepoint_PFPID.push_back(-999999);
+                spacepoint_sliceID.push_back(-999999);
+            }
+
+            spacepoint_x.push_back(spacePoint->XYZ()[0]);
+            spacepoint_y.push_back(spacePoint->XYZ()[1]);
+            spacepoint_z.push_back(spacePoint->XYZ()[2]);
+
+        }
+    } else{
+        std::cout << "No SpacePoints in the event" << std::endl;
+        spacepoint_x.push_back(-999999);    
+        spacepoint_y.push_back(-999999);    
+        spacepoint_z.push_back(-999999);    
+        spacepoint_sliceID.push_back(-999999);    
+        spacepoint_PFPID.push_back(-999999);    
+    }
+
     std::cout << "_______________________________" << std::endl;
 }
 
@@ -416,6 +477,12 @@ void sbnd::NuEHits::clearVectors(){
   hit_uvz.clear();
   hit_sliceID.clear();
   hit_PFPID.clear();
+  
+  spacepoint_x.clear();
+  spacepoint_y.clear();
+  spacepoint_z.clear();
+  spacepoint_sliceID.clear();
+  spacepoint_PFPID.clear();
 }
 
 void sbnd::NuEHits::beginJob()

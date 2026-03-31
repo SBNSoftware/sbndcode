@@ -10,6 +10,7 @@ nuEHits:
     HitLabel:           "gaushit"
     ShowerLabel:        "pandoraSCEShower"
     TruthLabel:         "corsika"
+    SpacePointLabel:    "pandoraSCE"
     DLCurrent:          5
     Signal:             3
 }
