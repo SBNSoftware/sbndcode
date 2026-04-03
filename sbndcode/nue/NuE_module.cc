@@ -110,7 +110,9 @@ public:
   double computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>& spacePointVec, double vx, double vy, double vz);
   void angleRecalculatePCASlice(art::Event const& e); 
   void angleRecalculatePCAPFP(art::Event const& e); 
- 
+  void trueSignal(art::Event const& e);
+
+
   // Selected optional functions.
   void beginJob() override;
   void endJob() override;
@@ -120,6 +122,11 @@ private:
   unsigned int eventID; // Event num
   unsigned int runID; // Run num  
   unsigned int subRunID; // Subrun num
+
+  int nuEScatter; // 0 = no nu+e scatter, 1 = nu+e scatter in event
+  double nuEScatterTrueVX; // True neutrino vertex of nu+e scatter
+  double nuEScatterTrueVY; // True neutrino vertex of nu+e scatter
+  double nuEScatterTrueVZ; // True neutrino vertex of nu+e scatter
 
   TTree* SubRunTree;
   double pot;
@@ -311,6 +318,11 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("subRunID", &subRunID);
   NuETree->Branch("DLCurrent", &DLCurrent);
   NuETree->Branch("signal", &signal);
+  
+  NuETree->Branch("nuEScatter", &nuEScatter);
+  NuETree->Branch("nuEScatterTrueVX", &nuEScatterTrueVX);
+  NuETree->Branch("nuEScatterTrueVY", &nuEScatterTrueVY);
+  NuETree->Branch("nuEScatterTrueVZ", &nuEScatterTrueVZ);
 
   NuETree->Branch("truth_neutrinoVX", &truth_neutrinoVX);
   NuETree->Branch("truth_neutrinoVY", &truth_neutrinoVY);
@@ -472,14 +484,62 @@ void sbnd::NuE::analyze(art::Event const& e)
     PFPs(e);
     angleRecalculatePCASlice(e);
     angleRecalculatePCAPFP(e);
+    trueSignal(e);
 
     NuETree->Fill();
+}
+
+void sbnd::NuE::trueSignal(art::Event const& e){
+    art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
+    std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+    if(e.getByLabel(TruthLabel, MCTruthHandle))
+        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+    int numNuEScatters = 0;
+
+    double nuEScatterVX = -999999;
+    double nuEScatterVY = -999999;
+    double nuEScatterVZ = -999999;
+
+    if(!MCTruthVec.empty()){
+        for(auto &MCTruth : MCTruthVec){
+            if(MCTruth->Origin() == simb::kBeamNeutrino){
+                simb::MCNeutrino neutrino = MCTruth->GetNeutrino();
+                simb::MCParticle neutrinoParticle = neutrino.Nu();
+                if(neutrino.InteractionType() == 1098){
+                    // This is a nu+e elastic scattering event
+                    numNuEScatters++;
+
+                    nuEScatterVX = neutrinoParticle.Vx();
+                    nuEScatterVY = neutrinoParticle.Vy();
+                    nuEScatterVZ = neutrinoParticle.Vz();
+
+                }
+            }
+        }
+    }
+
+    if(numNuEScatters > 1) std::cout << "MORE THAN 1 NU+E ELASTIC SCATTER!!!!!!!!!" << std::endl;
+    std::cout << "Number of nu+e elastic scatters in the event = " << numNuEScatters << std::endl;
+    std::cout << "True neutrino vertex of nu+e elastic scatter = (" << nuEScatterVX << ", " << nuEScatterVY << ", " << nuEScatterVZ << ")" << std::endl;
+
+    if(numNuEScatters != 0){
+        nuEScatter = 1;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ; 
+    } else{
+        nuEScatter = 0;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ; 
+    }
 }
 
 double sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>& spacePointVec, double vx, double vy, double vz){
     size_t N = spacePointVec.size();
     if (N == 0){
-        std::cout << "No spacepoints in slice.\n";
+        //std::cout << "No spacepoints!!!\n";
         return -999999;
     }
 
@@ -517,27 +577,27 @@ double sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>
     }
 
     cov /= static_cast<double>(N);
-    std::cout << "Covariance matrix:\n" << cov << "\n";
+    //std::cout << "Covariance matrix:\n" << cov << "\n";
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(cov);
 
     if(solver.info() != Eigen::Success){
-        std::cout << "Eigen decomposition failed.\n";
+        //std::cout << "Eigen decomposition failed.\n";
         return -999999;
     }
 
     Eigen::Vector3d eigenvalues = solver.eigenvalues();
     Eigen::Matrix3d eigenvectors = solver.eigenvectors();
 
-    std::cout << "\nEigenvalues:\n" << eigenvalues << "\n";
-    std::cout << "\nEigenvectors (columns):\n" << eigenvectors << "\n";
+    //std::cout << "\nEigenvalues:\n" << eigenvalues << "\n";
+    //std::cout << "\nEigenvectors (columns):\n" << eigenvectors << "\n";
 
     int max_idx;
     eigenvalues.maxCoeff(&max_idx);
 
     Eigen::Vector3d principal_axis = eigenvectors.col(max_idx).normalized();
 
-    std::cout << "\nPrincipal axis:\n" << principal_axis << "\n";
+    //std::cout << "\nPrincipal axis:\n" << principal_axis << "\n";
    
     if(vx == -999999){
         return -999999;
@@ -551,7 +611,7 @@ double sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>
         principal_axis = -principal_axis;
     }
 
-    std::cout << "\nOriented principal axis:\n" << principal_axis << "\n";
+    //std::cout << "\nOriented principal axis:\n" << principal_axis << "\n";
 
     // Beam Direction
     Eigen::Vector3d beam_dir(0.0, 0.0, 1.0);
@@ -564,11 +624,13 @@ double sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>
     dot_product = std::max(-1.0, std::min(1.0, dot_product));
 
     double theta_rad = std::acos(dot_product);
-    double theta_deg = theta_rad * 180.0 / M_PI;
+    //double theta_deg = theta_rad * 180.0 / M_PI;
 
+    /*
     std::cout << "\nDot product: " << dot_product << "\n";
     std::cout << "Angle (rad): " << theta_rad << "\n";
     std::cout << "Angle (deg): " << theta_deg << "\n";
+    */
 
     return theta_rad;
 }
@@ -622,8 +684,6 @@ void sbnd::NuE::angleRecalculatePCASlice(const art::Event &e){
         }
 
     }
-
-    std::cout << "------------ Spacepoint number of slices = " << sliceVec.size() << std::endl;
 
     // Getting the slices
     if(sliceVec.size() != 0){
@@ -681,33 +741,32 @@ void sbnd::NuE::angleRecalculatePCASlice(const art::Event &e){
                 }
             }
 
-            //std::cout << "Number of SpacePoints in slice = " << spacePointSliceMatchedVec.size() << ", within 5 cm = " << spacePointSliceMatched5cmVec.size() << ", within 10 cm = " << spacePointSliceMatched10cmVec.size() << ", within 15 cm = " << spacePointSliceMatched15cmVec.size() << std::endl; 
 
             // Recalculate the angle using PCA using all spacepoints in the slice
             double angle = computePCAAngle(spacePointSliceMatchedVec, sliceVX, sliceVY, sliceVZ);
-            std::cout << "Recalculating angle using all hits in slice (ID = " << targetSliceID << ") = " << angle << " = " << angle * 180.0 / M_PI << " degrees" << std::endl;
-            std::cout << "" << std::endl;
+            //std::cout << "Recalculating angle using all hits in slice (ID = " << targetSliceID << ") = " << angle << " = " << angle * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
             angleRecalculationPCASlice_angle.push_back(angle);
             angleRecalculationPCASlice_sliceID.push_back(targetSliceID);
 
             // Recalculate the angle using PCA using spacepoints in the slice within 5 cm of vertex
             double angle5cm = computePCAAngle(spacePointSliceMatched5cmVec, sliceVX, sliceVY, sliceVZ);
-            std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 5 cm of vertex = " << angle5cm << " = " << angle5cm * 180.0 / M_PI << " degrees" << std::endl;
-            std::cout << "" << std::endl;
+            //std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 5 cm of vertex = " << angle5cm << " = " << angle5cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
             angleRecalculationPCASlice5cm_angle.push_back(angle5cm);
             angleRecalculationPCASlice5cm_sliceID.push_back(targetSliceID);
 
             // Recalculate the angle using PCA using spacepoints in the slice within 10 cm of vertex
             double angle10cm = computePCAAngle(spacePointSliceMatched10cmVec, sliceVX, sliceVY, sliceVZ);
-            std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 10 cm of vertex = " << angle10cm << " = " << angle10cm * 180.0 / M_PI << " degrees" << std::endl;
-            std::cout << "" << std::endl;
+            //std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 10 cm of vertex = " << angle10cm << " = " << angle10cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
             angleRecalculationPCASlice10cm_angle.push_back(angle10cm);
             angleRecalculationPCASlice10cm_sliceID.push_back(targetSliceID);
 
             // Recalculate the angle using PCA using spacepoints in the slice within 15 cm of vertex
             double angle15cm = computePCAAngle(spacePointSliceMatched15cmVec, sliceVX, sliceVY, sliceVZ);
-            std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 15 cm of vertex = " << angle15cm << " = " << angle15cm * 180.0 / M_PI << " degrees" << std::endl;
-            std::cout << "" << std::endl;
+            //std::cout << "Recalculating angle using hits in slice (ID = " << targetSliceID << ") within 15 cm of vertex = " << angle15cm << " = " << angle15cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
             angleRecalculationPCASlice15cm_angle.push_back(angle15cm);
             angleRecalculationPCASlice15cm_sliceID.push_back(targetSliceID);
 
@@ -728,6 +787,117 @@ void sbnd::NuE::angleRecalculatePCASlice(const art::Event &e){
 }
 
 void sbnd::NuE::angleRecalculatePCAPFP(const art::Event &e){
+    std::cout << "---------------- angleRecalculatePCAPFP ---------------" << std::endl;
+   
+    art::Handle<std::vector<recob::SpacePoint>> spacePointHandle;
+    std::vector<art::Ptr<recob::SpacePoint>> spacePointVec;
+    if(e.getByLabel(spacePointLabel, spacePointHandle))
+        art::fill_ptr_vector(spacePointVec, spacePointHandle);
+
+    art::Handle<std::vector<recob::PFParticle>> PFPHandle;
+    std::vector<art::Ptr<recob::PFParticle>> PFPVec;
+    if(e.getByLabel(PFParticleLabel, PFPHandle))
+        art::fill_ptr_vector(PFPVec, PFPHandle);
+
+    std::vector<double> pfpIDVec;
+    pfpIDVec.reserve(spacePointVec.size());
+
+    // Getting the spacepoints
+    if(!spacePointVec.empty()){
+        // Get association between spacepoint and PFP
+        art::FindManyP<recob::PFParticle> spacePointPFPAssns(spacePointVec, e, spacePointLabel);
+        
+        for(const art::Ptr<recob::SpacePoint> &spacePoint : spacePointVec){
+            double pfpIDNum = -999999; // default value
+
+            // Getting the PFP associated with the spacepoint
+            const std::vector<art::Ptr<recob::PFParticle>> spacePointPFPs(spacePointPFPAssns.at(spacePoint.key()));
+            if(spacePointPFPs.size() != 0){
+                // There is a PFP associated with the spacepoint
+                art::Ptr<recob::PFParticle> spacePointPFP = spacePointPFPs.at(0);
+
+                pfpIDNum = spacePointPFP->Self();
+            }
+
+            pfpIDVec.push_back(pfpIDNum);
+        }
+    }
+
+    // Getting the PFPs
+    if(PFPVec.size() != 0){
+        art::FindManyP<recob::Vertex> PFPVertexAssns(PFPVec, e, vertexLabel);
+
+        for(const art::Ptr<recob::PFParticle> &pfp : PFPVec){
+            // Loop through the PFPs
+            double targetPFPID = pfp->Self();
+
+            std::vector<art::Ptr<recob::SpacePoint>> spacePointPFPMatchedVec;
+            std::vector<art::Ptr<recob::SpacePoint>> spacePointPFPMatched5cmVec;
+            std::vector<art::Ptr<recob::SpacePoint>> spacePointPFPMatched10cmVec;
+            std::vector<art::Ptr<recob::SpacePoint>> spacePointPFPMatched15cmVec;
+
+            double pfpVX = -999999;
+            double pfpVY = -999999;
+            double pfpVZ = -999999;
+
+            const std::vector<art::Ptr<recob::Vertex>> pfpVertices(PFPVertexAssns.at(pfp.key()));
+            if(pfpVertices.size() != 0){
+                // There is a vertex associated with the pfp
+                art::Ptr<recob::Vertex> pfpVertex = pfpVertices.at(0);
+                pfpVX = pfpVertex->position().X();
+                pfpVY = pfpVertex->position().Y();
+                pfpVZ = pfpVertex->position().Z();
+            }
+
+            for(size_t i = 0; i < pfpIDVec.size(); ++i){
+                if(pfpIDVec[i] == targetPFPID){
+                    spacePointPFPMatchedVec.push_back(spacePointVec[i]);
+
+                    double dx = (spacePointVec[i]->XYZ()[0] - pfpVX);
+                    double dy = (spacePointVec[i]->XYZ()[1] - pfpVY);
+                    double dz = (spacePointVec[i]->XYZ()[2] - pfpVZ);
+
+                    if(((dx*dx) + (dy*dy) + (dz*dz)) < 25) spacePointPFPMatched5cmVec.push_back(spacePointVec[i]);
+                    if(((dx*dx) + (dy*dy) + (dz*dz)) < 100) spacePointPFPMatched10cmVec.push_back(spacePointVec[i]);
+                    if(((dx*dx) + (dy*dy) + (dz*dz)) < 225) spacePointPFPMatched15cmVec.push_back(spacePointVec[i]);
+                }
+            }
+
+            double angle = computePCAAngle(spacePointPFPMatchedVec, pfpVX, pfpVY, pfpVZ);
+            //std::cout << "Recalculating angle using all hits in PFP (ID = " << targetPFPID << ") = " << angle << " = " << angle * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
+            angleRecalculationPCAPFP_angle.push_back(angle);
+            angleRecalculationPCAPFP_pfpID.push_back(targetPFPID);
+
+            double angle5cm = computePCAAngle(spacePointPFPMatched5cmVec, pfpVX, pfpVY, pfpVZ);
+            //std::cout << "Recalculating angle using all hits in PFP (ID = " << targetPFPID << ") within 5cm of vertex = " << angle5cm << " = " << angle5cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
+            angleRecalculationPCAPFP5cm_angle.push_back(angle5cm);
+            angleRecalculationPCAPFP5cm_pfpID.push_back(targetPFPID);
+
+            double angle10cm = computePCAAngle(spacePointPFPMatched10cmVec, pfpVX, pfpVY, pfpVZ);
+            //std::cout << "Recalculating angle using all hits in PFP (ID = " << targetPFPID << ") within 10cm of vertex = " << angle10cm << " = " << angle10cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
+            angleRecalculationPCAPFP10cm_angle.push_back(angle10cm);
+            angleRecalculationPCAPFP10cm_pfpID.push_back(targetPFPID);
+
+            double angle15cm = computePCAAngle(spacePointPFPMatched15cmVec, pfpVX, pfpVY, pfpVZ);
+            //std::cout << "Recalculating angle using all hits in PFP (ID = " << targetPFPID << ") within 15cm of vertex = " << angle15cm << " = " << angle15cm * 180.0 / M_PI << " degrees" << std::endl;
+            //std::cout << "" << std::endl;
+            angleRecalculationPCAPFP15cm_angle.push_back(angle15cm);
+            angleRecalculationPCAPFP15cm_pfpID.push_back(targetPFPID);
+        }
+    } else{
+        // There are no PFPs in the event
+        angleRecalculationPCAPFP_angle.push_back(-999999);
+        angleRecalculationPCAPFP_pfpID.push_back(-999999);
+        angleRecalculationPCAPFP5cm_angle.push_back(-999999);
+        angleRecalculationPCAPFP5cm_pfpID.push_back(-999999);
+        angleRecalculationPCAPFP10cm_angle.push_back(-999999);
+        angleRecalculationPCAPFP10cm_pfpID.push_back(-999999);
+        angleRecalculationPCAPFP15cm_angle.push_back(-999999);
+        angleRecalculationPCAPFP15cm_pfpID.push_back(-999999);
+    }
 }
 
 int sbnd::NuE::GetNumGenEvents(const art::Event &e){
