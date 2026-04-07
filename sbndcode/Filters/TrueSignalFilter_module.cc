@@ -64,6 +64,11 @@ struct FilterBlockConfig {
         fhicl::Comment("If true, only CC events are accepted. If false, only NC events are accepted. If ommitted, no requirement")
     };
 
+    fhicl::OptionalAtom<bool> KeepBadStatus {
+        fhicl::Name("KeepBadStatus"),
+        fhicl::Comment("If true, keep particles with a bad status code. This is needed for the production of unstable primaries like the eta meson")
+    };
+
     fhicl::OptionalSequence<int> Modes {
         fhicl::Name("Modes"),
         fhicl::Comment("List of allowed interaction modes")
@@ -102,6 +107,7 @@ struct FilterBlock {
     std::optional<std::array<float, 2>> wrange;
     std::optional<bool> in_tpc;
     std::optional<bool> iscc;
+    std::optional<bool> keep_bad_status;
     std::optional<std::vector<int>> modes;
     std::optional<std::vector<int>> required_pdgs;
     std::optional<std::vector<int>> ignored_pdgs;
@@ -188,6 +194,10 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
         bool iscc;
         if (cfg.IsCC(iscc)) {
             block.iscc = iscc;
+        }
+        bool keep_bad_status;
+        if (cfg.KeepBadStatus(keep_bad_status)) {
+            block.keep_bad_status = keep_bad_status;
         }
 
         std::vector<int> modes;
@@ -302,7 +312,7 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const Filter
         const auto& part(mc->GetParticle(i));
         debug_log << kSpace << "MC particle list " << i << " " << part.PdgCode() << " STATUS=" << part.StatusCode() << ", E=" << part.E() << "\n";
         // only consider primaries
-        if (part.StatusCode() != 1) continue;
+        if (part.StatusCode() != 1 && !block.keep_bad_status) continue;
 
         // don't count particles in the ignored list
         int pdg = part.PdgCode();
