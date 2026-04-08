@@ -1,0 +1,12 @@
+#include "filters_sbnd.fcl"
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+physics.filters.ccnuefilter: @local::sbnd_ccnuefilter
+
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, 
+                        ccnuefilter, 
+                        corsika, largeantcosmic, largeant, largeantdropped, simplemerge]
+
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter",
+                        dirtfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge,
+                        ccnuefilter]
