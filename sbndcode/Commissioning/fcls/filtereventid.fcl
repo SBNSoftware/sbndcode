@@ -1,18 +1,18 @@
-#include "services_sbnd.fcl"
+##include "services_sbnd.fcl"
 
 process_name: FilterEventID
 
 services:
 {
-  TFileService: { fileName: "reco_hist.root"}
-  MemoryTracker:     {}
-  TimeTracker:       {}
-  RandomNumberGenerator: {} 
-  message:              @local::sbnd_message_services_prod_debug
-  FileCatalogMetadata:  @local::art_file_catalog_mc
-  GeometryConfigurationWriter:    {}
-  @table::sbnd_basic_services
-  @table::sbnd_random_services
+  # TFileService: { fileName: "reco_hist.root"}
+  # MemoryTracker:     {}
+  # TimeTracker:       {}
+  # RandomNumberGenerator: {} 
+  # message:              @local::sbnd_message_services_prod_debug
+  # FileCatalogMetadata:  @local::art_file_catalog_mc
+  # GeometryConfigurationWriter:    {}
+  # @table::sbnd_basic_services
+  # @table::sbnd_random_services
 }
 
 source:
@@ -28,7 +28,7 @@ outputs:
    module_type: RootOutput
    fileName:    "%ifb_eventidfiltered.root"
    dataTier:    "filtered"
-   fastCloning: true
+  #  fastCloning: true
    SelectEvents: [ filter ]
  }
 }
@@ -39,7 +39,9 @@ physics:
   {
     filtereventid: {
       module_type: FilterEventID
+      # filterruns[i] must correspond to filterevts[i]
       filterevts: []
+      filterruns: []
     }
   }
 
