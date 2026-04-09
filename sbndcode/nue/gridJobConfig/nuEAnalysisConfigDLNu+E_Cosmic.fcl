@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+nuE:
+{
+    module_type:        "NuE"
+    SliceLabel:         "pandora"
+    SliceSCELabel:      "pandoraSCE"
+    PFParticleLabel:    "pandoraSCE"
+    VertexLabel:        "pandoraSCE"
+    NuGenModuleLabel:   "corsika"
+    HitLabel:           "gaushit"
+    CRUMBSLabel:        "crumbs"
+    RazzledLabel:       "pandoraRazzled"
+    TrackLabel:         "pandoraSCETrack"
+    ShowerLabel:        "pandoraSCEShower"
+    MCTruthLabel:       "largeant"
+    TruthLabel:         "corsika"
+    SpacePointLabel:    "pandoraSCE"
+    DLCurrent:          5
+    SpacePointLabel:    "pandoraSCE"
+    ClusterLabel:       "pandoraSCE"
+    POTLabel:           "corsika"
+    Signal:             3
+}
+
+END_PROLOG

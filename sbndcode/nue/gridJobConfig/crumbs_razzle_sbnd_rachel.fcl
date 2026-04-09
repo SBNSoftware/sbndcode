@@ -1,0 +1,142 @@
+#
+# fcl file to run CRUMBS on a reco2 file
+#
+
+
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "larproperties.fcl"
+#include "backtrackerservice.fcl"
+#include "detectorproperties_sbnd.fcl"
+
+#include "particleinventoryservice.fcl"
+#include "photonbacktrackerservice.fcl"
+#include "mccheatermodules.fcl"
+
+#include "calorimetry_sbnd.fcl"
+
+# WARNING: CNN module only built for e26 compiler
+#include "sbn_cnnid.fcl"
+
+#include "trackscatterclosestapproach.fcl"
+#include "trackstoppingchi2fitter.fcl"
+#include "showerselectionvarsproducer.fcl"
+#include "showercosmicdistanceproducer.fcl"
+#include "sbn_pid.fcl"
+#include "sbn_crumbs_producer.fcl"
+
+#include "pmtflashtrigger_producer.fcl"
+
+#include "flashmatch_sbnd.fcl"
+#include "sbn_stub.fcl"
+
+#include "cafmaker_common_defs.fcl"
+
+#include "eventweight_genie_systtools.fcl"
+
+process_name: CRUMBS
+
+services:
+{
+   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+   @table::sbnd_services
+   BackTrackerService: @local::sbnd_backtrackerservice
+   ParticleInventoryService: @local::sbnd_particleinventoryservice
+}
+
+source: {
+   module_type: RootInput
+}
+
+physics:
+{
+   producers:
+   {
+      @table::cafmaker_common_producers
+      flashtrig: @local::pmtflashtrigmaker_sbnd
+
+      crumbs:               @local::crumbs_sbnd
+      # cnnid: @local::cnnid_sbnd
+      
+
+      pandoraTrackClosestApproach:          @local::trackscatterclosestapproach_sbn
+      pandoraTrackStoppingChi2: @local::trackstoppingchi2fitter_sbn
+      pandoraTrackDazzle:       @local::dazzle_sbnd
+
+      pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
+      pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
+      pandoraShowerRazzle:         @local::razzle_sbnd
+
+      pandoraRazzled:       @local::razzled_sbnd
+      
+      systtools: @local::sbn_systtools  
+
+   }
+
+   runcrumbs: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
+                pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
+                pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs ]
+   stream1:   [ out1 ]
+}
+
+# pandoraTrackMCS overwrites
+physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
+
+# pandoraTrackRange overwrites
+physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
+
+# pandoraShowerSelectionVars overwrites
+physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel: "pandoraSCEShowerSBN"
+
+# pandoraTrackClosestApproach overwrites
+physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
+
+# pandoraTrackStoppingChi2 overwrites
+physics.producers.pandoraTrackStoppingChi2.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackStoppingChi2.CaloLabel: "pandoraSCECalo" 
+
+## Dazzle overwrites
+physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.pandoraTrackDazzle.PFPLabel: "pandoraSCE"
+physics.producers.pandoraTrackDazzle.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackDazzle.CaloLabel: "pandoraSCECalo"
+physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPid"
+
+# pandoraShowerCosmicDist overwrites
+physics.producers.pandoraShowerCosmicDist.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel: "pandoraSCEShowerSBN"
+
+# Razzle overwrites
+physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.pandoraShowerRazzle.PFPLabel: "pandoraSCE"
+physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
+
+# Razzled overwrites
+physics.producers.pandoraRazzled.PFPLabel: "pandoraSCE"
+physics.producers.pandoraRazzled.ClusterLabel: "pandoraSCE"
+physics.producers.pandoraRazzled.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraRazzled.ShowerLabel: "pandoraSCEShowerSBN"
+physics.producers.pandoraRazzled.CaloLabel: "pandoraSCECalo"
+physics.producers.pandoraRazzled.Chi2Label: "pandoraSCEPid"
+
+# Just over-write the stub reco labels -- no need to change to "SCE"
+physics.producers.vertexCharge: @local::vertex_charge_sbnd_sce
+physics.producers.vertexStub: @local::vertex_stub_sbnd_sce
+# set the CaloAlg again
+physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
+physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
+
+outputs:
+{
+   out1:
+   { 
+      @table::sbnd_rootoutput
+      dataTier: "reconstructed"
+   }
+}
+
+services.DetectorClocksService.InheritClockConfig: false
