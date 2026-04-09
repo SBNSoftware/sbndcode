@@ -2,3 +2,5 @@
 
 physics.analyzers.crtana.SmearPosition: true
 physics.analyzers.crtana.Debug: true
+physics.analyzers.crtana.SaveSystsFlux: false
+physics.analyzers.crtana.SaveSystsGenie: false

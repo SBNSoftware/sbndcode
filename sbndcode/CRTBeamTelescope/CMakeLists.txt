@@ -38,5 +38,6 @@ MODULE_LIBRARIES larcorealg_Geometry
                  ${ROOT_BASIC_LIB_LIST}
                  sbndcode_RecoUtils
                  sbndcode_OpDetSim
+                 CLHEP::Random
 )
 

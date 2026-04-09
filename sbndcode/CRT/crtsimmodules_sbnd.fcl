@@ -7,8 +7,8 @@ standard_sbnd_crtsimparams: {
   UseG4RefTimeOffset: true
 
   # Shape parameters for mean time delay vs. Npe
-  TDelayNorm: 15.455 #4125.74
-  TDelayShift: 0.055 #-300.31
+  TDelayNorm: 15.455 #11.155 #19.755 #15.455 #4125.74
+  TDelayShift: 0.055 #0.041 #0.070 #0.055 #-300.31
   TDelaySigma: 90.392
   TDelayOffset: -1.525
 
@@ -29,22 +29,22 @@ standard_sbnd_crtsimparams: {
   ClockSpeedCRT: 1000.
 
   # Propagation delay [ns/cm]
-  PropDelay: 0.061
-  PropDelayError: 0.007
+  PropDelay: 0.061 #0.072 #0.061
+  PropDelayError: 0.007 #0.008 #0.007
 
   # Interpolator time resolution [ns]
   TResInterpolator: 1.268
 
   # Model parameters for Npe vs. distance along strip
-  NpeScaleNorm:  1.39e8  #8.023e7 #5.261e7
-  NpeScaleShift: 1135.15 #-1085.0 
+  NpeScaleNorm:  8.023e7 #1.12396e8 #4.80644e7 #8.023e7 #5.261e7 
+  NpeScaleShift: -1085.  #-1320.879 #-832.192  #-1085
 
   # Mean deposited charge for mips [MeV]
   UseEdep: true
-  Q0: 1.68e-3 #1.75e-3
+  Q0: 1.53e-3 #1.68e-3 
 
   # ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
-  QPed: 0.0 #63.6
+  QPed: 0.0   #63.6
   QSlope: 40.0 #131.9
   QRMS: 80.0 #15.0
   QThreshold: 60.0 #100
@@ -56,7 +56,7 @@ standard_sbnd_crtsimparams: {
   TaggerPlaneCoincidenceWindow: 150.0 #5
 
   # Effective absorption length (for transverse response) [cm]
-  AbsLenEff: 8.5
+  AbsLenEff: 8.5 #2.58 #8.5
 
   # Minimum time between energy deposits that SiPMs can resolve [ns]
   SipmTimeResponse: 2.0
@@ -70,6 +70,7 @@ standard_sbnd_crtsimparams: {
   DoWaveformEmulation: true
 
   DebugTrigger: false
+  
 }
 
 sbnd_crtsim: {

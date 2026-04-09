@@ -9,6 +9,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
+#include "TRandom3.h"
 
 namespace sbnd{
 

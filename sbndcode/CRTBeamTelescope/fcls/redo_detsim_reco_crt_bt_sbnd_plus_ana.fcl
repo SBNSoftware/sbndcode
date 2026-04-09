@@ -1,0 +1,108 @@
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# modules
+#
+#include "crtsimmodules_sbnd.fcl"
+#include "crtslimmer_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crthitproducer_sbnd.fcl"
+#include "crttrackproducer_sbnd.fcl"
+#include "configs_crt_analyzer.fcl"
+#include "crtbacktracker_sbnd.fcl"
+#include "reco_crt_bt_sbnd.fcl"
+
+
+process_name: RedoCRTDetsimReco
+
+
+services:
+{
+  scheduler:    { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+  TFileService: { fileName: "crtSelectionAna_sbnd.root" } #fileName: "fluxuncertainties_ana_sbnd.root"
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  @table::sbnd_simulation_services
+}
+
+
+source:
+{
+    inputCommands: [ "keep *",
+    		     "drop *_crtsim_*_*",
+    		     "drop *_crt_*_*",
+    		     "drop *_crthit_*_*",
+    		     "drop *_crttrack_*_*"
+    ]
+
+    module_type: RootInput
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # CRT Detsim
+    crtsim: @local::sbnd_crtsim
+
+    # CRT Slimmer
+    # crt: @local::sbnd_crtslimmer
+
+    # CRT Hits
+    crthit: @local::standard_crthitproducer
+
+    # CRT Tracks
+    crttrack: @local::standard_crttrackproducer
+
+  }
+
+  analyzers:
+  {
+    crtana: @local::sbnd_crtselectionana
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , crtsim
+            #, crt
+            , crthit
+            , crttrack
+          ]
+
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  ana: [crtana]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1, ana]
+}
+
+
+outputs:
+{
+  out1:
+  {
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+    outputCommands: [ "keep *_*_*_*" ]
+  }
+}
+#physics.producers.crthit.HitRecoAlg.HitCoincidenceRequirement: 5
+
+physics.analyzers.crtana.InteractionMode: 1
+physics.analyzers.crtana.SaveSystsFlux: false
+physics.analyzers.crtana.SaveSystsGenie: false
+
+#include "use_crt_beam_tele_geometry_g4_services.fcl"

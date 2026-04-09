@@ -60,8 +60,7 @@ namespace sbnd{
 
           // Subtract channel pedestals
           uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i]   - sipm1.pedestal : 0;
-          uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
-
+          uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;; 
           uint16_t pedestal1 = sipm1.pedestal;
           uint16_t pedestal2 = sipm2.pedestal;
 
@@ -75,7 +74,12 @@ namespace sbnd{
             // === TO-DO === //
             // AMEND THE CODE AND IMPROVE CALCULATION
             double width = strip.width;
-            double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+            
+            TRandom3 *fRandomGenerator = new TRandom3();
+            fRandomGenerator->SetSeed(0); // Set seed for reproducibility, can be changed later
+            double x     = fRandomGenerator->Uniform(0, width);
+            std::cout<<"position x: "<<x<<", original: "<<width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.<<std::endl; 
+            //double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
             double ex    = 2.5;
 
             // Create hit

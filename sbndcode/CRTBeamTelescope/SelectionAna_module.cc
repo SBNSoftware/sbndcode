@@ -34,13 +34,21 @@
 
 #include "TTree.h"
 #include "TRandom3.h"
+#include "TSpline.h"
 #include <numeric>
 #include <algorithm>  // for sort
 #include <functional> // for greater
 
-class SelectionAna;
+#include "CLHEP/Random/RandEngine.h"
+#include "CLHEP/Random/RandGauss.h"
+#include "Structs.h"
 
-class SelectionAna : public art::EDAnalyzer
+namespace sbnd
+{
+  class SelectionAna;
+}
+
+class sbnd::SelectionAna : public art::EDAnalyzer
 {
 public:
   explicit SelectionAna(fhicl::ParameterSet const &p);
@@ -63,10 +71,10 @@ public:
   bool canFormRect(std::vector<double> distances);
   double FormRectScore(std::vector<double> distances);
   void calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area);
-  void StoreNeutrinoInfo(art::Event const &e, std::string _geant_producer, int geant_track_id, int _interactionMode, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, double &nu_energy, int &nu_source);
+  void StoreNeutrinoInfo(art::Event const &e, std::string _geant_producer, int geant_track_id, int _interactionMode, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, double &nu_energy, int &nu_source, int &nu_hitTarget, int &nu_hitNuc);
   double calculateScalingFactor(double energy, double mass, double boosted_decay_length, double unboosted_decay_length_old, double unboosted_decay_length_new);
-  void CalFluxWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, int &_countFunc);
-  void CalGENIEWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights);
+  void CalWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, int &_countFunc, std::string _evtweight_label);
+  void CalGENIEWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, std::string _genie_evtweight_label);
 
 private:
   sbnd::CRTBackTracker _crt_back_tracker;
@@ -77,13 +85,16 @@ private:
   std::string _pot_label;
   std::string _mctruth_label;
   std::string _g4_label;
-  std::string _fluxeventweight_label;
+  std::string _flux_eventweight_label;
   std::string _genie_eventweight_label;
+  std::string _genie_eventweight_systtool_label;
+  std::string _geant4_eventweight_label;
 
   bool _debug;
   bool _save_input_file_name;
   bool _data_mode;
   bool _cosmic_mode;
+  bool _BDT_Training;
 
   // for systematic uncertainty.
   bool _smear_timing;
@@ -140,16 +151,19 @@ private:
   std::vector<double> _chit_backtrack_trackID;          ///< CRT hit, backtracking truth information of track id
   std::vector<int> _chit_backtrack_origin;              ///< CRT hit, 0 -- signal; 1 -- dirt; 2 -- cosmic;
 
-  int _chit_backtrack_evtwgt_flux_nfunc;                   ///< Number of functions used for FLUX reweighting (multisim)
-  std::vector<float> _chit_backtrack_evtwgt_flux_weight;   ///< Weights for FLUX reweighting (multisim) (combines all variations)
-  std::vector<float> _chit_backtrack_evtwgt_genie_weight;  ///< Weights for XSEC reweighting (multisim) (combines all variations)
-  std::vector<float> _chit_backtrack_evtwgt_geant4_weight; ///< Weights for GEANT4 reweighting (multisim) (combines all variations)
+  std::vector<int> _chit_backtrack_evtwgt_flux_nfunc;                           ///< Number of functions used for FLUX reweighting (multisim)
+  std::vector<std::vector<float>> _chit_backtrack_evtwgt_flux_weight;           ///< Weights for FLUX reweighting (multisim) (combines all variations)
+  std::vector<std::vector<float>> _chit_backtrack_evtwgt_genie_weight;          ///< Weights for XSEC reweighting (multisim) (combines all variations)
+  std::vector<std::vector<float>> _chit_backtrack_evtwgt_genie_systtool_weight; ///< Weights for XSEC reweighting (multisim) (combines all variations), with systtool
+  std::vector<std::vector<float>> _chit_backtrack_evtwgt_geant4_weight;         ///< Weights for GEANT4 reweighting (multisim) (combines all variations)
   // truth info for neutrino
   std::vector<int> _chit_backtrack_nu_pdg;
   std::vector<int> _chit_backtrack_nu_ccnc;
   std::vector<int> _chit_backtrack_nu_mode;
   std::vector<int> _chit_backtrack_nu_interaction_type;
   std::vector<double> _chit_backtrack_nu_energy;
+  std::vector<int> _chit_backtrack_nu_hitTarget;
+  std::vector<int> _chit_backtrack_nu_hitNucleus;
 
   // for smearing to calculate the systematic uncertainty from reconstruction effect.
   // smear the handles.
@@ -174,25 +188,30 @@ private:
   double _mct_darkNeutrino_new_unboosted_decay_length;
   double _mct_darkNeutrino_unboosted_decay_length = 306.53; // cm,
   ULong_t _seednumber;
+
+  CLHEP::HepRandomEngine &fRandomEngine;
+  std::map<std::string, std::map<int, double>> genie_multisigma_universe_weights;
 };
 
-SelectionAna::SelectionAna(fhicl::ParameterSet const &p)
-    : EDAnalyzer{p} // ,
-// More initializers here.
+sbnd::SelectionAna::SelectionAna(fhicl::ParameterSet const &p)
+    : EDAnalyzer{p}, fRandomEngine(art::ServiceHandle<rndm::NuRandomService>()->createEngine(*this, "HepJamesRandom", "SystematicWeightThrows", 101)) // This is for GENIE systematics [systtool]
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   _mctruth_label = p.get<std::string>("MCTruthLabel", "generator");
   _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
   _pot_label = p.get<std::string>("POTLabel", "generator");
   _g4_label = p.get<std::string>("G4Label", "largeant");
-  _fluxeventweight_label = p.get<std::string>("FluxEventWeightLabel", "fluxweight");
+  _flux_eventweight_label = p.get<std::string>("FluxEventWeightLabel", "fluxweight");
   _genie_eventweight_label = p.get<std::string>("GENIEEventWeightLabel", "genieweight");
+  _genie_eventweight_systtool_label = p.get<std::string>("GENIEEventWeightSysttoolLabel", "systtools");
+  _geant4_eventweight_label = p.get<std::string>("Geant4EventWeightLabel", "geant4reweight");
 
   _crt_back_tracker = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
 
   _interactionMode = p.get<int>("InteractionMode", 0);
   _data_mode = p.get<bool>("DataMode", false);
   _cosmic_mode = p.get<bool>("CosmicMode", false);
+  _BDT_Training = p.get<bool>("BDTTraining", false);
 
   _smear_timing = p.get<bool>("SmearTiming", false);
   _smear_position = p.get<bool>("SmearPosition", false);
@@ -263,14 +282,17 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const &p)
     _tree->Branch("chit_backtrack_nu_mode", &_chit_backtrack_nu_mode);
     _tree->Branch("chit_backtrack_nu_interaction_type", &_chit_backtrack_nu_interaction_type);
     _tree->Branch("chit_backtrack_nu_energy", &_chit_backtrack_nu_energy);
+    _tree->Branch("chit_backtrack_nu_hitTarget", &_chit_backtrack_nu_hitTarget);
+    _tree->Branch("chit_backtrack_nu_hitNucleus", &_chit_backtrack_nu_hitNucleus);
     if (_save_systs_flux)
     {
       _tree->Branch("chit_backtrack_evtwgt_flux_weight", &_chit_backtrack_evtwgt_flux_weight);
-      _tree->Branch("chit_backtrack_evtwgt_flux_nfunc", &_chit_backtrack_evtwgt_flux_nfunc, "chit_backtrack_evtwgt_flux_nfunc/I");
+      _tree->Branch("chit_backtrack_evtwgt_flux_nfunc", &_chit_backtrack_evtwgt_flux_nfunc);
     }
     if (_save_systs_genie)
     {
       _tree->Branch("chit_backtrack_evtwgt_genie_weight", &_chit_backtrack_evtwgt_genie_weight);
+      _tree->Branch("chit_backtrack_evtwgt_genie_systtool_weight", &_chit_backtrack_evtwgt_genie_systtool_weight);
     }
     if (_save_systs_geant4)
     {
@@ -285,9 +307,23 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const &p)
   _sr_tree->Branch("begintime", &_sr_begintime, "begintime/D");
   _sr_tree->Branch("endtime", &_sr_endtime, "endtime/D");
   _sr_tree->Branch("pot", &_sr_pot, "pot/D");
+
+  CLHEP::RandGauss randGauss(fRandomEngine, 0., 1.);
+  for (auto const &name : genie_weight_names)
+  {
+    if (name.find("multisigma") != std::string::npos)
+    {
+      genie_multisigma_universe_weights[name] = std::map<int, double>();
+
+      for (int iuniv = 0; iuniv < n_genieweight_univs; ++iuniv)
+      {
+        genie_multisigma_universe_weights[name][iuniv] = randGauss.fire();
+      }
+    }
+  }
 }
 
-void SelectionAna::analyze(art::Event const &e)
+void sbnd::SelectionAna::analyze(art::Event const &e)
 {
   fRandomGenerator = new TRandom3();      // Initialize the random generator.
   fRandomGenerator->SetSeed(_seednumber); // set seed for the random generator.
@@ -303,7 +339,7 @@ void SelectionAna::analyze(art::Event const &e)
   _chit_depositedE.clear();
   _chit_t1.clear();
   _chit_t1_diff_biggest_distance.clear();
-  
+
   _chit_backtrack_pdg.clear();
   _chit_backtrack_energy.clear();
   _chit_backtrack_deposited_energy.clear();
@@ -317,7 +353,10 @@ void SelectionAna::analyze(art::Event const &e)
   _chit_backtrack_nu_energy.clear();
   _chit_backtrack_evtwgt_flux_weight.clear();
   _chit_backtrack_evtwgt_genie_weight.clear();
+  _chit_backtrack_evtwgt_genie_systtool_weight.clear();
   _chit_backtrack_evtwgt_geant4_weight.clear();
+  _chit_backtrack_nu_hitNucleus.clear();
+  _chit_backtrack_nu_hitTarget.clear();
 
   if (!_data_mode)
     _crt_back_tracker.Initialize(e); // Initialise the backtrack alg.
@@ -441,7 +480,7 @@ void SelectionAna::analyze(art::Event const &e)
       t1 = t1 - 4420. + 1.7e6;
 
     // select within the beam window.
-    if (_interactionMode != 0 && !_data_mode)
+    if (_interactionMode != 0 && !_data_mode && !_BDT_Training)
     {
       if (t1 < beam_time_window[0] || t1 > beam_time_window[0] + beam_time_window[1])
         continue; // if not signal, apply the beam window selection.
@@ -452,8 +491,8 @@ void SelectionAna::analyze(art::Event const &e)
     _chit_t1.push_back(t1); // store the t1.
 
     const std::array<uint16_t, 4> corr_adcs = hit->corr_adcs;
-    if (hit->tagger == "volTaggerNorth_0")
-    { // downstream
+    if (hit->tagger == "volTaggerNorth_0") // downstream
+    { 
       _n_chits_downstream++;
 
       if (_smear_deposited_energy)
@@ -479,8 +518,8 @@ void SelectionAna::analyze(art::Event const &e)
       chit_corrADC_strip_diff_downstream.push_back(corrADC_strip_diff);
       chit_t1_strip_diff_downstream.push_back(hit->ts0_ns_corr);
     }
-    else
-    { // upstream
+    else // upstream
+    { 
       _n_chits_upstream++;
       if (_smear_deposited_energy)
         _chit_depositedE.push_back(hit->peshit * calibration_constant[0] + smear_deposited_energy_offset);
@@ -496,17 +535,20 @@ void SelectionAna::analyze(art::Event const &e)
       _chit_backtrack_deposited_energy.push_back(truthMatch.depEnergy_total);
       _chit_backtrack_purity.push_back(truthMatch.purity);
       _chit_backtrack_trackID.push_back(truthMatch.trackid);
+  
 
       // store the neutrino info for the CRT hit.
-      int nu_pdg = -1, ccnc = -1, nu_mode = -1, nu_interaction_type = -1, nu_source = -1;
+      int nu_pdg = -1, ccnc = -1, nu_mode = -1, nu_interaction_type = -1, nu_source = -1, nu_hitTarget = -1, nu_hitNuc = -1;
       double nu_energy = -1.;
-      StoreNeutrinoInfo(e, _g4_label, truthMatch.trackid, _interactionMode, nu_pdg, ccnc, nu_mode, nu_interaction_type, nu_energy, nu_source);
+      StoreNeutrinoInfo(e, _g4_label, truthMatch.trackid, _interactionMode, nu_pdg, ccnc, nu_mode, nu_interaction_type, nu_energy, nu_source, nu_hitTarget, nu_hitNuc);
       _chit_backtrack_origin.push_back(nu_source);
       _chit_backtrack_nu_pdg.push_back(nu_pdg);
       _chit_backtrack_nu_ccnc.push_back(ccnc);
       _chit_backtrack_nu_mode.push_back(nu_mode);
       _chit_backtrack_nu_interaction_type.push_back(nu_interaction_type);
       _chit_backtrack_nu_energy.push_back(nu_energy);
+      _chit_backtrack_nu_hitTarget.push_back(nu_hitTarget);
+      _chit_backtrack_nu_hitNucleus.push_back(nu_hitNuc);
 
       if (_debug)
         std::cout << "backtrak pdg: " << truthMatch.pdg << ", energy: " << truthMatch.particle_energy << ", depEnergy_total: " << truthMatch.depEnergy_total << ", purity: " << truthMatch.purity << ", trackid: " << truthMatch.trackid << ", nu_pdg: " << nu_pdg << ", ccnc: " << ccnc << ", nu_mode: " << nu_mode << ", nu_interaction_type: " << nu_interaction_type << ", nu_energy: " << nu_energy << ", nu_source: " << nu_source << std::endl;
@@ -516,9 +558,9 @@ void SelectionAna::analyze(art::Event const &e)
         std::vector<float> _evtwgt_flux_weight;
         _evtwgt_flux_weight.resize(crt_hit_v.size(), -1.);
         int _countFunc = -1;
-        CalFluxWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_flux_weight, _countFunc);
-        _chit_backtrack_evtwgt_flux_weight = _evtwgt_flux_weight;
-        _chit_backtrack_evtwgt_flux_nfunc = _countFunc;
+        CalWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_flux_weight, _countFunc, _flux_eventweight_label);
+        _chit_backtrack_evtwgt_flux_weight.push_back(_evtwgt_flux_weight);
+        _chit_backtrack_evtwgt_flux_nfunc.push_back(_countFunc);
         _evtwgt_flux_weight.clear();
       }
 
@@ -526,11 +568,56 @@ void SelectionAna::analyze(art::Event const &e)
       {
         std::vector<float> _evtwgt_genie_weight;
         _evtwgt_genie_weight.resize(crt_hit_v.size(), -1.);
-        CalGENIEWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_genie_weight);
-        _chit_backtrack_evtwgt_genie_weight = _evtwgt_genie_weight;
+
+        // Old SBNEventWeight
+        CalGENIEWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_genie_weight, _genie_eventweight_label);
+        _chit_backtrack_evtwgt_genie_weight.push_back(_evtwgt_genie_weight);
+        if (_debug)
+        {
+          std::cout << "### SBNEventWeight: ###" << std::endl;
+          int couuuu = 0;
+          for (auto it : _evtwgt_genie_weight)
+          {
+            std::cout << "### SBNEventWeight: " << couuuu << ", " << it << std::endl;
+            couuuu++;
+          }
+        }
+        _evtwgt_genie_weight.clear();
+
+        // New SBNEventWeight with systtool
+        CalGENIEWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_genie_weight, _genie_eventweight_systtool_label);
+        _chit_backtrack_evtwgt_genie_systtool_weight.push_back(_evtwgt_genie_weight);
+        if (_debug)
+        {
+          std::cout << "### Systtools: ### " << std::endl;
+          int couuuu = 0;
+          for (auto it : _evtwgt_genie_weight)
+          {
+            std::cout << "### Systtools: " << couuuu << ", " << it << std::endl;
+            couuuu++;
+          }
+        }
         _evtwgt_genie_weight.clear();
       }
 
+      if (_save_systs_geant4)
+      {
+        std::vector<float> _evtwgt_geant4_weight;
+        _evtwgt_geant4_weight.resize(crt_hit_v.size(), -1.);
+        int _countFunc = -1;
+        CalWeight(e, _g4_label, _mctruth_label, truthMatch.trackid, _interactionMode, _evtwgt_geant4_weight, _countFunc, _geant4_eventweight_label);
+        _chit_backtrack_evtwgt_geant4_weight.push_back(_evtwgt_geant4_weight);
+        if (_debug) 
+        {
+          int couuuu = 0;
+          for (auto it : _evtwgt_geant4_weight)
+          {
+            std::cout << "GEANT4: " << couuuu << ", " << it << std::endl;
+            couuuu++;
+          }
+        }
+        _evtwgt_geant4_weight.clear();
+      }
     }
   }
 
@@ -673,6 +760,7 @@ void SelectionAna::analyze(art::Event const &e)
           _square_side_length = _square_side_length * scaling_factor;
           _square_side_width = _square_side_width * scaling_factor;
           _square_area = _square_area * scaling_factor * scaling_factor;
+          _biggest_distance_between_hits = distance_smeared;
         }
 
         if (_debug)
@@ -706,10 +794,14 @@ void SelectionAna::analyze(art::Event const &e)
 
   // Calculate the mean and std of the CRT hit PE.
   calculateMeanStd(_chit_depositedE, _chit_depositedE_mean, _chit_depositedE_sample_std);
+  if (_smear_deposited_energy){
+    double _chit_depositedE_sample_std_temp = std::hypot(_chit_depositedE_sample_std, smear_deposited_energy_offset);
+    _chit_depositedE_sample_std = _chit_depositedE_sample_std_temp;
+  }
   _tree->Fill();
 }
 
-void SelectionAna::beginSubRun(art::SubRun const &sr)
+void sbnd::SelectionAna::beginSubRun(art::SubRun const &sr)
 {
   _sr_run = sr.run();
   _sr_subrun = sr.subRun();
@@ -733,12 +825,12 @@ void SelectionAna::beginSubRun(art::SubRun const &sr)
   _sr_tree->Fill();
 }
 
-void SelectionAna::respondToOpenInputFile(const art::FileBlock &fb)
+void sbnd::SelectionAna::respondToOpenInputFile(const art::FileBlock &fb)
 {
   _file_name = fb.fileName();
 }
 
-void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, double &std)
+void sbnd::SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, double &std)
 {
   if (vec.size() >= 1)
   {
@@ -758,7 +850,7 @@ void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, doubl
   }
 }
 
-bool SelectionAna::canFormRect(std::vector<double> distances)
+bool sbnd::SelectionAna::canFormRect(std::vector<double> distances)
 {
   if (distances.size() != 6)
   {
@@ -776,7 +868,7 @@ bool SelectionAna::canFormRect(std::vector<double> distances)
          std::abs(distances[4] - std::sqrt(distances[0] * distances[0] + distances[2] * distances[2])) < 0.01;
 }
 
-double SelectionAna::FormRectScore(std::vector<double> distances)
+double sbnd::SelectionAna::FormRectScore(std::vector<double> distances)
 {
   if (distances.size() != 6)
   {
@@ -794,7 +886,7 @@ double SelectionAna::FormRectScore(std::vector<double> distances)
   return side_diff + side_diff_2 + diagonal_diff + Pythagorean_diff;
 }
 
-void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area)
+void sbnd::SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area)
 {
   if (position_x_y.size() != 4)
   {
@@ -822,7 +914,7 @@ void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> posi
   area = length * width;
 }
 
-void SelectionAna::StoreNeutrinoInfo(art::Event const &e, std::string _geant_producer, int geant_track_id, int _interactionMode, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, double &nu_energy, int &nu_source)
+void sbnd::SelectionAna::StoreNeutrinoInfo(art::Event const &e, std::string _geant_producer, int geant_track_id, int _interactionMode, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, double &nu_energy, int &nu_source, int &nu_hitTarget, int &nu_hitNuc)
 {
   if (_interactionMode == 0)
     nu_source = 0; // signal
@@ -848,9 +940,11 @@ void SelectionAna::StoreNeutrinoInfo(art::Event const &e, std::string _geant_pro
         nu_interaction_type = neutrino.InteractionType();
         nu_energy = nu.Momentum().E();
         nu_source = 1; // beam
+        nu_hitTarget = neutrino.Target();
+        nu_hitNuc = neutrino.HitNuc();
 
         if (_debug)
-          std::cout << "Neutrino pdg: " << nu_pdg << ", nu_mode: " << nu_mode << ", nu_interaction_type: " << nu_interaction_type << ", nu_energy: " << nu_energy << ", outgoing lepton: " << neutrino.Lepton().PdgCode() << ", HitNuc: " << neutrino.HitNuc() << ", Target: " << neutrino.Target() << ", vertex: (" << neutrino.Nu().Position().X() << ", " << neutrino.Nu().Position().Y() << ", " << neutrino.Nu().Position().Z() << ")" << ", nu_source: " << nu_source << std::endl;
+          std::cout << "Neutrino pdg: " << nu_pdg << ", nu_mode: " << nu_mode << ", nu_interaction_type: " << nu_interaction_type << ", nu_energy: " << nu_energy << ", outgoing lepton: " << neutrino.Lepton().PdgCode() << ", HitNuc: " << nu_hitNuc << ", Target: " << nu_hitTarget << ", vertex: (" << neutrino.Nu().Position().X() << ", " << neutrino.Nu().Position().Y() << ", " << neutrino.Nu().Position().Z() << ")" << ", nu_source: " << nu_source << std::endl;
 
         notFound = false;
       }
@@ -869,12 +963,14 @@ void SelectionAna::StoreNeutrinoInfo(art::Event const &e, std::string _geant_pro
     nu_interaction_type = -1;
     nu_energy = -1;
     nu_source = -1; // std::numeric_limits<int>::max();
+    nu_hitTarget = -1;
+    nu_hitNuc = -1;
   }
 }
 
-void SelectionAna::CalFluxWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, int &_countFunc)
+void sbnd::SelectionAna::CalWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, int &_countFunc, std::string _eventweight_label)
 {
-
+  std::cout<<"### SBNEventWeight: ###" << _eventweight_label << std::endl;
   lar_pandora::MCTruthToMCParticles truthToParticles;
   lar_pandora::MCParticlesToMCTruth particlesToTruth;
   lar_pandora::LArPandoraHelper::CollectMCParticles(e, _geant_producer, truthToParticles, particlesToTruth);
@@ -891,7 +987,7 @@ void SelectionAna::CalFluxWeight(art::Event const &e, std::string _geant_produce
   art::fill_ptr_vector(mct_v, mct_h);
 
   // Get the FluxEventWeightMap
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _fluxeventweight_label);
+  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _eventweight_label);
 
   for (auto iter : particlesToTruth)
   {
@@ -904,7 +1000,7 @@ void SelectionAna::CalFluxWeight(art::Event const &e, std::string _geant_produce
         std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> flux_ewm_v = mct_to_fluxewm.at(iter.second.key());
         if (flux_ewm_v.size() != 1)
         {
-          std::cout << "EventWeightMap of " << _fluxeventweight_label << " bigger than 1?" << std::endl;
+          std::cout << "EventWeightMap of " << _eventweight_label << " bigger than 1?" << std::endl;
         }
         std::map<std::string, std::vector<float>> evtwgt_map = *(flux_ewm_v[0]);
 
@@ -913,7 +1009,6 @@ void SelectionAna::CalFluxWeight(art::Event const &e, std::string _geant_produce
         int countFunc = 0;
         for (auto it : evtwgt_map)
         {
-
           std::string func_name = it.first;
           std::vector<float> weight_v = it.second;
 
@@ -940,8 +1035,7 @@ void SelectionAna::CalFluxWeight(art::Event const &e, std::string _geant_produce
   }
 }
 
-
-void SelectionAna::CalGENIEWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights)
+void sbnd::SelectionAna::CalGENIEWeight(art::Event const &e, std::string _geant_producer, std::string _mctruth_label, int geant_track_id, int _interactionMode, std::vector<float> &_final_weights, std::string _genie_evtweight_label)
 {
 
   lar_pandora::MCTruthToMCParticles truthToParticles;
@@ -960,7 +1054,7 @@ void SelectionAna::CalGENIEWeight(art::Event const &e, std::string _geant_produc
   art::fill_ptr_vector(mct_v, mct_h);
 
   // Get the FluxEventWeightMap
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm(mct_h, e, _genie_eventweight_label);
+  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm(mct_h, e, _genie_evtweight_label);
 
   for (auto iter : particlesToTruth)
   {
@@ -971,51 +1065,124 @@ void SelectionAna::CalGENIEWeight(art::Event const &e, std::string _geant_produc
       {
         // Flux weights
         std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_v = mct_to_genieewm.at(iter.second.key());
-        if (genie_ewm_v.size() != 1)
+
+        if (_genie_evtweight_label == _genie_eventweight_label)
         {
-          std::cout << "EventWeightMap of " << _genie_eventweight_label << " bigger than 1?" << std::endl;
-        }
-        std::map<std::string, std::vector<float>> evtwgt_map = *(genie_ewm_v[0]);
-
-        std::vector<float> final_weights;
-        std::vector<float> previous_weights;
-        int countFunc = 0;
-        for (auto it : evtwgt_map)
-        {
-
-          std::string func_name = it.first;
-          std::vector<float> weight_v = it.second;
-
-          if (previous_weights.size() == 0)
+          if (genie_ewm_v.size() != 1)
           {
-            previous_weights.resize(weight_v.size(), 1.);
-            final_weights.resize(weight_v.size(), 1.);
+            std::cout << "EventWeightMap of " << _genie_evtweight_label << " bigger than 1?" << std::endl;
           }
-          countFunc++;
-          std::cout << "weight_v.at(0) " << weight_v.at(0) << ", final_weights.at(0) " << final_weights.at(0) << std::endl;
+          std::map<std::string, std::vector<float>> evtwgt_map = *(genie_ewm_v[0]);
 
-          // Construct a single weight
-          std::transform(previous_weights.begin(), previous_weights.end(),
-                         weight_v.begin(),
-                         final_weights.begin(),
-                         std::multiplies<float>());
-          previous_weights = final_weights;
+          std::vector<float> final_weights;
+          std::vector<float> previous_weights;
+          for (auto it : evtwgt_map)
+          {
+
+            std::string func_name = it.first;
+            std::vector<float> weight_v = it.second;
+
+            if (previous_weights.size() == 0)
+            {
+              previous_weights.resize(weight_v.size(), 1.);
+              final_weights.resize(weight_v.size(), 1.);
+            }
+
+            // Construct a single weight
+            std::transform(previous_weights.begin(), previous_weights.end(),
+                           weight_v.begin(),
+                           final_weights.begin(),
+                           std::multiplies<float>());
+            previous_weights = final_weights;
+          }
+          _final_weights = final_weights;
         }
+        else if (_genie_evtweight_label == _genie_eventweight_systtool_label)
+        {
+          int n_univs = n_genieweight_univs;
+          std::vector<float> final_weights(n_univs, 1.);
+          for (auto const &genie_ewm : genie_ewm_v)
+          {
+            for (auto const &[name, weight_v] : *genie_ewm)
+            {
+              if (name.find("multisigma") != std::string::npos)
+              {
+                std::vector<float> thrown_weights(n_univs, 1.);
+                if (weight_v.size() == 6) // multisigma. 
+                {
+                  double multisigma_sigmas[7] = {-3, -2, -1, 0, 1, 2, 3};
+                  double multisigma_vals[7] = {weight_v[4], weight_v[2], weight_v[0], 1.0, weight_v[1], weight_v[3], weight_v[5]};
+                  TSpline3 *spline = new TSpline3(Form("%s_spline", name.c_str()), multisigma_sigmas, multisigma_vals, 6);
+                  for (int iuniv = 0; iuniv < n_univs; ++iuniv)
+                  {
 
-        _final_weights = final_weights;
+                    thrown_weights[iuniv] = spline->Eval(genie_multisigma_universe_weights[name][iuniv]);
+
+                    if (thrown_weights[iuniv] < 0 && multisigma_vals[1] == 0) // for these handles where the -2 sigma is 0, rethrow the weights.
+                    { 
+                      thrown_weights[iuniv] = spline->Eval(genie_multisigma_universe_weights[name][iuniv]);
+                    }
+
+                    if (std::isnan(thrown_weights[iuniv]))
+                    {
+                      thrown_weights[iuniv] = 1.; // GENIE error, discard this universe.
+                    }
+                    else if (thrown_weights[iuniv] < 0.)
+                    {
+                      std::cout << "GENIE syst tool: multisigma: for " << name << " in " << iuniv << " universe, final_weights[iuniv], " << thrown_weights[iuniv] << ", weight_v: size: " << weight_v.size() << ", weight_v: {" << multisigma_vals[0] << ", " << multisigma_vals[1] << ", " << multisigma_vals[2] << ", " << multisigma_vals[3] << ", " << multisigma_vals[4] << ", " << multisigma_vals[5] << ", " << multisigma_vals[6] << "}" << std::endl;
+                      thrown_weights[iuniv] = 1e-5; 
+                    }
+                    final_weights[iuniv] *= thrown_weights[iuniv];
+                  }
+                }
+                else if (weight_v.size() == 1) // unisim
+                {
+                  for (int iuniv = 0; iuniv < n_univs; ++iuniv)
+                  {
+
+                    thrown_weights[iuniv] = 1 + (weight_v[0] - 1) * 2 * genie_multisigma_universe_weights[name][iuniv];
+                    if (std::isnan(thrown_weights[iuniv]))
+                    {
+                      thrown_weights[iuniv] = 1.; // GENIE error, discard this universe.
+                    }
+                    else if (thrown_weights[iuniv] < 0.)
+                    {
+                      thrown_weights[iuniv] = 1e-5; 
+                    }
+
+                    final_weights[iuniv] *= thrown_weights[iuniv];
+                  }
+                }
+                else
+                  std::cout << "Whoaaaaaaaaaa, multisigma of size " << weight_v.size() << std::endl;
+              }
+              else if (name.find("multisim") != std::string::npos)
+              {
+                if (_debug)
+                  std::cout << "multisim: " << name << ", weight_v.size(): " << weight_v.size() << std::endl;
+                for (int iuniv = 0; iuniv < n_univs; iuniv++)
+                {
+                  final_weights[iuniv] *= weight_v[iuniv];
+                }
+              }
+            }
+          }
+          _final_weights = final_weights;
+        }
       }
     }
   }
 }
 
-double SelectionAna::calculateScalingFactor(double energy, double mass, double boosted_decay_length, double unboosted_decay_length_old, double unboosted_decay_length_new)
+double sbnd::SelectionAna::calculateScalingFactor(double energy, double mass, double boosted_decay_length, double unboosted_decay_length_old, double unboosted_decay_length_new)
 {
   double gamma = energy / mass;
   double beta = std::sqrt(1 - 1 / (gamma * gamma));
+  double extra_scaling_factor = unboosted_decay_length_old / unboosted_decay_length_new;
   // exponential function
   double scaling_factor = std::exp(-boosted_decay_length / (gamma * beta * unboosted_decay_length_new)) / std::exp(-boosted_decay_length / (gamma * beta * unboosted_decay_length_old));
 
-  return scaling_factor;
+  return scaling_factor*extra_scaling_factor;
 }
 
-DEFINE_ART_MODULE(SelectionAna)
+DEFINE_ART_MODULE(sbnd::SelectionAna)
