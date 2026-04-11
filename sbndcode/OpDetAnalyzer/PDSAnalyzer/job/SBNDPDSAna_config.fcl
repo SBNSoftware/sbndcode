@@ -7,11 +7,11 @@ sbndPDSAna:
 	## Save options for TTree
 	SaveMCTruth: "true"
 	SaveMCParticles: "true"
-	SaveSimPhotons: "true"
-	SaveSimPhotonsArrivalTimes: "true"
+	SaveSimPhotons: "false"
+	SaveSimPhotonsArrivalTimes: "false"
 	SaveRawWaveforms: "false"
 	SaveDeconvolvedWaveforms: "false"
-	SaveOpHits: "true"
+	SaveOpHits: "false"
 	SaveOpFlashes: "true"
 	SaveCosmicId: "false"
 

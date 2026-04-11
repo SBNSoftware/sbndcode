@@ -23,11 +23,11 @@
 #include "art_root_io/TFileService.h"
 
 // TensorFlow includes
-#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/tf/tf_graph.h"
+#include "sbndcode/NuIntNNOpReco/3-inference-larsoft-module/tf/tf_graph.h"
 #include <sstream>
 
 // Include the data structure definition
-#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/module/PixelMapVars.h"
+#include "sbndcode/NuIntNNOpReco/3-inference-larsoft-module/module/PixelMapVars.h"
 
 // Services
 #include "larsim/MCCheater/BackTrackerService.h"

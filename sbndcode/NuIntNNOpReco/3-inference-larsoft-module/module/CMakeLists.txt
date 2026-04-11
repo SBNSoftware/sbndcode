@@ -29,7 +29,7 @@ set(MODULE_LIBRARIES
 
     sbnobj::Common_Reco
     sbndcode_OpDetSim
-    sbndcode_PosRecoCVN_3-inference-larsoft-module_tf
+    sbndcode_NuIntNNOpReco_3-inference-larsoft-module_tf
 
     Eigen3::Eigen
 

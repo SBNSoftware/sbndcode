@@ -36,7 +36,7 @@
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 
 // PosRecoCVN data product
-#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/module/PixelMapVars.h"
+#include "sbndcode/NuIntNNOpReco/3-inference-larsoft-module/module/PixelMapVars.h"
 
 // ROOT
 #include "TTree.h"

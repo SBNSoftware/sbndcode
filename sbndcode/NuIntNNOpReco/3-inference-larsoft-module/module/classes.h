@@ -1,4 +1,4 @@
-#include "sbndcode/PosRecoCVN/3-inference-larsoft-module/module/PixelMapVars.h"
+#include "sbndcode/NuIntNNOpReco/3-inference-larsoft-module/module/PixelMapVars.h"
 #include "canvas/Persistency/Common/Wrapper.h"
 
 // This file is needed to tell ROOT about our custom data structures

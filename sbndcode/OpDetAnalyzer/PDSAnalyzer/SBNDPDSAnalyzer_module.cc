@@ -648,8 +648,8 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _flash_zerr.push_back( Flash.ZWidth() );
         _nopflash++;
 
-        if(fSaveOpHits){
-          
+        if(fSaveOpFlashes){
+
           _flash_ophit_time.push_back({});
           _flash_ophit_risetime.push_back({});
           _flash_ophit_starttime.push_back({});
@@ -658,7 +658,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
           _flash_ophit_width.push_back({});
           _flash_ophit_pe.push_back({});
           _flash_ophit_ch.push_back({});
-          
+
           std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
           for (auto ophit : ophit_v) {
             _flash_ophit_time[_nopflash-1].push_back(ophit->PeakTimeAbs());

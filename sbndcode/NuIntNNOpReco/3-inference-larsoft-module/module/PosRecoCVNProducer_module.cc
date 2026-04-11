@@ -56,9 +56,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
         std::vector<std::string> search_paths = {
             model_path,
             "/pnfs/sbnd/persistent/users/svidales/inference_models/" + model_path,
-            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
-            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
-            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3-inference-larsoft-module/module/" + model_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + model_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + model_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/NuIntNNOpReco/3-inference-larsoft-module/module/" + model_path,
             "../" + model_path,
             "./" + model_path
         };
@@ -93,9 +93,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
         std::vector<std::string> dir_search_paths = {
             dir_path,
             "/pnfs/sbnd/persistent/users/svidales/inference_models/" + dir_path,
-            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
-            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
-            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/3-inference-larsoft-module/module/" + dir_path,
+            "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + dir_path,
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + dir_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/NuIntNNOpReco/3-inference-larsoft-module/module/" + dir_path,
             "../" + dir_path,
             "./" + dir_path
         };
@@ -628,13 +628,13 @@ void opdet::PosRecoCVNProducer::LoadPMTMaps() {
 
     std::vector<std::string> search_paths = {
       filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + filename,
-      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
-      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
-      "../../../PosRecoCVN/pmt_maps/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + filename,
+      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename : ""),
+      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/NuIntNNOpReco/pmt_maps/" + filename : ""),
+      "../../../NuIntNNOpReco/pmt_maps/" + filename,
       "../../pmt_maps/" + filename,
-      "sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename,
       "pmt_maps/" + filename
     };
 
@@ -657,13 +657,13 @@ void opdet::PosRecoCVNProducer::LoadPMTMaps() {
 
     std::vector<std::string> search_paths = {
       filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
-      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/3-inference-larsoft-module/module/" + filename,
-      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
-      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
-      "../../../PosRecoCVN/pmt_maps/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename,
+      "../local/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/3-inference-larsoft-module/module/" + filename,
+      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename : ""),
+      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/NuIntNNOpReco/pmt_maps/" + filename : ""),
+      "../../../NuIntNNOpReco/pmt_maps/" + filename,
       "../../pmt_maps/" + filename,
-      "sbndcode/" + fSbndcodeVersion + "/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "sbndcode/" + fSbndcodeVersion + "/scripts/NuIntNNOpReco/pmt_maps/" + filename,
       "pmt_maps/" + filename
     };
 
