@@ -566,6 +566,10 @@ void nuESignalVertexingComparison_macro(){
     auto sliceAngleDifference = createHistGroup("angleDifference", "Angle Difference between True and Reconstructed Recoil Electron", "Angle (degrees)", 90, 0, 180);
     auto energyAsymmetrySummed = createHistGroup("energyAsymmetrySummed", "Energy Asymmetry between True and Summed Energies of PFPs in Slice", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
     auto energyAsymmetryHighest = createHistGroup("energyAsymmetryHighest", "Energy Asymmetry between True and Highest Energy PFP in Slice", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
+    auto deltaVX = createHistGroup("deltaVX", "X Coordinate Difference Between True and Reco Neutrino Vertex", "x_{Reco} - x_{True} (cm)", 50, -5, 5);
+    auto deltaVY = createHistGroup("deltaVY", "Y Coordinate Difference Between True and Reco Neutrino Vertex", "y_{Reco} - y_{True} (cm)", 50, -5, 5);
+    auto deltaVZ = createHistGroup("deltaVZ", "Z Coordinate Difference Between True and Reco Neutrino Vertex", "z_{Reco} - z_{True} (cm)", 50, -5, 5);
+    auto deltaR = createHistGroup("deltaR", "Distance Between True and Reco Neutrino Vertex", "|#bar{r}_{Reco} - #bar{r}_{True}| (cm)", 25, 0, 5);
 
     double actualSignalCount_cheated = 0;
     double actualSignalCount_DLDune = 0;
