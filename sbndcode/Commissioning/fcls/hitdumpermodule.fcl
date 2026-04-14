@@ -11,9 +11,10 @@ hitdumper:
     NoisyChannel: 0 
     MaxTime: 1100.0
     MinTime: 400.0
-    TimeWindow: 200	
-    MaxTPCHits:800
-    ElectronVel:0.1601	
+    TimeWindow: 300	
+    MaxTPCHits:3000
+    MinTPCHits:800	
+    ElectronVel:0.1601
 
     MaxHits: 21000
     MaxOpHits: 100000
@@ -58,7 +59,7 @@ hitdumper:
 
     KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
 
-    SkipInduction:            true
+    SkipInduction:            false
     SelectEvents: []
 
     CRTGeoAlg: @local::crtgeoalg_sbnd

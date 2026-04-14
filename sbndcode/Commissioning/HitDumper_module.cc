@@ -83,7 +83,7 @@
 #include "TGeoManager.h"
 #include "TF1.h"
 #include "TObjString.h"
-
+#include "TGraph.h"
 // C++ Includes
 #include <map>
 #include <vector>
@@ -91,6 +91,8 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <unordered_set>
+
 
 
 bool Cut_NS_Function_Transparency(double x1, double z1,double x2, double z2){
@@ -104,6 +106,23 @@ bool Cut_NS_Function_Diffusion(double x1, double z1,double x2, double z2){
   bool x=((x1>-250 && x1<-0.01) && (x2>-250 && x2<-0.01)) || ((x1>0.01 && x1<250) && (x2>0.01 && x2<250));
   bool angle_cut = fabs(x1 - x2) < tan(5 * M_PI / 180.0) * fabs(z1 - z2);
   return x && z && angle_cut;
+}
+
+double findIntersection(double m1, double c1, double m2, double c2) {
+
+  if (m1 == m2) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  double y_intersect = (c2 - c1) / (m1 - m2); // Solve for Y                                                                                                                                                                                                                   
+  return y_intersect;
+}
+
+double vector_to_double(const std::vector<double>& vec) {
+  if (vec.size() != 1) {
+    throw std::runtime_error("Vector does not contain exactly one element.");
+  }
+  return vec[0];
 }
 
 
@@ -485,7 +504,7 @@ private:
   std::vector<double> _theta_yz_CRT;
   std::vector<double> _crt_gradient;
   std::vector<double> _crt_intercept;
-
+  std::vector<double> _crt_track_tof;
   std::vector<double>  _crt_track_midx;
   std::vector<double> _crt_track_predicted_t;
   std::vector<double> _crt_track_time_cut_upper;
@@ -645,6 +664,7 @@ private:
   int _plane_num;
   int _time_window;
   int _max_tpc_hits;
+  int _min_tpc_hits;
   int _max_hits;                    ///< maximum number of hits (to be set via fcl)
   int _max_ophits;                  ///< maximum number of hits (to be set via fcl)
   int _max_samples;                 ///< maximum number of samples (to be set via fcl)
@@ -742,6 +762,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _plane_num = p.get<int>("PlaneNum", 0);
   _time_window = p.get<int>("TimeWindow", 150);
   _max_tpc_hits=p.get<int>("MaxTPCHits",0);
+  _min_tpc_hits=p.get<int>("MinTPCHits",0);
   _electron_vel=p.get<double>("ElectronVel",0.16);
 
   _max_hits = p.get<int>("MaxHits", 50000);
@@ -976,6 +997,8 @@ void Hitdumper::analyze(const art::Event& evt)
   double crt_trk_time;
   double mt;
   double ct;
+  double crt_grad;
+  double crt_intercept;
   _n_crt_tracks = 0;
   if (fKeepCRTTracks) {
 
@@ -1006,7 +1029,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	  _crt_track_x2.push_back(end.X());
 	  _crt_track_y2.push_back(end.Y());
 	  _crt_track_z2.push_back(end.Z());
-	  
+	  _crt_track_tof.push_back(crttrack->ToF());
 	  _crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
 	  _crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
 	  
@@ -1016,6 +1039,9 @@ void Hitdumper::analyze(const art::Event& evt)
 	  
 	  _crt_gradient.push_back((end.z() - start.z()) / (end.y() - start.y()));
           _crt_intercept.push_back( start.z() - (((end.z() - start.z()) / (end.y() - start.y())) * start.y()));
+
+	  crt_grad=(end.z() - start.z()) / (end.y() - start.y()) ;
+	  crt_intercept= start.z() - (((end.z() - start.z()) / (end.y() - start.y())) * start.y());
 
 	  double dx;
 	  double dy;
@@ -1061,6 +1087,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
 	  std::cout << "m  (dX/dZ)      = " << m  << "\n";
 	  std::cout << "c  (intercept)  = " << c  << "\n";
+	  
 	  std::cout << "mt (time slope) = " << mt << "\n";
 	  std::cout << "ct (time int.)  = " << ct << "\n";
 	  */
@@ -1291,37 +1318,91 @@ void Hitdumper::analyze(const art::Event& evt)
       mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
     }
 
-    int waveform_number_tracker = 0;
-   
+    int waveform_number_tracker = 0;   
     _adc_count = _nhits * (fWindow * 2 + 1);  //number of adc values
-    int hit_counter=0;
-    std::map<int, int> channelHitCounts;
 
+    std::vector<int> all_hits;
     for (int ihit = 0; ihit < _nhits; ++ihit) {
-      /*
-      double z_hit    = _hit_z[ihit];
-      double peakT    = _hit_peakT[ihit];
-      double pred_mid = mt * z_hit + ct;
-      double pred_up  = pred_mid + 175;
-      double pred_low = pred_mid - 175;
-
-      std::cout << "\n--- HIT DEBUG " << ihit << " ---\n";
-      std::cout << "Hit:   Z = " << z_hit << "   peakT = " << peakT << "\n";
-      std::cout << "mt = " << mt << "   ct = " << ct << "\n";
-      std::cout << "Pred:  mt*z+ct = " << pred_mid
-		<< "   range: [" << pred_low << ", " << pred_up << "]\n";
-
-      std::cout << "Pass? "
-		<< ((_hit_peakT[ihit] < pred_up && _hit_peakT[ihit] > pred_low) ? "YES" : "NO")
-		<< "\n";
-      */
-      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num && _hit_peakT[ihit] < ((mt*_hit_z[ihit])+ct+_time_window) && _hit_peakT[ihit] > ((mt*_hit_z[ihit])+ct-_time_window) &&  _hit_z[ihit]>10. && _hit_z[ihit]<490.) {
-	channelHitCounts[_hit_channel[ihit]]++;
-	++hit_counter;
+      double hit_y = findIntersection(crt_grad, crt_intercept, 0, _hit_z[ihit]);
+      if (_hit_tpc[ihit] == _tpc_num &&
+          _hit_plane[ihit] == _plane_num &&_hit_peakT[ihit] > 400 &&
+      hit_y > -190. && hit_y < 190. &&
+	  _hit_wire[ihit] > 35 && _hit_wire[ihit] < 1635){
+	all_hits.push_back(ihit);
       }
     }
 
-    std::cout << "Number of hits passing cuts: " << hit_counter << std::endl;
+    std::vector<int> geom_hits;
+    int hit_counter=0;
+    for (int ihit = 0; ihit < _nhits; ++ihit) {
+      double hit_y = findIntersection(crt_grad, crt_intercept, 0, _hit_z[ihit]);
+      if (_hit_tpc[ihit] == _tpc_num &&
+	  _hit_plane[ihit] == _plane_num  &&
+	    _hit_peakT[ihit] < ((mt*_hit_z[ihit])+ct+_time_window) &&
+	  _hit_peakT[ihit] > ((mt*_hit_z[ihit])+ct-_time_window) &&
+      _hit_peakT[ihit] > 400 &&
+      hit_y > -190. && hit_y < 190. &&
+      _hit_wire[ihit] > 35 && _hit_wire[ihit] < 1635) {
+	geom_hits.push_back(ihit);
+	hit_counter++;
+      }
+    }
+
+    std::map<int,int> channel_counts;
+    for (int idx : geom_hits) {
+      channel_counts[_hit_channel[idx]]++;
+    }
+
+    std::vector<int> seed_hits;
+    for (int idx : geom_hits) {
+      if (channel_counts[_hit_channel[idx]] == 1) {
+        seed_hits.push_back(idx);
+      }
+    }
+
+
+    TGraph graph(seed_hits.size());
+    for (size_t i = 0; i < seed_hits.size(); ++i) {
+      int idx = seed_hits[i];
+      graph.SetPoint(i, _hit_z[idx], _hit_peakT[idx]);
+    }
+    TF1 lineFit("lineFit", "[0]*x + [1]");
+    graph.Fit(&lineFit, "Q");  
+
+    double m = lineFit.GetParameter(0);
+    double c = lineFit.GetParameter(1);
+    double sum_res2 = 0;
+    for (int idx : seed_hits) {
+      double t_fit = m*_hit_z[idx] + c;
+      double res = _hit_peakT[idx] - t_fit;
+      sum_res2 += res*res;
+    }
+    double sigma = sqrt(sum_res2 / seed_hits.size());
+    double n_sigma = 1.0; 
+
+    std::vector<int> linecut_hits;
+    for (int idx : all_hits) {
+      double t_fit = m*_hit_z[idx] + c;
+      if (fabs(_hit_peakT[idx] - t_fit) <= n_sigma * sigma) {
+        linecut_hits.push_back(idx);
+      }
+    }
+    
+    std::map<int,int> channel_counts_final;
+    for (int idx : linecut_hits) {
+      channel_counts_final[_hit_channel[idx]]++;
+    }
+    int final_n_hits =0;
+    std::vector<int> final_hits;
+    for (int idx : linecut_hits) {
+      if (channel_counts_final[_hit_channel[idx]] == 1) {
+	final_hits.push_back(idx);
+	final_n_hits++;
+	 }
+    }
+    
+    std::cout << "Number of hits " << hit_counter << std::endl;
+    std::cout << " final Number of hits " << final_n_hits << std::endl;
 
     std::vector<double> temp_waveform_number;
     std::vector<double> temp_adc_on_wire;
@@ -1349,10 +1430,9 @@ void Hitdumper::analyze(const art::Event& evt)
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
 
-      if (channelHitCounts[channel] == 1 && hit_counter > _max_tpc_hits) {
-	for (int ihit = 0; ihit < _nhits; ++ihit) {
-	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<((mt*_hit_z[ihit])+ct+_time_window) && _hit_peakT[ihit]>((mt*_hit_z[ihit])+ct-_time_window) &&  _hit_z[ihit]>10. && _hit_z[ihit]<490.) {
-	   
+      if (hit_counter < _max_tpc_hits && hit_counter > _min_tpc_hits && final_n_hits>500) {
+	for (int ihit : final_hits) {
+	  if (_hit_channel[ihit] == channel){
 	    int pedestal = (int)digitVec->GetPedestal();
 	    //UNCOMPRESS THE DATA.
 	    if (fUncompressWithPed) {
@@ -1365,7 +1445,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    unsigned int bin = _hit_peakT[ihit];
 	    unsigned int low_edge,high_edge;
 	    if((int)bin > fWindow and _hit_plane[ihit] == 0) {
-	      low_edge = bin - fWindow;
+	      low_edge = bin - 1.5*fWindow;
 	    }
 	    else if ((int)bin>fWindow) {
 	      low_edge = bin-fWindow;
@@ -1375,7 +1455,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    }
 
 	    if (_hit_plane[ihit] == 0) {
-	      high_edge = bin + 3*fWindow;
+	      high_edge = bin + 2.5*fWindow;
 	    } else {
 	      high_edge = bin + fWindow;
 	    }
@@ -1407,8 +1487,8 @@ void Hitdumper::analyze(const art::Event& evt)
 	  } // if cuts
 	} //end loop over hits
       }//if one hit per channel
-    }// end loop over waveforms
-
+     }// end loop over waveforms
+    std::cout << "Number of hits passing cuts: " << waveform_number_tracker << std::endl;
   
     for (const auto &entry : waveform_adc_map) {
       int wave_num = entry.first; // The current waveform number
@@ -1427,6 +1507,8 @@ void Hitdumper::analyze(const art::Event& evt)
       for (int t : waveform_hit_time[wave_num]) {
 	hit_times.push_back(static_cast<int>(t - crt_ticks));
       }
+
+
 
       /*******************hit quality cuts****************************/
       //	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
@@ -1705,9 +1787,7 @@ void Hitdumper::endJob() {
   fTree2 = tfs->make<TTree>("diffusion", "Average waveforms by hit time");
 
   int nBins = 41;
-  double avg_bin_contents[41];
-  double avg_half_width = -1.0;
-  double avg_amplitude = -1.0;
+  double sum_bin_contents[41];
   double window_lower = -1.0;
   double window_upper = -1.0;
   TObjString* window_label = nullptr;
@@ -1719,9 +1799,7 @@ void Hitdumper::endJob() {
   fTree2->Branch("window_lower", &window_lower, "window_lower/D");
   fTree2->Branch("window_upper", &window_upper, "window_upper/D");
   fTree2->Branch("nWaveforms", &nWaveforms, "nWaveforms/I");
-  fTree2->Branch("avg_bin_contents", avg_bin_contents, Form("avg_bin_contents[%d]/D", nBins));
-  fTree2->Branch("avg_half_width", &avg_half_width, "avg_half_width/D");
-  fTree2->Branch("avg_amplitude", &avg_amplitude, "avg_amplitude/D");
+  fTree2->Branch("sum_bin_contents", sum_bin_contents, Form("sum_bin_contents[%d]/D", nBins));
   fTree2->Branch("hit_times", &hit_times);
   fTree2->Branch("half_widths", &half_widths);
 
@@ -1762,20 +1840,9 @@ void Hitdumper::endJob() {
     nWaveforms = count_it->second;
     if (nWaveforms == 0) continue;
 
-    // Average the accumulated bin contents
+   
     for (int i = 0; i < nBins; ++i)
-      avg_bin_contents[i] = summed_bins[i] / static_cast<double>(nWaveforms);
-
-
-    TH1D* tempHist = new TH1D("temp", "temporary", nBins, 0, nBins);
-    for (int i = 0; i < nBins; ++i)
-      tempHist->SetBinContent(i + 1, avg_bin_contents[i]);
-
-    auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitude(tempHist);
-    delete tempHist;
-
-    avg_half_width = half_width;
-    avg_amplitude  = amplitude;
+      sum_bin_contents[i] = summed_bins[i];
 
     window_label = new TObjString(label.c_str());
     window_lower = win.low;
@@ -1785,9 +1852,7 @@ void Hitdumper::endJob() {
     
     std::cout << "Window " << label
               << " (" << window_lower << "–" << window_upper << " ticks)"
-              << " → " << nWaveforms << " waveforms\n"
-              << "   ↳ Amplitude: " << avg_amplitude
-              << ", Half-width: " << avg_half_width << std::endl;
+              << " → " << nWaveforms << " waveforms\n" << std::endl;
     
 
     fTree2->Fill();
@@ -1883,6 +1948,7 @@ void Hitdumper::beginJob()
     fTree->Branch("crt_track_t0", &_crt_track_t0);
     fTree->Branch("crt_track_t1", &_crt_track_t1);
     fTree->Branch("crt_track_pes", &_crt_track_pes);
+    fTree->Branch("crt_track_tof", &_crt_track_tof);
     fTree->Branch("crt_track_tagger1", &_crt_track_tagger1);
     fTree->Branch("crt_track_tagger2", &_crt_track_tagger2);
     fTree->Branch("crt_track_theta", &_crt_track_theta);
@@ -2124,6 +2190,7 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_x2.clear();
   _crt_track_y2.clear();
   _crt_track_z2.clear();
+  _crt_track_tof.clear();
   _crt_track_tagger1.clear();
   _crt_track_tagger2.clear();
   _crt_track_theta.clear();

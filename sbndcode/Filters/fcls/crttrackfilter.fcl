@@ -5,9 +5,7 @@ standard_crt_track_filter:
    module_type:          "CRTTrackFilter"
    CRTTrackModuleLabel:  "crttracks"
    XPosMin:              0.  # minimum absolute value of x position of CRT track endpoints, in cm
-   XPosMax:              190.  # maximum absolute value of x position of CRT track endpoints, in cm
-   YPosMin:              0. 
-   YPosMax:              190.
+   XPosMax:              250.  # maximum absolute value of x position of CRT track endpoints, in cm
    ThetaXZMax:           5.   # maximum angle theta_XZ of CRT track, in degrees
    UseLengthMin:         true  # flag to use the fancy calculation of projected CRT track length the active volume, and to cut on that
    LengthMin:            300.  # if UseLengthMin, then this is minimum length in the active volume, in cm
@@ -20,7 +18,7 @@ standard_crt_track_filter:
    TimeWindow:           200
    MaxTPCHits:           800
 
-   ElectronVel:		 0.1601
+   ElectronVel:		 0.1142
 
    HitsModuleLabel: "fasthit"	
 }
