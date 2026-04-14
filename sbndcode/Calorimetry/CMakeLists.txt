@@ -1,7 +1,6 @@
 set (MODULE_LIBRARIES
                 larsim::PhotonPropagation
                 larsim::OpticalPath
-                larsim::LegacyLArG4
                 larcorealg::Geometry
                 larcore::Geometry_Geometry_service
                 larevt::CalibrationDBI_Providers
