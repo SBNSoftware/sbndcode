@@ -15,6 +15,7 @@ nuE:
     ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
     TruthLabel:         "generator"
+    SpacePointLabel:    "pandoraSCE"
     DLCurrent:          5
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"

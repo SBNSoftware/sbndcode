@@ -1,5 +1,8 @@
+find_package(Eigen3 REQUIRED)
+
 art_make(
           MODULE_LIBRARIES
+                           Eigen3::Eigen
                            larpandora::LArPandoraInterface
                            lardata::RecoObjects
                            lardataobj::RecoBase

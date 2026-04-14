@@ -16,11 +16,11 @@ nuE:
     MCTruthLabel:       "largeant"
     TruthLabel:         "generator"
     SpacePointLabel:    "pandoraSCE"
-    DLCurrent:          5
+    DLCurrent:          6
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
     POTLabel:           "generator"
-    Signal:             2
+    Signal:             1
 }
 
 END_PROLOG
