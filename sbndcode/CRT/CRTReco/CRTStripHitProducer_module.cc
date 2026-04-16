@@ -62,6 +62,7 @@ private:
 
   std::string           fFEBDataModuleLabel;
   uint16_t              fADCThreshold;
+  uint16_t              fADCSaturation;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
   bool                  fApplyTs0Window;
@@ -88,6 +89,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   : EDProducer{p}
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
+  , fADCSaturation(p.get<uint16_t>("ADCSaturation"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
   , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
@@ -273,6 +275,10 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
       const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
 
+      // Saturated?
+      const bool sat1 = sipm_adcs[adc_i]   >= fADCSaturation;
+      const bool sat2 = sipm_adcs[adc_i+1] >= fADCSaturation;
+
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)
         {
@@ -290,7 +296,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           if(pos - err < 0)
             err = pos;
 
-          stripHits.emplace_back(offline_channel_id, t0, t1, ref_time_s, pos, err, adc1, adc2);
+          stripHits.emplace_back(offline_channel_id, t0, t1, ref_time_s, pos, err, adc1, adc2, sat1, sat2);
         }
     }
 

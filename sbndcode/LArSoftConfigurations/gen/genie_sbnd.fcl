@@ -232,7 +232,7 @@ sbnd_flux_bnb_nu_Lv1_test1: {
 #
 # Booster Neutrino Beam, FHC mode, g4bnb 1.1.0, A
 #
-sbnd_flux_g4bnb_1_0_0_fhc: {
+sbnd_flux_g4bnb_1_1_1_fhc: {
   FluxType:         "dk2nu"
   DetectorLocation: "SBND"
   FluxCopyMethod:   "DIRECT"
@@ -240,21 +240,21 @@ sbnd_flux_g4bnb_1_0_0_fhc: {
   FluxFiles: [ "NuBeam_production_BooNE_50m_I174000A_*.dk2nu.root" ]
 }
 
-sbnd_flux_g4bnb_1_0_0_fhc_test1: {
-  @table::sbnd_flux_g4bnb_1_0_0_fhc
+sbnd_flux_g4bnb_1_1_1_fhc_test1: {
+  @table::sbnd_flux_g4bnb_1_1_1_fhc
   FluxFiles: [ "NuBeam_production_BooNE_50m_I174000A_9998.dk2nu.root" ]
 }
 
 #
 # Booster Neutrino Beam, FHC mode, DIRT, g4bnb 1.1.0, A
 #
-sbnd_flux_g4bnb_1_0_0_fhc_dirt: {
-  @table::sbnd_flux_g4bnb_1_0_0_fhc
+sbnd_flux_g4bnb_1_1_1_fhc_dirt: {
+  @table::sbnd_flux_g4bnb_1_1_1_fhc
   DetectorLocation: "SBND-Dirt"
 }
 
-sbnd_flux_g4bnb_1_0_0_fhc_dirt_test1: {
-  @table::sbnd_flux_g4bnb_1_0_0_fhc_dirt
+sbnd_flux_g4bnb_1_1_1_fhc_dirt_test1: {
+  @table::sbnd_flux_g4bnb_1_1_1_fhc_dirt
   FluxFiles: [ "NuBeam_production_BooNE_50m_I174000A_9998.dk2nu.root" ]
 }
 
@@ -283,19 +283,32 @@ sbnd_flux_g4bnb_1_0_0_beamdump: {
 }
 
 
+#
+# Booster Neutrino Beam, beam-dump mode, G4BNB v1.1.1, A
+#
+sbnd_flux_g4bnb_1_1_1_beamdump: {
+  FluxType:         "dk2nu"
+  DetectorLocation: "SBND"
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/G4BNB/v1.1.1/beamdump/a/"
+  FluxFiles: [ "NuBeam_production_offTarg_BooNE_50m_offtarg_wires_al2O3_srbbs_I174000A_*.dk2nu.root" ]
+}
+
+
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_g4bnb_1_0_0_fhc
-sbnd_flux_bnb_nu_test1: @local::sbnd_flux_g4bnb_1_0_0_fhc_test1
+sbnd_flux_bnb_nu: @local::sbnd_flux_g4bnb_1_1_1_fhc
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_g4bnb_1_1_1_fhc_test1
 
 #
 # Booster Neutrino Beam, interaction from dirt
 #
-sbnd_flux_bnb_dirt: @local::sbnd_flux_g4bnb_1_0_0_fhc_dirt
-sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_g4bnb_1_0_0_fhc_dirt_test1
+sbnd_flux_bnb_dirt: @local::sbnd_flux_g4bnb_1_1_1_fhc_dirt
+sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_g4bnb_1_1_1_fhc_dirt_test1
 
 #
 # Booster Neutrino Beam, RHC mode, "default" configuration
@@ -305,7 +318,7 @@ sbnd_flux_bnb_nu_rhc: @local::sbnd_flux_g4bnb_1_0_0_rhc
 #
 # Booster Neutrino Beam, beam-dump mode, "default" configuration
 #
-sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_0_0_beamdump
+sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_1_1_beamdump
 
 
 #

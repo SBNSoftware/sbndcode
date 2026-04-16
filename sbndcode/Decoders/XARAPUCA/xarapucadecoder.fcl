@@ -33,6 +33,9 @@ xarapucadecoder:
     waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
     timing_ref_instance_name: ""                                # Name for the instance product containing the timing reference information.
     store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
+    # Combination of extended fragments.
+    combine_ext_frag: true                                      # (De)activates the combination of extended fragments into a single raw::OpDetWaveform object.
+    allowed_jittering: 64                                       # Allowed jittering (in ns) between fragments to be combined.
     # - Debug options.
     debug_tdc_handle: false                                     # (De)activates SPEC-TDC art::Handle information printing.
     debug_ptb_handle: false                                     # (De)activates PTB art::Handle information printing.
@@ -40,6 +43,8 @@ xarapucadecoder:
     debug_timing: false                                         # (De)activates timing data printing.
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
+    debug_extended_fragments: false                             # (De)activates extended fragments information printing.
+    debug_jittering: false                                      # (De)activates trigger jittering information printing.
     # - Verbose option.
     verbose: false                                              # (De)activates verbosity.
 }

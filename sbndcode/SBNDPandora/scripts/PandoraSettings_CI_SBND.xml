@@ -1,10 +1,6 @@
-<!--
-    ATTN: If you modify this XML please make the corresponding change in PandoraSettings_CI_SBND.xml
-    to ensure the continuous integration workflow remains in sync with the standard workflow.
--->
 <pandora>
   <!-- GLOBAL SETTINGS -->
-  <IsMonitoringEnabled>false</IsMonitoringEnabled>
+  <IsMonitoringEnabled>true</IsMonitoringEnabled>
   <ShouldDisplayAlgorithmInfo>false</ShouldDisplayAlgorithmInfo>
   <SingleHitTypeClusteringMode>true</SingleHitTypeClusteringMode>
 
@@ -15,10 +11,6 @@
     <OutputCaloHitListNameW>CaloHitListW</OutputCaloHitListNameW>
     <FilteredCaloHitListName>CaloHitList2D</FilteredCaloHitListName>
     <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
-  </algorithm>
-  <algorithm type = "LArVisualMonitoring">
-    <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</CaloHitListNames>
-    <ShowDetector>true</ShowDetector>
   </algorithm>
 
   <algorithm type = "LArMaster">
@@ -49,8 +41,12 @@
     <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
   </algorithm>
 
-  <algorithm type = "LArVisualMonitoring">
-    <ShowCurrentPfos>true</ShowCurrentPfos>
-    <ShowDetector>true</ShowDetector>
+  <algorithm type = "LArEventClusterValidation">
+    <FileName>ci_pandora_clusters.root</FileName>
+    <TreeName>pandora_clusters</TreeName>
+    <ClusterListNames>RecreatedClusters</ClusterListNames>
+    <CaloHitListNames>CaloHitList2D</CaloHitListNames>
+    <MinMCHitsPerView>5</MinMCHitsPerView>
+    <HitWeightedPurityCompleteness>true</HitWeightedPurityCompleteness>
   </algorithm>
 </pandora>

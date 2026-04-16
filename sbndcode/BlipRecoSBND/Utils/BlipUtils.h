@@ -37,8 +37,8 @@
 #include "sbndcode/BlipRecoSBND/Utils/DataTypes.h"
 #include "TH1D.h"
 
-
-typedef std::vector<sim::IDE> SEDVec_t;
+typedef std::vector<art::Ptr<sim::SimEnergyDeposit>> SEDVec_t;
+typedef std::vector<sim::IDE> SIDEVec_t;
 
 geo::View_t kViews[3]={geo::kU, geo::kV, geo::kW};
 
@@ -48,7 +48,9 @@ namespace BlipUtils {
   // Functions related to blip reconstruction
   //###################################################
   //void      InitializeDetProps();
-  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane=2);
+  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane);
+  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SIDEVec_t&, int plane);
+  void      FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
   void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&); 
@@ -78,7 +80,7 @@ namespace BlipUtils {
   //bool    G4IdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
   double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
   double  PathLength(const simb::MCParticle&);
-  bool    IsAncestorOf(int, int, bool);
+  bool    IsAncestorOf(int, int, bool, bool);
   double  DistToBoundary(const recob::Track::Point_t&);
   double  DistToLine(TVector3&, TVector3&, TVector3&);
   double  DistToLine2D(TVector2&, TVector2&, TVector2&);

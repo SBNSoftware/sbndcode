@@ -32,9 +32,8 @@ namespace BlipUtils {
   //===========================================================================
   // Provided a MCParticle, calculate everything we'll need for later calculations
   // and save into ParticleInfo object
-  void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
-    
-    // Get important info and do conversions
+void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo){
+  // Get important info and do conversions
     pinfo.particle    = part;
     pinfo.trackId     = part.TrackId();
     pinfo.isPrimary   = (int)(part.Process() == "primary");
@@ -50,17 +49,28 @@ namespace BlipUtils {
     pinfo.time        = /*ns ->mus*/1e-3 * part.T();
     pinfo.endtime     = /*ns ->mus*/1e-3 * part.EndT();
     pinfo.numTrajPts  = part.NumberTrajectoryPoints();
-
     // Pathlength (in AV) and start/end point
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
-
     // Central position of trajectory
     pinfo.position    = 0.5*(pinfo.startPoint+pinfo.endPoint);
-
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
+    return;
+}
+void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
+    FillParticleInfo( part, pinfo);
     for(auto& sed : sedvec ) {
+      if( -1*sed->TrackID() == part.TrackId() || sed->TrackID() == part.TrackId() ) {
+        pinfo.depEnergy     += sed->Energy();
+        pinfo.depElectrons  += sed->NumElectrons();
+      }
+    }
+    return;
+  }
+  void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SIDEVec_t& sIDEvec, int caloPlane){
+    FillParticleInfo( part, pinfo);
+    for(auto& sed : sIDEvec ) {
       if( -1*sed.trackID == part.TrackId() || sed.trackID == part.TrackId() ) {
         pinfo.depEnergy     += sed.energy;
         pinfo.depElectrons  += sed.numElectrons;
@@ -99,12 +109,14 @@ namespace BlipUtils {
 
       // We want to loop through any contiguous electrons (produced
       // with process "eIoni") and add the energy they deposit into this blip.
-      if( part.NumberDaughters() ) {
+      if( part.NumberDaughters() ) { //particles have daughters but they must all be neutron, gamma, or one of the special processes?
         for(size_t j=0; j<pinfo.size(); j++){
           simb::MCParticle& p = pinfo[j].particle;
           std::string pr = p.Process();
-          if( p.PdgCode() != 2112 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){
-            if( IsAncestorOf(p.TrackId(),part.TrackId(),true) ) GrowTrueBlip(pinfo[j],tb);
+          if( p.PdgCode() != 2112 && p.PdgCode() != 22 && (pr == "eIoni" || pr == "muIoni" || pr == "hIoni") ){ //neutron and photons leave track
+            if( IsAncestorOf(p.TrackId(),part.TrackId(),true,true) ){
+              GrowTrueBlip(pinfo[j],tb);
+            }
           }
         }
       }
@@ -151,7 +163,7 @@ namespace BlipUtils {
     // .. otherwise, check that the new particle
     // creation time is comparable to existing blip.
     // then calculate new energy-weighted position.
-    } else if ( fabs(tblip.Time-pinfo.time) < 3 ) {
+    } else if ( fabs(tblip.Time-pinfo.time) < 3) {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
@@ -383,7 +395,7 @@ namespace BlipUtils {
       // use view with the maximal wire extent to calculate transverse (YZ) length
       if( hcs[i].NWires > newblip.MaxWireSpan ) {
         newblip.MaxWireSpan = hcs[i].NWires;
-	newblip.dYZ         = hcs[i].NWires * wirepitch;
+	      newblip.dYZ         = hcs[i].NWires * wirepitch;
       }
   
       for(size_t j=i+1; j<hcs.size(); j++){
@@ -397,9 +409,8 @@ namespace BlipUtils {
           intsec_p.SetY(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Y());
           intsec_p.SetZ(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Z());
         } else {
-	  std::vector<geo::WireID> i_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[i].CenterChan);
-	  std::vector<geo::WireID> j_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[j].CenterChan);
-
+	        std::vector<geo::WireID> i_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[i].CenterChan);
+	        std::vector<geo::WireID> j_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[j].CenterChan);
           match3d = wireReadoutGeom->Get().WireIDsIntersect(i_wireids.at(0), j_wireids.at(0), intsec_p);
         }
 
@@ -474,7 +485,7 @@ namespace BlipUtils {
   //====================================================================
   // Function to determine if a particle descended from another particle.
   // Allows option to break lineage at photons for contiguous parentage.
-  bool IsAncestorOf(int particleID, int ancestorID, bool breakAtPhots = false){
+  bool IsAncestorOf(int particleID, int ancestorID, bool breakAtPhots = false, bool breakAtNeutrons = false){
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
     const sim::ParticleList& plist = pi_serv->ParticleList();
     if( particleID == ancestorID  )       return true;
@@ -488,6 +499,7 @@ namespace BlipUtils {
       simb::MCParticle pM = pi_serv->TrackIdToParticle(p.Mother());
       if      ( pM.TrackId() == ancestorID )                      { return true;  }
       else if ( breakAtPhots == true && pM.PdgCode() == 22 )      { return false; }
+      else if ( breakAtNeutrons && pM.PdgCode() == 2112 )           { return false; }
       else if ( pM.Process() == "primary" || pM.TrackId() == 1 )  { return false; }
       else if ( pM.Mother() == 0 )                                { return false; }
       else    { particleID = pM.TrackId(); }              

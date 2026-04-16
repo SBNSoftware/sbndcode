@@ -37,4 +37,10 @@ simple_plugin(
               Eigen3::Eigen
 )
 
+simple_plugin(
+              CRTBlobProducer module
+              lardata::Utilities
+              sbnobj::SBND_CRT
+)
+
 install_fhicl()
