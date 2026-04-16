@@ -30,7 +30,7 @@
 
 #include "cafmaker_common_defs.fcl"
 
-#include "eventweight_genie_systtools.fcl"
+#include "eventweight_genie_systtools_v2.fcl"
 
 process_name: CAFmaker
 
