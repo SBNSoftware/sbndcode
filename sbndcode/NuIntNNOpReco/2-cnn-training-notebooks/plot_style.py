@@ -38,7 +38,7 @@ FONT_STAT  = 11
 STAT_BOX = dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='0.6', alpha=0.9)
 
 # ── Dataset / experiment labels (available but not added to figures) ──────────
-MC_LABEL         = 'MC Fall Production 2025'       # dataset watermark
+MC_LABEL         = ''       # dataset watermark
 EXPERIMENT_LABEL = 'SBND Work In Progress'         # experiment label
 # Usage (uncomment to add to a figure):
 #   fig.text(0.01, 0.01, MC_LABEL, fontsize=10, style='italic', va='bottom')
