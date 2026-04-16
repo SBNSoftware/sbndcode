@@ -1,0 +1,137 @@
+BEGIN_PROLOG
+
+# Signal definitions for exclusive cross section analysis sample production
+# The "Filters" option accepts a list of parameter sets in case the signal
+# definition cannot be expressed with a single set of filter options
+
+# CC nue or nuebar
+sbnd_ccnue_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            NuPDGs: [ 12, -12 ]
+            IsCC: true
+            InTPC: true
+        }
+    ]
+}
+
+# one muon > 27 MeV, one charged pion > 30 MeV, no protons > 20 MeV, no neutrons, no pi0
+sbnd_cohpi_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            KEThresholds: [
+                [ 13, 27 ],
+                [ 211, 30 ],
+                [ 2212, 20 ]
+            ]
+            RequiredPDGs: [ 13, 211 ]
+            DisallowedPDGs: [ 111, 2212, 2112 ]
+            InTPC: true
+            ExactCounts: true
+        }
+    ]
+}
+
+# one muon > 27 MeV, two protons > 50 MeV, no pions, any number of neutrons
+sbnd_2p2h_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            NuPDGs: [ 14 ]
+            IsCC: true
+            KEThresholds: [
+                [ 13, 27 ],
+                [ 2212, 50 ]
+            ]
+            RequiredPDGs: [ 13, 2212, 2212 ]
+            IgnoredPDGs: [ 2112 ]
+            DisallowedPDGs: [ 111, 211 ]
+            InTPC: true
+            ExactCounts: true
+        }
+    ]
+}
+
+# one proton only!
+sbnd_nc1p_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            IsCC: false
+            RequiredPDGs: [ 2212 ]
+            InTPC: true
+            ExactCounts: true
+        }
+    ]
+}
+
+# one eta + anything except pi0s
+sbnd_eta_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            KeepBadStatus: true
+            RequiredPDGs: [ 221 ]
+            InTPC: true
+        }
+    ]
+}
+
+# one eta + anything except pi0s
+sbnd_eta_nopi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            KeepBadStatus: true
+            RequiredPDGs: [ 221 ]
+            DisallowedPDGs: [ 111 ]
+            InTPC: true
+        }
+    ]
+}
+
+# pi0 + anything
+sbnd_pi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 111 ]
+            InTPC: true
+        }
+    ]
+}
+
+# Charged or neutral kaon + anything
+sbnd_kaon_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 321 ]
+            InTPC: true
+        },
+        {
+            RequiredPDGs: [ 311 ]
+            InTPC: true
+        }
+    ]
+}
+
+END_PROLOG
