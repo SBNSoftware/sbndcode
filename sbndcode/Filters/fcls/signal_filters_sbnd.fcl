@@ -82,6 +82,21 @@ sbnd_eta_filter:
     GENIELabel: "generator"
     Filters: [
         {
+            KeepBadStatus: true
+            RequiredPDGs: [ 221 ]
+            InTPC: true
+        }
+    ]
+}
+
+# one eta + anything except pi0s
+sbnd_eta_nopi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            KeepBadStatus: true
             RequiredPDGs: [ 221 ]
             DisallowedPDGs: [ 111 ]
             InTPC: true
