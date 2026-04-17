@@ -105,10 +105,10 @@ Each event is a padded sequence of optical hits with 7 features each.
 | 0 | `t_us` | Absolute ophit time (μs), ToF-corrected |
 | 1 | `PE_raw` | Raw photoelectrons (normalised in Python) |
 | 2 | `det_type` | 0=PMT coated, 1=PMT uncoated, 2=XARAPUCA VUV, 3=XARAPUCA VIS |
-| 3 | `x_norm` | Optical detector X / 213.75 |
-| 4 | `y_norm` | Optical detector Y / 175.00 |
-| 5 | `z_norm` | (Z − 16.05) / (484.95 − 16.05) |
-| 6 | `delta_t` | t_us − t_first (relative timing within event) |
+| 3 | `x_norm` | X position normalised to [0, 1] using the detector PMT X extent (0 – 213.75 cm) |
+| 4 | `y_norm` | Y position normalised to [-1, 1] using the detector PMT Y extent (-175 – +175 cm) |
+| 5 | `z_norm` | Z position normalised to [0, 1] using the detector PMT Z extent (16.05 – 484.95 cm) |
+| 6 | `delta_t` | Time since the first ophit in the event (μs), encodes temporal structure |
 
 ### `images/tree` — for the CNN position and direction models
 
