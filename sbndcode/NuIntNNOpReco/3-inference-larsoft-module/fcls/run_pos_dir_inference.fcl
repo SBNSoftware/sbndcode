@@ -81,13 +81,14 @@ sbnd_ResNetInference:
   #------------------------------------------------------------------------
   # CNN INFERENCE CONFIGURATION
   #------------------------------------------------------------------------
-  # CNN model paths (relative - searched in inference/module/ subdirectory)
-  ModelPath:    "v0223_trained_w_177k_position/saved_model"
-  DirModelPath: "v0224_trained_w_177k_direction_2d/saved_model"
+  # CNN model paths (relative to 3-inference-larsoft-module/module/)
+  ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0410_trained_w_388k_position/saved_model"
+  DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0411_trained_w_388k_direction_2d/saved_model"
 
   # Image normalization factor (from training)
-  # Source: PosRecoCVN_Training.ipynb (177k events, global max PE)
-  CustomNormFactor: 210603.0
+  # Source: PosDirCoords_Training.ipynb (388k events, joint max PE coated/uncoated)
+  # train_max_uncoated=6228.5, train_max_coated=895992.6 -> joint max=895992.6
+  CustomNormFactor: 895992.6
 
   #------------------------------------------------------------------------
   # OUTPUT CONFIGURATION

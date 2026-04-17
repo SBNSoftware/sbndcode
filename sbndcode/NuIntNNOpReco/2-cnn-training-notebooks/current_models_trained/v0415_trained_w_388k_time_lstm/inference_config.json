@@ -1,0 +1,50 @@
+{
+  "normalization": {
+    "input": {
+      "sequence_length": 20,
+      "n_features": 7,
+      "feature_layout": ["t_us", "log1p_pe", "det_type", "x_norm", "y_norm", "z_norm", "delta_t_us"],
+      "padding_value": -1000.0,
+      "sc_t": {
+        "scaler": "MinMaxScaler",
+        "file": "sc_t.pkl",
+        "feature": "t_us (ophit time, µs, ToF-corrected: t_ophit - nuvZ/c)",
+        "data_min": 0.063949,
+        "data_max": 7.112051,
+        "target_range": [0.0, 1.0]
+      },
+      "sc_pe": {
+        "scaler": "MinMaxScaler",
+        "file": "sc_pe.pkl",
+        "feature": "log1p(PE) — apply log1p to raw PE first, then scale",
+        "data_min": 0.0,
+        "data_max": 11.996067,
+        "target_range": [0.0, 1.0]
+      },
+      "note": "det_type, x_norm, y_norm, z_norm, delta_t_us are not scaled by external scalers"
+    },
+    "output": {
+      "sc_tof": {
+        "scaler": "MinMaxScaler",
+        "file": "sc_tof.pkl",
+        "label": "nuvT_tof = nuvT - nuvZ / c_light [ns]",
+        "data_min": 54.933914,
+        "data_max": 1580.076172,
+        "note": "apply inverse_transform to network output to recover nuvT_tof in ns"
+      },
+      "c_light_cm_ns": 29.9792458,
+      "note": "to recover nuvT: nuvT = nuvT_tof + nuvZ / c_light_cm_ns"
+    }
+  },
+  "model": {
+    "architecture": "LSTM",
+    "path": "saved_model",
+    "keras_file": "lstm_tof.keras",
+    "input_shape": [20, 7]
+  },
+  "training_events": 387591,
+  "validation_events": 83055,
+  "best_val_loss_mse_scaled": 9.268230496672913e-05,
+  "best_val_mae_scaled": 0.010590,
+  "best_val_mae_ns": 16.15
+}

@@ -52,24 +52,64 @@ Each notebook creates its own timestamped folder:
 # PosDirCoords_Training.ipynb
 position/runs/run_YYYYMMDD_HHMM/
 ├── models/
-│   ├── *_position/        ← position model (SavedModel format)
-│   └── *_direction_2d/    ← direction model (SavedModel format)
-└── plots/                 ← training curves and residual distributions
+│   ├── v<date>_trained_w_<N>_position/
+│   │   ├── saved_model/         ← TF SavedModel (loaded by LArSoft C++ module)
+│   │   └── inference_config.json
+│   └── v<date>_trained_w_<N>_direction_2d/
+│       ├── saved_model/
+│       └── inference_config.json
+└── plots/                       ← training curves and residual distributions
 
 # TimeCoord_Training.ipynb
 temporal/runs/run_YYYYMMDD_HHMM/
-├── transformer_tof/       ← transformer model (SavedModel — loaded by LArSoft module)
-├── transformer_tof.keras  ← transformer model (Keras — for retraining or fine-tuning)
-├── lstm_tof/              ← LSTM model (SavedModel — loaded by LArSoft module)
-└── lstm_tof.keras         ← LSTM model (Keras — for retraining or fine-tuning)
+├── lstm_tof/
+│   ├── saved_model/             ← TF SavedModel
+│   └── inference_config.json
+├── lstm_tof.keras               ← Keras format (for retraining / fine-tuning)
+├── transformer_tof/
+│   ├── saved_model/
+│   └── inference_config.json
+├── transformer_tof.keras
+├── sc_t.pkl / sc_pe.pkl / sc_tof.pkl   ← MinMaxScalers (required at inference)
+└── hist_lstm_tof.json / hist_transformer_tof.json
 ```
 
 The LArSoft inference module (`../3-inference-larsoft-module`) loads models in
 **SavedModel format** via the TensorFlow C++ API. The Keras format is kept separately
 to allow retraining without losing the model architecture and custom layers.
 
-Alongside each SavedModel a JSON metadata file stores the normalisation parameters
-needed by the LArSoft C++ inference module.
+Each `inference_config.json` records all parameters needed to reproduce the
+preprocessing at inference time (PE normalisation factor, coordinate ranges,
+scaler min/max values) together with model architecture info and validation performance.
+
+---
+
+## Current models
+
+The latest production models are kept under `current_models_trained/` in this directory
+so that the LArSoft module can reference them with a stable relative path:
+
+```
+current_models_trained/
+├── v0410_trained_w_388k_position/
+│   ├── saved_model/
+│   └── inference_config.json   ← pe_normalization_factor, coord ranges, performance
+├── v0411_trained_w_388k_direction_2d/
+│   ├── saved_model/
+│   └── inference_config.json   ← pe_normalization_factor, unit-vector output info
+├── v0415_trained_w_388k_time_lstm/
+│   ├── saved_model/
+│   ├── sc_t.pkl / sc_pe.pkl / sc_tof.pkl
+│   └── inference_config.json   ← scaler ranges, feature layout, performance
+└── v0415_trained_w_388k_time_transformer/
+    ├── saved_model/
+    ├── sc_t.pkl / sc_pe.pkl / sc_tof.pkl
+    └── inference_config.json
+```
+
+When a new training run produces better models, copy the relevant `saved_model/`,
+scalers, and `inference_config.json` here and update the FCL model paths in
+`../3-inference-larsoft-module/fcls/`.
 
 ---
 

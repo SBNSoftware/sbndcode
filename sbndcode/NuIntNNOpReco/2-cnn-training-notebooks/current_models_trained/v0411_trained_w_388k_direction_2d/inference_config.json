@@ -1,0 +1,38 @@
+{
+  "normalization": {
+    "input": {
+      "pe_normalization_factor": 895992.6,
+      "note": "divide raw PE image by pe_normalization_factor before passing to the network"
+    },
+    "output": {
+      "type": "unit_vector_yz",
+      "dir2d_y_range": [-1.0, 1.0],
+      "dir2d_z_range": [0.0, 1.0],
+      "note": "network outputs (dirY, dirZ) projected onto YZ plane — renormalize to unit vector at inference, no coordinate inverse transform needed"
+    }
+  },
+  "model": {
+    "architecture": "ResNet-18 (reduced, half filters: 32->64->128->256)",
+    "n_params_approx": "2.8M",
+    "input_shape": [59, 70, 2],
+    "input_channels": ["uncoated PMT image", "coated PMT image"],
+    "output_shape": 2,
+    "output_labels": ["dirY", "dirZ"],
+    "loss_function": "angular_loss (atan2-based, sign-invariant)",
+    "optimizer": "AdamW"
+  },
+  "training_events": 388169,
+  "validation_events": 83179,
+  "best_val_loss_rad": 0.40747660398483276,
+  "best_val_loss_deg": 23.34668965865454,
+  "performance": {
+    "validation": {
+      "mean_error_deg": 24.70,
+      "median_error_deg": 15.22
+    },
+    "test": {
+      "mean_error_deg": 24.71,
+      "median_error_deg": 15.28
+    }
+  }
+}
