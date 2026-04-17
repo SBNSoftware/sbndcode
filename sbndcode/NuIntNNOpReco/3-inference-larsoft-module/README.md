@@ -81,7 +81,7 @@ flowchart TD
 **Trade-off**: the matching criterion *is* the distance between light and charge
 barycenters. Events where the traditional reconstruction is far off are less likely
 to be matched correctly, so the measured resolution for the traditional method is
-biased towards well-reconstructed events — it will look better than it really is.
+biased towards well-reconstructed events, so the measured resolution underestimates the true one.
 The CNN resolution is less affected since it is independent of the matching criterion.
 
 ---

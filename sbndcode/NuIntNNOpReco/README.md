@@ -69,7 +69,7 @@ Three art modules run the trained networks inside LArSoft:
 - **`NuSliceAnalyzer`** — fills a TTree with Pandora vertex, barycenter, PCA direction, and CNN predictions
 
 Models are loaded via the TensorFlow C++ API from the `tf/` interface and the
-`SavedModel` directories bundled under `module/`.
+`SavedModel` directories under `2-cnn-training-notebooks/current_models_trained/`.
 
 ```bash
 # MC
@@ -78,6 +78,8 @@ lar -c fcls/run_pos_dir_inference.fcl -s input_mc.root
 # Data (with Pandora NuScore slice selection)
 lar -c fcls/run_pos_inference_data_nuslice.fcl -s input_data.root
 ```
+
+→ See [`3-inference-larsoft-module/README.md`](3-inference-larsoft-module/README.md)
 
 ---
 
