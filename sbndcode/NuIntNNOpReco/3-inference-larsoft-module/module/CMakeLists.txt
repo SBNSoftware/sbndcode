@@ -35,7 +35,7 @@ set(MODULE_LIBRARIES
 
 )
 
-cet_build_plugin(PosRecoCVNProducer art::Module SOURCE PosRecoCVNProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+cet_build_plugin(PosRecoCVNProducer art::Module SOURCE NuIntNNProducer_posdir_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 
 # NuSliceFilter and NuSliceAnalyzer need larpandora for PFParticleMetadata
 set(SLICE_LIBRARIES

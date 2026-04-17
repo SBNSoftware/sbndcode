@@ -429,6 +429,8 @@ private:
   std::vector<int> fG4BufferBoxY;               // Fiducial volume Y boundaries [cm]
   std::vector<int> fG4BufferBoxZ;               // Fiducial volume Z boundaries [cm]
   std::vector<int> fG4BeamWindow;               // Beam timing window [μs]
+  std::vector<double> fFlashTimeWindowMC;       // OpFlash time window for MC [μs] (default: 0.15, 1.75)
+  std::vector<double> fFlashTimeWindowData;     // OpFlash time window for DATA [μs] (default: -1.2, 0.4)
   std::vector<int> fKeepPDGCode;                // PDG codes to keep in MC particle list
 
   // Active volume for neutrino vertex filter (training pipeline compatibility)

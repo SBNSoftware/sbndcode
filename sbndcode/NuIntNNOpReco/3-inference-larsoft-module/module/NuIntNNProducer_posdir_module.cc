@@ -1,4 +1,4 @@
-#include "PosRecoCVNProducer_module.hh"
+#include "NuIntNNProducer_posdir_module.hh"
 
 #include "larcorealg/Geometry/OpDetGeo.h"
 #include <chrono>
@@ -42,7 +42,9 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fCustomNormFactor( p.get<double>("CustomNormFactor", -1.0) ),
     fPredictionTolerance( p.get<double>("PredictionTolerance", 0.05) ),
     fSkipNeutrinoFilter( p.get<bool>("SkipNeutrinoFilter", false) ),
-    fSbndcodeVersion( p.get<std::string>("SbndcodeVersion", "v10_09_00") )
+    fSbndcodeVersion( p.get<std::string>("SbndcodeVersion", "v10_09_00") ),
+    fFlashTimeWindowMC(   p.get<std::vector<double>>("FlashTimeWindowMC",   {0.15, 1.75}) ),
+    fFlashTimeWindowData( p.get<std::vector<double>>("FlashTimeWindowData", {-1.2, 0.4})  )
 {
     if(fSavePixelMapVars) produces<PixelMapVars>();
 
@@ -173,7 +175,7 @@ void opdet::PosRecoCVNProducer::beginJob()
 // ============================================================================
 // produce - Main event processing (per-event analysis)
 //   1. Load MC truth and particles (mode-dependent)
-//   2. Load and filter OpFlashes/OpHits (beam window: 0.367-1.9 μs)
+//   2. Load and filter OpFlashes/OpHits (beam window: 0.15-1.75 μs for MC, -1.2-0.4 μs for DATA)
 //   3. Apply event filters (neutrino count, optical data availability)
 //   4. Process flashes: channel classification → energy filter
 //   5. Generate PE images: matrix [312 ch] → images [ch_y/2, ch_z, 2]
@@ -381,7 +383,7 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
   LogTiming("ProcessOpHits", section_start);
   section_start = std::chrono::high_resolution_clock::now();
 
-  // --- Process OpFlashes: Filter by beam window (0.367-1.9 μs) and extract flash positions + OpHits
+  // --- Process OpFlashes: Filter by beam window (0.15-1.75 μs MC / -1.2-0.4 μs DATA) and extract flash positions + OpHits
   art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
   for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) {
@@ -404,8 +406,9 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
       double flash_time_us = Flash.AbsTime();
 
       // Time window depends on processing mode
-      double time_min = (fProcessingMode == "DATA_inference") ? -1.2 : 0.367;
-      double time_max = (fProcessingMode == "DATA_inference") ?  0.4 : 1.9;
+      const auto& tw = (fProcessingMode == "DATA_inference") ? fFlashTimeWindowData : fFlashTimeWindowMC;
+      double time_min = tw[0];
+      double time_max = tw[1];
 
       // DEBUG: Print ALL flashes before time cut
       if(fVerbosity > 1) {

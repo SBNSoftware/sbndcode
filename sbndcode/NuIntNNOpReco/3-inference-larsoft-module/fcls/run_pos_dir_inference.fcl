@@ -53,6 +53,10 @@ sbnd_ResNetInference:
   OpHitsModuleLabel: ["ophitpmt"]
   OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
 
+  # Flash time windows [μs] — must match training data preparation
+  FlashTimeWindowMC:   [0.15, 1.75]   # BNB window for MC (matches NuIntNNDataPrep)
+  FlashTimeWindowData: [-1.2, 0.4]    # BNB window for real data
+
   #------------------------------------------------------------------------
   # EVENT SELECTION CRITERIA (MC modes only)
   #------------------------------------------------------------------------
