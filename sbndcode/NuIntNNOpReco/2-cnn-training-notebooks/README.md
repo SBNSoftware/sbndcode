@@ -50,7 +50,7 @@ Each notebook creates its own timestamped folder:
 
 ```
 # PosDirCoords_Training.ipynb
-position/run_YYYYMMDD_HHMM/
+position/runs/run_YYYYMMDD_HHMM/
 ├── models/
 │   ├── *_position/        ← position model (SavedModel format)
 │   └── *_direction_2d/    ← direction model (SavedModel format)
