@@ -1,0 +1,22 @@
+#include "crtrecoproducers_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crttimingana_data_sbnd:
+{ 
+  module_type:                      "CRTTimingAnalysis"
+  CRTClusterModuleLabel:            "crtclustering"
+  CRTSpacePointModuleLabel:         "crtspacepoints"
+  CRTTrackModuleLabel:              "crttracks"
+  PTBModuleLabel:                   "ptbdecoder"
+  TDCModuleLabel:                   "tdcdecoder"
+  TimingReferenceModuleLabel:       "crtstrips"
+  TPCSliceModuleLabel:              "pandoraSCE"
+  CorrectedOpFlashModuleLabel:      "lightpropagationcorrectionSCE"
+  TPCTrackModuleLabel:              "pandoraSCETrack"
+  CRTSpacePointMatchingModuleLabel: "crtspacepointmatchingSCE"
+  AllowedPTBHLTs:                   [ 26, 27 ]
+  CRTClusterCharacterisationAlg:    @local::crtclustercharacterisationalg_data_sbnd
+}
+
+END_PROLOG
