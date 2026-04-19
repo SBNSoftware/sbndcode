@@ -72,11 +72,14 @@ physics.analyzers:
 // Trigger path: pandora -> filter (drops non-neutrino events) -> ResNet -> analyzer
 // nusliceana runs in the same trigger path so it only fills the TTree for events
 // that pass nuselector (NuScore > 0.6, FV, is_clear_cosmic == 0).
-physics.reco: [ pandora, nuselector, ResNetInference, nusliceana ]
+physics.reco: [ pandora, nuselector, ResNetInference ]
 physics.trigger_paths: [ reco ]
 
-# No end paths needed: both TTrees (ResNetInference + nusliceana) go to TFileService
-physics.end_paths: []
+# nusliceana is an EDAnalyzer: must go in end_paths
+# art only calls end_path modules on events not dropped by the trigger path filter,
+# so nusliceana will only fill the TTree for events that passed nuselector.
+physics.ana: [ nusliceana ]
+physics.end_paths: [ ana ]
 
 //==============================================================================
 // RESNET OUTPUT CONFIGURATION

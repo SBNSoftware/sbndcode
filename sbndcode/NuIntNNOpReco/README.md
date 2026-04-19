@@ -83,6 +83,15 @@ lar -c fcls/run_pos_inference_data_nuslice.fcl -s input_data.root
 
 ---
 
+## Tutorial
+
+A full module overview and usage tutorial is available here:  
+[NuIntNNOpReco — Tutorial (Google Drive)](https://drive.google.com/file/d/1wC1IGy-CNwzi5gJhbo7YMZ57jNW-oHcQ/view?usp=sharing)
+
+*(To be moved to SBND DocDB)*
+
+---
+
 ## Contact
 
 Author: Sergio Dominguez-Vidales

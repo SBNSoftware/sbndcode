@@ -275,6 +275,7 @@ private:
   double                    fRadius;               ///< Hypotenuse of DeltaY and DeltaZ *parameter minimized by matching* (cm)
   double                    fChi2;                 ///< Chi2 to be minimized when matching flash to slice (dimensionless)
   double                    fScore;                ///< Score to be maximized when matching flash to slice (dimensionless)
+  double                    fNuScore;              ///< Pandora NuScore for the primary PFP in this slice
   double                    fAngle;                ///< Angle between charge PCA and light PCA (degrees)
   double                    fDeltaY_Trigger;       ///< | Triggering flash Y center - charge Y center | (cm)
   double                    fDeltaZ_Trigger;       ///< | Triggering flash Z center - charge Z center | (cm)
@@ -373,6 +374,7 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
     fMatchTree->Branch("angle",               &fAngle,               "angle/d"              );
     fMatchTree->Branch("chi2",                &fChi2,                "chi2/d"               );
     fMatchTree->Branch("score",               &fScore,               "score/d"              );
+    fMatchTree->Branch("nuScore",             &fNuScore,             "nuScore/d"            );
     fMatchTree->Branch("deltaZ_Trigger",      &fDeltaZ_Trigger,      "deltaZ_Trigger/d"     );
     fMatchTree->Branch("deltaY_Trigger",      &fDeltaY_Trigger,      "deltaY_Trigger/d"     );
     fMatchTree->Branch("radius_Trigger",      &fRadius_Trigger,      "radius_Trigger/d"     );
@@ -501,6 +503,19 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       if ( f1T0.at(0).isValid() ) {
         fChargeT0 = f1T0.at(0).ref().Time() / 1e3;
       }
+    }
+
+    // Read NuScore from PFParticleMetadata for the primary PFP in this slice
+    fNuScore = -999.;
+    art::FindManyP<larpandoraobj::PFParticleMetadata> pfpMetaAssns(pfpHandle, e, fPandoraLabel);
+    for (const art::Ptr<recob::PFParticle>& pfp : pfpVect) {
+      if (!pfp->IsPrimary()) continue;
+      const auto& metaVec = pfpMetaAssns.at(pfp.key());
+      if (metaVec.empty()) break;
+      const auto& propertiesMap = metaVec.front()->GetPropertiesMap();
+      auto it = propertiesMap.find("NuScore");
+      if (it != propertiesMap.end()) fNuScore = it->second;
+      break;
     }
 
     for ( size_t tpc=0; tpc<2 ; tpc ++) {

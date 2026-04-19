@@ -5,6 +5,7 @@ set(	MODULE_LIBRARIES
 			larcore::Geometry_Geometry_service
 			lardataobj::RecoBase
 			lardataobj::Simulation
+			larpandora::LArPandoraInterface
 			larcoreobj::SummaryData
 			larana::OpticalDetector_OpHitFinder
 			larreco::Calorimetry

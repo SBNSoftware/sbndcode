@@ -26,7 +26,7 @@ sbnd_NuIntNNDataPrep:
     #------------------------------------------------------------------------
     # VERSION CONTROL (used for PMT map path search)
     #------------------------------------------------------------------------
-    SbndcodeVersion: "v10_14_02"
+    SbndcodeVersion: "v10_20_05"
 
     #------------------------------------------------------------------------
     # VERBOSITY
@@ -56,7 +56,7 @@ sbnd_NuIntNNDataPrep:
     G4BufferBoxY:    [-400, 400]      # cm
     G4BufferBoxZ:    [-100, 600]      # cm
     G4BeamWindow:    [-10000, 12000]  # ns
-    FlashTimeWindow: [0.15, 1.75]    # us - OpFlash AbsTime selection (beam gate)
+    FlashTimeWindow: [0.15, 1.75]    # us -beam gate selection, verify it because it can be different in principle it can be different productions
 
     #------------------------------------------------------------------------
     # ACTIVE VOLUME (neutrino vertex must be inside for event to pass)

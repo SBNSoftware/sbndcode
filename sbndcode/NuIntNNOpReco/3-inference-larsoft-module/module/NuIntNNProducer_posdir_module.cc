@@ -25,6 +25,8 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fG4BufferBoxY( p.get<std::vector<int>>("G4BufferBoxY") ),
     fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
     fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
+    fFlashTimeWindowMC(   p.get<std::vector<double>>("FlashTimeWindowMC",   {0.15, 1.75}) ),
+    fFlashTimeWindowData( p.get<std::vector<double>>("FlashTimeWindowData", {-1.2, 0.4})  ),
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
     fActiveVolumeX( p.get<std::vector<double>>("ActiveVolumeX", {-200.0, 200.0}) ),
     fActiveVolumeY( p.get<std::vector<double>>("ActiveVolumeY", {-200.0, 200.0}) ),
@@ -42,9 +44,7 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fCustomNormFactor( p.get<double>("CustomNormFactor", -1.0) ),
     fPredictionTolerance( p.get<double>("PredictionTolerance", 0.05) ),
     fSkipNeutrinoFilter( p.get<bool>("SkipNeutrinoFilter", false) ),
-    fSbndcodeVersion( p.get<std::string>("SbndcodeVersion", "v10_09_00") ),
-    fFlashTimeWindowMC(   p.get<std::vector<double>>("FlashTimeWindowMC",   {0.15, 1.75}) ),
-    fFlashTimeWindowData( p.get<std::vector<double>>("FlashTimeWindowData", {-1.2, 0.4})  )
+    fSbndcodeVersion( p.get<std::string>("SbndcodeVersion", "v10_20_05") )
 {
     if(fSavePixelMapVars) produces<PixelMapVars>();
 

@@ -39,7 +39,7 @@ sbnd_ResNetInference:
   #------------------------------------------------------------------------
   # VERSION CONTROL
   #------------------------------------------------------------------------
-  SbndcodeVersion: "v10_14_02"
+  SbndcodeVersion: "v10_20_05"
 
   #------------------------------------------------------------------------
   # DATA PRODUCT LABELS
@@ -53,7 +53,7 @@ sbnd_ResNetInference:
   OpHitsModuleLabel: ["ophitpmt"]
   OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
 
-  # Flash time windows [μs] — must match training data preparation
+  # Flash time windows [us] - must match training data preparation
   FlashTimeWindowMC:   [0.15, 1.75]   # BNB window for MC (matches NuIntNNDataPrep)
   FlashTimeWindowData: [-1.2, 0.4]    # BNB window for real data
 
@@ -82,13 +82,12 @@ sbnd_ResNetInference:
   # CNN INFERENCE CONFIGURATION
   #------------------------------------------------------------------------
   # CNN model paths (relative to 3-inference-larsoft-module/module/)
-  ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0410_trained_w_388k_position/saved_model"
-  DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0411_trained_w_388k_direction_2d/saved_model"
+  ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_position/saved_model"
+  DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_direction_2d/saved_model"
 
   # Image normalization factor (from training)
-  # Source: PosDirCoords_Training.ipynb (388k events, joint max PE coated/uncoated)
-  # train_max_uncoated=6228.5, train_max_coated=895992.6 -> joint max=895992.6
-  CustomNormFactor: 895992.6
+  # Source: PosDirCoords_Training.ipynb (388k events) — v0419 joint max PE (taken using p99.9 to avoid extreme outliers)
+  CustomNormFactor: 42043.73
 
   #------------------------------------------------------------------------
   # OUTPUT CONFIGURATION

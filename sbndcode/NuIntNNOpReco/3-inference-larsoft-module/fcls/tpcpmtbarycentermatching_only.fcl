@@ -39,3 +39,5 @@ physics.producers.pandoraSCE.TrackLabel: "pandoraTrack"
 physics.producers.pandoraSCE.T0Labels: []
 physics.producers.pandoraSCE.T0LabelsCorrectT0: []
 physics.producers.pandoraSCE.CorrectNoT0Tag: true
+
+physics.producers.tpcpmtbarycentermatchingSCE.FillMatchTree: true

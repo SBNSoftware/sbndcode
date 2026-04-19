@@ -392,7 +392,7 @@ opdet::NuIntNNDataPrep::NuIntNNDataPrep(fhicl::ParameterSet const& p)
     fActiveVolumeZ       ( p.get<std::vector<double>>("ActiveVolumeZ", {0.0, 500.0}) ),
     fSaveOpHits          ( p.get<bool>("SaveOpHits", true) ),
     fVerbosity           ( p.get<int>("Verbosity", 0) ),
-    fSbndcodeVersion     ( p.get<std::string>("SbndcodeVersion", "v10_09_00") ),
+    fSbndcodeVersion     ( p.get<std::string>("SbndcodeVersion", "v10_20_05") ),
     fTemporalMaxOphits       ( p.get<int>("TemporalMaxOphits", 100) ),
     fTemporalNumFlashes      ( p.get<int>("TemporalNumFlashes", 1) ),
     fTemporalUseEnergyVertex ( p.get<bool>("TemporalUseEnergyVertex", false) ),
