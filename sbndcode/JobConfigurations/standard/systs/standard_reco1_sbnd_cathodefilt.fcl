@@ -1,0 +1,18 @@
+#
+# reco1 after the cathode filter.
+#
+# reco1 is a pure-detector-response reconstruction pass -- it reads TPC
+# RawDigits / SimChannels and produces hits, wires, space-points etc.
+# Nothing in reco1 consumes sim::SimEnergyDeposit directly, so the only
+# thing this file does is set the process_name so that subsequent stages
+# pick up the cathode-filtered provenance chain cleanly.
+#
+# If your local reco1 configuration does read SimEnergyDeposit for
+# truth-matching or validation, add the relevant label overrides below
+# (change "ionandscint" references to "cathodefiltered").
+#
+
+#include "standard_reco1_sbnd.fcl"
+
+# Uncomment and adjust if any reco1 module reads SimEnergyDeposit:
+# physics.producers.<producer_name>.SimEnergyDepositLabel: "cathodefiltered"

@@ -1,0 +1,66 @@
+#
+# Cathode-filter stage -- insert between standard_g4_rockbox_sbnd.fcl and
+# standard_detsim_sbnd.fcl in the SBND workflow.
+#
+# Reads the two sim::SimEnergyDeposit collections produced by ionandscint
+# in the g4 stage, drops every deposit whose MidPoint lies inside the
+# data-driven SBND cathode volume, and writes them out under the producer
+# label "cathodefiltered" with the same instance names:
+#
+#     ionandscint                ->   cathodefiltered
+#     ionandscint:priorSCE       ->   cathodefiltered:priorSCE
+#
+# The original ionandscint collections are DROPPED from the output file
+# (see outputs.out1.outputCommands below) so downstream stages never see
+# the unfiltered products by accident.
+#
+# Usage:
+#     lar -c standard_cathodefilter_sbnd.fcl -s <g4.root> -o <cathodefilt.root> -n N
+#
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "cathode_simenergydeposit_filter.fcl"
+
+process_name: CathodeFilter
+
+services: {
+  TFileService:              { fileName: "cathodefilter_hist.root" }
+  TimeTracker:               {}
+  MemoryTracker:             {}
+  RandomNumberGenerator:     {}
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc
+  message:                   @local::sbnd_message_services_prod
+  @table::sbnd_services
+}
+
+source: {
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics: {
+  producers: {
+    cathodefiltered: @local::cathode_simenergydeposit_filter_default
+  }
+  simulate:      [ cathodefiltered ]
+  stream1:       [ out1 ]
+  trigger_paths: [ simulate ]
+  end_paths:     [ stream1 ]
+}
+
+outputs: {
+  out1: {
+    module_type: RootOutput
+    fileName:    "%ifb_cathodefilt.root"
+    dataTier:    "simulated"
+    compressionLevel: 1
+    # Keep everything, but drop the pre-filter ionandscint deposits so
+    # downstream stages only see the filtered versions.
+    outputCommands: [
+      "keep *_*_*_*",
+      "drop sim::SimEnergyDeposits_ionandscint_*_*"
+    ]
+    SelectEvents: [ simulate ]
+  }
+}
