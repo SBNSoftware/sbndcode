@@ -1,0 +1,23 @@
+#
+# gen stage for the cathode-filter chain.
+#
+# Thin wrapper around prodgenie_corsika_proton_rockbox_sbnd.fcl that
+# swaps the stock SBND GDML for the cathode-less counterpart.
+#
+# CORSIKA rockbox itself only reads the detector-enclosure dimensions
+# (not the cathode), so the physics thrown by the generator is
+# unchanged.  We still override the geometry here because LArSoft
+# stores the DetectorName on every event at gen time and cross-checks
+# it downstream -- if gen uses sbnd_v02_04_*.gdml and g4 uses
+# sbnd_v02_04_nocathode_*.gdml the chain throws a consistency error
+# before the cathode-less geometry is ever exercised.
+#
+# Chain entry-point:
+#   gen                  -> THIS FILE                                   <--
+#   g4                   -> standard_g4_rockbox_sbnd_cathodefilt.fcl
+#   filter               -> standard_cathodefilter_sbnd.fcl
+#   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
+#
+
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"

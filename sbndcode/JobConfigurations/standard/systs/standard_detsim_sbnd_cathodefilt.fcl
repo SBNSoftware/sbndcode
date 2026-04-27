@@ -1,0 +1,32 @@
+#
+# Detsim stage after the cathode filter.
+#
+# This is a thin wrapper around standard_detsim_sbnd.fcl that redirects
+# every producer that reads sim::SimEnergyDeposit from the ionandscint
+# labels to the new cathodefiltered labels.
+#
+# The parameter names below are the ones historically used in SBND
+# detsim modules; if a future sbndcode refactor renames any of them,
+# just update the override here.  FHiCL will complain if the key does
+# not exist, which makes drift from upstream easy to spot.
+#
+
+#include "standard_detsim_sbnd.fcl"
+###include "geometry_sbnd_cathodefilt.fcl"
+
+# ---- drift / TPC electron simulation -----------------------------------
+# default ionandscint collection  ->  cathodefiltered (default instance)
+physics.producers.simdrift.SimulationLabel:         "cathodefiltered"
+physics.producers.simdrift.SimEnergyDepositLabel:   "cathodefiltered"
+
+# ---- fast optical simulation that re-reads SimEnergyDeposit -----------
+# (present in some sbndcode variants -- harmless if the key is absent;
+#  delete this block if your standard_detsim_sbnd.fcl does not define it)
+physics.producers.opfastscintillation.SimEnergyDepositLabel: "cathodefiltered"
+
+# ---- any SCE-aware / truth-shifted SimEnergyDeposit consumers ---------
+# ionandscint:priorSCE collection  ->  cathodefiltered:priorSCE
+physics.producers.simdrift.SimulationLabelPriorSCE: "cathodefiltered:priorSCE"
+
+physics.producers.simtpc2d.wcls_main.params.inputTag: "cathodefiltered:"
+physics.producers.simtpc2d.wcls_main.configs:["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp_nocathode.jsonnet"]

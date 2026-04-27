@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+# Default configuration for the CathodeSimEnergyDepositFilter producer.
+# The data file path is resolved via fw-search-path (it installs to
+# $FW_SEARCH_PATH/sbndcode/CathodeFilter/sbnd_cathode_v6.txt).
+
+cathode_simenergydeposit_filter_default: {
+  module_type:            "CathodeFilterSBND"
+  SimEnergyDepositLabel:  "ionandscint"
+  CathodeVolumeFile:      "sbnd_cathode_v6.txt"
+  UseStepEndpoints:       false
+  NanPolicy:              "outside"
+  Interp:                 "bilinear"
+  Verbose:                false
+}
+
+END_PROLOG

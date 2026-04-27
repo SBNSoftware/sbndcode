@@ -1,0 +1,24 @@
+#
+# Shared geometry override for the cathode-filter chain.
+#
+# Every fcl in the cathode-filter chain #include's this file and then
+# applies `@table::sbnd_geometry_cathodefilt` to `services`, so that
+# Geant4 and every downstream geometry consumer uses the *cathode-less*
+# GDML.  The physical cathode's role in absorbing ionisation is then
+# taken over by the CathodeSimEnergyDepositFilter module.
+#
+# Drop
+#   sbnd_v02_04_nocathode_base.gdml
+#   sbnd_v02_04_nocathode_nowires.gdml
+# (produced in sbndcode/CathodeFilter/gdml/) on FW_SEARCH_PATH
+# alongside the rest of the SBND GDMLs.
+#
+# LArSoft's Geometry service uses the *nowires* GDML; the base file is
+# included for completeness so both variants stay consistent.
+#
+
+services.Geometry.GDML:       "sbnd_v02_04_nocathode.gdml"
+services.Geometry.ROOT:       "sbnd_v02_04_nocathode.gdml"
+services.AuxDetGeometry.GDML: "sbnd_v02_04_nocathode.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v02_04_nocathode.gdml"
+services.LArG4Detector.gdmlFileName_:  "sbnd_v02_04_nocathode_nowires.gdml"
