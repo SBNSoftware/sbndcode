@@ -26,6 +26,9 @@
 #include <vector>
 #include <stdexcept>
 
+#include "art_root_io/TFileService.h"
+#include "fhiclcpp/ParameterSet.h"
+
 namespace sbnd {
 
 class SBNDCathode {

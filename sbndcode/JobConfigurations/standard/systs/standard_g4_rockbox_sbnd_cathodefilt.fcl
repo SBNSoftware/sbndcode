@@ -1,0 +1,23 @@
+#
+# g4 stage for the cathode-filter chain.
+#
+# Thin wrapper around standard_g4_rockbox_sbnd.fcl that replaces the
+# SBND GDML with its cathode-less counterpart.  With the CPA removed
+# from the geometry, Geant4 propagates particles through LAr where the
+# cathode used to be -- the CathodeSimEnergyDepositFilter then takes
+# over cathode absorption using the data-driven cathode volume
+# (sbnd_cathode_v6.txt).
+#
+# Produce sbnd_v02_00_noCPA.gdml first (see
+# sbndcode/CathodeFilter/gdml/README.md).
+#
+# Chain:
+#   gen                  -> prodgenie_corsika_proton_rockbox_sbnd.fcl
+#   g4                   -> THIS FILE                                   <--
+#   filter               -> standard_cathodefilter_sbnd.fcl
+#   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
+#
+
+#include "standard_g4_rockbox_sbnd.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"
+

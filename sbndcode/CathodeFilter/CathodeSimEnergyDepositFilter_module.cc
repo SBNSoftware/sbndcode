@@ -48,6 +48,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "TMath.h"
+#include "Math/GenVector/Cartesian3D.h"
 
 namespace sbnd {
 

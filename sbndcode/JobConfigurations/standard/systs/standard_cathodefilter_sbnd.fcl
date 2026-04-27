@@ -21,6 +21,7 @@
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "cathode_simenergydeposit_filter.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"
 
 process_name: CathodeFilter
 

@@ -36,7 +36,11 @@ bool SBNDCathode::isnan_(double v) {
 }
 
 SBNDCathode::SBNDCathode(const std::string& filename) {
-  std::ifstream f(filename);
+  std::string fname;
+  cet::search_path sp("FW_SEARCH_PATH");
+  sp.find_file(filename, fname);
+  std::ifstream f(fname, std::ifstream::in);
+
   if (!f.is_open())
     throw std::runtime_error("SBNDCathode: cannot open file " + filename);
 

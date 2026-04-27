@@ -12,6 +12,7 @@
 #
 
 #include "standard_detsim_sbnd.fcl"
+###include "geometry_sbnd_cathodefilt.fcl"
 
 # ---- drift / TPC electron simulation -----------------------------------
 # default ionandscint collection  ->  cathodefiltered (default instance)
@@ -26,3 +27,6 @@ physics.producers.opfastscintillation.SimEnergyDepositLabel: "cathodefiltered"
 # ---- any SCE-aware / truth-shifted SimEnergyDeposit consumers ---------
 # ionandscint:priorSCE collection  ->  cathodefiltered:priorSCE
 physics.producers.simdrift.SimulationLabelPriorSCE: "cathodefiltered:priorSCE"
+
+physics.producers.simtpc2d.wcls_main.params.inputTag: "cathodefiltered:"
+physics.producers.simtpc2d.wcls_main.configs:["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp_nocathode.jsonnet"]

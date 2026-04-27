@@ -5,9 +5,9 @@ BEGIN_PROLOG
 # $FW_SEARCH_PATH/sbndcode/CathodeFilter/sbnd_cathode_v6.txt).
 
 cathode_simenergydeposit_filter_default: {
-  module_type:            "CathodeSimEnergyDepositFilter"
+  module_type:            "CathodeFilterSBND"
   SimEnergyDepositLabel:  "ionandscint"
-  CathodeVolumeFile:      "sbndcode/CathodeFilter/sbnd_cathode_v6.txt"
+  CathodeVolumeFile:      "sbnd_cathode_v6.txt"
   UseStepEndpoints:       false
   NanPolicy:              "outside"
   Interp:                 "bilinear"

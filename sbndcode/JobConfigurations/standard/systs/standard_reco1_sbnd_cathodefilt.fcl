@@ -13,6 +13,7 @@
 #
 
 #include "standard_reco1_sbnd.fcl"
+###include "geometry_sbnd_cathodefilt.fcl"
 
 # Uncomment and adjust if any reco1 module reads SimEnergyDeposit:
 # physics.producers.<producer_name>.SimEnergyDepositLabel: "cathodefiltered"

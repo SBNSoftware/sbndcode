@@ -8,6 +8,7 @@
 #
 
 #include "standard_reco2_sbnd.fcl"
+####include "geometry_sbnd_cathodefilt.fcl"
 
 # Typical SBND truth-match tools that read SimEnergyDeposit.  Override
 # as needed for your local configuration; delete any lines whose keys
@@ -19,3 +20,4 @@
 # Backtrackers / analyzers that do read ionandscint:
 # physics.analyzers.<ana>.SimEnergyDepositLabel: "cathodefiltered"
 # physics.producers.<prod>.SimEnergyDepositLabel: "cathodefiltered"
+
