@@ -9,12 +9,33 @@ import matplotlib as mpl
 
 # ── rcParams ──────────────────────────────────────────────────────────────────
 mpl.rcParams.update({
-    'axes.labelsize':  14,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
-    'lines.linewidth': 2.0,
+    # Fonts
+    'font.family':      'DejaVu Sans',
+    'axes.labelsize':   14,
+    'axes.titlesize':   14,
+    'axes.titleweight': 'bold',
+    'xtick.labelsize':  12,
+    'ytick.labelsize':  12,
+    'legend.fontsize':  12,
+    'legend.framealpha': 1.0,
+    'legend.edgecolor': '0.7',
+    # Lines
+    'lines.linewidth':  2.0,
+    # Grid (subtle, off by default — enable per-axes with ax.grid(True))
+    'axes.grid':       False,
+    'grid.alpha':      0.3,
+    'grid.linewidth':  0.6,
+    # Minor ticks on by default
+    'xtick.minor.visible': True,
+    'ytick.minor.visible': True,
+    'xtick.direction': 'in',
+    'ytick.direction': 'in',
+    'xtick.top':       True,
+    'ytick.right':     True,
+    # Figure / saving
     'figure.dpi':      150,
+    'savefig.dpi':     300,
+    'savefig.bbox':    'tight',
 })
 
 # ── Color palette (Paul Tol "vibrant") ───────────────────────────────────────
@@ -37,9 +58,10 @@ FONT_STAT  = 11
 # ── Stat box style ────────────────────────────────────────────────────────────
 STAT_BOX = dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='0.6', alpha=0.9)
 
-# ── Dataset / experiment labels (available but not added to figures) ──────────
-MC_LABEL         = ''       # dataset watermark
-EXPERIMENT_LABEL = 'SBND Work In Progress'         # experiment label
-# Usage (uncomment to add to a figure):
-#   fig.text(0.01, 0.01, MC_LABEL, fontsize=10, style='italic', va='bottom')
-#   fig.text(0.99, 0.01, EXPERIMENT_LABEL, fontsize=10, style='italic', va='bottom', ha='right')
+# ── Experiment label helpers ──────────────────────────────────────────────────
+EXPERIMENT_LABEL = 'SBND Work In Progress'
+
+def add_experiment_label(fig, label=EXPERIMENT_LABEL, fontsize=11):
+    """Add 'SBND Work In Progress' watermark to bottom-right of a figure."""
+    fig.text(0.99, 0.01, label, fontsize=fontsize, style='italic',
+             va='bottom', ha='right', color='0.45')

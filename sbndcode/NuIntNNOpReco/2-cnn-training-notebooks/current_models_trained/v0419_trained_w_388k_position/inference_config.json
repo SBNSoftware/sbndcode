@@ -1,0 +1,71 @@
+{
+  "normalization": {
+    "type": "minmax",
+    "pe_normalization_factor": 42043.72581250151,
+    "note_pe": "divide raw PE image by pe_normalization_factor before passing to the network",
+    "ranges": {
+      "x": [
+        0.0,
+        200.0
+      ],
+      "y": [
+        -200.0,
+        200.0
+      ],
+      "z": [
+        0.0,
+        500.0
+      ]
+    },
+    "target_ranges": {
+      "x": [
+        0.0,
+        1.0
+      ],
+      "y": [
+        -1.0,
+        1.0
+      ],
+      "z": [
+        0.0,
+        1.0
+      ]
+    },
+    "note_coords": "apply inverse minmax to network output to recover x_abs (cm); x_abs is |x| \u2014 TPC side reconstructed separately"
+  },
+  "model": {
+    "architecture": "ResNet-18 (reduced, half filters: 32->64->128->256)",
+    "n_params_approx": "2.8M",
+    "input_shape": [
+      59,
+      70,
+      2
+    ],
+    "input_channels": [
+      "uncoated PMT image",
+      "coated PMT image"
+    ],
+    "output_shape": 3,
+    "output_labels": [
+      "x_abs",
+      "y",
+      "z"
+    ],
+    "loss_function": "MSE",
+    "optimizer": "AdamW"
+  },
+  "training_events": 388169,
+  "validation_events": 83179,
+  "best_val_loss_mse_scaled": 0.0004919595085084438,
+  "performance": {
+    "validation": {
+      "mean_3d_dist_cm": 17.84,
+      "x_bias_cm": -1.03,
+      "x_sigma_cm": 5.18,
+      "y_bias_cm": 0.11,
+      "y_sigma_cm": 6.53,
+      "z_bias_cm": -0.81,
+      "z_sigma_cm": 7.77
+    }
+  }
+}

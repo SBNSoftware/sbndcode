@@ -81,12 +81,16 @@ sbnd_ResNetInference:
   #------------------------------------------------------------------------
   # CNN INFERENCE CONFIGURATION
   #------------------------------------------------------------------------
-  # CNN model paths (relative to 3-inference-larsoft-module/module/)
-  ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_position/saved_model"
-  DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_direction_2d/saved_model"
+  # CNN model paths for running in the grid (you need to put the models inside the tarball)
+  ModelPath:    "v0419_trained_w_388k_position/saved_model"
+  DirModelPath: "v0419_trained_w_388k_direction_2d/saved_model"
+
+  # CNN model paths (relative to 3-inference-larsoft-module/module/) for running local with lar
+  #ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_position/saved_model"
+  #DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_direction_2d/saved_model"
 
   # Image normalization factor (from training)
-  # Source: PosDirCoords_Training.ipynb (388k events) — v0419 joint max PE (taken using p99.9 to avoid extreme outliers)
+  # Source: PosDirCoords_Training.ipynb (388k events) - v0419 joint p99.9 of training set max PE
   CustomNormFactor: 42043.73
 
   #------------------------------------------------------------------------

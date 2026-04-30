@@ -107,19 +107,18 @@ The CNN resolution is less affected since it is independent of the matching crit
 │   ├── NuSliceFilter_module.cc              ← Pandora neutrino slice filter
 │   ├── NuSliceAnalyzer_module.cc            ← Combined TTree filler
 │   ├── PixelMapVars.h                       ← Data product: images + CNN predictions
-│   ├── classes.h / classes_def.xml          ← ROOT dictionary for PixelMapVars
-│   ├── v0223_trained_w_177k_position/       ← Current position model
-│   ├── v0224_trained_w_177k_direction_2d/   ← Current direction model
-│   ├── v0901_trained_w_165k_resnet18/       ← Previous model
-│   └── v0127_trained_w_160k_resnet18_fall_prod/
+│   └── classes.h / classes_def.xml          ← ROOT dictionary for PixelMapVars
 ├── fcls/
 │   ├── run_pos_dir_inference.fcl            ← Base CNN inference FCL (PROLOG)
 │   ├── run_pos_inference_data_nuslice.fcl   ← Option A: CNN + NuScore filter
-│   ├── tpcpmtbarycentermatching_only.fcl    ← Option B: flash barycenter matching
+│   └── tpcpmtbarycentermatching_only.fcl    ← Option B: flash barycenter matching
 ├── tf/
 │   ├── tf_graph.cc / tf_graph.h            ← TensorFlow C++ API interface
 │   └── CMakeLists.txt
-└── ReadPixelMapVars.ipynb                   ← Notebook to inspect PixelMapVars output
+├── ReadPixelMapVars.ipynb                   ← Inspect PixelMapVars art data product
+└── notebooks/
+    ├── inference_highneutrinopurity_data.ipynb  ← Option A analysis: CNN vs TPC barycenter (NuScore-selected events)
+    └── analyze_bfm.ipynb                        ← Option B analysis: CNN + traditional vs TPC barycenter (flash matching)
 ```
 
 ---
@@ -164,17 +163,20 @@ Only created when `SavePixelMapVars: true` in the FCL.
 Models live in `../2-cnn-training-notebooks/current_models_trained/`
 (see that directory's README for the full structure and how to update them).
 
-| Directory | Val performance |
-|---|---|
-| `v0410_trained_w_388k_position/` | mean 3D dist 18.0 cm |
-| `v0411_trained_w_388k_direction_2d/` | median angular error 15.2° |
-| `v0415_trained_w_388k_time_lstm/` | MAE 16.1 ns |
-| `v0415_trained_w_388k_time_transformer/` | MAE 15.8 ns |
+| Directory | Task | Val performance |
+|---|---|---|
+| `v0419_trained_w_388k_position/` | position | mean 3D dist 17.8 cm |
+| `v0419_trained_w_388k_direction_2d/` | direction | median angular error 15.2° |
+| `v0415_trained_w_388k_time_lstm/` | time (LSTM) | MAE 16.1 ns |
+| `v0415_trained_w_388k_time_transformer/` | time (Transformer) | MAE 15.8 ns |
+
+The time models are used in `2-cnn-training-notebooks/TimeCoord_Training.ipynb` for evaluation
+and are not yet integrated into the LArSoft inference pipeline.
 
 FCL paths (relative to `module/`):
 ```
-ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0410_trained_w_388k_position/saved_model"
-DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0411_trained_w_388k_direction_2d/saved_model"
+ModelPath:    "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_position/saved_model"
+DirModelPath: "../../2-cnn-training-notebooks/current_models_trained/v0419_trained_w_388k_direction_2d/saved_model"
 ```
 
 ---
@@ -191,3 +193,19 @@ lar -c fcls/run_pos_dir_inference.fcl -s input_mc.root
 # Option B — Flash barycenter matching
 lar -c fcls/tpcpmtbarycentermatching_only.fcl -s input_data.root
 ```
+
+---
+
+## Analysis notebooks
+
+Two Jupyter notebooks in `notebooks/` cover the full result analysis after running the LArSoft modules:
+
+### `notebooks/inference_highneutrinopurity_data.ipynb`
+**Option A** analysis. Reads the TTree produced by `NuSliceAnalyzer` on NuScore-filtered data.
+Compares CNN light barycenter vs Pandora vertex and SpacePoint charge barycenter.
+Produces position and direction resolution plots for the high-purity neutrino sample.
+
+### `notebooks/analyze_bfm.ipynb`
+**Option B** analysis. Reads the output of the flash barycenter matching pipeline.
+Compares CNN light barycenter **and** traditional flash barycenter both against the TPC
+charge barycenter, providing a direct side-by-side resolution comparison of the two methods.
