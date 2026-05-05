@@ -31,7 +31,6 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbnobj/SBND/CRT/CRTVeto.hh"
-#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "lardata/Utilities/AssociationUtil.h"
@@ -78,8 +77,6 @@ private:
   bool		   fIsData;
   bool 		   fDebug; 
  
-  std::string      fFrameShiftModuleLabel;
-
   unsigned int fEventID;
   unsigned int fRun;
   unsigned int fSubRun;
@@ -96,7 +93,6 @@ sbnd::crt::CRTVetoProducer::CRTVetoProducer(fhicl::ParameterSet const& p)
   , fCRTTimingReferenceInfoLabel(p.get<std::string>("CRTTimingReferenceInfoLabel"))
   , fIsData(p.get<bool>("IsData"))
   , fDebug(p.get<bool>("Debug", false))
-  , fFrameShiftModuleLabel(p.get<std::string>("FrameShiftModuleLabel", ""))
 {
   produces<std::vector<CRTVeto>>();
   produces<art::Assns<CRTVeto, CRTSpacePoint>>();
@@ -119,13 +115,6 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
 
   // Data needs to be handled differently than MC  
   if (fIsData) {
-    
-    // Check that FrameShift module was applied successfully
-    art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
-    e.getByLabel(fFrameShiftModuleLabel, frameShiftHandle);
-    
-    if(!frameShiftHandle.isValid())
-      throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
 
     art::Handle<raw::TimingReferenceInfo> TimingReferenceHandle;
     e.getByLabel(fCRTTimingReferenceInfoLabel, TimingReferenceHandle);
