@@ -7,6 +7,7 @@
 process_name: PMTDecoder
 
 services: {
+  @table::sbnd_services # includes PMTCalibDB, TriggerEmulation
   TFileService : {fileName: "decoder_hist.root"}
   TriggerEmulationService: {
     service_type: TriggerEmulationService
@@ -16,7 +17,6 @@ services: {
     Baseline: 14250 #Run 1: 14250, Run 2: 14257
     MC: false
   }
-  @table::sbnd_services # includes PMTCalibDB, TriggerEmulation
 }
 
 #source is a root file

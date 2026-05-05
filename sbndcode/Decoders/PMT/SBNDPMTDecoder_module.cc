@@ -278,7 +278,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     if (!evt.getByLabel(fframeshift_module_label, frameShiftHandle))
         throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
     
-    event_trigger_time           = frameShiftHandle->FrameDefault()%uint64_t(1e9);
+    event_trigger_time           = frameShiftHandle->FrameDefault()%1'000'000'000;
     evtTimingInfo->timingType    = frameShiftHandle->TimingTypeDefault();
     evtTimingInfo->timingChannel = frameShiftHandle->TimingChannelDefault(); 
 
@@ -436,24 +436,21 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 if ((i == 15) && (foutput_ftrig_wvfm)){
                     // for the timing ch of each board, the opdetwaveform channel is equal to the board id
-                    raw::OpDetWaveform waveform(time_diff, fragid, combined_wvfm);
-                    fltwvfmVec->push_back(waveform);
+                    fltwvfmVec->emplace_back(time_diff, fragid, combined_wvfm);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
                     fltTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                 }
                 else if ((fragid == 8)){ // fyi: this hardcodes the timing caen board index
                     // for the timing caen, the opdetwaveform channel is offset (900) + chidx 
-                    raw::OpDetWaveform waveform(time_diff, ftiming_caen_offset + i, combined_wvfm);
                     if ((foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end())){
-                        timwvfmVec->push_back(waveform);
+                        timwvfmVec->emplace_back(time_diff, ftiming_caen_offset + i, combined_wvfm);
                         art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
                         timTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                     }
                 }
                 else{
                     // for normal pmt chs, the opdetwaveform channel is from the ch_map
-                    raw::OpDetWaveform waveform(time_diff, ch_map.at(fragid*15+i), combined_wvfm);
-                    pmtwvfmVec->push_back(waveform);
+                    pmtwvfmVec->emplace_back(time_diff, ch_map.at(fragid*15+i), combined_wvfm);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_pmtwvfm_ptr(pmtwvfmVec->size()-1);
                     pmtTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                 }
