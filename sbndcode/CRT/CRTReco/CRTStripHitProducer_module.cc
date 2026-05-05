@@ -58,8 +58,8 @@ private:
   art::ServiceHandle<CRTGeoService>              fCRTGeoService;
   art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
-  std::string           fFEBDataModuleLabel;
-  std::string           fFrameShiftModuleLabel;
+  art::InputTag           fFEBDataModuleLabel;
+  art::InputTag           fFrameShiftModuleLabel;
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
@@ -79,8 +79,8 @@ private:
 
 sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
-  , fFrameShiftModuleLabel(p.get<std::string>("FrameShiftModuleLabel"))
+  , fFEBDataModuleLabel(p.get<art::InputTag>("FEBDataModuleLabel"))
+  , fFrameShiftModuleLabel(p.get<art::InputTag>("FrameShiftModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))

@@ -6,7 +6,7 @@ pmtdecoder:
     debug: 0 # 0=no output, 1=standard, 2=verbose
 
     # configure CAEN inputs 
-    caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
+    caen_fragment_name: [ "daq:CAENV1730", "daq:ContainerCAENV1730" ]
     frameshift_module_label: "frameshift"
     ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # ticks, expected waveform length

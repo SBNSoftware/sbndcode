@@ -86,9 +86,8 @@ public:
 private:
     uint fdebug;
 
-    std::vector<std::string>  fcaen_fragment_name;
-    std::string               fcaen_module_label;
-    std::string               fframeshift_module_label;
+    std::vector<art::InputTag>  fcaen_fragment_name;
+    art::InputTag             fframeshift_module_label;
     
     std::vector<uint32_t>     fignore_fragid;
     uint32_t                  fnominal_length; 
@@ -135,9 +134,8 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 {
     fdebug          = p.get<uint>("debug",0);
 
-    fcaen_fragment_name = p.get<std::vector<std::string>>("caen_fragment_name");
-    fcaen_module_label  = p.get<std::string>("caen_module_label","daq");
-    fframeshift_module_label = p.get<std::string>("frameshift_module_label");
+    fcaen_fragment_name = p.get<std::vector<art::InputTag>>("caen_fragment_name");
+    fframeshift_module_label = p.get<art::InputTag>("frameshift_module_label");
 
     fignore_fragid = p.get<std::vector<uint32_t>>("ignore_fragid",{});
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
@@ -216,9 +214,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
     bool found_caen = false;
     // get CAEN fragments 
-    for (const std::string &caen_name : fcaen_fragment_name){
+    for (const art::InputTag &caen_name : fcaen_fragment_name){
         art::Handle<std::vector<artdaq::Fragment>> fragmentHandle;
-        evt.getByLabel(fcaen_module_label, caen_name, fragmentHandle);
+        evt.getByLabel(caen_name, fragmentHandle);
 
         if (!fragmentHandle.isValid() || fragmentHandle->size() == 0){
             if (fdebug>0) std::cout << "No CAEN V1730 fragments with label " << caen_name << " found." << std::endl;

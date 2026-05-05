@@ -7,8 +7,7 @@ xarapucadecoder:
 
     # INPUT configuration:
     # - CAEN Fragments.
-    caen_module_label: "daq"                                    # Label identifying the CAEN fragments module.
-    caen_fragment_names: [ "CAENV1740", "ContainerCAENV1740" ]  # Valid CAEN fragments for this decoder.
+    caen_fragment_names: [ "daq:CAENV1740", "daq:ContainerCAENV1740" ]  # Valid CAEN fragments for this decoder.
     # - Boards configuration.
     num_caen_boards: 4                                          # Maximum number of boards to be considered.
     fragment_id_offset: 41216                                   # Offset to be applied to the fragment IDs (0xA100).
