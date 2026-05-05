@@ -117,6 +117,34 @@ sbnd_pi0_filter:
     ]
 }
 
+# CC pi0 + anything
+sbnd_ccpi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 111 ]
+            IsCC: true
+            InTPC: true
+        }
+    ]
+}
+
+# NC pi0 + anything
+sbnd_ncpi0_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 111 ]
+            IsCC: false
+            InTPC: true
+        }
+    ]
+}
+
 # Charged or neutral kaon + anything
 sbnd_kaon_filter:
 {
