@@ -63,6 +63,15 @@ namespace sbndaq {
  */
 class sbndaq::SBNDXARAPUCADecoder : public art::EDProducer {
 public:
+
+/**
+ * @brief Constructor of the class SBNDXARAPUCADecoder. Given a fhicl::ParameterSet object it gets the configuration needed by this 
+ * art::EDProducer from the FHiCL file.
+ * @param[in] p A set of parameters containing configuration values for the decoder from the FHiCL file.
+ * @details This constructor accesses the parameters in the FHiCL configuration file and set the configuration to be run for 
+ * this module. It sets settings for CAEN fragments, board information, timing, debug and verbosity options, and creates
+ * instances of the products associated with this module: a vector of raw::OpDetWaveform objects and a raw::TimingReferenceInfo object.
+ */
   explicit SBNDXARAPUCADecoder(fhicl::ParameterSet const& p);
 
   SBNDXARAPUCADecoder(SBNDXARAPUCADecoder const&) = delete;
@@ -71,6 +80,17 @@ public:
   SBNDXARAPUCADecoder& operator=(SBNDXARAPUCADecoder&&) = delete;
 
   // Main class method.
+ /** 
+  * @brief Main function of the art::EDProducer: the produce function analyzes every event producing waveforms after the decoding.
+  * @param[in] e The event to be processed.
+  * @details It is the main function of the art::EDProducer module: it processes each event, searches for CAEN V1740 fragments, decodes 
+  * them and creates the output products.
+  * 1. It gets the raw timestamp from the artdaq::RawEventHeader product.
+  * 2. It tries to get a valid timing reference from the selected time frame (FRAMESHIFT or CAEN-only). If the selected 
+  * timing frame is not found, it tries to get the next one in the priority list.
+  * 3. It searches for CAEN V1740 fragments in the event, decodes them and creates the output products: a vector of raw::OpDetWaveform.
+  * 4. It dumps the products in the event.
+  */
   void produce(art::Event& e) override;
 
 private:
@@ -122,43 +142,275 @@ private:
   bool fdebug_extended_fragments; /**< If `true` extended fragments information is printed. */
   bool fdebug_jittering; /**< If `true` trigger jittering information is printed. */
   bool fverbose; /**< If `true` it increases verbosity of console output for detailed processing steps. */
+  
+  // Auxiliary methods.
 
-  // Main processing method.
-  void decode_fragment(uint64_t timestamp, uint64_t& first_frag_timestamp, size_t& first_frag_idx, int32_t& first_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, bool last_one, size_t& appended_samples);
+/**
+ * @brief Returns the signed difference between two timestamps (t1 - t2).
+ * @param[in] t1 The first timestamp in nanoseconds.
+ * @param[in] t2 The second timestamp in nanoseconds.
+ * @return The signed difference between the two timestamps (t1 - t2) in nanoseconds.
+ * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
+ */
+  int64_t signed_difference_UTC_timestamp(uint64_t t1, uint64_t t2);
+
+/**
+ * @brief Returns the absolute difference between two timestamps.
+ * @param[in] t1 The first timestamp in nanoseconds.
+ * @param[in] t2 The second timestamp in nanoseconds.
+ * @return The absolute difference between the two timestamps in nanoseconds.
+ * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
+ */
+  uint64_t abs_difference(uint64_t t1, uint64_t t2);
+
+/**
+ * @brief Formats a timestamp in nanoseconds into a easily readable string format.
+ * @param[in] timestamp The timestamp in nanoseconds to be formatted.
+ * @return A string representation of the timestamp in the format "(seconds)nanoseconds ns".
+ * @details The function divides the input timestamp by 1,000,000,000 to obtain the seconds component and uses the modulus operator to get the remaining nanoseconds.
+ */
+  std::string print_timestamp(uint64_t timestamp);
   
   // Timing.
+
+/**
+  * @brief This function shifts the initial and end timestamps of a waveform based on the provided timing information.
+  * 
+  * @param[in] TTT_ticks The trigger time tag in ticks from the CAEN V1740 header.
+  * @param[in] TTT_end_ns The end time of the Trigger Time Tag (TTT) in nanoseconds.
+  * @param[in] frag_timestamp The timestamp of the fragment in nanoseconds.
+  * @param[in] timestamp The reference timestamp (from FRAMESHIFT or CAEN-only) in nanoseconds.
+  * @param[in] num_samples_per_wvfm The number of samples per waveform.
+  * @param[out] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds (output).
+  * @param[out] end_wvfm_timestamp The end timestamp of the waveform in microseconds (output).
+  * 
+  * @details 
+  * This function calculates the initial and end timestamps for a waveform based on the provided timing information. It takes into account
+  * potential rollovers in the trigger time tag and adjusts the timestamps accordingly. The function supports different timing frames, including
+  * FRAMESHIFT and CAEN-only timing. The calculated timestamps are returned in microseconds.
+  *
+ */
   void shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp, size_t& appended_samples);
+  
+/**
+  * @brief Searches for the frameshift timestamp in the event if any frameshift product is found and returns it as a TimingReferenceInfo object.
+  * @param[in] e The event to be processed.
+  * @param[in,out] timestamp The frameshift timestamp (if found).
+  * @param[in,out] timing_type The type of the frameshift timestamp (if found).
+  * @param[in,out] timing_channel The channel of the frameshift timestamp (if found).
+  * @return A unique pointer to a TimingReferenceInfo object containing the frameshift timestamp information (if found), or nullptr if no valid frameshift product is found.
+  * @details It searches for the frameshift products in the event and looks for the default frameshift timestamp, type and channel. If any valid frameshift product is found, it returns its information as a TimingReferenceInfo object.
+ */
   std::unique_ptr<raw::TimingReferenceInfo> get_frameshift_timestamp(art::Event& e, uint64_t& timestamp);
 
   // Waveforms decoding.
+
+/**
+ * @brief Decodes the waveforms from a CAEN V1740 fragment (binary decoding stage).
+ * 
+ * @param[in] fragment The input CAEN V1740 fragment containing raw data to be decoded.
+ * @param[out] wvfms A 2D vector where the decoded waveforms will be stored. Each inner vector corresponds to a channel's waveform.
+ * @param[in] header_size The size of the event header in bytes.
+ * @param[in] num_channels The number of channels in the fragment.
+ * @param[in] num_samples_per_wvfm The number of samples per waveform for each channel.
+ * @param[in] num_words_per_wvfms The total number of 32-bit words containing waveform data in the fragment.
+ * @param[in] num_samples_per_group The number of samples per group of channels (8 channels per group).
+ * 
+ * @details This function reads raw 32-bit words from the fragment, storing them in a buffer, and extracts 12-bit samples. 
+ * It assigns each sample to the appropriate channel and sample index based on its position in the sequence. The decoding process includes:
+ * - Initializing a buffer to hold incoming data and tracking the number of bits currently stored.
+ * - Iterating over each 32-bit word in the waveform data section of the fragment, adding it to the buffer.
+ * - Extracting 12-bit samples from the buffer as long as there are enough bits available, and assigning them to their respective channels and sample indices using calculated formulas.
+ * The function ensures that all samples are correctly mapped to their channels, taking into account the grouping of channels and the interleaving of samples.
+ * @note The function assumes that the input fragment is valid and contains the expected structure for a CAEN V1740 device.
+ * @see SBN Document 38475-v1 for more details on the binary decoding.
+ */
   void decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group);
+
+/**
+ * @brief Extract a sample from a 64-bit buffer using the specified bit positions.
+ *
+ * @param[in] buffer An unsigned 64-bit integer which represents a temporal buffer for the read words and where the samples are extracted from. 
+ * @param[in] msb An unsigned 32-bit integer representing the most significative bit (MSB) where the readout from the buffer paramter.
+ * @param[in] lsb An unsigned 32-bit integer representing the less significative bit (LSB) from we end read
+ *
+ * @details The function shifts the buffer to the right by the number of positions specified by `lsb` so that the least significant bit of the 
+ * sample aligns with bit 0. It then applies a mask to isolate the bits between `lsb` and `msb`, inclusive.
+ *
+ * @return The extracted sample as a 16-bit unsigned integer.
+ */
   uint16_t get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb);
+
+/**
+ * @brief Read a 32-bit word from the data pointer and advances the pointer. 
+ *
+ * @param[in, out] data_ptr A reference to a pointer pointing to the current position in the data.
+ *
+ * @details This function retrieves a 32-bit word from the memory location pointed to by `data_ptr`. After reading, it advances `data_ptr` to 
+ * the next 32-bit word location.
+ *
+ * @return The 32-bit word read from the location pointed to by `data_ptr`.
+ */
   uint32_t read_word(const uint32_t* & data_ptr);
+
+/**
+ * @brief Generates a unique global channel identifier using the board slot and the channel number of that board.
+ *
+ * @param[in] board Index of the board in `fboard_id_list` from which to derive the board slot.
+ * @param[in] board_channel The specific channel number on the given board.
+ *
+ * @details This function computes a `channel_id` by combining the board slot and the specific 
+ * channel number on that board. 
+ * The unique identifier `channel_id` (\f$ CH_{ID} $\f) is computed as follows:
+ * \f[
+ * CH\_{ID} = B\_{ID} \times 100 + CH\_{B}
+ * \f]
+ *
+ * Where:
+ * - \f$ B\_{ID} \f$ is the fragment ID retrieved from `fboard_id_list` based on the slot.
+ * - \f$ CH\_B \f$ is the channel number on that board.
+ *
+ * @return A unique identifier for the specified channel as an unsigned integer.
+ */
   unsigned int get_channel_id(unsigned int board, unsigned int board_channel);
 
   // Combines decoded waveforms.
+
+/**
+ * @brief Combines the waveforms from the current fragment with the previously stored waveforms.
+ * @param[in,out] wvfms A 2D vector containing the (combined if it was needed before) waveforms.
+ * @param[in] fragment_wvfms A 2D vector containing the waveforms from the current fragment to be combined.
+ * @param[in] num_channels The number of channels per board.
+ *
+ * @details
+ * The function performs the following steps:
+ * 1. Checks if the `wvfms` vector is empty. If it is, it resizes it to accommodate `num_channels` channels.
+ * 2. Iterates over each channel from 0 to `num_channels - 1`.
+ * 3. For each channel, it appends the samples from `fragment_wvfms` to the corresponding channel in `wvfms`.
+ * 
+ * This approach ensures that waveforms from multiple fragments are concatenated correctly, maintaining the order of samples for each channel.
+ * 
+ * @pre The `fragment_wvfms` vector should contain waveforms for all channels of the board being processed.
+ * @pre The `wvfms` vector should be either empty or already contain waveforms for all channels of the board being processed.
+ */
   void append_waveforms(std::vector<std::vector<uint16_t>>& wvfms, const std::vector<std::vector<uint16_t>>& fragment_wvfms, uint32_t num_channels);
 
   // Dumps and saves waveforms.
+/**
+ * @brief Dump products into a `raw::OpDetWaveform` object and into a debug histogram file.
+ * @param[in,out] prod_wvfms A reference to the vector where the produced `raw::OpDetWaveform` objects are dumped into products.
+ * @param[in,out] wvfms A 2D vector containing the (combined if needed) waveforms.
+ * @param[in,out] fragment_indices A reference to a vector keeping track of the number of fragments decoded per board.
+ * @param[in] board_idx The board index (position in the list of boards).
+ * @param[in] num_channels The number of channels per board.
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
+ * @param[in] end_wvfm_timestamp The final timestamp of the waveform in microseconds.
+ *
+ * @details
+ * The function performs the following steps:
+ * 1. Determines the number of debug waveforms to be stored based on the configuration parameter `fstore_debug_waveforms`.
+ *    - If `fstore_debug_waveforms` is set to -1, all channels are considered for debug storage.
+ *    - Otherwise, it takes the minimum between `num_channels` and `fstore_debug_waveforms`.
+ * 2. Iterates over each channel up to the determined number of debug waveforms:
+ *    - Calls `save_prod_wvfm` to convert and store the waveform in the products.
+ *    - Calls `save_debug_wvfm` to save the waveform as a histogram for debugging purposes.
+ * 3. For any remaining channels beyond the debug limit, it only calls `save_prod_wvfm` to store the waveform in the products.
+ * 4. Clears the `wvfms` vector to free up memory after processing.
+ * 
+ * @pre ini_wvfm_timestamp and end_wvfm_timestamp is assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
+ * @pre The `wvfms` vector should contain waveforms for all channels of the board specified by `board_idx`.
+ * @pre The `fragment_indices` vector should have been initialized with a size equal to the number of boards being processed.
+ * @pre The `prod_wvfms` vector should be ready to accept new `raw::OpDetWaveform` objects.
+ *
+ * @see raw::OpDetWaveform
+ * @see save_prod_wvfm
+ * @see save_debug_wvfm
+ */
   void dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, size_t first_frag_idx, size_t board_index, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp);
+
+/**
+ * @brief Converts a production waveform from raw ADC data into a `raw::OpDetWaveform` object,
+ * assigning it a global channel ID and timestamp, and appends it to the output collection.
+ *
+ * @param[in] b The board index (position in the list of boards).
+ * @param[in] ch The channel index (channel number from which the waveform is extracted).
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
+ * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
+ * and each element of the inner vector represents a sample (ADC count).
+ * @param[out] prod_wvfms A reference to the vector where the produced `raw::OpDetWaveform` objects
+ * will be stored.
+ *
+ * @details
+ * The function performs the following steps:
+ * 1. Determines the global channel ID for the specified board and channel using `get_channel_id`.
+ * 2. Creates a `raw::OpDetWaveform` object with the initial timestamp, global channel ID, and waveform data.
+ * 3. Appends the `raw::OpDetWaveform` object to the provided `prod_wvfms` collection.
+ * 
+ * @pre ini_wvfm_timestamp is assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
+ *
+ * @see raw::OpDetWaveform
+ */
   void save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
+
+/**
+ * @brief Saves debug waveform as a histogram for debugging purposes, based on the waveform data provided. 
+ * The histogram is labeled with event number, fragment, board slot ID and channel information.
+ *
+ * @param[in] board_idx The board index (position in the list of boards).
+ * @param[in] fragment_idx The fragment index (order in decoding).
+ * @param[in] ch The channel index (channel number from which the waveform is extracted).
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform.
+ * @param[in] end_wvfm_timestamp The final timestamp of the waveform.
+ * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
+ * and each element of the inner vector represents a sample (ADC count).
+ *
+ * @details
+ * The function generates a histogram with:
+ * - X-axis representing time in microseconds if the timing frame is from the FRAMESHIFT reference, otherwise in samples.
+ * - Y-axis representing ADC counts.
+ * The histogram is stored using ROOT's `TFileService`.
+ * 
+ * @pre ini_wvfm_timestamp and end_wvfm_timestamp are assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
+ *
+ * @see TH1I, TFileService
+ */
   void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms);
   
-  // Auxiliary methods.
-  int64_t signed_difference_UTC_timestamp(uint64_t t1, uint64_t t2);
-  uint64_t abs_difference(uint64_t t1, uint64_t t2);
-  std::string print_timestamp(uint64_t timestamp);
+  // Main processing method.
+
+/**
+ * @brief Decodes a CAEN V1740 fragment, extracts the waveforms and combines them into the output product.
+ * @param[in] timestamp The valid timestamp used as reference for the event.
+ * @param[in,out] first_frag_timestamp The nominal timestamp calculated for the fragment being processed.
+ * @param[in, out] first_frag_idx The first index of the fragments being combined.
+ * @param[in,out] first_TTT The nominal Trigger Time Tag (TTT) calculated for the fragment being processed.
+ * @param[in,out] fragment_indices A vector containing the indices of the fragments already processed for each board.
+ * @param[in] fragment The artdaq::Fragment object to be processed.
+ * @param[in,out] prod_wvfms The vector of raw::OpDetWaveform objects to be filled with the decoded waveforms.
+ * @param[in,out] wvfms A 2D vector containing the waveforms for all channels and boards decoded so far.
+ * @param[in] last_one A boolean flag indicating if the fragment being processed is the last one in the event.
+
+ * @details This method decodes a CAEN V1740 fragment, extracts the waveforms for each channel, shifts them in time according to the
+ * timing reference and combines them into the output product.
+ *    1. It checks if the fragment ID corresponds to a valid board.
+ *    2. It accesses the metadata and header of the fragment to get information about the number of channels, samples, words, etc.
+ *    3. It calculates the number of samples per waveform and checks if it is a nominal or extended fragment.
+ *    4. It decodes the waveforms for each channel in the fragment.
+ *    5. It shifts the waveforms in time according to the timing reference.
+ *    6. It combines the decoded waveforms into the output product.
+ *    7. It dumps the waveforms if required.
+ * 
+ * @pre The art::Event object containing the fragment has been processed to get a valid timing reference.
+ * @post The vector of raw::OpDetWaveform objects is filled with the decoded waveforms from the fragment.
+ * @see shift_time
+ * @see decode_waveforms
+ * @see append_waveforms
+ * @see dump_waveforms
+ */
+  void decode_fragment(uint64_t timestamp, uint64_t& first_frag_timestamp, size_t& first_frag_idx, int32_t& first_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, bool last_one, size_t& appended_samples);
 
 };
 
-/**
- * @brief Constructor of the class SBNDXARAPUCADecoder. Given a fhicl::ParameterSet object it gets the configuration needed by this 
- * art::EDProducer from the FHiCL file.
- * @param[in] p A set of parameters containing configuration values for the decoder from the FHiCL file.
- * @details This constructor accesses the parameters in the FHiCL configuration file and set the configuration to be run for 
- * this module. It sets settings for CAEN fragments, board information, timing, debug and verbosity options, and creates
- * instances of the products associated with this module: a vector of raw::OpDetWaveform objects and a raw::TimingReferenceInfo object.
- */
 sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
 : EDProducer{p}
 {
@@ -206,17 +458,6 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   produces <raw::TimingReferenceInfo> (ftiming_ref_instance_name);
 }
 
- /** 
-  * @brief Main function of the art::EDProducer: the produce function analyzes every event producing waveforms after the decoding.
-  * @param[in] e The event to be processed.
-  * @details It is the main function of the art::EDProducer module: it processes each event, searches for CAEN V1740 fragments, decodes 
-  * them and creates the output products.
-  * 1. It gets the raw timestamp from the artdaq::RawEventHeader product.
-  * 2. It tries to get a valid timing reference from the selected time frame (FRAMESHIFT or CAEN-only). If the selected 
-  * timing frame is not found, it tries to get the next one in the priority list.
-  * 3. It searches for CAEN V1740 fragments in the event, decodes them and creates the output products: a vector of raw::OpDetWaveform.
-  * 4. It dumps the products in the event.
-  */
 void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
   if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: entering the produce function." << std::endl;
 
@@ -233,7 +474,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
   uint64_t timestamp = 0;           
   
   // ============= FRAMESHIFT TIMING ============ //
-  if (auto fs_timing_ref_info = get_frameshift_timestamp(e, timestamp)) {
+  if (auto const fs_timing_ref_info = get_frameshift_timestamp(e, timestamp)) {
     *prod_event_timing_ref_info = *fs_timing_ref_info;
     factive_timing_frame = FRAMESHIFT_TIMING;
     if (fverbose | fdebug_frameshift_handle) {
@@ -298,7 +539,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
             
             for (size_t f = 0; f < num_caen_fragments; f++) {
               const artdaq::Fragment fragment = *container_fragment[f].get();
-              last_one = f == (num_caen_fragments - 1);
+              last_one = (f == (num_caen_fragments - 1));
               decode_fragment(timestamp, first_frag_timestamp, first_frag_idx, first_TTT, prev_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one, appended_samples);
             } // End CAEN V1740 fragments loop.
           }
@@ -334,36 +575,6 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
 }
 
 // ===============  Main fragment processing method ===============  //
-
-/**
- * @brief Decodes a CAEN V1740 fragment, extracts the waveforms and combines them into the output product.
- * @param[in] timestamp The valid timestamp used as reference for the event.
- * @param[in,out] first_frag_timestamp The nominal timestamp calculated for the fragment being processed.
- * @param[in, out] first_frag_idx The first index of the fragments being combined.
- * @param[in,out] first_TTT The nominal Trigger Time Tag (TTT) calculated for the fragment being processed.
- * @param[in,out] fragment_indices A vector containing the indices of the fragments already processed for each board.
- * @param[in] fragment The artdaq::Fragment object to be processed.
- * @param[in,out] prod_wvfms The vector of raw::OpDetWaveform objects to be filled with the decoded waveforms.
- * @param[in,out] wvfms A 2D vector containing the waveforms for all channels and boards decoded so far.
- * @param[in] last_one A boolean flag indicating if the fragment being processed is the last one in the event.
-
- * @details This method decodes a CAEN V1740 fragment, extracts the waveforms for each channel, shifts them in time according to the
- * timing reference and combines them into the output product.
- *    1. It checks if the fragment ID corresponds to a valid board.
- *    2. It accesses the metadata and header of the fragment to get information about the number of channels, samples, words, etc.
- *    3. It calculates the number of samples per waveform and checks if it is a nominal or extended fragment.
- *    4. It decodes the waveforms for each channel in the fragment.
- *    5. It shifts the waveforms in time according to the timing reference.
- *    6. It combines the decoded waveforms into the output product.
- *    7. It dumps the waveforms if required.
- * 
- * @pre The art::Event object containing the fragment has been processed to get a valid timing reference.
- * @post The vector of raw::OpDetWaveform objects is filled with the decoded waveforms from the fragment.
- * @see shift_time
- * @see decode_waveforms
- * @see append_waveforms
- * @see dump_waveforms
- */
 
 void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& first_frag_timestamp, size_t& first_frag_idx, int32_t& first_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms, bool last_one, size_t& appended_samples) {
   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
@@ -532,23 +743,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
 
 // ===============  Timing functions =============== //
 
-/**
-  * @brief This function shifts the initial and end timestamps of a waveform based on the provided timing information.
-  * 
-  * @param[in] TTT_ticks The trigger time tag in ticks from the CAEN V1740 header.
-  * @param[in] TTT_end_ns The end time of the Trigger Time Tag (TTT) in nanoseconds.
-  * @param[in] frag_timestamp The timestamp of the fragment in nanoseconds.
-  * @param[in] timestamp The reference timestamp (from FRAMESHIFT or CAEN-only) in nanoseconds.
-  * @param[in] num_samples_per_wvfm The number of samples per waveform.
-  * @param[out] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds (output).
-  * @param[out] end_wvfm_timestamp The end timestamp of the waveform in microseconds (output).
-  * 
-  * @details 
-  * This function calculates the initial and end timestamps for a waveform based on the provided timing information. It takes into account
-  * potential rollovers in the trigger time tag and adjusts the timestamps accordingly. The function supports different timing frames, including
-  * FRAMESHIFT and CAEN-only timing. The calculated timestamps are returned in microseconds.
-  *
- */
 void sbndaq::SBNDXARAPUCADecoder::shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp, size_t& appended_samples) {
   
   int64_t pulse_duration_ns = num_samples_per_wvfm * fns_per_sample; // ns.
@@ -607,15 +801,6 @@ void sbndaq::SBNDXARAPUCADecoder::shift_time(uint64_t TTT_ticks, int64_t TTT_end
   }
 }
 
-/**
-  * @brief Searches for the frameshift timestamp in the event if any frameshift product is found and returns it as a TimingReferenceInfo object.
-  * @param[in] e The event to be processed.
-  * @param[in,out] timestamp The frameshift timestamp (if found).
-  * @param[in,out] timing_type The type of the frameshift timestamp (if found).
-  * @param[in,out] timing_channel The channel of the frameshift timestamp (if found).
-  * @return A unique pointer to a TimingReferenceInfo object containing the frameshift timestamp information (if found), or nullptr if no valid frameshift product is found.
-  * @details It searches for the frameshift products in the event and looks for the default frameshift timestamp, type and channel. If any valid frameshift product is found, it returns its information as a TimingReferenceInfo object.
- */
 std::unique_ptr<raw::TimingReferenceInfo> sbndaq::SBNDXARAPUCADecoder::get_frameshift_timestamp(art::Event& e, uint64_t& timestamp) {
   std::unique_ptr<raw::TimingReferenceInfo> fs_timing_ref_info = nullptr;
 
@@ -645,26 +830,6 @@ std::unique_ptr<raw::TimingReferenceInfo> sbndaq::SBNDXARAPUCADecoder::get_frame
 
 // ===============  Decodes the waveforms =============== //
 
-/**
- * @brief Decodes the waveforms from a CAEN V1740 fragment (binary decoding stage).
- * 
- * @param[in] fragment The input CAEN V1740 fragment containing raw data to be decoded.
- * @param[out] wvfms A 2D vector where the decoded waveforms will be stored. Each inner vector corresponds to a channel's waveform.
- * @param[in] header_size The size of the event header in bytes.
- * @param[in] num_channels The number of channels in the fragment.
- * @param[in] num_samples_per_wvfm The number of samples per waveform for each channel.
- * @param[in] num_words_per_wvfms The total number of 32-bit words containing waveform data in the fragment.
- * @param[in] num_samples_per_group The number of samples per group of channels (8 channels per group).
- * 
- * @details This function reads raw 32-bit words from the fragment, storing them in a buffer, and extracts 12-bit samples. 
- * It assigns each sample to the appropriate channel and sample index based on its position in the sequence. The decoding process includes:
- * - Initializing a buffer to hold incoming data and tracking the number of bits currently stored.
- * - Iterating over each 32-bit word in the waveform data section of the fragment, adding it to the buffer.
- * - Extracting 12-bit samples from the buffer as long as there are enough bits available, and assigning them to their respective channels and sample indices using calculated formulas.
- * The function ensures that all samples are correctly mapped to their channels, taking into account the grouping of channels and the interleaving of samples.
- * @note The function assumes that the input fragment is valid and contains the expected structure for a CAEN V1740 device.
- * @see SBN Document 38475-v1 for more details on the binary decoding.
- */
 void sbndaq::SBNDXARAPUCADecoder::decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group) {
   // ===============  Start decoding the waveforms =============== //
   if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: binary decoding of the waveforms starting... " << std::endl;
@@ -708,59 +873,18 @@ void sbndaq::SBNDXARAPUCADecoder::decode_waveforms(const artdaq::Fragment& fragm
   }
 }
 
-/**
- * @brief Extract a sample from a 64-bit buffer using the specified bit positions.
- *
- * @param[in] buffer An unsigned 64-bit integer which represents a temporal buffer for the read words and where the samples are extracted from. 
- * @param[in] msb An unsigned 32-bit integer representing the most significative bit (MSB) where the readout from the buffer paramter.
- * @param[in] lsb An unsigned 32-bit integer representing the less significative bit (LSB) from we end read
- *
- * @details The function shifts the buffer to the right by the number of positions specified by `lsb` so that the least significant bit of the 
- * sample aligns with bit 0. It then applies a mask to isolate the bits between `lsb` and `msb`, inclusive.
- *
- * @return The extracted sample as a 16-bit unsigned integer.
- */
 uint16_t sbndaq::SBNDXARAPUCADecoder::get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb) {
   uint64_t mask = (1U << (msb - lsb + 1)) - 1;
   uint64_t sample = buffer >> lsb;
   return sample & mask;
 }
 
-/**
- * @brief Read a 32-bit word from the data pointer and advances the pointer. 
- *
- * @param[in, out] data_ptr A reference to a pointer pointing to the current position in the data.
- *
- * @details This function retrieves a 32-bit word from the memory location pointed to by `data_ptr`. After reading, it advances `data_ptr` to 
- * the next 32-bit word location.
- *
- * @return The 32-bit word read from the location pointed to by `data_ptr`.
- */
 uint32_t sbndaq::SBNDXARAPUCADecoder::read_word(const uint32_t* & data_ptr) {
   uint32_t word = *data_ptr;
   data_ptr += 1;
   return word;
 }
 
-/**
- * @brief Generates a unique global channel identifier using the board slot and the channel number of that board.
- *
- * @param[in] board Index of the board in `fboard_id_list` from which to derive the board slot.
- * @param[in] board_channel The specific channel number on the given board.
- *
- * @details This function computes a `channel_id` by combining the board slot and the specific 
- * channel number on that board. 
- * The unique identifier `channel_id` (\f$ CH_{ID} $\f) is computed as follows:
- * \f[
- * CH\_{ID} = B\_{ID} \times 100 + CH\_{B}
- * \f]
- *
- * Where:
- * - \f$ B\_{ID} \f$ is the fragment ID retrieved from `fboard_id_list` based on the slot.
- * - \f$ CH\_B \f$ is the channel number on that board.
- *
- * @return A unique identifier for the specified channel as an unsigned integer.
- */
 unsigned int sbndaq::SBNDXARAPUCADecoder::get_channel_id(unsigned int board, unsigned int board_channel) {
   unsigned int channel_id = fboard_id_list[board] * 100 + board_channel;
   return channel_id;
@@ -768,23 +892,6 @@ unsigned int sbndaq::SBNDXARAPUCADecoder::get_channel_id(unsigned int board, uns
 
 // ===============  Combines the waveforms from extended fragments =============== //
 
-/**
- * @brief Combines the waveforms from the current fragment with the previously stored waveforms.
- * @param[in,out] wvfms A 2D vector containing the (combined if it was needed before) waveforms.
- * @param[in] fragment_wvfms A 2D vector containing the waveforms from the current fragment to be combined.
- * @param[in] num_channels The number of channels per board.
- *
- * @details
- * The function performs the following steps:
- * 1. Checks if the `wvfms` vector is empty. If it is, it resizes it to accommodate `num_channels` channels.
- * 2. Iterates over each channel from 0 to `num_channels - 1`.
- * 3. For each channel, it appends the samples from `fragment_wvfms` to the corresponding channel in `wvfms`.
- * 
- * This approach ensures that waveforms from multiple fragments are concatenated correctly, maintaining the order of samples for each channel.
- * 
- * @pre The `fragment_wvfms` vector should contain waveforms for all channels of the board being processed.
- * @pre The `wvfms` vector should be either empty or already contain waveforms for all channels of the board being processed.
- */
 void sbndaq::SBNDXARAPUCADecoder::append_waveforms(std::vector<std::vector<uint16_t>>& wvfms, const std::vector<std::vector<uint16_t>>& fragment_wvfms, uint32_t num_channels) {
   if (fdebug_extended_fragments) std::cout << "  > SBNDXARAPUCADecoder::append_waveforms: combining waveforms from extended fragments..." << std::endl;
   if (wvfms.empty()) {
@@ -806,36 +913,6 @@ void sbndaq::SBNDXARAPUCADecoder::append_waveforms(std::vector<std::vector<uint1
 
 // ===============  Dumps the decoded waveforms =============== //
 
-/**
- * @brief Dump products into a `raw::OpDetWaveform` object and into a debug histogram file.
- * @param[in,out] prod_wvfms A reference to the vector where the produced `raw::OpDetWaveform` objects are dumped into products.
- * @param[in,out] wvfms A 2D vector containing the (combined if needed) waveforms.
- * @param[in,out] fragment_indices A reference to a vector keeping track of the number of fragments decoded per board.
- * @param[in] board_idx The board index (position in the list of boards).
- * @param[in] num_channels The number of channels per board.
- * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
- * @param[in] end_wvfm_timestamp The final timestamp of the waveform in microseconds.
- *
- * @details
- * The function performs the following steps:
- * 1. Determines the number of debug waveforms to be stored based on the configuration parameter `fstore_debug_waveforms`.
- *    - If `fstore_debug_waveforms` is set to -1, all channels are considered for debug storage.
- *    - Otherwise, it takes the minimum between `num_channels` and `fstore_debug_waveforms`.
- * 2. Iterates over each channel up to the determined number of debug waveforms:
- *    - Calls `save_prod_wvfm` to convert and store the waveform in the products.
- *    - Calls `save_debug_wvfm` to save the waveform as a histogram for debugging purposes.
- * 3. For any remaining channels beyond the debug limit, it only calls `save_prod_wvfm` to store the waveform in the products.
- * 4. Clears the `wvfms` vector to free up memory after processing.
- * 
- * @pre ini_wvfm_timestamp and end_wvfm_timestamp is assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
- * @pre The `wvfms` vector should contain waveforms for all channels of the board specified by `board_idx`.
- * @pre The `fragment_indices` vector should have been initialized with a size equal to the number of boards being processed.
- * @pre The `prod_wvfms` vector should be ready to accept new `raw::OpDetWaveform` objects.
- *
- * @see raw::OpDetWaveform
- * @see save_prod_wvfm
- * @see save_debug_wvfm
- */
 void sbndaq::SBNDXARAPUCADecoder::dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, size_t first_frag_idx, size_t board_idx, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp) {
     
   // The decoded waveforms are dumped into two products:
@@ -866,57 +943,12 @@ void sbndaq::SBNDXARAPUCADecoder::dump_waveforms(std::vector <raw::OpDetWaveform
 
 }
 
-/**
- * @brief Converts a production waveform from raw ADC data into a `raw::OpDetWaveform` object,
- * assigning it a global channel ID and timestamp, and appends it to the output collection.
- *
- * @param[in] b The board index (position in the list of boards).
- * @param[in] ch The channel index (channel number from which the waveform is extracted).
- * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
- * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
- * and each element of the inner vector represents a sample (ADC count).
- * @param[out] prod_wvfms A reference to the vector where the produced `raw::OpDetWaveform` objects
- * will be stored.
- *
- * @details
- * The function performs the following steps:
- * 1. Determines the global channel ID for the specified board and channel using `get_channel_id`.
- * 2. Creates a `raw::OpDetWaveform` object with the initial timestamp, global channel ID, and waveform data.
- * 3. Appends the `raw::OpDetWaveform` object to the provided `prod_wvfms` collection.
- * 
- * @pre ini_wvfm_timestamp is assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
- *
- * @see raw::OpDetWaveform
- */
 void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms) {
   unsigned int channel_id = get_channel_id(board_idx, ch);
   raw::OpDetWaveform waveform(ini_wvfm_timestamp, channel_id, wvfms[ch]);
   if (fdebug_waveforms) std::cout << "Pushing waveform from board " << board_idx << " (slot " << fboard_id_list[board_idx] << ") channel " << ch << " (ch_id " << channel_id << ")" << std::endl;
   prod_wvfms.push_back(waveform);
 }
-
-/**
- * @brief Saves debug waveform as a histogram for debugging purposes, based on the waveform data provided. 
- * The histogram is labeled with event number, fragment, board slot ID and channel information.
- *
- * @param[in] board_idx The board index (position in the list of boards).
- * @param[in] fragment_idx The fragment index (order in decoding).
- * @param[in] ch The channel index (channel number from which the waveform is extracted).
- * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform.
- * @param[in] end_wvfm_timestamp The final timestamp of the waveform.
- * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
- * and each element of the inner vector represents a sample (ADC count).
- *
- * @details
- * The function generates a histogram with:
- * - X-axis representing time in microseconds if the timing frame is from the FRAMESHIFT reference, otherwise in samples.
- * - Y-axis representing ADC counts.
- * The histogram is stored using ROOT's `TFileService`.
- * 
- * @pre ini_wvfm_timestamp and end_wvfm_timestamp are assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
- *
- * @see TH1I, TFileService
- */
 
 void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms) {
   std::stringstream hist_name("");
@@ -944,13 +976,6 @@ void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragm
 
 // ==================== Auxiliary functions ====================  //
 
-/**
- * @brief Returns the signed difference between two timestamps (t1 - t2).
- * @param[in] t1 The first timestamp in nanoseconds.
- * @param[in] t2 The second timestamp in nanoseconds.
- * @return The signed difference between the two timestamps (t1 - t2) in nanoseconds.
- * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
- */
 int64_t sbndaq::SBNDXARAPUCADecoder::signed_difference_UTC_timestamp(uint64_t t1, uint64_t t2) {
   int64_t signed_diff = 0;
   
@@ -963,13 +988,6 @@ int64_t sbndaq::SBNDXARAPUCADecoder::signed_difference_UTC_timestamp(uint64_t t1
   return signed_diff;
 }
 
-/**
- * @brief Returns the absolute difference between two timestamps.
- * @param[in] t1 The first timestamp in nanoseconds.
- * @param[in] t2 The second timestamp in nanoseconds.
- * @return The absolute difference between the two timestamps in nanoseconds.
- * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
- */
 uint64_t sbndaq::SBNDXARAPUCADecoder::abs_difference(uint64_t t1, uint64_t t2) {
   uint64_t abs_diff = 0;
   
@@ -982,12 +1000,6 @@ uint64_t sbndaq::SBNDXARAPUCADecoder::abs_difference(uint64_t t1, uint64_t t2) {
   return abs_diff;
 }
 
-/**
- * @brief Formats a timestamp in nanoseconds into a easily readable string format.
- * @param[in] timestamp The timestamp in nanoseconds to be formatted.
- * @return A string representation of the timestamp in the format "(seconds)nanoseconds ns".
- * @details The function divides the input timestamp by 1,000,000,000 to obtain the seconds component and uses the modulus operator to get the remaining nanoseconds.
- */
 std::string sbndaq::SBNDXARAPUCADecoder::print_timestamp(uint64_t timestamp) {
   return "(" + std::to_string(timestamp / NANOSEC_IN_SEC) + ")" + std::to_string(timestamp % NANOSEC_IN_SEC) + " ns";
 }
