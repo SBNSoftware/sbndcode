@@ -216,18 +216,18 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff < -1 || unix_diff > 1)
         {
-          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
+          throw std::runtime_error("Unix timestamps differ by more than 1 (" + std::to_string(unix_diff) + ")");
         }
 
       t0_etrig -= etrig_time_ns;
 
       if(unix_diff == 1)
-	t0_etrig -= 1e9;
+        t0_etrig -= 1e9;
       else if(unix_diff == -1)
-	t0_etrig += 1e9;
+        t0_etrig += 1e9;
 
       if(t0_etrig < fETrigMin || t0_etrig > fETrigMax)
-	return stripHits;
+        return stripHits;
     }
 
   if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
