@@ -81,17 +81,17 @@ public:
     uint32_t get_boardid(artdaq::Fragment & frag);
     void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
-    std::vector<uint> fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db);
+    std::vector<uint16_t> fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db);
 
 private:
-    uint fdebug;
+    uint8_t fdebug;
 
     std::vector<art::InputTag>  fcaen_fragment_name;
     art::InputTag             fframeshift_module_label;
     
-    std::vector<uint32_t>     fignore_fragid;
+    std::vector<uint16_t>     fignore_fragid;
     uint32_t                  fnominal_length; 
-    uint                      fallowed_time_diff;
+    uint32_t                  fallowed_time_diff;
 
     std::string fpmt_instance_name;
     std::string fflt_instance_name;
@@ -106,23 +106,23 @@ private:
     std::vector<int> fignore_timing_ch;
 
     int fn_maxflashes;
-    uint fn_caenboards;
-    uint fn_caenpmtchannels;
-    uint ftiming_caen_offset;
+    uint8_t fn_caenboards;
+    uint8_t fn_caenpmtchannels;
+    uint16_t ftiming_caen_offset;
     uint16_t fthreshold_ftrig;
     uint16_t fdefault_postpercent; // should be a number between 0 and 100
 
-    uint ffragid_offset;
-    uint fhist_evt;
+    uint16_t ffragid_offset;
+    uint32_t fhist_evt;
 
-    std::vector<uint> fset_fragid_map;
+    std::vector<uint16_t> fset_fragid_map;
     bool fuse_set_map;
     int fmon_threshold;
 
     // histogram info  
     std::stringstream histname; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
-    uint evt_counter = 0;
+    uint32_t evt_counter = 0;
 
     sbndDB::PMTCalibrationDatabase const* fpmt_calib_db;
     opdet::sbndPDMapAlg opdetmap; //map for photon detector types
@@ -132,14 +132,14 @@ private:
 sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     : EDProducer{p}  // ,
 {
-    fdebug          = p.get<uint>("debug",0);
+    fdebug          = p.get<uint8_t>("debug",0);
 
     fcaen_fragment_name = p.get<std::vector<art::InputTag>>("caen_fragment_name");
     fframeshift_module_label = p.get<art::InputTag>("frameshift_module_label");
 
-    fignore_fragid = p.get<std::vector<uint32_t>>("ignore_fragid",{});
+    fignore_fragid = p.get<std::vector<uint16_t>>("ignore_fragid",{});
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
-    fallowed_time_diff = p.get<uint>("allowed_time_diff",3000); // us!!! 
+    fallowed_time_diff = p.get<uint32_t>("allowed_time_diff",3000); // us!!! 
 
     // configure output labels 
     fpmt_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
@@ -154,15 +154,15 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fignore_timing_ch = p.get<std::vector<int>>("ignore_timing_ch",{});
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
-    fn_caenboards    = p.get<uint>("n_caenboards",8);
-    fn_caenpmtchannels  = p.get<uint>("n_caenpmtchannels",15);
-    ftiming_caen_offset = p.get<uint>("timing_caen_offset",900);
+    fn_caenboards    = p.get<uint8_t>("n_caenboards",8);
+    fn_caenpmtchannels  = p.get<uint8_t>("n_caenpmtchannels",15);
+    ftiming_caen_offset = p.get<uint16_t>("timing_caen_offset",900);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     fdefault_postpercent = p.get<uint16_t>("default_postpercent",80);
-    ffragid_offset   = p.get<uint>("fragid_offset",40960);
-    fhist_evt        = p.get<int>("hist_evt",1);
+    ffragid_offset   = p.get<uint16_t>("fragid_offset",40960);
+    fhist_evt        = p.get<uint32_t>("hist_evt",1);
 
-    fset_fragid_map = p.get<std::vector<uint>>("set_fragid_map",{});
+    fset_fragid_map = p.get<std::vector<uint16_t>>("set_fragid_map",{});
     fuse_set_map    = p.get<bool>("use_set_map",false);
 
     fpmt_calib_db    = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
@@ -208,7 +208,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
-    std::vector<uint> ch_map = fill_chmap(fpmt_calib_db);
+    std::vector<uint16_t> ch_map = fill_chmap(fpmt_calib_db);
 
     uint ncont = 0; // counter for number of containers
 
@@ -673,8 +673,8 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
     return boardid;
 }
 
-std::vector<uint> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
-    std::vector<uint> ch_map(fn_caenboards*fn_caenpmtchannels,9999);
+std::vector<uint16_t> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
+    std::vector<uint16_t> ch_map(fn_caenboards*fn_caenpmtchannels,9999);
     if (pmt_calib_db==nullptr){
         throw std::runtime_error("PMT Calibration Database pointer is null.");
     }
