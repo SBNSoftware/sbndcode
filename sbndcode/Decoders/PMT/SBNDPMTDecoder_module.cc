@@ -81,7 +81,7 @@ public:
     uint32_t get_boardid(artdaq::Fragment & frag);
     void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
-    std::vector<uint16_t> fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db);
+    std::vector<uint16_t> make_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db) const;
 
 private:
     uint8_t fdebug;
@@ -208,7 +208,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
-    std::vector<uint16_t> ch_map = fill_chmap(fpmt_calib_db);
+    std::vector<uint16_t> ch_map = make_chmap(fpmt_calib_db);
 
     uint ncont = 0; // counter for number of containers
 
@@ -670,7 +670,7 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
     return boardid;
 }
 
-std::vector<uint16_t> sbndaq::SBNDPMTDecoder::fill_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db){
+std::vector<uint16_t> sbndaq::SBNDPMTDecoder::make_chmap(sbndDB::PMTCalibrationDatabase const* pmt_calib_db) const {
     std::vector<uint16_t> ch_map(fn_caenboards*fn_caenpmtchannels,9999);
     if (pmt_calib_db==nullptr){
         throw std::runtime_error("PMT Calibration Database pointer is null.");
