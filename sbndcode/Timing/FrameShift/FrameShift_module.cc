@@ -43,6 +43,14 @@ namespace sbnd::timing {
 
 class sbnd::timing::FrameShift : public art::EDProducer {
 public:
+  /**
+   * @brief Constructor for the FrameShift art::EDProducer module.
+   * @param[in] p The FHiCL parameter set containing all configuration values for this module.
+   * @details Reads all FHiCL configuration parameters, including DAQ header module/instance
+   * labels, PTB and TDC decode labels, all HLT codes for each trigger stream (Beam, Offbeam,
+   * Xmuon), calibration shifts between TDC and PTB timing references, and debug/output options.
+   * Declares FrameShiftInfo and TimingInfo as output data products.
+   */
   explicit FrameShift(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
@@ -54,22 +62,128 @@ public:
   FrameShift& operator=(FrameShift&&) = delete;
 
   // Required functions.
+  /**
+   * @brief Main per-event processing function.
+   * @param[in,out] e The art::Event being processed.
+   * @details For each event this function:
+   * 1. Resets all per-event variables.
+   * 2. Retrieves the raw DAQ header timestamp.
+   * 3. Retrieves and unpacks PTB HLT trigger words and timestamps.
+   * 4. Retrieves SPECTDC timestamps for all relevant channels.
+   * 5. Identifies the ETRIG timestamps from TDC channel 4 and the PTB HLTs.
+   * 6. Selects a global ETRIG reference (TDC > PTB > raw header).
+   * 7. Picks the TDC and PTB timestamps closest to the global ETRIG reference.
+   * 8. Computes frame shift values for the CRT T1, beam gate, and event trigger frames.
+   * 9. Selects the default frame for the trigger stream (gate for Beam/Offbeam, ETRIG for Xmuon).
+   * 10. Produces a FrameShiftInfo and TimingInfo object and puts them in the event.
+   */
   void produce(art::Event& e) override;
 
   // Selected optional functions.
+  /**
+   * @brief Called once before event processing begins; creates the output TTree and registers
+   * all branches if fMakeTree is true.
+   * @details Branches cover run/subrun/event identifiers, raw per-channel TDC timestamp
+   * vectors, the selected per-event TDC and PTB timestamps, and the three computed frame
+   * shift values (CRT T1, gate, ETRIG) together with their timing type and channel metadata.
+   */
   void beginJob() override;
+  /**
+   * @brief Resets all per-event member variables to their default or invalid sentinel values.
+   * @details Sets run/subrun/event to -1, clears all TDC and PTB timestamp vectors, resets
+   * all selected timestamps to kInvalidTimestamp, resets the stream flags (_isBeam,
+   * _isOffbeam, _isXmuon) to false, and initialises all frame shift values together with
+   * their timing type and channel metadata to their respective kInvalid* sentinels.
+   * Called at the beginning of every produce() call.
+   */
   void ResetEventVars();
 
+  /**
+   * @brief Returns the timestamp from a vector that is closest to a reference timestamp.
+   * @param[in] timestamps Vector of timestamps to search through (in nanoseconds).
+   * @param[in] reference The reference timestamp to compare against (in nanoseconds).
+   * @return The timestamp with the smallest absolute difference to @p reference,
+   *         or kInvalidTimestamp if the vector is empty.
+   */
   uint64_t FindClosest(const std::vector<uint64_t> &timestamps, const uint64_t &reference);
+  /**
+   * @brief Formats a 64-bit nanosecond timestamp into a human-readable string.
+   * @param[in] timestamp The timestamp in nanoseconds.
+   * @return A string of the form "(s) = X, (ns) = Y" where X is the whole-second component
+   *         and Y is the sub-second nanosecond remainder.
+   */
   std::string PrintFormatTimestamp(const uint64_t &timestamp);
 
+  /**
+   * @brief Reads the artdaq RawEventHeader from the event and stores the corrected timestamp.
+   * @param[in] e The art::Event to read from.
+   * @details Retrieves the artdaq::detail::RawEventHeader using fDAQHeaderModuleLabel and
+   * fDAQHeaderInstanceLabel, then subtracts fRawTSCorrection to account for the NTB offset,
+   * storing the result in _raw_ts. Throws a cet::exception if the handle is not valid.
+   */
   void GetRawTimestamp(const art::Event &e);
+  /**
+   * @brief Reads decoded SPECTDC DAQTimestamp objects from the event and sorts them by channel.
+   * @param[in] e The art::Event to read from.
+   * @details Retrieves std::vector<DAQTimestamp> using fTdcDecodeLabel and appends each
+   * timestamp to the appropriate per-channel vector:
+   * - Channel 0: CRT T1 reset (_tdc_ch0)
+   * - Channel 1: BES (_tdc_ch1)
+   * - Channel 2: RWM (_tdc_ch2)
+   * - Channel 4: Event trigger (_tdc_ch4)
+   * Logs a non-fatal info message if no timestamps are found.
+   */
   void GetTDCTimestamps(const art::Event &e);
+  /**
+   * @brief Reads decoded PTB HLT words from the event and unpacks per-bit trigger timestamps.
+   * @param[in] e The art::Event to read from.
+   * @details Retrieves std::vector<raw::ptb::sbndptb> using fPtbDecodeLabel. For each HLT
+   * trigger word the bitmask is unpacked so that every set bit becomes a separate entry in
+   * _ptb_hlt_trunmask and _ptb_hlt_unmask_timestamp, enabling per-HLT-code lookup later.
+   * HLT timestamps are converted from PTB clock ticks to nanoseconds (multiplied by 20).
+   * Throws a cet::exception if the handle is not valid or empty.
+   */
   void GetPTBTimestamps(const art::Event &e);
+  /**
+   * @brief Identifies the ETRIG timestamps from TDC channel 4 and PTB HLT words closest to
+   * the raw DAQ header timestamp.
+   * @details Uses the already-populated _tdc_ch4 and _ptb_hlt_unmask_timestamp collections.
+   * - Selects the TDC ETRIG timestamp closest to _raw_ts via FindClosest.
+   * - Collects all PTB HLT entries whose code appears in fPtbEtrigHlts, then selects the one
+   *   closest to _raw_ts, storing the result in _hlt_etrig and _hlt_etrig_ts.
+   * Throws a cet::exception if either TDC or PTB ETRIG timestamps are missing.
+   */
   void FindETRIGs();
 
+  /**
+   * @brief Selects the global ETRIG reference timestamp with priority:
+   *        TDC ETRIG > PTB HLT ETRIG > raw DAQ header timestamp.
+   * @return The chosen global ETRIG reference timestamp in nanoseconds.
+   * @details This timestamp is used as the anchor for selecting the closest individual TDC
+   * channel and PTB HLT timestamps in DecideRelevantTDCTimestamps and
+   * DecideRelevantPTBTimestamps.
+   */
   uint64_t DecideGlobalEtrigTimestamp();
+  /**
+   * @brief For each active TDC channel, selects the timestamp closest to the global ETRIG reference.
+   * @param[in] global_etrig_ts The global ETRIG reference timestamp in nanoseconds.
+   * @details Searches _tdc_ch0 (CRT T1), _tdc_ch1 (BES), and _tdc_ch2 (RWM) for the closest
+   * timestamp to @p global_etrig_ts via FindClosest, storing results in _tdc_crtt1_ts,
+   * _tdc_bes_ts, and _tdc_rwm_ts respectively. Channels with no recorded timestamps are left
+   * at kInvalidTimestamp.
+   */
   void DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts);
+  /**
+   * @brief Identifies the trigger stream and retrieves the corresponding gate and CRT T1
+   * HLT timestamps from the PTB record.
+   * @param[in] global_etrig_ts The global ETRIG reference timestamp in nanoseconds
+   *            (used for API symmetry with DecideRelevantTDCTimestamps).
+   * @details Matches _hlt_etrig against fBeamEtrigHlt, fOffbeamEtrigHlt, and fXmuonEtrigHlt
+   * in that order to set _isBeam, _isOffbeam, or _isXmuon and assign the appropriate
+   * _hlt_gate and _hlt_crtt1 codes. Then scans _ptb_hlt_trunmask to find matching gate and
+   * CRT T1 entries and fills _hlt_gate_ts and _hlt_crtt1_ts.
+   * Throws a cet::exception if the ETRIG HLT code does not match any known stream.
+   */
   void DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts);
 
 private:
