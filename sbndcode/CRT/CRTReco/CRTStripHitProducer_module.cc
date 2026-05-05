@@ -132,10 +132,10 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
       timingReferenceInfo->timingChannel = frameShiftHandle->TimingChannelDefault();
 
       if(timingReferenceInfo->timingType == sbnd::timing::kNoShiftType)
-	{
-	  std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
-          ref_time_s = unix_set.size() ? *unix_set.rbegin(): 0;
-	}
+      {
+        std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
+        ref_time_s = unix_set.size() ? *unix_set.rbegin(): 0;
+      }
 
       uint64_t etrig_time = frameShiftHandle->FrameEtrig();
 

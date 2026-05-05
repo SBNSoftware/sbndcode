@@ -626,7 +626,6 @@ std::unique_ptr<raw::TimingReferenceInfo> sbndaq::SBNDXARAPUCADecoder::get_frame
   if (fverbose || fdebug_frameshift_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_frameshift_timestamp: Frameshift timing frame selected. Searching for Frameshift products..." << std::endl;
   
   if (e.getByLabel(fframeshift_product_name, frameshiftHandle)) {
-  //if (frameshiftHandle.isValid()) {
     
     uint16_t timing_type    = frameshiftHandle->TimingTypeDefault();
     uint16_t timing_channel = frameshiftHandle->TimingChannelDefault();
