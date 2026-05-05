@@ -677,12 +677,11 @@ std::vector<uint16_t> sbndaq::SBNDPMTDecoder::make_chmap(sbndDB::PMTCalibrationD
     }
     auto nopdets = opdetmap.size();
     for (size_t idet=0; idet<nopdets; idet++){
-        std::string pd_type = opdetmap.pdType(idet);
-        if (pd_type.find("pmt") == std::string::npos) continue;
+        if (opdetmap.pdType(idet).find("pmt") == std::string::npos) continue;
         // the boards in the database are 1-indexed, need to convert to 0-indexed
         int board = pmt_calib_db->getCAENDigitizer(idet) - 1;
         int channel = pmt_calib_db->getCAENDigitizerChannel(idet);
-        ch_map[board*15 + channel] = idet;
+        ch_map.at(board*15 + channel) = idet;
     }
     return ch_map;
 }
