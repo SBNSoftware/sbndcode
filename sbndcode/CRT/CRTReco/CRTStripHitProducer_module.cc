@@ -120,9 +120,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   if(fReferenceTs0)
     {
       art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
-      e.getByLabel(fFrameShiftModuleLabel, frameShiftHandle);
-
-      if(!frameShiftHandle.isValid())
+      if (!e.getByLabel(fFrameShiftModuleLabel, frameShiftHandle))
         throw std::runtime_error("Frame Shift Info object is invalid, check data quality");
 
       uint64_t ref_time = frameShiftHandle->FrameDefault();
