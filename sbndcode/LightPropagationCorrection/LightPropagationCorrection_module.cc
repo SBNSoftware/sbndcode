@@ -26,9 +26,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
 {
     fNOpChannels = fWireReadout.NOpChannels();
     // Initialize the TimeCorrectionVector PerChannel
-    for(size_t i = 0; i <fNOpChannels; ++i) {
-        fTimeCorrectionPerChannel.push_back(0.0); // Initialize with zero or any default value
-    }
+    fTimeCorrectionPerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
 
     for(unsigned int opch=0; opch<fNOpChannels; opch++){
         auto pdCenter = fWireReadout.OpDetGeoFromOpChannel(opch).GetCenter();
@@ -395,7 +393,7 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fSpacePointY.clear();
     fSpacePointZ.clear();
     fSpacePointIntegral.clear();
-    fTimeCorrectionPerChannel.resize(fNOpChannels, 0.0); // Reset the time correction vector for each channel
+    fTimeCorrectionPerChannel.assign(fNOpChannels, 0.0); // Reset the time correction vector for each channel
     fChargeBarycenterX.assign(2, 0.0);
     fChargeBarycenterY.assign(2, 0.0);
     fChargeBarycenterZ.assign(2, 0.0);
