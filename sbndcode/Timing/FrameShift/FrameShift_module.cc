@@ -172,7 +172,7 @@ public:
    * _tdc_bes_ts, and _tdc_rwm_ts respectively. Channels with no recorded timestamps are left
    * at kInvalidTimestamp.
    */
-  void DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts);
+  void DecideRelevantTDCTimestamps(uint64_t global_etrig_ts);
   /**
    * @brief Identifies the trigger stream and retrieves the corresponding gate and CRT T1
    * HLT timestamps from the PTB record.
@@ -184,7 +184,7 @@ public:
    * CRT T1 entries and fills _hlt_gate_ts and _hlt_crtt1_ts.
    * Throws a cet::exception if the ETRIG HLT code does not match any known stream.
    */
-  void DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts);
+  void DecideRelevantPTBTimestamps(uint64_t global_etrig_ts);
 
 private:
 
@@ -675,7 +675,7 @@ uint64_t sbnd::timing::FrameShift::DecideGlobalEtrigTimestamp()
   return global_etrig_ts;
 }
 
-void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(const uint64_t &global_etrig_ts)
+void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(uint64_t global_etrig_ts)
 {
   // ch0: CRT T1
   if(_tdc_ch0.size() != 0)
@@ -705,7 +705,7 @@ void sbnd::timing::FrameShift::DecideRelevantTDCTimestamps(const uint64_t &globa
     }
 }
 
-void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(const uint64_t &global_etrig_ts)
+void sbnd::timing::FrameShift::DecideRelevantPTBTimestamps(uint64_t global_etrig_ts)
 {
   //Check which Gate/CRT T1 HLT to use based on ETRIG HLT
   //Order to check: Beam -> Offbeam -> Xmuon
