@@ -1,10 +1,11 @@
-////////////////////////////////////////////////////////////////////////
-// Class:       WaveformAlignment
-// Plugin Type: Producer
-// File:        WaveformAlignment_module.cc
-//
-// Author: Lan Nguyen (vclnguyen@ucsb.edu)
-////////////////////////////////////////////////////////////////////////
+/**
+ * @file WaveformAlignment_module.cc
+ * @brief art::EDProducer that aligns PMT waveforms in time
+ *        by computing per-CAEN-digitiser jitter shifts 
+ *        from FTRIG waveforms digitised in channel 15 of each CAEN
+ *
+ * @author Lan Nguyen (vclnguyen@ucsb.edu)
+ */
 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -54,9 +55,8 @@ namespace sbnd {
 
 class sbnd::WaveformAlignment : public art::EDProducer {
 public:
+    /** @brief Constructor. Reads FHiCL configuration and declares all output data products. */
     explicit WaveformAlignment(fhicl::ParameterSet const& p);
-    // The compiler-generated destructor is fine for non-base
-    // classes without bare pointers or other resource use.
 
     // Plugins should not be copied or assigned.
     WaveformAlignment(WaveformAlignment const&) = delete;
@@ -65,170 +65,241 @@ public:
     WaveformAlignment& operator=(WaveformAlignment&&) = delete;
 
     // Required functions.
+    /**
+     * @brief Per-event processing: reads FrameShift, TDC, PTB, and FTRIG data;
+     *        computes per-board digitiser jitter shifts; applies timing corrections
+     *        to PMT and timing waveforms; and writes aligned products to the event.
+     * @param[in,out] e The art event being processed.
+     */
     void produce(art::Event& e) override;
 
     // Selected optional functions.
+    /** @brief Called once at the start of the job. Creates the output TTree and registers all branches. */
     void beginJob() override;
+    /** @brief Called once at the end of the job. */
     void endJob() override;
 
+    /** @brief Resets all per-event member variables to their invalid/default sentinel values. */
     void ResetEventVars();
 
+    /**
+     * @brief Fits the rising edge of an FTRIG waveform with a sigmoid function to find the transition midpoint.
+     * @param[in] wf      Pointer to the FTRIG OpDetWaveform.
+     * @param[in] flashId Index of the current flash (used for plot naming).
+     * @param[in] boardId CAEN digitiser board ID (8 = timing board, 0–7 = PMT boards).
+     * @return Pair of (midpoint tick position, fit convergence flag).
+     */
     std::pair<double, double> FitFtrig(art::Ptr<raw::OpDetWaveform> wf, const int flashId, const int boardId);
+    /**
+     * @brief Finds the timing frame timestamp closest to a given FTRIG UTC timestamp.
+     * @param[in] tsFtrig     UTC timestamp of the FTRIG rising edge (ns).
+     * @param[in] frameVec    Vector of reference frame UTC timestamps (ns).
+     * @param[in] frameOffset Known cable/path offset between the frame and the FTRIG (ns).
+     * @return UTC timestamp of the nearest frame in @p frameVec.
+     */
     uint64_t FindNearestFrame(const uint64_t tsFtrig, const std::vector<uint64_t> frameVec, const double frameOffset);
+    /**
+     * @brief Checks whether a UTC second-boundary rollover occurred between two timestamps.
+     * @param[in] tsFtrig UTC timestamp of the FTRIG (ns).
+     * @param[in] tsFrame UTC timestamp of the reference frame (ns).
+     * @return @c true if the two timestamps belong to different UTC seconds.
+     */
     bool IsSecondRollover(const uint64_t tsFtrig, const uint64_t tsFrame);
+    /**
+     * @brief Computes the digitiser jitter shift using an integer-nanosecond reference frame.
+     * @param[in] decodeFrame  UTC frame timestamp from the decoded waveform header (ns).
+     * @param[in] decodeTs     Decoded waveform start timestamp (µs).
+     * @param[in] tickFtrig    FTRIG rising-edge tick from the sigmoid fit.
+     * @param[in] frameVec     Vector of reference frame UTC timestamps (ns).
+     * @param[in] frameOffset  Known cable/path offset between frame and FTRIG (ns).
+     * @param[in] isFrameEarly @c true if the reference frame arrives before the FTRIG.
+     * @return Jitter shift in nanoseconds.
+     */
     double ComputeShift(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
                                             , const std::vector<uint64_t> frameVec
                                             , const double frameOffset
                                             , const bool isFrameEarly
                                             );
+    /**
+     * @brief Computes the digitiser jitter shift using a picosecond-resolution reference frame.
+     * @param[in] decodeFrame  UTC frame timestamp from the decoded waveform header (ns).
+     * @param[in] decodeTs     Decoded waveform start timestamp (µs).
+     * @param[in] tickFtrig    FTRIG rising-edge tick from the sigmoid fit.
+     * @param[in] frameVec     Vector of reference frame UTC timestamps (ns).
+     * @param[in] frameVecPs   Picosecond-precision counterpart of @p frameVec (ps).
+     * @param[in] frameOffset  Known cable/path offset between frame and FTRIG (ns).
+     * @param[in] isFrameEarly @c true if the reference frame arrives before the FTRIG.
+     * @return Jitter shift in nanoseconds.
+     */
     double ComputeShiftPs(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
                                             , const std::vector<uint64_t> frameVec
                                             , const std::vector<uint64_t> frameVecPs
                                             , const double frameOffset
                                             , const bool isFrameEarly
                                             );
+    /**
+     * @brief Validates that the computed jitter shift is within the allowed acceptance window.
+     * @param[in] shift   Computed shift value (ns).
+     * @param[in] boardId CAEN board ID (8 = timing board uses tighter bounds than PMT boards).
+     * @return @c true if the shift lies within the configured bounds.
+     */
     bool CheckShift(const double shift, const int boardId);
 
+    /**
+     * @brief Saves a two-panel before/after comparison plot of FTRIG waveforms across all boards.
+     * @param[in] flashId Index of the flash to plot.
+     */
     void PlotFtrigCompare(const int flashId);
+    /**
+     * @brief Saves a ROOT canvas showing the FTRIG waveform and its sigmoid rising-edge fit.
+     * @param[in] g         TGraph of the FTRIG waveform ADC values.
+     * @param[in] fitf      Fitted sigmoid TF1.
+     * @param[in] converged Whether the fit converged.
+     * @param[in] boardId   CAEN board ID (for plot file naming).
+     * @param[in] flashId   Flash index (for plot file naming).
+     */
     void PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId);
+    /** @brief Clears all per-flash plotting containers (tick positions and waveform coordinate vectors). */
     void ResetPlotVars();
 private:
 
     //---GLOBAL PARAMETERS
     
     enum TimingStatus {
-        kUndefined = -99, //Something went wrong
-        kFitFailure = -1, //Fit does not converge - default 0
-        kMissingTDC = -11, //Missing hardware information from TDC
-        kOutOfBoundTDC = -12, //Cannot find correct frame from TDC
-        kMissingPTB = -21, //Missing hardware information from PTB
-        kOutOfBoundPTB = -22, //Cannot find correct frame from PTB
-        kOutOfBoundCAEN = -3, //Cannot align with other CAEN digitisers since 
-        kGoodTDC = 1, //Align using TDC O(2ns)
-        kGoodPTB = 2, //Align using PTB O(2ns)
-        kGoodCAEN = 3 //Align with CAEN earlier in the chain O(8ns)
+        kUndefined = -99,    ///< Something went wrong
+        kFitFailure = -1,    ///< Fit does not converge — default shift is 0
+        kMissingTDC = -11,   ///< Missing hardware information from TDC
+        kOutOfBoundTDC = -12, ///< Cannot find correct frame from TDC
+        kMissingPTB = -21,   ///< Missing hardware information from PTB
+        kOutOfBoundPTB = -22, ///< Cannot find correct frame from PTB
+        kOutOfBoundCAEN = -3, ///< Cannot align with other CAEN digitisers
+        kGoodTDC = 1,        ///< Aligned using TDC (~2 ns precision)
+        kGoodPTB = 2,        ///< Aligned using PTB (~2 ns precision)
+        kGoodCAEN = 3        ///< Aligned with CAEN earlier in the chain (~8 ns precision)
     };
     
     // Plotting
-    std::stringstream _plotName; //raw waveform hist name
-    std::map<uint16_t, double> tickVec;
-    std::map<uint16_t, std::vector<double>> xVec;
-    std::map<uint16_t, std::vector<double>> yVec;
-    std::map<uint16_t, double> boardMidX; 
-    std::map<uint16_t, double> boardMidY; 
+    std::stringstream _plotName; ///< String stream used to build histogram/canvas names
+    std::map<uint16_t, double> tickVec;                    ///< Per-board FTRIG rising-edge tick position from the fit
+    std::map<uint16_t, std::vector<double>> xVec;          ///< Per-board waveform time axis values (ns)
+    std::map<uint16_t, std::vector<double>> yVec;          ///< Per-board waveform ADC values
+    std::map<uint16_t, double> boardMidX;                  ///< Per-board x-coordinate of the fitted midpoint
+    std::map<uint16_t, double> boardMidY;                  ///< Per-board y-coordinate of the fitted midpoint
 
     // Shifting
-    std::vector<double> boardJitter[9];
-    std::vector<double> boardStatus[9];
-    std::vector<double> boardFrame;
+    std::vector<double> boardJitter[9]; ///< Per-board jitter shift values for each flash (ns); index = board ID
+    std::vector<double> boardStatus[9]; ///< Per-board alignment status codes (TimingStatus) for each flash
+    std::vector<double> boardFrame;     ///< UTC timestamp(s) of the earliest PMT board FTRIG rising edge (ns)
 
     // Board counter
-    int nTotalBoard;
-    int nTimingBoard;
-    int nPmtBoard;
-    std::vector<int> boardId_v;
+    int nTotalBoard;  ///< Total number of CAEN boards seen in the event
+    int nTimingBoard; ///< Number of timing CAEN boards (board ID = fPmtBoard.back())
+    int nPmtBoard;    ///< Number of PMT CAEN boards
+    std::vector<int> boardId_v; ///< Ordered list of board IDs found in the FTRIG data
 
     // Flash counter
-    int nFtrigFlash;
+    int nFtrigFlash; ///< Number of FTRIG flashes per board in the event
 
     //---TREE PARAMETERS
-    TTree *fTree;
-    art::ServiceHandle<art::TFileService> tfs;
+    TTree *fTree; ///< Output ROOT TTree
+    art::ServiceHandle<art::TFileService> tfs; ///< art TFileService for ROOT output
 
-    int _run, _subrun, _event;
+    int _run;    ///< Run number
+    int _subrun; ///< Subrun number
+    int _event;  ///< Event number
 
     // PMT Timing
-    uint16_t _pmt_timing_type;
-    uint16_t _pmt_timing_ch;
+    uint16_t _pmt_timing_type; ///< Timing reference type from FrameShiftInfo (0=TDC, 1=PTB, 2=CAEN)
+    uint16_t _pmt_timing_ch;   ///< Timing reference channel from FrameShiftInfo
 
     // TDC stuff
-    std::vector<uint64_t> _tdc_ch3;
-    std::vector<uint64_t> _tdc_ch3_ps;
+    std::vector<uint64_t> _tdc_ch3;    ///< TDC channel 3 timestamps (ns) — FTRIG from CAEN timing board
+    std::vector<uint64_t> _tdc_ch3_ps; ///< TDC channel 3 timestamps (ps) — picosecond precision if available
 
     //PTB stuff
-    std::vector<uint64_t> _ptb_hlt_trigger;
-    std::vector<uint64_t> _ptb_hlt_timestamp;
-    std::vector<uint64_t> _ptb_hlt_unmask_timestamp;
-    std::vector<int> _ptb_hlt_trunmask;
+    std::vector<uint64_t> _ptb_hlt_trigger;           ///< PTB HLT trigger bitmask words
+    std::vector<uint64_t> _ptb_hlt_timestamp;          ///< PTB HLT timestamps before bitmask expansion (ns)
+    std::vector<uint64_t> _ptb_hlt_unmask_timestamp;   ///< PTB HLT timestamps after per-bit unmasking (ns)
+    std::vector<int>      _ptb_hlt_trunmask;           ///< PTB HLT trigger bit indices after unmasking
 
     //---SERVICE
-    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService; ///< PMT calibration database service
     
     //---FHICL CONFIG PARAMETERS
     
     // Product label
-    art::InputTag fFrameShiftLabel;
-    art::InputTag fTdcDecodeLabel;
-    art::InputTag fPtbDecodeLabel;
-    art::InputTag fPmtDecodeLabel;
-    art::InputTag fPmtBoardLabel;
-    art::InputTag fTimingDecodeLabel;
-    art::InputTag fTimingBoardLabel;
-    art::InputTag fFtrigDecodeLabel;
-    art::InputTag fFtrigBoardLabel;
+    art::InputTag fFrameShiftLabel;   ///< Input tag for the FrameShiftInfo product
+    art::InputTag fTdcDecodeLabel;    ///< Input tag for the TDC DAQTimestamp product
+    art::InputTag fPtbDecodeLabel;    ///< Input tag for the PTB sbndptb product
+    art::InputTag fPmtDecodeLabel;    ///< Input tag for the PMT OpDetWaveform product
+    art::InputTag fPmtBoardLabel;     ///< Input tag for the PMT BoardTimingInfo associations
+    art::InputTag fTimingDecodeLabel; ///< Input tag for the timing channel OpDetWaveform product
+    art::InputTag fTimingBoardLabel;  ///< Input tag for the timing BoardTimingInfo associations
+    art::InputTag fFtrigDecodeLabel;  ///< Input tag for the FTRIG OpDetWaveform product
+    art::InputTag fFtrigBoardLabel;   ///< Input tag for the FTRIG BoardTimingInfo associations
 
     //PTB
-    std::vector<int> fPtbAllowedHlts; 
+    std::vector<int> fPtbAllowedHlts; ///< List of PTB HLT bit indices accepted as valid timing references
 
     //FrameShift
-    uint64_t _frameDefault;
+    uint64_t _frameDefault; ///< Default UTC frame timestamp from FrameShiftInfo (ns)
 
     // DAQ
-    double fWfLength;
-    int fnChperBoard;
-    std::vector<int> fPmtBoard;
-    std::vector<int> fPmtCol;
+    double fWfLength;           ///< Expected waveform length in ticks
+    int fnChperBoard;           ///< Number of channels per CAEN board
+    std::vector<int> fPmtBoard; ///< CAEN board IDs for PMT boards (0–7) and timing board (8)
+    std::vector<int> fPmtCol;   ///< ROOT colour index per board for overlay plots
 
     // Shift configuration
-    int fTickLbPmt;
-    int fTickUbPmt;
+    int fTickLbPmt; ///< Lower search bound (tick) for the PMT FTRIG rising edge
+    int fTickUbPmt; ///< Upper search bound (tick) for the PMT FTRIG rising edge
     
-    int fTickLbTiming;
-    int fTickUbTiming;
+    int fTickLbTiming; ///< Lower search bound (tick) for the timing FTRIG rising edge
+    int fTickUbTiming; ///< Upper search bound (tick) for the timing FTRIG rising edge
     
-    int fFitBound;
-    int fFitTries;
-    std::vector<double> fGradientInitialGuess;
+    int fFitBound;   ///< Half-width of the sigmoid fit range in ticks
+    int fFitTries;   ///< Maximum number of re-fit attempts on non-convergence
+    std::vector<double> fGradientInitialGuess; ///< Initial guess for the sigmoid gradient parameter per board
 
-    double fPmtJitterLowerBound;
-    double fPmtJitterUpperBound;
-    double fTimingJitterLowerBound;
-    double fTimingJitterUpperBound;
+    double fPmtJitterLowerBound;    ///< Minimum acceptable jitter shift for PMT boards (ns)
+    double fPmtJitterUpperBound;    ///< Maximum acceptable jitter shift for PMT boards (ns)
+    double fTimingJitterLowerBound; ///< Minimum acceptable jitter shift for the timing board (ns)
+    double fTimingJitterUpperBound; ///< Maximum acceptable jitter shift for the timing board (ns)
     
     //Cable length
-    std::vector<double> fTdc3CaenOffset;
-    std::vector<double> fPtbCaenOffset;
-    double fPPSPath;
+    std::vector<double> fTdc3CaenOffset; ///< Per-board cable-length offset between TDC ch3 and each CAEN board (ns)
+    std::vector<double> fPtbCaenOffset;  ///< Per-board cable-length offset between PTB and each CAEN board (ns)
+    double fPPSPath; ///< PPS cable propagation delay to be subtracted from all timestamps (ns)
 
     // Which Correction To Apply
-    bool fCorrectPPS;
-    bool fCorrectPMT2DigitiserCable;
-    bool fCorrectDigitiserJitter;
-    bool fCorrectPMTResponse;
+    bool fCorrectPPS;               ///< Apply PPS cable path correction
+    bool fCorrectPMT2DigitiserCable; ///< Apply PMT-to-digitiser cable length (transit time) correction
+    bool fCorrectDigitiserJitter;   ///< Apply per-board digitiser jitter shift correction
+    bool fCorrectPMTResponse;       ///< Apply per-channel PMT response time correction
     
     // Debug
-    bool fDebugTimeRef;
-    bool fDebugFtrig;
-    bool fDebugPmt;
-    bool fDebugTiming;
+    bool fDebugTimeRef; ///< Enable verbose printout for timing reference selection
+    bool fDebugFtrig;   ///< Enable verbose printout for FTRIG fitting and shift computation
+    bool fDebugPmt;     ///< Enable verbose printout for PMT waveform alignment
+    bool fDebugTiming;  ///< Enable verbose printout for timing channel waveform alignment
 
     // New product labels
-    std::string fFtrigNewLabel;
-    std::string fFtrigBoardNewLabel;
+    std::string fFtrigNewLabel;      ///< Instance label for the output aligned FTRIG waveforms
+    std::string fFtrigBoardNewLabel; ///< Instance label for the output FTRIG–board associations
 
-    std::string fPmtNewLabel;
-    std::string fPmtBoardNewLabel;
-    std::string fPmtAlignNewLabel;
+    std::string fPmtNewLabel;      ///< Instance label for the output aligned PMT waveforms
+    std::string fPmtBoardNewLabel; ///< Instance label for the output PMT–board associations
+    std::string fPmtAlignNewLabel; ///< Instance label for the output PMT–BoardAlignment associations
 
-    std::string fTimingNewLabel;
-    std::string fTimingBoardNewLabel;
-    std::string fTimingAlignNewLabel;
+    std::string fTimingNewLabel;      ///< Instance label for the output aligned timing waveforms
+    std::string fTimingBoardNewLabel; ///< Instance label for the output timing–board associations
+    std::string fTimingAlignNewLabel; ///< Instance label for the output timing–BoardAlignment associations
 
     // Plotting
-    bool fSaveGoodFit;
-    bool fSaveBadFit;
-    bool fSaveCompare;
-    std::string fSavePath;
+    bool fSaveGoodFit; ///< Save PNG plots for waveforms where the sigmoid fit converged
+    bool fSaveBadFit;  ///< Save PNG plots for waveforms where the sigmoid fit failed
+    bool fSaveCompare; ///< Save before/after comparison plots of FTRIG waveforms
+    std::string fSavePath; ///< Directory path for saved plot files
 };
 
 
@@ -372,15 +443,13 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
     //------------------------Frame Shift--------------------------//
-    art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
-    e.getByLabel(fFrameShiftLabel, frameShiftHandle);
-
-    if (!frameShiftHandle.isValid()){
-        throw cet::exception("WaveformAlignment") << "No sbnd::timing::FrameShiftInfo found w/ tag " << fFrameShiftLabel << ". Check data quality!";
+    try {
+        auto const& frameShift = e.getProduct<sbnd::timing::FrameShiftInfo>(fFrameShiftLabel);
+        _frameDefault = frameShift.FrameDefault();
+        _pmt_timing_type = frameShift.TimingTypeDefault();
     }
-    else{
-        _frameDefault = frameShiftHandle->FrameDefault();
-        _pmt_timing_type = frameShiftHandle->TimingTypeDefault();
+    catch(art::Exception const&) {
+        throw cet::exception("WaveformAlignment") << "No sbnd::timing::FrameShiftInfo found w/ tag " << fFrameShiftLabel << ". Check data quality!";
     }
 
     //---------------------------TDC-----------------------------//
