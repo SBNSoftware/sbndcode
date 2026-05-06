@@ -59,6 +59,10 @@
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
+// Calibration database includes
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+
 //ROOT includes
 #include <Eigen/Dense>
 #include <vector>
@@ -231,7 +235,6 @@ private:
   bool                      fCollectionOnly;       ///< Only use TPC spacepoints from the collection plane
   double                    fDistanceCandidateFlashes; ///< Maximum distance between candidate flashes to be considered for matching (cm)
   std::vector<double>       fCalAreaConst;         /// Calibration area constants for wire plane
-  std::vector<int>          fSkipChannelList;
   double                    fOpDetCoVUVEff;           // Efficiencies for PMT detection (Coated PMT VUV)
   double                    fOpDetCoVISEff;           // Efficiencies for PMT detection (Coated PMT VIS)
   double                    fOpDetUncoVISEff;           // Efficiencies for PMT detection (Uncoated PMT VIS)
@@ -293,6 +296,9 @@ private:
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
   std::shared_ptr<phot::OpticalPath> _optical_path_tool;
+
+  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+
 
 };
 
@@ -391,6 +397,9 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
   _optical_path_tool = std::shared_ptr<phot::OpticalPath>(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool")));
   _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, _optical_path_tool, true, false);
+
+  //Load PMT Calibration Database
+  fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
 }
 
 void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
@@ -892,7 +901,7 @@ double TPCPMTBarycenterMatchProducer::GetFlashLight(double flash_pe, std::vector
   double tot_visibility=0;
 
   for(size_t ch=0; ch<dir_visibility.size(); ch++){
-    if (std::find(fSkipChannelList.begin(), fSkipChannelList.end(), ch) != fSkipChannelList.end()) continue;
+    if(!fPMTCalibrationDatabaseService->getReconstructChannel(ch)) continue; // Skip channels not reconstructed
     if(fOpDetType[ch]==0) tot_visibility += fOpDetCoVUVEff*dir_visibility[ch] + fOpDetCoVISEff*ref_visibility[ch];
     else if(fOpDetType[ch]==1) tot_visibility += fOpDetUncoVISEff*ref_visibility[ch];
     else continue; // skip other types

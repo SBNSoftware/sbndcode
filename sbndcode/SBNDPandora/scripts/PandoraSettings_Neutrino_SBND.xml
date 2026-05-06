@@ -447,16 +447,6 @@
     <DaughterListNames>TrackParticles3D ShowerParticles3D DaughterVertices3D ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
   </algorithm>
 
-  <algorithm type = "LArNeutrinoProperties">
-    <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
-  </algorithm>
-
-  <!-- Track and shower building -->
-  <algorithm type = "LArTrackParticleBuilding">
-    <PfoListName>TrackParticles3D</PfoListName>
-    <VertexListName>DaughterVertices3D</VertexListName>
-  </algorithm>
-
   <!-- Shower Merging -->
   <algorithm type = "LArShowerMergingPfoMopUp">
     <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
@@ -488,6 +478,16 @@
       <tool type = "LArThreeDPCAFeatureTool"/>
       <tool type = "LArThreeDOpeningAngleFeatureTool"/>
     </FeatureToolsNoChargeInfo>
+  </algorithm>
+
+  <algorithm type = "LArNeutrinoProperties">
+    <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
+  </algorithm>
+
+  <!-- Track and shower building -->
+  <algorithm type = "LArTrackParticleBuilding">
+    <PfoListName>TrackParticles3D</PfoListName>
+    <VertexListName>DaughterVertices3D</VertexListName>
   </algorithm>
 
   <!-- Output list management -->

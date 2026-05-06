@@ -4,7 +4,7 @@
 BEGIN_PROLOG
 
 SBND_Calibration_GlobalTags: {
-  @table::TPC_CalibrationTags_Nov2025
+  @table::TPC_CalibrationTags_Jan2026
   @table::PDS_CalibrationTags_Nov2025
 }
 

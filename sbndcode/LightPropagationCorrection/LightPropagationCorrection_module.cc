@@ -442,16 +442,16 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
-            //double spToCathode = abs(fSpacePointX[sp]); // Distance from space point to cathode in mm
-            //double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + dy*dy + dz*dz); // Distance from cathode to OpDet in mm
-            //float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
-
             double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
             double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
 
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
-            float lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
+            float lightPropTime = 0;
+            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
+                lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
+            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
+                lightPropTime = lightPropTimeVIS;
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;
