@@ -1,5 +1,7 @@
 #include "LightPropagationCorrection_module.hh"
 
+#include <stdexcept>
+
 namespace sbnd {
     class LightPropagationCorrection;
 }
@@ -423,10 +425,13 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
-            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
+            const std::string pdType = fPDSMap.pdType(opdet);
+            if(pdType=="pmt_coated" || pdType=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
-            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
+            else if(pdType=="pmt_uncoated" || pdType=="xarapuca_vis")
                 lightPropTime = lightPropTimeVIS;
+            else
+                throw std::runtime_error("LightPropagationCorrection: unexpected pdType '" + pdType + "' for opdet " + std::to_string(opdet));
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;
