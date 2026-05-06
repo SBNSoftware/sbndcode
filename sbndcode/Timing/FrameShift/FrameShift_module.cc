@@ -189,92 +189,90 @@ public:
 private:
 
   // FCL Parameters
-  std::string fDAQHeaderModuleLabel;   // Instance label for DAQ header product
-  std::string fDAQHeaderInstanceLabel; // Module label for DAQ header product
-  uint64_t fRawTSCorrection;           // Correction to the DAQ header timestamp to account for NTB offset
-  art::InputTag fPtbDecodeLabel;       // Module label for decoded PTB data
-  std::vector<int> fPtbEtrigHlts;      // All allowed PTB HLT codes for event triggers
-  std::vector<int> fBeamEtrigHlt;      // PTB HLT codes associated with beam trigger
-  std::vector<int> fOffbeamEtrigHlt;   // PTB HLT codes associated with offbeam trigger
-  std::vector<int> fXmuonEtrigHlt;     // PTB HLT codes associated with crossing muon trigger
-  int fBeamCrtT1Hlt;                   // PTB HLT code for beam CRT T1 reset
-  int fOffbeamCrtT1Hlt;                // PTB HLT code for offbeam CRT T1 reset
-  int fBeamGateHlt;                    // PTB HLT code for beam gate opening
-  int fOffbeamGateHlt;                 // PTB HLT code for offbeam gate opening
-  art::InputTag fTdcDecodeLabel;       // Module label for decoded TDC data
-  uint64_t fShiftData2MC;              // Value to shift Data to MC -- so that data agree with MC [ns]
-                                       // TODO: Derive this value and verify if it is consistent across pmt/crt
-                                       // TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftTdcRwm2PtbGate;       // Value to move Tdc RWM (ch2) frame to agree with HLT Gate Frame
-                                       // TODO: Get this value from database instead of fhicl parameter
-  uint64_t fShiftTdcEtrig2PtbEtrig;    // Value to move Tdc Etrig (ch4) to agree with HLT ETRIG
-                                       // TODO: Get from database
-  uint64_t fShiftTdcCrtt12PtbCrtt1;    // Value to move Tdc Crt T1 Reset (ch0) to agree with HLT CRT T1
-                                       // TODO: Get from database
-  bool fMakeTree;                      // Whether to produce a TTree in the hist file
-  bool fDebugDAQHeader;                // Whether to print debug statements relevant to DAQ header
-  bool fDebugPtb;                      // Whether to print debug statements relevant to PTB
-  bool fDebugTdc;                      // Whether to print debug statements relevant to TDC
-  bool fDebugFrame;                    // Whether to print debug statements relevant to frame shifts
+  art::InputTag fDAQHeaderLabel;   ///< Instance label for DAQ header product.
+  uint64_t fRawTSCorrection;           ///< Correction to the DAQ header timestamp to account for NTB offset.
+  art::InputTag fPtbDecodeLabel;       ///< Module label for decoded PTB data.
+  std::vector<int> fPtbEtrigHlts;      ///< All allowed PTB HLT codes for event triggers.
+  std::vector<int> fBeamEtrigHlt;      ///< PTB HLT codes associated with beam trigger.
+  std::vector<int> fOffbeamEtrigHlt;   ///< PTB HLT codes associated with offbeam trigger.
+  std::vector<int> fXmuonEtrigHlt;     ///< PTB HLT codes associated with crossing muon trigger.
+  int fBeamCrtT1Hlt;                   ///< PTB HLT code for beam CRT T1 reset.
+  int fOffbeamCrtT1Hlt;                ///< PTB HLT code for offbeam CRT T1 reset.
+  int fBeamGateHlt;                    ///< PTB HLT code for beam gate opening.
+  int fOffbeamGateHlt;                 ///< PTB HLT code for offbeam gate opening.
+  art::InputTag fTdcDecodeLabel;       ///< Module label for decoded TDC data.
+  uint64_t fShiftData2MC;              ///< Value to shift Data to MC so that data agree with MC [ns].
+  ///< TODO: Derive this value and verify if it is consistent across PMT/CRT.
+  ///< TODO: Get this value from database instead of FHiCL parameter.
+  uint64_t fShiftTdcRwm2PtbGate;       ///< Value to move TDC RWM (ch2) frame to agree with HLT gate frame.
+  ///< TODO: Get this value from database instead of FHiCL parameter.
+  uint64_t fShiftTdcEtrig2PtbEtrig;    ///< Value to move TDC ETRIG (ch4) to agree with HLT ETRIG.
+  ///< TODO: Get from database.
+  uint64_t fShiftTdcCrtt12PtbCrtt1;    ///< Value to move TDC CRT T1 reset (ch0) to agree with HLT CRT T1.
+  ///< TODO: Get from database.
+  bool fMakeTree;                      ///< Whether to produce a TTree in the hist file.
+  bool fDebugDAQHeader;                ///< Whether to print debug statements relevant to DAQ header.
+  bool fDebugPtb;                      ///< Whether to print debug statements relevant to PTB.
+  bool fDebugTdc;                      ///< Whether to print debug statements relevant to TDC.
+  bool fDebugFrame;                    ///< Whether to print debug statements relevant to frame shifts.
 
   // Global Variables, set in processing
-  int _run, _subrun, _event;                       // Stores the unique run, subrun, event number combination for this event
+  int _run, _subrun, _event;                       ///< Stores the unique run/subrun/event number combination for this event.
 
-  uint64_t _raw_ts;                                // Stores DAQ header timestamp
-  std::vector<uint64_t> _ptb_hlt_trigger;          // Stores full trigger word from PTB HLT (indexed per HLT)
-  std::vector<uint64_t> _ptb_hlt_timestamp;        // Stores timestamp associated with PTB HLT (indexed per HLT)
-  std::vector<uint64_t> _ptb_hlt_unmask_timestamp; // Stores timestamp associated with PTB HLT for each element (indexed per HLT element once unmasked)
-  std::vector<int> _ptb_hlt_trunmask;              // Stores PTB HLT code for each element (indexed per HLT element once unmasked)
-  std::vector<int> _ptb_hlt_etrig;                 // Stores all PTB HLTs that are an 'allowed type' for this stream
-  std::vector<uint64_t> _ptb_hlt_etrig_ts;         // Stores the associated timestamps for the above HLTs
+  uint64_t _raw_ts;                                ///< Stores DAQ header timestamp.
+  std::vector<uint64_t> _ptb_hlt_trigger;          ///< Stores full trigger word from PTB HLT (indexed per HLT).
+  std::vector<uint64_t> _ptb_hlt_timestamp;        ///< Stores timestamp associated with PTB HLT (indexed per HLT).
+  std::vector<uint64_t> _ptb_hlt_unmask_timestamp; ///< Stores timestamp associated with PTB HLT for each element (indexed per HLT element once unmasked).
+  std::vector<int> _ptb_hlt_trunmask;              ///< Stores PTB HLT code for each element (indexed per HLT element once unmasked).
+  std::vector<int> _ptb_hlt_etrig;                 ///< Stores all PTB HLTs that are an allowed type for this stream.
+  std::vector<uint64_t> _ptb_hlt_etrig_ts;         ///< Stores the associated timestamps for the above HLTs.
 
-  bool _isBeam;                                    // Event is a beam trigger (BNB or BNBLight)
-  bool _isOffbeam;                                 // Event is an offbeam trigger (OffBeam or OffBeamLight)
-  bool _isXmuon;                                   // Event is a crossing muon trigger
+  bool _isBeam;                                    ///< Event is a beam trigger (BNB or BNBLight).
+  bool _isOffbeam;                                 ///< Event is an offbeam trigger (OffBeam or OffBeamLight).
+  bool _isXmuon;                                   ///< Event is a crossing muon trigger.
 
-  int _hlt_etrig;                                  // Stores the HLT event trigger code, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _hlt_etrig_ts;                          // Stores the HLT timestamp, once we've decided which one was closest to the DAQ header timestamp
-  int _hlt_gate;                                   // Stores the HLT gate opening code, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _hlt_gate_ts;                           // Stores the HLT gate opening timestamp, once we've decided which one was closest to the DAQ header timestamp
-  int _hlt_crtt1;                                  // Stores the HLT CRT T1 code, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _hlt_crtt1_ts;                          // Stores the HLT CRT T1 timestamp, once we've decided which one was closest to the DAQ header timestamp
+  int _hlt_etrig;                                  ///< Stores the HLT event trigger code once selected as closest to DAQ header timestamp.
+  uint64_t _hlt_etrig_ts;                          ///< Stores the HLT event trigger timestamp once selected as closest to DAQ header timestamp.
+  int _hlt_gate;                                   ///< Stores the HLT gate opening code once selected as closest to DAQ header timestamp.
+  uint64_t _hlt_gate_ts;                           ///< Stores the HLT gate opening timestamp once selected as closest to DAQ header timestamp.
+  int _hlt_crtt1;                                  ///< Stores the HLT CRT T1 code once selected as closest to DAQ header timestamp.
+  uint64_t _hlt_crtt1_ts;                          ///< Stores the HLT CRT T1 timestamp once selected as closest to DAQ header timestamp.
  
-  std::vector<uint64_t> _tdc_ch0;                  // Stores all the timestamps recorded in the TDC channel 0 (CRT T1)
-  std::vector<uint64_t> _tdc_ch1;                  // Stores all the timestamps recorded in the TDC channel 1 (BES)
-  std::vector<uint64_t> _tdc_ch2;                  // Stores all the timestamps recorded in the TDC channel 2 (RWM)
-  //std::vector<uint64_t> _tdc_ch3;                  // Stores all the timestamps recorded in the TDC channel 3 (Flash trigger)
-  std::vector<uint64_t> _tdc_ch4;                  // Stores all the timestamps recorded in the TDC channel 4 (Event trigger)
+  std::vector<uint64_t> _tdc_ch0;                 ///< Stores all timestamps recorded in TDC channel 0 (CRT T1).
+  std::vector<uint64_t> _tdc_ch1;                 ///< Stores all timestamps recorded in TDC channel 1 (BES).
+  std::vector<uint64_t> _tdc_ch2;                 ///< Stores all timestamps recorded in TDC channel 2 (RWM).
+  //std::vector<uint64_t> _tdc_ch3;               ///< Stores all timestamps recorded in TDC channel 3 (flash trigger).
+  std::vector<uint64_t> _tdc_ch4;                 ///< Stores all timestamps recorded in TDC channel 4 (event trigger).
 
-  uint64_t _tdc_crtt1_ts;                          // Stores the TDC CRT T1 timestamp, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _tdc_bes_ts;                            // Stores the TDC BES timestamp, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _tdc_rwm_ts;                            // Stores the TDC RWM timestamp, once we've decided which one was closest to the DAQ header timestamp
-  uint64_t _tdc_etrig_ts;                          // Stores the TDC event trigger timestamp, once we've decided which one was closest to the DAQ header timestamp
+  uint64_t _tdc_crtt1_ts;                         ///< Stores the TDC CRT T1 timestamp selected as closest to DAQ header timestamp.
+  uint64_t _tdc_bes_ts;                           ///< Stores the TDC BES timestamp selected as closest to DAQ header timestamp.
+  uint64_t _tdc_rwm_ts;                           ///< Stores the TDC RWM timestamp selected as closest to DAQ header timestamp.
+  uint64_t _tdc_etrig_ts;                         ///< Stores the TDC event trigger timestamp selected as closest to DAQ header timestamp.
 
-  uint64_t _frame_crtt1;                           // Stores the shift required to move from the PPS frame to the CRT T1 frame
-  uint16_t _timing_type_crtt1;                     // Stores the type (TDC/PTB) used to produce the above shift
-  uint16_t _timing_channel_crtt1;                  // Stores the channel (TDC) / code (PTB) used to produce the above shift
-  uint64_t _frame_gate;                            // Stores the shift required to move from the PPS frame to the gate opening frame
-  uint16_t _timing_type_gate;                      // Stores the type (TDC/PTB) used to produce the above shift
-  uint16_t _timing_channel_gate;                   // Stores the channel (TDC) / code (PTB) used to produce the above shift
-  uint64_t _frame_etrig;                           // Stores the shift required to move from the PPS frame to the event trigger frame
-  uint16_t _timing_type_etrig;                     // Stores the type (TDC/PTB) used to produce the above shift
-  uint16_t _timing_channel_etrig;                  // Stores the channel (TDC) / code (PTB) used to produce the above shift
+  uint64_t _frame_crtt1;                          ///< Stores the shift required to move from the PPS frame to the CRT T1 frame.
+  uint16_t _timing_type_crtt1;                    ///< Stores the type (TDC/PTB) used to produce the CRT T1 shift.
+  uint16_t _timing_channel_crtt1;                 ///< Stores the channel (TDC) or code (PTB) used to produce the CRT T1 shift.
+  uint64_t _frame_gate;                           ///< Stores the shift required to move from the PPS frame to the gate opening frame.
+  uint16_t _timing_type_gate;                     ///< Stores the type (TDC/PTB) used to produce the gate shift.
+  uint16_t _timing_channel_gate;                  ///< Stores the channel (TDC) or code (PTB) used to produce the gate shift.
+  uint64_t _frame_etrig;                          ///< Stores the shift required to move from the PPS frame to the event trigger frame.
+  uint16_t _timing_type_etrig;                    ///< Stores the type (TDC/PTB) used to produce the ETRIG shift.
+  uint16_t _timing_channel_etrig;                 ///< Stores the channel (TDC) or code (PTB) used to produce the ETRIG shift.
 
-  uint64_t _frame_default;                         // Stores the shift required to move from the PPS frame to the default frame for this stream
-  uint16_t _timing_type_default;                   // Stores the type (TDC/PTB) used to produce the above shift
-  uint16_t _timing_channel_default;                // Stores the channel (TDC) / code (PTB) used to produce the above shift
+  uint64_t _frame_default;                        ///< Stores the shift required to move from the PPS frame to the default frame for this stream.
+  uint16_t _timing_type_default;                  ///< Stores the type (TDC/PTB) used to produce the default shift.
+  uint16_t _timing_channel_default;               ///< Stores the channel (TDC) or code (PTB) used to produce the default shift.
 
   // Tree production
-  TTree *fTree;
-  art::ServiceHandle<art::TFileService> tfs;
+  TTree *fTree;                                   ///< Pointer to the output tree produced when fMakeTree is enabled.
+  art::ServiceHandle<art::TFileService> tfs;      ///< Service handle used to create ROOT output objects.
 };
 
 
 sbnd::timing::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   : EDProducer{p}
 {
-  fDAQHeaderInstanceLabel = p.get<std::string>("DAQHeaderInstanceLabel");
-  fDAQHeaderModuleLabel = p.get<std::string>("DAQHeaderModuleLabel");
+  fDAQHeaderLabel = p.get<art::InputTag>("DAQHeaderLabel");
   fRawTSCorrection = p.get<uint64_t>("RawTSCorrection");
   fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel");
   fPtbEtrigHlts = p.get<std::vector<int>>("PtbEtrigHlts");
@@ -472,10 +470,10 @@ std::string sbnd::timing::FrameShift::PrintFormatTimestamp(const uint64_t &times
 void sbnd::timing::FrameShift::GetRawTimestamp(const art::Event &e)
 {
   art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
-  e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
+  e.getByLabel(fDAQHeaderLabel, DAQHeaderHandle);
 
   if(!DAQHeaderHandle.isValid())
-    throw cet::exception("FrameShift") << "No artdaq::detail::RawEventHeader found w/ tag " << fDAQHeaderModuleLabel << ". Check data quality!";
+    throw cet::exception("FrameShift") << "No artdaq::detail::RawEventHeader found w/ tag " << fDAQHeaderLabel << ". Check data quality!";
   else
     {
       artdaq::RawEvent rawHeaderEvent = artdaq::RawEvent(*DAQHeaderHandle);

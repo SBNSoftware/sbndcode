@@ -1,7 +1,7 @@
 #include "sbndcode/Timing/TimingUtils.h"
 
 namespace sbnd {
-  double TimingUtils::SubtractUTCTimestmap(const uint64_t& ts1, const uint64_t& ts2)
+  double TimingUtils::SubtractUTCTimestmap(uint64_t ts1, uint64_t ts2)
   {
   
     double ts1_s = ts1 / uint64_t(1e9);

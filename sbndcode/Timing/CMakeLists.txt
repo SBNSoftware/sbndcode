@@ -1,8 +1,7 @@
 art_make_library(
-                SOURCE  TimingUtils.cc
-                 LIBRARIES art::Persistency_Common
-                           messagefacility::MF_MessageLogger
-        )
+                LIBRARIES art::Persistency_Common
+                messagefacility::MF_MessageLogger
+                )
 
 art_dictionary(DICTIONARY_LIBRARIES lardataobj::RawData)
 

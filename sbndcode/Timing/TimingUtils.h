@@ -1,22 +1,28 @@
 #ifndef TIMINGUTILS_H_SEEN
 #define TIMINGUTILS_H_SEEN
 
-///////////////////////////////////////////////
-// TimingUtils.h
-//
-// Common functions for Timing reconstruction
-///////////////////////////////////////////////
+/**
+ * @file TimingUtils.h
+ * @brief Common utility functions for timing reconstruction.
+ */
 
 #include "canvas/Persistency/Common/Ptr.h"
 
 namespace sbnd {
 
+  /**
+   * @namespace TimingUtils
+   * @brief Collection of helper utilities for timing calculations.
+   */
   namespace TimingUtils{
-    
-    //Subtract two timestamps in UTC format
-    //ts1 and ts2 are in nanoseconds in uint64_t format
-    //Return the difference in nanoseconds as double
-    double SubtractUTCTimestmap(const uint64_t& ts1, const uint64_t& ts2);
+
+    /**
+     * @brief Subtracts two UTC timestamps.
+     * @param[in] ts1 First timestamp in nanoseconds.
+     * @param[in] ts2 Second timestamp in nanoseconds.
+     * @return Difference between `ts1 - ts2` in nanoseconds as double.
+     */
+    double SubtractUTCTimestmap(uint64_t ts1, uint64_t ts2);
 
   }
 }

@@ -4,8 +4,7 @@ frameshift_data:
 {
   module_type:  "FrameShift" 
   
-  DAQHeaderInstanceLabel: "RawEventHeader"
-  DAQHeaderModuleLabel: "daq"
+  DAQHeaderLabel: "daq:RawEventHeader"
   RawTSCorrection: 367000 #367 us
   
   TdcDecodeLabel: "tdcdecoder"
