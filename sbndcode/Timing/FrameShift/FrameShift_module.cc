@@ -2,7 +2,7 @@
 // Class:       FrameShift
 // Plugin Type: Producer
 // File:        FrameShift_module.cc
-//
+// Documentation: [SBN DocDB 46654](https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=46654)
 // Author: Lan Nguyen (vclnguyen@ucsb.edu)
 ////////////////////////////////////////////////////////////////////////
 
