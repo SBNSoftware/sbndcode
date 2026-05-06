@@ -552,7 +552,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
         // It searches for all CAEN V1740 fragments.
         for (size_t f = 0; f < frag_handle_size; f++) {
           const artdaq::Fragment fragment = fragment_handle->at(f);
-          last_one = f == (frag_handle_size - 1);
+          last_one = (f == (frag_handle_size - 1));
           decode_fragment(timestamp, first_frag_timestamp, first_frag_idx, first_TTT, prev_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one, appended_samples);
         } // End CAEN V1740 fragments loop.
       }
@@ -577,21 +577,21 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e) {
 // ===============  Main fragment processing method ===============  //
 
 void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& first_frag_timestamp, size_t& first_frag_idx, int32_t& first_TTT, int32_t& prev_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms, bool last_one, size_t& appended_samples) {
-  auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
-  auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
-  size_t board_idx;
-  bool valid_fragment = false;
+   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
+   auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
+   size_t board_idx;
+   bool valid_fragment = false; 
 
-  if (it != fboard_id_list.end()) {
-    board_idx = it - fboard_id_list.begin();
-    if (board_idx >= fnum_caen_boards) {
-      if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: fragment ID " << fragment_id << " (" << board_idx << ") is out of range. Skipping this fragment..." << std::endl;
-    } else {
-      valid_fragment = true;
-    }
-  } else {
-      if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: fragment ID " << fragment_id << " is not valid. Skipping this fragment..." << std::endl;
-  }
+   if (it != fboard_id_list.end()) {
+     board_idx = it - fboard_id_list.begin();
+     if (board_idx >= fnum_caen_boards) {
+       if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: fragment ID " << fragment_id << " (" << board_idx << ") is out of range. Skipping this fragment..." << std::endl;
+     } else {
+       valid_fragment = true;
+     }
+   } else {
+       if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: fragment ID " << fragment_id << " is not valid. Skipping this fragment..." << std::endl;
+   }
 
   if (valid_fragment) {
     fragment_indices[board_idx]++;  
