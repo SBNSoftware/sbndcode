@@ -2,6 +2,7 @@
 #include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "sbnd_lightpropagationcorrection_config.fcl"
 #include "frameshift_sbnd_data.fcl"
+#include "lightcalo_sbnd_data.fcl"
 #include "standard_reco2_sbnd.fcl"
 
 services:
@@ -34,6 +35,7 @@ physics.producers:
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreationData
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
 
+    lightcaloSCE: @local::sbnd_lightcalo_data_sce
     frameshift: @local::frameshift_data
 }
 
@@ -41,7 +43,7 @@ physics.reco2: [ pandora, pandoraTrack, blipPandoraCopy, blipPandoraTrackCopy, p
                  cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData, pandoraSCELikePidData,
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
-                 caloskimCalorimetry, blipreco, lightpropagationcorrectionSCE, frameshift]
+                 caloskimCalorimetry, blipreco, lightpropagationcorrectionSCE, lightcaloSCE, frameshift]
 
 
 physics.analyzers.caloskim.G4producer: ""

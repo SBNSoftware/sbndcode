@@ -1,0 +1,62 @@
+#include "opticalsimparameterisations_sbnd.fcl"
+#include "sbndopticalpath_tool.fcl"
+#include "digi_pmt_sbnd.fcl"
+#include "digi_arapuca_sbnd.fcl"
+#include "calorimetry_sbnd.fcl"
+
+BEGIN_PROLOG
+sbnd_lightcalo:
+{
+    module_type: "LightCaloProducer"
+
+    VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+    VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    OpticalPathTool:  @local::SBNDOpticalPath
+
+    OpFlashProducers:     ["opflashtpc0", "opflashtpc1"]
+    OpFlashAraProducers:  ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+    # only validated for coated PMTs for now
+    PDTypes:              ["pmt_coated"] # "pmt_uncoated", "xarapuca_vuv", "xarapuca_vis"
+
+    SliceProducer:        "pandora"
+    OpT0FinderProducer:   "opt0finder"
+    BCFMProducer:         "tpcpmtbarycentermatching"
+
+    UseBCFM:              true
+    UseOpT0Finder:        false
+    Verbose:              false
+    FillTree:             false  
+
+    bcfmScoreCut:         0.02 # default: accept bcfm match > bcfmScoreCut
+    opt0ScoreCut:         200 # default: accept opt0 match > opt0ScoreCut
+    opt0FractionalCut:    0.5 
+
+    OpFlashMin:           0.0 # in us, simulation [0.0], light-triggered data [-0.8]
+    OpFlashMax:           2.0 # in us, simulation [2.0], light-triggered data [2.0]
+
+    # flash parameters    
+    FlashOffset:          0.05 # in us, acceptable offset between the t0 between TPCs or between PMTs/X-ARAPUCAs
+    FlashNoiseThreshold:  [ 600., 1500. ] # in PE, {PMT, xARAPUCA}, flash total PE threshold to ignore a flash
+    OpDetMaxPEThreshold:  [4000., 1e9] # in PE, PE in a single opdet to ignore (due to saturation effects)
+    OpDetMask:            [] # list of opdet channels to ignore (off/non-reconstructable PMTs are already identified via calibration db)
+
+    # calibration constants & simulation parameters  
+    CalAreaConstants:     @local::sbnd_calorimetryalgmc.CalAreaConstants
+    PMTCoatedVISEff_tpc0: @local::sbnd_digipmt_alg.PMTCoatedVISEff_tpc0
+    PMTCoatedVUVEff_tpc0: @local::sbnd_digipmt_alg.PMTCoatedVUVEff_tpc0
+    PMTUncoatedEff_tpc0:  @local::sbnd_digipmt_alg.PMTUncoatedEff_tpc0
+    PMTCoatedVISEff_tpc1: @local::sbnd_digipmt_alg.PMTCoatedVISEff_tpc1
+    PMTCoatedVUVEff_tpc1: @local::sbnd_digipmt_alg.PMTCoatedVUVEff_tpc1
+    PMTUncoatedEff_tpc1:  @local::sbnd_digipmt_alg.PMTUncoatedEff_tpc1
+
+    XArapucaVUVVUVEff:    @local::sbnd_digiarapuca_alg.XArapucaVUVEffVUV
+    XArapucaVUVVISEff:    @local::sbnd_digiarapuca_alg.XArapucaVUVEffVis
+    XArapucaVISEff:       @local::sbnd_digiarapuca_alg.XArapucaVISEff
+}
+
+sbnd_lightcalo_sce: @local::sbnd_lightcalo
+sbnd_lightcalo_sce.SliceProducer:       "pandoraSCE"
+sbnd_lightcalo_sce.OpT0FinderProducer:  "opt0finderSCE"
+sbnd_lightcalo_sce.BCFMProducer:        "tpcpmtbarycentermatchingSCE"
+
+END_PROLOG
