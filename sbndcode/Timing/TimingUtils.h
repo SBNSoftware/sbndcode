@@ -22,7 +22,7 @@ namespace sbnd {
      * @param[in] ts2 Second timestamp in nanoseconds.
      * @return Difference between `ts1 - ts2` in nanoseconds as double.
      */
-    double SubtractUTCTimestmap(uint64_t ts1, uint64_t ts2);
+    double SubtractUTCTimestamp(uint64_t ts1, uint64_t ts2);
 
   }
 }
