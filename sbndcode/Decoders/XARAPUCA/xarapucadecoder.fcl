@@ -3,38 +3,38 @@ BEGIN_PROLOG
 xarapucadecoder: 
 {
     # Module name.
-    module_type: "SBNDXARAPUCADecoder"                          # The name to be assigne to this art::EDProducer module.
+    module_type: "SBNDXARAPUCADecoder"                                  # The name to be assigne to this art::EDProducer module.
 
     # INPUT configuration:
     # - CAEN Fragments.
     caen_fragment_names: [ "daq:CAENV1740", "daq:ContainerCAENV1740" ]  # Valid CAEN fragments for this decoder.
     # - Boards configuration.
-    num_caen_boards: 4                                          # Maximum number of boards to be considered.
-    fragment_id_offset: 41216                                   # Offset to be applied to the fragment IDs (0xA100).
-    board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
+    num_caen_boards: 4                                                  # Maximum number of boards to be considered.
+    fragment_id_offset: 41216                                           # Offset to be applied to the fragment IDs (0xA100).
+    board_id_list: [7, 13, 16, 19]                                      # Slots where the boards are installed.
     # - Timing configuration.
-    ns_per_sample: 16                                           # Nanoseconds per sample.
+    ns_per_sample: 16                                                   # Nanoseconds per sample.
     # - FrameShift access configuration
-    frameshift_product_name: "frameshift"                       # Name for getting FrameShift module products (if any). 
+    frameshift_product_name: "frameshift"                               # Name for getting FrameShift module products (if any). 
 
     # OUTPUT configuration:
     # - Output data product instance name.
-    waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
-    timing_ref_instance_name: ""                                # Name for the instance product containing the timing reference information.
-    store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
+    waveforms_instance_name: "XARAPUCAChannels"                         # Name for the instance product containing the raw decoded waveforms.
+    timing_ref_instance_name: ""                                        # Name for the instance product containing the timing reference information.
+    store_debug_waveforms: 0                                            # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # Combination of extended fragments.
-    combine_ext_frag: true                                      # (De)activates the combination of extended fragments into a single raw::OpDetWaveform object.
-    allowed_jittering: 64                                       # Allowed jittering (in ns) between fragments to be combined.
+    combine_ext_frag: true                                              # (De)activates the combination of extended fragments into a single raw::OpDetWaveform object.
+    allowed_jittering: 64                                               # Allowed jittering (in ns) between fragments to be combined.
     # - Debug options.
-    debug_frameshift_handle: false                              # (De)activates FrameShift art::Handle information printing.
-    debug_fragments_handle: false                               # (De)activates V1740B CAEN fragments art::Handle information printing.
-    debug_timing: false                                         # (De)activates timing data printing.
-    debug_buffer: false                                         # (De)activates buffer status printing.
-    debug_waveforms: false                                      # (De)activates waveforms decoding printing.
-    debug_extended_fragments: false                             # (De)activates extended fragments information printing.
-    debug_jittering: false                                      # (De)activates trigger jittering information printing.
+    debug_frameshift_handle: false                                      # (De)activates FrameShift art::Handle information printing.
+    debug_fragments_handle: false                                       # (De)activates V1740B CAEN fragments art::Handle information printing.
+    debug_timing: false                                                 # (De)activates timing data printing.
+    debug_buffer: false                                                 # (De)activates buffer status printing.
+    debug_waveforms: false                                              # (De)activates waveforms decoding printing.
+    debug_extended_fragments: false                                     # (De)activates extended fragments information printing.
+    debug_jittering: false                                              # (De)activates trigger jittering information printing.
     # - Verbose option.
-    verbose: false                                              # (De)activates verbosity.
+    verbose: false                                                      # (De)activates verbosity.
 }
 
 END_PROLOG
