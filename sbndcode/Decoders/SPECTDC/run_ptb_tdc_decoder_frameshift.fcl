@@ -30,6 +30,7 @@ outputs:
   {
     module_type: RootOutput
     fileName:    "decoder-frameshift-art.root"
+    dataTier:    "reconstructed"
  }
 }
 
