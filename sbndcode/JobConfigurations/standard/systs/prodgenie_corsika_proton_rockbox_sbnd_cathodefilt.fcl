@@ -15,7 +15,13 @@
 # Chain entry-point:
 #   gen                  -> THIS FILE                                   <--
 #   g4                   -> standard_g4_rockbox_sbnd_cathodefilt.fcl
+#                            (now runs CathodeSimEnergyDepositFilter
+#                             between largeant and ionandscint, so the
+#                             cathode is applied to the raw LArG4 SED
+#                             *before* the SCE shift in ionandscint.)
 #   filter               -> standard_cathodefilter_sbnd.fcl
+#                            (deprecated; kept as a no-op pass-through
+#                             for backwards compatibility.)
 #   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
 #
 

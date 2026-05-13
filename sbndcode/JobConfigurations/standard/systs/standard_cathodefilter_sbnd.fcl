@@ -1,26 +1,30 @@
 #
-# Cathode-filter stage -- insert between standard_g4_rockbox_sbnd.fcl and
-# standard_detsim_sbnd.fcl in the SBND workflow.
+# Cathode-filter stage -- DEPRECATED no-op pass-through.
 #
-# Reads the two sim::SimEnergyDeposit collections produced by ionandscint
-# in the g4 stage, drops every deposit whose MidPoint lies inside the
-# data-driven SBND cathode volume, and writes them out under the producer
-# label "cathodefiltered" with the same instance names:
+# Historically this stage sat between standard_g4_rockbox_sbnd.fcl and
+# standard_detsim_sbnd.fcl and ran the CathodeSimEnergyDepositFilter on
+# the ionandscint SimEnergyDeposit collection (i.e. *after* the SCE
+# shift had already been applied).
 #
-#     ionandscint                ->   cathodefiltered
-#     ionandscint:priorSCE       ->   cathodefiltered:priorSCE
+# The cathode is a physical surface at the un-shifted deposit position,
+# so the filter has been moved up into standard_g4_rockbox_sbnd_cathodefilt.fcl
+# where it now runs on the raw LArG4 SED *before* ionandscint applies
+# SCE.  The filtered LArG4 deposits then flow through ionandscint and
+# everything downstream sees only the surviving deposits.
 #
-# The original ionandscint collections are DROPPED from the output file
-# (see outputs.out1.outputCommands below) so downstream stages never see
-# the unfiltered products by accident.
+# This file is kept as a no-op pass-through so existing job submission
+# scripts that reference it continue to work: it just copies the input
+# file to the output unchanged.  New chains should skip this stage.
 #
-# Usage:
-#     lar -c standard_cathodefilter_sbnd.fcl -s <g4.root> -o <cathodefilt.root> -n N
+# Chain:
+#   gen                  -> prodgenie_corsika_proton_rockbox_sbnd_cathodefilt.fcl
+#   g4                   -> standard_g4_rockbox_sbnd_cathodefilt.fcl   (filter runs HERE now)
+#   filter               -> THIS FILE  (no-op, kept for compatibility) <--
+#   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
 #
 
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
-#include "cathode_simenergydeposit_filter.fcl"
 #include "geometry_sbnd_cathodefilt.fcl"
 
 process_name: CathodeFilter
@@ -40,13 +44,13 @@ source: {
   maxEvents:   -1
 }
 
+# No producers -- the input file is already cathode-filtered by the g4
+# stage.  Leave the trigger path empty so art simply streams events to
+# the output unchanged.
 physics: {
-  producers: {
-    cathodefiltered: @local::cathode_simenergydeposit_filter_default
-  }
-  simulate:      [ cathodefiltered ]
+  producers: {}
   stream1:       [ out1 ]
-  trigger_paths: [ simulate ]
+  trigger_paths: []
   end_paths:     [ stream1 ]
 }
 
@@ -56,12 +60,5 @@ outputs: {
     fileName:    "%ifb_cathodefilt.root"
     dataTier:    "simulated"
     compressionLevel: 1
-    # Keep everything, but drop the pre-filter ionandscint deposits so
-    # downstream stages only see the filtered versions.
-    outputCommands: [
-      "keep *_*_*_*",
-      "drop sim::SimEnergyDeposits_ionandscint_*_*"
-    ]
-    SelectEvents: [ simulate ]
   }
 }
