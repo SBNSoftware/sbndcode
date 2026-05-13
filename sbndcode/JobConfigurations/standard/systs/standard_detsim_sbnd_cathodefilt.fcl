@@ -30,3 +30,7 @@ physics.producers.simdrift.SimulationLabelPriorSCE: "cathodefiltered:priorSCE"
 
 physics.producers.simtpc2d.wcls_main.params.inputTag: "cathodefiltered:"
 physics.producers.simtpc2d.wcls_main.configs:["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp_nocathode.jsonnet"]
+
+services.DetectorPropertiesService.DriftVelFudgeFactor: 1.00767754319 #1.575/1.563
+
+physics.producers.simtpc2d.wcls_main.structs.driftSpeed: 1.575
