@@ -39,16 +39,31 @@
 
 #include "standard_g4_rockbox_sbnd.fcl"
 #include "geometry_sbnd_cathodefilt.fcl"
-#include "cathode_simenergydeposit_filter.fcl"
 
 # ---- CathodeSimEnergyDepositFilter -------------------------------------
 # Read the raw LArG4 SED for the TPC-active volume, drop deposits inside
 # the data-driven cathode, and re-publish them under this module's label
 # with the *same* instance name so the rest of the LArSoft chain still
 # discovers the deposits via Instances = "LArG4DetectorServicevolTPCActive".
-physics.producers.cathodefiltered: @local::cathode_simenergydeposit_filter_default
-physics.producers.cathodefiltered.SimEnergyDepositLabels: [ "largeant:LArG4DetectorServicevolTPCActive" ]
-physics.producers.cathodefiltered.OutputInstances:        [ "LArG4DetectorServicevolTPCActive" ]
+#
+# NOTE: the producer is defined *inline* here (instead of via
+#   #include "cathode_simenergydeposit_filter.fcl"
+# + @local::cathode_simenergydeposit_filter_default) because that
+# include carries a BEGIN_PROLOG block, and FHiCL forbids any PROLOG
+# block after the first top-level definition.  By the time we reach
+# this line, standard_g4_rockbox_sbnd.fcl has already emitted top-level
+# services/physics/outputs blocks, so an inline definition is the
+# only way to stay valid.
+physics.producers.cathodefiltered: {
+  module_type:            "CathodeFilterSBND"
+  SimEnergyDepositLabels: [ "largeant:LArG4DetectorServicevolTPCActive" ]
+  OutputInstances:        [ "LArG4DetectorServicevolTPCActive" ]
+  CathodeVolumeFile:      "sbnd_cathode_v6.txt"
+  UseStepEndpoints:       false
+  NanPolicy:              "outside"
+  Interp:                 "bilinear"
+  Verbose:                false
+}
 
 # ---- Point ionandscint at the filtered LArG4 SED -----------------------
 # IonAndScint defaults to scanning every module for SEDs matching
