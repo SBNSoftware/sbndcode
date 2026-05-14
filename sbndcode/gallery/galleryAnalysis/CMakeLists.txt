@@ -28,18 +28,15 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.24)
 
-# The presence of cetmodules appears to allow for some tricky UPS packages
-# (e.g. `range` library) canvas depends on, which are not distributed
-# with a package config script (neither pkgconfig or CMake flavor).
-# Many other UPS packages appear they could work without it
-# (hard to say since the dependency on `range` via `canvas` is quite hard)
+project(galleryAnalysis LANGUAGES CXX)
+
 find_package(cetmodules 3.20.00 REQUIRED)
 
 #
 # making `cmake` aware of Clang may require some care;
 # we pick `gallery` qualifiers and if they contain `cN` then it's Clang;
 # TODO check if this is still necessary with CMake 3.24
-# 
+#
 if ( $ENV{SETUP_GALLERY} MATCHES "-q +([^ ]+)( |$)" )
   set ( GalleryQualifiers ${CMAKE_MATCH_1} )
   if( ${GalleryQualifiers} MATCHES "(^|:)c[0-9]+(:|$)" )
@@ -59,18 +56,10 @@ else(DEFINED $ENV{GALLERY_INSTALL})
   set(GalleryInstallDir "./" )
 endif(DEFINED $ENV{GALLERY_INSTALL})
 
-#
-# declare the name of our project
-#
-project(galleryAnalysis
-  LANGUAGES CXX
-  )
-
 # this does not seem to affect the quality of the compilation,
 # but it cuts a lot of the messages from CMake (and maybe it caches results?)
-include(CetCMakeEnv)
-cet_cmake_env()
-
+include(CetSetup)
+cet_setup()
 # standard CMake voodoo to push the installation directory in the right direction
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}

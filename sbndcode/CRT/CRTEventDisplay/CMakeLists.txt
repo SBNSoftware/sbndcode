@@ -8,14 +8,14 @@ art_make_library(
                         lardata::DetectorPropertiesService
 )
 
-simple_plugin(
-              CRTEventDisplay module
-              sbndcode_CRT_CRTEventDisplay
+cet_build_plugin(
+              CRTEventDisplay art::module
+              LIBRARIES sbndcode_CRT_CRTEventDisplay
 )
 
-simple_plugin(
-              CRTChannelMappingEventDisplay module
-              sbndcode_CRT_CRTEventDisplay
+cet_build_plugin(
+              CRTChannelMappingEventDisplay art::module
+              LIBRARIES sbndcode_CRT_CRTEventDisplay
 )
 
 install_fhicl()

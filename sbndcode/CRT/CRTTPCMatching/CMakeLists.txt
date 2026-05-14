@@ -8,14 +8,16 @@ art_make_library(
                         lardataobj::AnalysisBase
 )
 
-simple_plugin(
-              CRTTrackMatching module
+cet_build_plugin(
+              CRTTrackMatching art::module
+              LIBRARIES
               sbndcode_CRT_CRTTPCMatching
               sbndcode_CRT_CRTEventDisplay
 )
 
-simple_plugin(
-              CRTSpacePointMatching module
+cet_build_plugin(
+              CRTSpacePointMatching art::module
+              LIBRARIES
               sbndcode_CRT_CRTTPCMatching
               sbndcode_CRT_CRTEventDisplay
 )

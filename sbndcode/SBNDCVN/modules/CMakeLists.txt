@@ -19,9 +19,10 @@ cet_build_plugin(SBNDCVNMapper art::EDProducer
   art::Framework_Services_Registry
   art_root_io::tfile_support ROOT::Core
   art_root_io::TFileService_service
-  art::Persistency_Common canvas::canvas
-  art::Persistency_Provenance canvas::canvas
-  art::Utilities canvas::canvas
+  art::Persistency_Common
+  art::Persistency_Provenance
+  art::Utilities
+  canvas::canvas
   messagefacility::MF_MessageLogger
                            
   fhiclcpp::fhiclcpp
@@ -31,7 +32,7 @@ cet_build_plugin(SBNDCVNMapper art::EDProducer
   ${ROOT_BASIC_LIB_LIST}
   sbndcode_RecoUtils
   sbndcode_OpDetSim
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
 )
 
 cet_build_plugin(SBNDCVNZlibMaker art::EDAnalyzer
@@ -55,9 +56,10 @@ cet_build_plugin(SBNDCVNZlibMaker art::EDAnalyzer
   art::Framework_Services_Registry
   art_root_io::tfile_support ROOT::Core
   art_root_io::TFileService_service
-  art::Persistency_Common canvas::canvas
-  art::Persistency_Provenance canvas::canvas
-  art::Utilities canvas::canvas
+  art::Persistency_Common
+  art::Persistency_Provenance
+  art::Utilities
+  canvas::canvas
   messagefacility::MF_MessageLogger
                            
   fhiclcpp::fhiclcpp
@@ -67,7 +69,7 @@ cet_build_plugin(SBNDCVNZlibMaker art::EDAnalyzer
   ${ROOT_BASIC_LIB_LIST}
   sbndcode_RecoUtils
   sbndcode_OpDetSim
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
 )
 
 cet_build_plugin(SBNDTFNetHandler art::tool
@@ -79,7 +81,7 @@ cet_build_plugin(SBNDTFNetHandler art::tool
   fhiclcpp::types
   fhiclcpp::fhiclcpp
   ROOT::Hist
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
   sbndcode_SBNDCVN_tf
 )
 
@@ -92,7 +94,7 @@ cet_build_plugin(SBNDCVNEvaluator art::EDProducer
   art::Framework_Principal
   art_root_io::TFileService_service
   canvas::canvas
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
 )
 
 cet_build_plugin(SBNDCVNTest art::EDAnalyzer
@@ -106,7 +108,7 @@ cet_build_plugin(SBNDCVNTest art::EDAnalyzer
   art::Framework_Principal
   art_root_io::TFileService_service
   canvas::canvas
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
   ROOT::Tree
 )
 

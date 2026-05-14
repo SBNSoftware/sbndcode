@@ -15,9 +15,9 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.20.05)
-find_package(cetmodules REQUIRED)
-project(sbndcode LANGUAGES CXX)
+project(sbndcode VERSION 10.20.05 LANGUAGES CXX)
+
+find_package(cetmodules 3.24 REQUIRED)
 
 # for CI:
 # project(sbndcode VERSION 10.05.00)
@@ -27,8 +27,8 @@ message(STATUS "=================================   ${PROJECT_NAME}   ==========
 message(STATUS "")
 
 
-include(CetCMakeEnv)
-cet_cmake_env()
+include(CetSetup)
+cet_setup()
 
 # The specification of the C++ standard is required because CET macros
 # set it to C++98 by default, and then override it depending on the
@@ -60,6 +60,7 @@ install_source(LIST RepositoryTag)
 find_package( art REQUIRED )
 find_package( art_root_io REQUIRED )
 find_package( artdaq_core REQUIRED )
+find_package( canvas REQUIRED )
 find_package( nugen REQUIRED )
 find_package( nuevdb REQUIRED )
 find_package( nurandom REQUIRED )
@@ -82,7 +83,6 @@ find_package( larcoreobj REQUIRED )
 find_package( larreco REQUIRED )
 find_package( larrecodnn REQUIRED )
 find_package( larana REQUIRED )
-find_package( PostgreSQL REQUIRED )
 find_package( hep_concurrency REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( Geant4 REQUIRED )

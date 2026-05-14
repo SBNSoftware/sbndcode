@@ -7,7 +7,7 @@ cet_make_library(
   SBNDICVNZlibMaker.cxx
   SBNDITFNetHandler.h
   LIBRARY_NAME
-  sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_module_helpers
   LIBRARIES
   PUBLIC
   larrecodnn::CVN_interfaces
@@ -24,7 +24,6 @@ cet_make_library(
   fhiclcpp::fhiclcpp
   art_plugin_types::module
   Boost::filesystem
-  art_root_io::tfile_support
   nusimdata::SimulationBase
   ROOT::Hist
   lardata::DetectorPropertiesService
@@ -37,7 +36,7 @@ cet_make_library(
   larsim::MCCheater_ParticleInventoryService_service
 )
 
-art_dictionary(DICTIONARY_LIBRARIES sbndcode_sbndcvn_module_helpers)
+art_dictionary(DICTIONARY_LIBRARIES sbndcode_SBNDCVN_module_helpers)
 
 install_headers()
 install_source()

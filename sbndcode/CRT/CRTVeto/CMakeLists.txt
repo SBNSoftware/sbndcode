@@ -1,5 +1,6 @@
-simple_plugin(
-              CRTVetoProducer module
+cet_build_plugin(
+              CRTVetoProducer art::module
+              LIBRARIES
               artdaq_core::artdaq-core_Data
               sbnobj::SBND_Timing
               sbnobj::SBND_CRT

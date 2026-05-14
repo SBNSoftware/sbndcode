@@ -9,8 +9,9 @@ art_make_library(
                         sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
-simple_plugin(
-              CRTDetSim module
+cet_build_plugin(
+              CRTDetSim art::module
+              LIBRARIES
               nurandom::RandomUtils_NuRandomService_service
               larcorealg::Geometry
               lardata::DetectorClocksService

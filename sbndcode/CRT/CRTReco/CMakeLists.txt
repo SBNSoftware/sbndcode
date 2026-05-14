@@ -5,8 +5,9 @@ art_make_library(
                  sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
-simple_plugin(
-              CRTStripHitProducer module
+cet_build_plugin(
+              CRTStripHitProducer art::module
+              LIBRARIES
               artdaq_core::artdaq-core_Data
               lardata::Utilities
               sbnobj::SBND_CRT
@@ -14,22 +15,25 @@ simple_plugin(
               sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
-simple_plugin(
-              CRTClusterProducer module
+cet_build_plugin(
+              CRTClusterProducer art::module
+              LIBRARIES
               lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
-simple_plugin(
-              CRTSpacePointProducer module
+cet_build_plugin(
+              CRTSpacePointProducer art::module
+              LIBRARIES
               lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_CRT_CRTReco
 )
 
-simple_plugin(
-              CRTTrackProducer module
+cet_build_plugin(
+              CRTTrackProducer art::module
+              LIBRARIES
               lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_CRTUtils
@@ -37,8 +41,9 @@ simple_plugin(
               Eigen3::Eigen
 )
 
-simple_plugin(
-              CRTBlobProducer module
+cet_build_plugin(
+              CRTBlobProducer art::module
+              LIBRARIES
               lardata::Utilities
               sbnobj::SBND_CRT
 )
