@@ -27,8 +27,8 @@ message(STATUS "=================================   ${PROJECT_NAME}   ==========
 message(STATUS "")
 
 
-include(CetSetup)
-cet_setup()
+include(CetCMakeEnv)
+cet_cmake_env()
 
 # The specification of the C++ standard is required because CET macros
 # set it to C++98 by default, and then override it depending on the
