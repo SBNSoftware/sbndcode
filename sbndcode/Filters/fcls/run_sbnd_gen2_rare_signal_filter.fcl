@@ -1,0 +1,97 @@
+# run_sbnd_gen2_rare_signal_filter.fcl
+# author: Thomas Wester <twester@uchicago.edu>
+# Select events for Gen2 exclusive cross section samples from single unfiltered
+# input file (gen, g4, etc.). Save passing events to separate file streams
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "signal_filters_sbnd.fcl"
+
+
+services: {
+    TFileService: { fileName: "hists_filter.root" }
+    @table::services
+    @table::sbnd_random_services
+    @table::sbnd_g4_services
+}
+
+
+physics: {
+    filters: {
+        ccpi0filter: @local::sbnd_ccpi0_filter
+        ncpi0filter: @local::sbnd_ncpi0_filter
+        etafilter: @local::sbnd_eta_nopi0_filter
+        nueccfilter: @local::sbnd_ccnue_filter
+        kaonfilter: @local::sbnd_kaon_filter
+        CCDeltaRadFilter: {
+            module_type: "CCDeltaRadiative"
+        }
+        NCDeltaRadFilter: {
+            module_type: "NCDeltaRadiative"
+        }
+    }
+
+    ccpi0: [ "ccpi0filter" ]
+    ncpi0: [ "ncpi0filter" ]
+    eta: [ "etafilter" ]
+    nuecc: [ "nueccfilter" ]
+    kaon: [ "kaonfilter" ]
+    ccdeltarad: [ "CCDeltaRadFilter" ]
+    ncdeltarad: [ "NCDeltaRadFilter" ]
+
+    trigger_paths: [ "ccpi0", "ncpi0", "eta", "nuecc", "kaon", "ccdeltarad", "ncdeltarad" ]
+
+    streamccpi0: [ outccpi0 ]
+    streamncpi0: [ outncpi0 ]
+    streameta: [ outeta ]
+    streamnuecc: [ outnuecc ]
+    streamkaon: [ outkaon ]
+    streamccdeltarad: [ outccdeltarad ]
+    streamncdeltarad: [ outncdeltarad ]
+    end_paths: [ streamccpi0, streamncpi0, streameta, streamnuecc, streamkaon, streamccdeltarad, streamncdeltarad ]
+}
+
+
+outputs: {
+  outccpi0: {
+    module_type: "RootOutput"
+    fileName: "output_ccpi0.root"
+    SelectEvents: [ "ccpi0" ]
+  }
+
+  outncpi0: {
+    module_type: "RootOutput"
+    fileName: "output_ncpi0.root"
+    SelectEvents: [ "ncpi0" ]
+  }
+
+  outeta: {
+    module_type: "RootOutput"
+    fileName: "output_eta.root"
+    SelectEvents: [ "eta" ]
+  }
+
+  outnuecc: {
+    module_type: "RootOutput"
+    fileName: "output_nuecc.root"
+    SelectEvents: [ "nuecc" ]
+  }
+
+  outkaon: {
+    module_type: "RootOutput"
+    fileName: "output_kaon.root"
+    SelectEvents: [ "kaon" ]
+  }
+
+  outccdeltarad: {
+    module_type: "RootOutput"
+    fileName: "output_ccdeltarad.root"
+    SelectEvents: [ "ccdeltarad" ]
+  }
+
+  outncdeltarad: {
+    module_type: "RootOutput"
+    fileName: "output_ncdeltarad.root"
+    SelectEvents: [ "ncdeltarad" ]
+  }
+}
