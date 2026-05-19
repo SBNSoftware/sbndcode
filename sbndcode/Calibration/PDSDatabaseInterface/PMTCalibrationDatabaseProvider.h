@@ -86,6 +86,7 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
     private:
         
         bool fVerbose = false; ///< Whether to print the configuration we read.
+        bool fApplyScales = false; // Apply scalings to DB parameters for systematic variations
         std::string fLogCategory; ///< Category tag for messages.
         std::string fPMTCalibrationDatabaseTag;  
         long fDatabaseTimeStamp;
@@ -110,10 +111,34 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             double nonlinearity_alpha=0.;
             std::vector<double> ser={};
             };
+
+        /// Structure for scaling factors to DB values (for syst. studies)
+        struct PMTCalibrationDBScales {
+            // bools are OR'd with nominal value
+            bool onPMT=true;
+            bool reconstructChannel=true;
+
+            // otherwise multiplicative
+            double totalTransitTime=1.;
+            double cosmicTimeCorrection=1.;
+            double spe_amplitude=1.;
+            double spe_amplitude_std=1.;
+            double gauss_wc_power=1.;
+            double gauss_wc=1.;
+            double nonlinearity_pesat=1.;
+            double nonlinearity_alpha=1.;
+
+            std::vector<double> ser={};
+        };
             
         const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, true, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
+        const PMTCalibrationDBScales ScaleDefaults = {true, true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, {}};
+
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
+
+        /// per-channel scales
+        std::map<unsigned int, PMTCalibrationDBScales> fPMTCalibrationScales;
         
         /// Internal access to the channel correction record; returns defaults if not present.
         PMTCalibrationDB const& getChannelCorrOrDefault
@@ -127,8 +152,9 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         uint64_t RunToDatabaseTimestamp(uint32_t run) const;
 
         void ReadPMTCalibration(uint32_t run);
+        PMTCalibrationDB scalePMTCalibrationData(const PMTCalibrationDB&, const PMTCalibrationDBScales&) const;
 
 
 }; // services class
 
-#endif 
+#endif

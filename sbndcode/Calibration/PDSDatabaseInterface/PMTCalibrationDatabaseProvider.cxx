@@ -216,6 +216,12 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
       _ser.push_back(_ser_component);
     }
     fPMTCalibrationData[channel].ser = _ser;
+
+    if (fApplyScales) {
+        fPMTCalibrationData[channel] = scalePMTCalibrationData(
+                fPMTCalibrationData[channel], fPMTCalibrationScales[channel]
+        );
+    }
   }
 }
 
@@ -240,4 +246,40 @@ void sbndDB::PMTCalibrationDatabaseProvider::readPMTCalibrationDatabase(const ar
       mf::LogVerbatim(fLogCategory) << key << " " << value.breakoutBox << "," << std::endl;
     }
   }
+}
+
+
+// -----------------------------------------------------------------------------
+
+/// Apply scaling factors to the PMT calibrations
+sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDB sbndDB::PMTCalibrationDatabaseProvider::scalePMTCalibrationData(
+        const PMTCalibrationDB& db, const PMTCalibrationDBScales& scales) const
+{
+    PMTCalibrationDB result;
+
+    // copy IDs, no modification
+    result.breakoutBox = db.breakoutBox;
+    result.caenDigitizer = db.caenDigitizer;
+    result.caenDigitizerChannel = db.caenDigitizerChannel;
+
+    // copy and scale calibrations
+    // bools: use XOR + invert. Scale = True preserves the original value, Scale = False inverts
+    // TRUE ^ !TRUE = TRUE, FALSE ^ !FALSE = FALSE
+    // TRUE ^ !FALSE = FALSE, FALSE ^ !FALSE = TRUE
+    result.onPMT = db.onPMT ^ !scales.onPMT;
+    result.reconstructChannel = db.reconstructChannel ^ !scales.reconstructChannel;
+
+    result.totalTransitTime = db.totalTransitTime * scales.totalTransitTime;
+    result.cosmicTimeCorrection = db.cosmicTimeCorrection * scales.cosmicTimeCorrection;
+    result.spe_amplitude = db.spe_amplitude * scales.spe_amplitude;
+    result.spe_amplitude_std = db.spe_amplitude_std * scales.spe_amplitude_std;
+    result.gauss_wc_power = db.gauss_wc_power * scales.gauss_wc_power;
+    result.gauss_wc = db.gauss_wc * scales.gauss_wc;
+    result.nonlinearity_pesat = db.nonlinearity_pesat * scales.nonlinearity_pesat;
+    result.nonlinearity_alpha = db.nonlinearity_alpha * scales.nonlinearity_alpha;
+
+    // TODO not implemented
+    result.ser = db.ser;
+
+    return result;
 }
