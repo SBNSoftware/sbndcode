@@ -16,6 +16,10 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib_except/exception.h"
 #include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Sequence.h"
+#include "fhiclcpp/types/Tuple.h"
+#include "fhiclcpp/types/OptionalAtom.h"
+#include "fhiclcpp/types/OptionalSequence.h"
 
 // Local
 #include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
@@ -33,6 +37,23 @@ namespace sbndDB{ class PMTCalibrationDatabaseProvider; }
  * This module reads the PMT timing corrections from the database.
  *
  */
+
+//--------------------------------------------------------------------------------
+
+// PMT Scalings for systematic variations. All scale fields optional
+struct PMTScaleConfig {
+    fhicl::Atom<int> channel {
+        fhicl::Name("Channel"),
+        fhicl::Comment("Which channel to apply the scaling to (-1 for all channels)")
+    };
+
+    fhicl::OptionalAtom<float> spe_response {
+        fhicl::Name("SPEAmplitude"),
+        fhicl::Comment("Multiplicative scaling applied to SPE response")
+    };
+};
+
+
 class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
 
     public:
@@ -115,24 +136,24 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         /// Structure for scaling factors to DB values (for syst. studies)
         struct PMTCalibrationDBScales {
             // bools are OR'd with nominal value
-            bool onPMT=true;
-            bool reconstructChannel=true;
+            std::optional<bool> onPMT;
+            std::optional<bool> reconstructChannel;
 
             // otherwise multiplicative
-            double totalTransitTime=1.;
-            double cosmicTimeCorrection=1.;
-            double spe_amplitude=1.;
-            double spe_amplitude_std=1.;
-            double gauss_wc_power=1.;
-            double gauss_wc=1.;
-            double nonlinearity_pesat=1.;
-            double nonlinearity_alpha=1.;
+            std::optional<double> totalTransitTime;
+            std::optional<double> cosmicTimeCorrection;
+            std::optional<double> spe_amplitude;
+            std::optional<double> spe_amplitude_std;
+            std::optional<double> gauss_wc_power;
+            std::optional<double> gauss_wc;
+            std::optional<double> nonlinearity_pesat;
+            std::optional<double> nonlinearity_alpha;
 
-            std::vector<double> ser={};
+            // SER not implemented
         };
             
         const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, true, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
-        const PMTCalibrationDBScales ScaleDefaults = {true, true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, {}};
+        // const PMTCalibrationDBScales ScaleDefaults = {true, true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, {}};
 
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
@@ -153,6 +174,8 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
 
         void ReadPMTCalibration(uint32_t run);
         PMTCalibrationDB scalePMTCalibrationData(const PMTCalibrationDB&, const PMTCalibrationDBScales&) const;
+        void modifyScale(PMTCalibrationDBScales&, const PMTCalibrationDBScales&) const;
+        std::string calibDataStr(const PMTCalibrationDB&) const;
 
 
 }; // services class
