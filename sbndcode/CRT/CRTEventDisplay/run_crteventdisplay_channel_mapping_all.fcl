@@ -1,0 +1,53 @@
+#include "services_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "crteventdisplay_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
+
+process_name: CRTEventDisplay
+
+services:
+{
+  @table::sbnd_services
+  @table::crt_services_sbnd
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  CRTChannelMapService:     @local::crt_channel_map_no_inversion
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtevdbot:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdsou:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdnor:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdwes:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdeas:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdtpl:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdtph:   @local::crteventdisplay_sbnd_channel_mapping
+  }
+
+  ana: [ crtevdbot, crtevdsou, crtevdnor, crtevdwes, crtevdeas, crtevdtpl, crtevdtph ]
+
+  end_paths: [ ana ]
+}
+
+physics.analyzers.crtevdbot.SaveDir:                          "/YOUR/DIRECTORY/NAME/bottom_wall"
+physics.analyzers.crtevdbot.EventDisplayConfig.ChosenTaggers: [ 0 ]
+physics.analyzers.crtevdsou.SaveDir:                          "/YOUR/DIRECTORY/NAME/south_wall"
+physics.analyzers.crtevdsou.EventDisplayConfig.ChosenTaggers: [ 1 ]
+physics.analyzers.crtevdnor.SaveDir:                          "/YOUR/DIRECTORY/NAME/north_wall"
+physics.analyzers.crtevdnor.EventDisplayConfig.ChosenTaggers: [ 2 ]
+physics.analyzers.crtevdwes.SaveDir:                          "/YOUR/DIRECTORY/NAME/west_wall"
+physics.analyzers.crtevdwes.EventDisplayConfig.ChosenTaggers: [ 3 ]
+physics.analyzers.crtevdeas.SaveDir:                          "/YOUR/DIRECTORY/NAME/east_wall"
+physics.analyzers.crtevdeas.EventDisplayConfig.ChosenTaggers: [ 4 ]
+physics.analyzers.crtevdtpl.SaveDir:                          "/YOUR/DIRECTORY/NAME/toplow_wall"
+physics.analyzers.crtevdtpl.EventDisplayConfig.ChosenTaggers: [ 5 ]
+physics.analyzers.crtevdtph.SaveDir:                          "/YOUR/DIRECTORY/NAME/tophigh_wall"
+physics.analyzers.crtevdtph.EventDisplayConfig.ChosenTaggers: [ 6 ]

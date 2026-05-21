@@ -1,23 +1,22 @@
 #include "crtbacktrackeralg_sbnd.fcl"
-#include "crtsimmodules_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crtana_sbnd:
 {
-  CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd 
-  PEAttenuation:     @local::sbnd_crtsim.DetSimParams.NpeScaleShift
-  PropDelay:         @local::sbnd_crtsim.DetSimParams.PropDelay
-  TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm
-  TimeWalkScale:     @local::sbnd_crtsim.DetSimParams.TDelayScale
-  TruthMatch:        false
-  module_type:       "CRTAnalysis"
+  CRTBackTrackerAlg:             @local::crtbacktrackeralg_sbnd
+  CRTClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
+  TruthMatch:                    false
+  module_type:                   "CRTAnalysis"
 }
 
 crtana_data_sbnd: @local::crtana_sbnd
-crtana_data_sbnd.FEBDataModuleLabel: "crtdecoder"
-crtana_data_sbnd.DataMode:           true
-crtana_data_sbnd.HasPTB:             true
-crtana_data_sbnd.HasTDC:             true
+crtana_data_sbnd.FEBDataModuleLabel:            "crtdecoder"
+crtana_data_sbnd.DataMode:                      true
+crtana_data_sbnd.NoTPC:                         false
+crtana_data_sbnd.HasPTB:                        true
+crtana_data_sbnd.HasTDC:                        true
+crtana_data_sbnd.CRTClusterCharacterisationAlg: @local::crtclustercharacterisationalg_data_sbnd
 
 END_PROLOG

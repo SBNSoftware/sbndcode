@@ -1,3 +1,0 @@
-#include "run_crtrecoana_notpc.fcl"
-
-physics.producers.crttracks.MaskedTaggers: [ 0 ]

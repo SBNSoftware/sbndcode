@@ -33,16 +33,17 @@
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTBlob.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
-#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/CRT/CRTReco/CRTClusterCharacterisationAlg.h"
 
 namespace sbnd::crt {
   class CRTAnalysis;
@@ -87,6 +88,8 @@ public:
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec, const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
                         const art::FindOneP<CRTCluster> &spacePointsToClusters, const art::FindManyP<CRTStripHit> &clustersToStripHits);
 
+  void AnalyseCRTBlobs(std::vector<art::Ptr<CRTBlob>> &CRTBlobVec);
+
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                           const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const art::Handle<std::vector<CRTCluster>> &CRTClusterHandle,
                           const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
@@ -100,16 +103,14 @@ private:
   art::ServiceHandle<CRTGeoService>              fCRTGeoService;
   art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
-  TPCGeoAlg         fTPCGeoAlg;
-  CRTBackTrackerAlg fCRTBackTrackerAlg;
+  CRTBackTrackerAlg             fCRTBackTrackerAlg;
+  CRTClusterCharacterisationAlg fCRTClusterCharacAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
-    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
+    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fCRTBlobModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
     fTDCModuleLabel, fTimingReferenceModuleLabel;
-  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fTruthMatch;
-  //! Adding some of the reco parameters to save corrections
-  double fPEAttenuation, fTimeWalkNorm, fTimeWalkScale, fPropDelay;
+  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fHasBlobs, fTruthMatch;
 
   TTree* fTree;
 
@@ -121,7 +122,7 @@ private:
   int _crt_timing_reference_type;
   int _crt_timing_reference_channel;
 
-  //mc truth
+  // True Particles (from G4)
   std::vector<int16_t>              _mc_trackid;
   std::vector<int16_t>              _mc_pdg;
   std::vector<int16_t>              _mc_status;
@@ -144,7 +145,7 @@ private:
   std::vector<double>               _mc_endpz;
   std::vector<double>               _mc_ende;
 
-  //G4 detector id
+  // True Energy Depositions
   std::vector<int16_t> _ide_trackid;
   std::vector<float>   _ide_e;
   std::vector<float>   _ide_entryx;
@@ -156,7 +157,7 @@ private:
   std::vector<float>   _ide_exitz;
   std::vector<float>   _ide_exitt;
 
-  //front end mother board
+  // Raw Readouts (FEBDatas)
   std::vector<uint16_t>              _feb_mac5;
   std::vector<int16_t>               _feb_tagger;
   std::vector<uint16_t>              _feb_flags;
@@ -166,7 +167,7 @@ private:
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
 
-  //strip hit to select the strip which has ADC above threshold
+  // Strip Hits
   std::vector<uint32_t> _sh_channel;
   std::vector<int16_t>  _sh_tagger;
   std::vector<double>   _sh_ts0;
@@ -185,7 +186,7 @@ private:
   std::vector<double>   _sh_truth_energy;
   std::vector<double>   _sh_truth_time;
 
-  //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
+  // Clusters and their corresponding SpacePoints
   std::vector<double>                _cl_ts0;
   std::vector<double>                _cl_ts1;
   std::vector<uint32_t>              _cl_unixs;
@@ -194,11 +195,11 @@ private:
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
-  std::vector<std::vector<double>>   _cl_sh_ts0_set; //! To store t0 from x-y coincidences
-  std::vector<std::vector<double>>   _cl_sh_ts1_set; //! To store t1 from x-y coincidences
-  std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
-  std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
-  std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
+  std::vector<std::vector<double>>   _cl_sh_ts0_set;
+  std::vector<std::vector<double>>   _cl_sh_ts1_set;
+  std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set;
+  std::vector<std::vector<double>>   _cl_sh_time_walk_set;
+  std::vector<std::vector<double>>   _cl_sh_prop_delay_set;
   std::vector<int>                   _cl_truth_trackid;
   std::vector<double>                _cl_truth_completeness;
   std::vector<double>                _cl_truth_purity;
@@ -231,7 +232,7 @@ private:
   std::vector<double>                _cl_sp_dts1;
   std::vector<bool>                  _cl_sp_complete;
 
-  //backtrack truth information from reco level
+  // True Deposits per particle per tagger
   std::vector<int>     _td_tag_trackid;
   std::vector<int>     _td_tag_pdg;
   std::vector<int16_t> _td_tag_tagger;
@@ -242,6 +243,7 @@ private:
   std::vector<double>  _td_tag_z;
   std::vector<bool>    _td_tag_reco_status;
 
+  // True Deposits per particle
   std::vector<int>     _td_trackid;
   std::vector<int>     _td_pdg;
   std::vector<double>  _td_energy;
@@ -250,7 +252,7 @@ private:
   std::vector<bool>    _td_reco_status;
   std::vector<bool>    _td_reco_triple;
 
-  //track level information
+  // Tracks
   std::vector<double>                _tr_start_x;
   std::vector<double>                _tr_start_y;
   std::vector<double>                _tr_start_z;
@@ -296,6 +298,16 @@ private:
   std::vector<double>                _tr_truth_theta;
   std::vector<double>                _tr_truth_phi;
 
+  // Blobs
+  std::vector<double>           _bl_ts0;
+  std::vector<double>           _bl_ets0;
+  std::vector<double>           _bl_ts1;
+  std::vector<double>           _bl_ets1;
+  std::vector<double>           _bl_pe;
+  std::vector<int>              _bl_nsps;
+  std::vector<std::vector<int>> _bl_nsps_per_tagger;
+
+  // TPC Tracks and their CRT matches
   std::vector<double>                _tpc_start_x;
   std::vector<double>                _tpc_start_y;
   std::vector<double>                _tpc_start_z;
@@ -310,6 +322,7 @@ private:
   std::vector<double>                _tpc_end_dir_z;
   std::vector<double>                _tpc_length;
   std::vector<double>                _tpc_track_score;
+  std::vector<int>                   _tpc_whichtpc;
   std::vector<int>                   _tpc_truth_trackid;
   std::vector<int>                   _tpc_truth_pdg;
   std::vector<double>                _tpc_truth_energy;
@@ -330,6 +343,7 @@ private:
   std::vector<bool>                  _tpc_tr_matchable;
   std::vector<bool>                  _tpc_tr_matched;
   std::vector<bool>                  _tpc_tr_good_match;
+  std::vector<double>                _tpc_tr_xshift;
   std::vector<double>                _tpc_tr_ts0;
   std::vector<double>                _tpc_tr_ts1;
   std::vector<std::vector<int>>      _tpc_tr_taggers;
@@ -341,12 +355,15 @@ private:
   std::vector<double>                _tpc_tr_end_z;
   std::vector<double>                _tpc_tr_score;
 
+  // Penn Trigger Board HLTs
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
 
+  // Penn Trigger Board LLTs
   std::vector<uint64_t> _ptb_llt_trigger;
   std::vector<uint64_t> _ptb_llt_timestamp;
 
+  // SPEC TDC Timestamps
   std::vector<uint32_t>    _tdc_channel;
   std::vector<uint64_t>    _tdc_timestamp;
   std::vector<uint64_t>    _tdc_offset;
@@ -356,6 +373,7 @@ private:
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
+  , fCRTClusterCharacAlg(p.get<fhicl::ParameterSet>("CRTClusterCharacterisationAlg", fhicl::ParameterSet()))
 {
   fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
   fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
@@ -364,6 +382,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fCRTClusterModuleLabel            = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
   fCRTSpacePointModuleLabel         = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
   fCRTTrackModuleLabel              = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
+  fCRTBlobModuleLabel               = p.get<std::string>("CRTBlobModuleLabel", "crtblobs");
   fTPCTrackModuleLabel              = p.get<std::string>("TPCTrackModuleLabel", "pandoraSCETrack");
   fCRTSpacePointMatchingModuleLabel = p.get<std::string>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
   fCRTTrackMatchingModuleLabel      = p.get<std::string>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
@@ -376,12 +395,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fNoTPC                            = p.get<bool>("NoTPC", false);
   fHasPTB                           = p.get<bool>("HasPTB", false);
   fHasTDC                           = p.get<bool>("HasTDC", false);
+  fHasBlobs                         = p.get<bool>("HasBlobs", false);
   fTruthMatch                       = p.get<bool>("TruthMatch", true);
-  //! Adding some of the reco parameters to save corrections
-  fPEAttenuation                    = p.get<double>("PEAttenuation", 1.0);
-  fTimeWalkNorm                     = p.get<double>("TimeWalkNorm",  0.0);
-  fTimeWalkScale                    = p.get<double>("TimeWalkScale", 0.0);
-  fPropDelay                        = p.get<double>("PropDelay",     0.0);
 
   if(!fDataMode && fTruthMatch)
     fCRTBackTrackerAlg = CRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()));
@@ -578,6 +593,17 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tr_truth_phi", "std::vector<double>", &_tr_truth_phi);
     }
 
+  if(fHasBlobs)
+    {
+      fTree->Branch("bl_ts0", "std::vector<double>", &_bl_ts0);
+      fTree->Branch("bl_ets0", "std::vector<double>", &_bl_ets0);
+      fTree->Branch("bl_ts1", "std::vector<double>", &_bl_ts1);
+      fTree->Branch("bl_ets1", "std::vector<double>", &_bl_ets1);
+      fTree->Branch("bl_pe", "std::vector<double>", &_bl_pe);
+      fTree->Branch("bl_nsps", "std::vector<int>", &_bl_nsps);
+      fTree->Branch("bl_nsps_per_tagger", "std::vector<std::vector<int>>", &_bl_nsps_per_tagger);
+    }
+
   if(!fNoTPC)
     {
       fTree->Branch("tpc_start_x", "std::vector<double>", &_tpc_start_x);
@@ -594,6 +620,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_end_dir_z", "std::vector<double>", &_tpc_end_dir_z);
       fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
       fTree->Branch("tpc_track_score", "std::vector<double>", &_tpc_track_score);
+      fTree->Branch("tpc_whichtpc", "std::vector<int>", &_tpc_whichtpc);
       fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
       fTree->Branch("tpc_sp_channel_set", "std::vector<std::vector<uint32_t>>", &_tpc_sp_channel_set);
       fTree->Branch("tpc_sp_xshift", "std::vector<double>", &_tpc_sp_xshift);
@@ -606,6 +633,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_sp_z", "std::vector<double>", &_tpc_sp_z);
       fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
       fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
+      fTree->Branch("tpc_tr_xshift", "std::vector<double>", &_tpc_tr_xshift);
       fTree->Branch("tpc_tr_ts0", "std::vector<double>", &_tpc_tr_ts0);
       fTree->Branch("tpc_tr_ts1", "std::vector<double>", &_tpc_tr_ts1);
       fTree->Branch("tpc_tr_taggers", "std::vector<std::vector<int>>", &_tpc_tr_taggers);
@@ -834,6 +862,23 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill CRTTrack variables
   AnalyseCRTTracks(e, CRTTrackVec, tracksToSpacePoints, spacepointsToClusters, clustersToStripHits);
+
+  if(fHasBlobs)
+    {
+      // Get CRTBlobs
+      art::Handle<std::vector<CRTBlob>> CRTBlobHandle;
+      e.getByLabel(fCRTBlobModuleLabel, CRTBlobHandle);
+      if(!CRTBlobHandle.isValid()){
+        std::cout << "CRTBlob product " << fCRTBlobModuleLabel << " not found..." << std::endl;
+        throw std::exception();
+      }
+
+      std::vector<art::Ptr<CRTBlob>> CRTBlobVec;
+      art::fill_ptr_vector(CRTBlobVec, CRTBlobHandle);
+
+      // Fill CRTBlob variables
+      AnalyseCRTBlobs(CRTBlobVec);
+    }
 
   if(fNoTPC)
     {
@@ -1282,25 +1327,10 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sh_ts1_set[i][ii]      = striphit->Ts1();
           _cl_sh_feb_mac5_set[i][ii] = fCRTChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
 
-          /*
-           * The below segment reimplements the CorrectTime() method
-           * from CRTReco/CRTClusterCharacterisationAlg.cc .
-           * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
-           * counters, the time walk and propagation delay are saved as explicit branches here.
-           */
           if(spacepoints.size() == 1)
             {
-              double pe0 = fCRTGeoService->GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
-              double pe1 = fCRTGeoService->GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
-              double pe  = pe0 + pe1;
-
-              double dist = fCRTGeoService->DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
-
-              double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
-              double tw_pe = pe * corr;
-
-              _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
-              _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+              _cl_sh_time_walk_set[i][ii]  = fCRTClusterCharacAlg.TimeWalk(striphit, spacepoints[0]->Pos());
+              _cl_sh_prop_delay_set[i][ii] = fCRTClusterCharacAlg.PropagationDelay(striphit, spacepoints[0]->Pos());
 
               ts0_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts0_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
               ts1_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts1_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
@@ -1585,6 +1615,34 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
     }
 }
 
+void sbnd::crt::CRTAnalysis::AnalyseCRTBlobs(std::vector<art::Ptr<CRTBlob>> &CRTBlobVec)
+{
+  const unsigned nBlobs = CRTBlobVec.size();
+
+  _bl_ts0.resize(nBlobs);
+  _bl_ets0.resize(nBlobs);
+  _bl_ts1.resize(nBlobs);
+  _bl_ets1.resize(nBlobs);
+  _bl_pe.resize(nBlobs);
+  _bl_nsps.resize(nBlobs);
+  _bl_nsps_per_tagger.resize(nBlobs, std::vector<int>(7));
+
+  for(unsigned i = 0; i < nBlobs; ++i)
+    {
+      const auto blob = CRTBlobVec[i];
+
+      _bl_ts0[i]  = blob->Ts0();
+      _bl_ets0[i] = blob->Ts0Err();
+      _bl_ts1[i]  = blob->Ts1();
+      _bl_ets1[i] = blob->Ts1Err();
+      _bl_pe[i]   = blob->PE();
+      _bl_nsps[i] = blob->TotalSpacePoints();
+
+      for(unsigned j = 0; j < 7; ++j)
+        _bl_nsps_per_tagger[i][j] = blob->SpacePointsInTagger((CRTTagger)j);
+    }
+}
+
 void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                                                 const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const art::Handle<std::vector<CRTCluster>> &CRTClusterHandle,
                                                 const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
@@ -1610,6 +1668,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_dir_z.resize(nTracks);
   _tpc_length.resize(nTracks);
   _tpc_track_score.resize(nTracks);
+  _tpc_whichtpc.resize(nTracks);
   _tpc_truth_trackid.resize(nTracks);
   _tpc_truth_pdg.resize(nTracks);
   _tpc_truth_energy.resize(nTracks);
@@ -1630,6 +1689,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_matchable.resize(nTracks);
   _tpc_tr_matched.resize(nTracks);
   _tpc_tr_good_match.resize(nTracks);
+  _tpc_tr_xshift.resize(nTracks);
   _tpc_tr_ts0.resize(nTracks);
   _tpc_tr_ts1.resize(nTracks);
   _tpc_tr_taggers.resize(nTracks);
@@ -1699,6 +1759,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
 
       const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
+      _tpc_whichtpc[nActualTracks]                      = TPCGeoUtil::DetectedInTPC(trackHits);
 
       if(spacepoint.isNonnull())
         {
@@ -1741,7 +1802,11 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
         {
           const anab::T0 trackMatch = tracksToTrackMatches.data(track.key()).ref();
 
+          const int driftDirection     = TPCGeoUtil::DriftDirectionFromHits(geometryService, trackHits);
+          const double crtShiftingTime = fDataMode ? crttrack->Ts0() * 1e-3 : crttrack->Ts1() * 1e-3;
+
           _tpc_tr_matched[nActualTracks] = true;
+          _tpc_tr_xshift[nActualTracks]  = driftDirection * crtShiftingTime * detProp.DriftVelocity();
           _tpc_tr_ts0[nActualTracks]     = crttrack->Ts0();
           _tpc_tr_ts1[nActualTracks]     = crttrack->Ts1();
           _tpc_tr_score[nActualTracks]   = trackMatch.TriggerConfidence();
@@ -1765,6 +1830,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       else
         {
           _tpc_tr_matched[nActualTracks] = false;
+          _tpc_tr_xshift[nActualTracks]  = -std::numeric_limits<double>::max();
           _tpc_tr_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_score[nActualTracks]   = -std::numeric_limits<double>::max();
@@ -1843,6 +1909,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_dir_z.resize(nActualTracks);
   _tpc_length.resize(nActualTracks);
   _tpc_track_score.resize(nActualTracks);
+  _tpc_whichtpc.resize(nActualTracks);
   _tpc_truth_trackid.resize(nActualTracks);
   _tpc_truth_pdg.resize(nActualTracks);
   _tpc_truth_energy.resize(nActualTracks);

@@ -17,28 +17,30 @@
   
 SBND::CRTChannelMapService::CRTChannelMapService(fhicl::ParameterSet const& pset)
 {
-  const std::string channelMapFile = pset.get<std::string>("FileName");
+  const std::string channelMapFile     = pset.get<std::string>("ChannelMapFileName");
+  const std::string timingChainMapFile = pset.get<std::string>("TimingChainMapFileName");
 
-  std::string fullname;
+  std::string channelMapFileFullName, timingChainMapFileFullName;
   cet::search_path sp("FW_SEARCH_PATH");
-  sp.find_file(channelMapFile, fullname);
+  sp.find_file(channelMapFile, channelMapFileFullName);
+  sp.find_file(timingChainMapFile, timingChainMapFileFullName);
 
-  if(fullname.empty())
+  if(channelMapFileFullName.empty())
     {
       std::cout << "SBND::CRTChannelMapService Input file " << channelMapFile << " not found" << std::endl;
       throw cet::exception("File not found");
     }
 
   std::cout << "SBND CRT Channel Map: Building map from file " << channelMapFile << std::endl;
-  std::ifstream inFile(fullname, std::ios::in);
+  std::ifstream channelMapInFile(channelMapFileFullName, std::ios::in);
   std::string line;
 
-  while(std::getline(inFile,line))
+  while(std::getline(channelMapInFile, line))
     {
       std::stringstream linestream(line);
     
       SBND::CRTChannelMapService::ModuleInfo_t m;
-      linestream 
+      linestream
         >> m.offline_module_id
         >> m.mac5
         >> m.channel_order_swapped;
@@ -49,7 +51,38 @@ SBND::CRTChannelMapService::CRTChannelMapService(fhicl::ParameterSet const& pset
       fModuleInfoFromMAC5[m.mac5]                   = m;
     }
   
-  inFile.close();
+  channelMapInFile.close();
+
+  if(timingChainMapFileFullName.empty())
+    {
+      std::cout << "SBND::CRTChannelMapService Input file " << timingChainMapFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
+  std::cout << "SBND CRT Channel Map: Building timing chain map from file " << timingChainMapFile << std::endl;
+  std::ifstream timingChainMapInFile(timingChainMapFileFullName, std::ios::in);
+
+  while(std::getline(timingChainMapInFile, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int timing_chain = std::numeric_limits<unsigned int>::max();
+      unsigned int n            = 0;
+
+      linestream
+        >> timing_chain
+        >> n;
+
+      for(unsigned int i = 0; i < n; ++i)
+        {
+          unsigned int offline_module_id = std::numeric_limits<unsigned int>::max();
+          linestream >> offline_module_id;
+          fTimingChainFromOfflineID[offline_module_id]                        = timing_chain;
+          fTimingChainFromMAC5[GetMAC5FromOfflineModuleID(offline_module_id)] = timing_chain;
+        }
+    }
+
+  timingChainMapInFile.close();
 }
 
 SBND::CRTChannelMapService::ModuleInfo_t SBND::CRTChannelMapService::GetModuleInfoFromMAC5(unsigned int mac5) const
@@ -200,6 +233,21 @@ bool SBND::CRTChannelMapService::GetInversionFromOfflineModuleID(const unsigned 
 unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id)
 {
   return GetMAC5FromOfflineModuleID(GetOfflineModuleIDFromOfflineChannelID(offline_channel_id));
+}
+
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineModuleID(unsigned int offline_module_id)
+{
+  return fTimingChainFromOfflineID[offline_module_id];
+}
+
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id)
+{
+  return GetTimingChainFromOfflineModuleID(GetOfflineModuleIDFromOfflineChannelID(offline_channel_id));
+}
+
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromMAC5(unsigned int mac5)
+{
+  return fTimingChainFromMAC5[mac5];
 }
 
 DEFINE_ART_SERVICE(SBND::CRTChannelMapService)
