@@ -153,7 +153,6 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         };
             
         const PMTCalibrationDB CorrectionDefaults = {0, 0, 0, true, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {}};
-        // const PMTCalibrationDBScales ScaleDefaults = {true, true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, {}};
 
 	    /// Map of corrections by channel
         std::map<unsigned int, PMTCalibrationDB> fPMTCalibrationData;
