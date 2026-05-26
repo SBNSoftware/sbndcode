@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+services.MillichargedParticleService: {
+  charge: 0.2
+  massFraction: 11.4
+}
+
+END_PROLOG

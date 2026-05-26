@@ -10,7 +10,7 @@ sbnd_simenergydepfaketriggerfilter:
   EnergyDeposit:   100        # Minimum energy deposit in TPC for trigger [MeV]
  
   # By default, take only the energy deposits within the TPC active volume
-  SimEnergyDepModuleName: "largeant:LArG4DetectorServicevolTPCActive" # Name of SimEnergyDeposit producer module
+  SimEnergyDepModuleName: "largeant" # Name of SimEnergyDeposit producer module
 }
 
 END_PROLOG

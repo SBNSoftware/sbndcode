@@ -1,0 +1,24 @@
+#include "services_sbnd.fcl"
+
+physics: {
+   analyzers: {
+      millichargedExporter: {
+        module_type: "MillichargedExporter"
+        # digitsAdcs or dedl
+        export_type: "both"
+      }
+   }
+   ana: [millichargedExporter]
+   end_paths: [ana]
+}
+
+process_name: MillichargedExporter
+
+services: {
+    TFileService: { fileName: "millicharged.root" }
+    @table::sbnd_services # from services_sbnd.fcl
+}
+
+source: {
+    maxEvents: -1
+}
