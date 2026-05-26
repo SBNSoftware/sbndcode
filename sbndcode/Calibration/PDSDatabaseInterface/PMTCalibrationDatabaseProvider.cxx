@@ -331,12 +331,11 @@ sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDB sbndDB::PMTCalibrationD
     result.caenDigitizerChannel = db.caenDigitizerChannel;
 
     // copy and scale calibrations
-    // bools: use XOR + invert. Scale = True preserves the original value, Scale = False inverts
-    // TRUE ^ !TRUE = TRUE, FALSE ^ !FALSE = FALSE
-    // TRUE ^ !FALSE = FALSE, FALSE ^ !FALSE = TRUE
-    result.onPMT = db.onPMT ^ !scales.onPMT.value_or(true);
-    result.reconstructChannel = db.reconstructChannel ^ !scales.reconstructChannel.value_or(true);
+    // bools: change value if set
+    if (scales.onPMT) result.onPMT = scales.onPMT.value();
+    if (scales.reconstructChannel) result.reconstructChannel = scales.reconstructChannel.value();
 
+    // otherwise multiply
     result.totalTransitTime = db.totalTransitTime * scales.totalTransitTime.value_or(1.0);
     result.cosmicTimeCorrection = db.cosmicTimeCorrection * scales.cosmicTimeCorrection.value_or(1.0);
     result.spe_amplitude = db.spe_amplitude * scales.spe_amplitude.value_or(1.0);
