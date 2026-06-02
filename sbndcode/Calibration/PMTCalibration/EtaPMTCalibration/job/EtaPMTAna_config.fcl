@@ -1,0 +1,31 @@
+BEGIN_PROLOG
+
+etapmtAna:
+{
+	module_type: "EtaPMTAna"
+	
+	## Save options for TTree
+
+	## Configuration parameters
+	Verbosity: 0
+	MakePDSGeoTree: "true"
+
+	## Input module labels
+	OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
+	CRTTrackModuleLabel: "crttracks"
+
+	MaxTimeDiff: 0.5
+	MinTrackLength: 200
+
+	OpFlashBeamWindow: [-1500000, 1500000] #ns [Full flash window]
+	CRTSaveWindow: [-1500000, 1500000] #ns [Full flash window]
+
+    AVminTPC0: [-200, -200, 0]
+    AVmaxTPC0: [0, 200, 500]
+    AVminTPC1: [0, -200, 0]
+    AVmaxTPC1: [200, 200, 500]
+	
+	IsochronousWidth: 10
+}
+
+END_PROLOG

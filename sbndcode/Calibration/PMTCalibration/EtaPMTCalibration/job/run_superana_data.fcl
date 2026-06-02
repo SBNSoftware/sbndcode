@@ -1,0 +1,19 @@
+#include "run_superana.fcl"
+
+physics.analyzers.superana.SaveRawWaveforms: false
+physics.analyzers.superana.SaveDeconvolvedWaveforms: false
+physics.analyzers.superana.SaveMCTruth: "false"
+physics.analyzers.superana.SaveMCParticles: "false"
+physics.analyzers.superana.SaveSimPhotons: "false"
+physics.analyzers.superana.SaveSimPhotonsArrivalTimes: "false"
+physics.analyzers.superana.SaveOpFlashes: "true"
+physics.analyzers.superana.MCTruthModuleLabel: [""]
+physics.analyzers.superana.MCModuleLabel: ""
+physics.analyzers.superana.SimPhotonsModuleLabel: ["", ""]
+physics.analyzers.superana.RawWaveformsModuleLabel: "pmtdecoder:PMTChannels"
+physics.analyzers.superana.OpFlashesModuleLabel: ["opflashtpc0","opflashtpc1"]
+physics.analyzers.superana.HitsLabel: ""
+physics.analyzers.superana.Reco2Label: ""
+physics.analyzers.superana.CosmicIdModuleLabel: ""
+physics.analyzers.superana.OpT0FinderModuleLabel: ""
+physics.analyzers.superana.SimpleFlashMatchModuleLabel: ""

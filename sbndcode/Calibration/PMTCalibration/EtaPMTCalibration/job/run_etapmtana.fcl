@@ -1,0 +1,32 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "EtaPMTAna_config.fcl"
+
+process_name: EtaPMTAna
+
+services:
+{
+  TFileService:              { fileName: "etapmtana_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    etapmtAna: @local::etapmtAna
+  }
+
+  ana: [etapmtAna]
+  end_paths: [ana]
+}
