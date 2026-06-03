@@ -579,68 +579,253 @@ void nuESystWeightMatching_macro(){
         weightEntryMap[key] = i;
     }
 
-    TH1D* numNuEScatters_nominal = new TH1D("numNuEScatters_nominal", "Number of nu+e Elastic Scatters for 1e21 POT", 60, 0, 600);
+    const int NUNIV = 1000;
 
-    double actualSignalCount = 0;
+    // Per-parameter histograms: each shows how total signal count varies across 1000 universes
+    TH1D* h_horncurrent  = new TH1D("h_horncurrent",  "Horn Current;Total nu+e count;Universes",     60, 0, 600);
+    TH1D* h_expskin      = new TH1D("h_expskin",      "Exp Skin;Total nu+e count;Universes",         60, 0, 600);
+    TH1D* h_kplus        = new TH1D("h_kplus",        "K+;Total nu+e count;Universes",               60, 0, 600);
+    TH1D* h_kmin         = new TH1D("h_kmin",         "K-;Total nu+e count;Universes",               60, 0, 600);
+    TH1D* h_kzero        = new TH1D("h_kzero",        "K0;Total nu+e count;Universes",               60, 0, 600);
+    TH1D* h_nucleoninex  = new TH1D("h_nucleoninex",  "Nucleon InelXsec;Total nu+e count;Universes", 60, 0, 600);
+    TH1D* h_nucleonqex   = new TH1D("h_nucleonqex",   "Nucleon QelXsec;Total nu+e count;Universes",  60, 0, 600);
+    TH1D* h_nucleontotx  = new TH1D("h_nucleontotx",  "Nucleon TotXsec;Total nu+e count;Universes",  60, 0, 600);
+    TH1D* h_piminus      = new TH1D("h_piminus",      "Pi-;Total nu+e count;Universes",              60, 0, 600);
+    TH1D* h_pioninex     = new TH1D("h_pioninex",     "Pion InelXsec;Total nu+e count;Universes",    60, 0, 600);
+    TH1D* h_pionqex      = new TH1D("h_pionqex",      "Pion QelXsec;Total nu+e count;Universes",     60, 0, 600);
+    TH1D* h_piontotx     = new TH1D("h_piontotx",     "Pion TotXsec;Total nu+e count;Universes",     60, 0, 600);
+    TH1D* h_piplus       = new TH1D("h_piplus",       "Pi+;Total nu+e count;Universes",              60, 0, 600);
+
+    // Running totals across events, one entry per universe
+    std::vector<double> count_horncurrent(NUNIV, 0.0);
+    std::vector<double> count_expskin(NUNIV, 0.0);
+    std::vector<double> count_kplus(NUNIV, 0.0);
+    std::vector<double> count_kmin(NUNIV, 0.0);
+    std::vector<double> count_kzero(NUNIV, 0.0);
+    std::vector<double> count_nucleoninex(NUNIV, 0.0);
+    std::vector<double> count_nucleonqex(NUNIV, 0.0);
+    std::vector<double> count_nucleontotx(NUNIV, 0.0);
+    std::vector<double> count_piminus(NUNIV, 0.0);
+    std::vector<double> count_pioninex(NUNIV, 0.0);
+    std::vector<double> count_pionqex(NUNIV, 0.0);
+    std::vector<double> count_piontotx(NUNIV, 0.0);
+    std::vector<double> count_piplus(NUNIV, 0.0);
+
+    double actualSignalCount = 0.0;
+
 
     for(Long64_t e = 0; e < numEntries; ++e){
-        std::cout << "============= New Event =============" << std::endl;
+        //std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
 
-        std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
-        std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
+        //std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
+        //std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
 
         if(reco_sliceID->size() == 0) continue;
 
-        std::cout << "--- Slices for event in NuE tree ---" << std::endl;
+        //std::cout << "--- Slices for event in NuE tree ---" << std::endl;
         for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
             if(reco_sliceID->at(slice) == -999999) continue;
-            std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", Interaction = " << reco_sliceInteraction->at(slice) << ", True Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << "), Origin = " << reco_sliceOrigin->at(slice) << ", True CCNC = " << reco_sliceTrueCCNC->at(slice) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType->at(slice) << std::endl;
+            //std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", Interaction = " << reco_sliceInteraction->at(slice) << ", True Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << "), Origin = " << reco_sliceOrigin->at(slice) << ", True CCNC = " << reco_sliceTrueCCNC->at(slice) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType->at(slice) << std::endl;
         }
-        std::cout << "------------------------------------" << std::endl;
+        //std::cout << "------------------------------------" << std::endl;
 
         if(signal == 2 || signal == 1){
             // This is either a BNB or signal event
-            std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
+            //std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
 
             eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
 
             auto it = weightEntryMap.find(key);
 
             if(it == weightEntryMap.end()){
-                std::cout << "No matching weights event found" << std::endl;
+                //std::cout << "No matching weights event found" << std::endl;
             } else{
                 Long64_t weightEntry = it->second;
                 weightsTree->GetEntry(weightEntry);
-                std::cout << "Found matching weights event at entry " << weightEntry << std::endl;
+                //std::cout << "Found matching weights event at entry " << weightEntry << std::endl;
 
-                std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
-                std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
-                std::cout << "  weight of horncurrent universe 1 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(0) << std::endl;
-                if(nuEScatter_MCTruthFlux_weight_horncurrent->size() > 1){
-                    std::cout << "  weight of horncurrent universe 2 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(1) << std::endl;
-                }
-                std::cout << "" << std::endl;
-                std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
-                std::cout << "--- Slices for event in NuEWeights tree ---" << std::endl;
+                //std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
+                //std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
+                //std::cout << "  weight of horncurrent universe 1 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(0) << std::endl;
+                
+                if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+                    // This is an event with a nu+e elastic scatter in it (from the signal files)
+                    actualSignalCount += weights.signalNuE; // nominal value
 
-                std::cout << "reco_sliceID_weights->size() = " << reco_sliceID_weights->size() << ", reco_sliceMCTruthFlux_weight_horncurrent->size() = " << reco_sliceMCTruthFlux_weight_horncurrent->size() << std::endl;
-                for(size_t sliceWeight = 0; sliceWeight < reco_sliceID_weights->size(); ++sliceWeight){
-                    if(reco_sliceID_weights->at(sliceWeight) == -999999) continue;
-                    std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", Interaction = " << reco_sliceInteraction_weights->at(sliceWeight) << ", True Vertex = (" << reco_sliceTrueVX_weights->at(sliceWeight) << ", " << reco_sliceTrueVY_weights->at(sliceWeight) << ", " << reco_sliceTrueVZ_weights->at(sliceWeight) << "), Origin = " << reco_sliceOrigin_weights->at(sliceWeight) << ", True CCNC = " << reco_sliceTrueCCNC_weights->at(sliceWeight) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType_weights->at(sliceWeight) << ", Number of entries in horn current vector = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).size() << std::endl;
-                    std::cout << "  weight of horncurrent universe 1 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl;
-                    std::cout << "  weight of horncurrent universe 2 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(1) << std::endl;
+                    bool weightsValid = (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
+
+                    if(weightsValid){
+                        for(int u = 0; u < NUNIV; u++){
+                            count_horncurrent[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_horncurrent->at(u);
+                            count_expskin[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_expskin->at(u);
+                            count_kplus[u]       += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kplus->at(u);
+                            count_kmin[u]        += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kmin->at(u);
+                            count_kzero[u]       += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kzero->at(u);
+                            count_nucleoninex[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleoninexsec->at(u);
+                            count_nucleonqex[u]  += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleonqexsec->at(u);
+                            count_nucleontotx[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleontotxsec->at(u);
+                            count_piminus[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piminus->at(u);
+                            count_pioninex[u]    += weights.signalNuE * nuEScatter_MCTruthFlux_weight_pioninexsec->at(u);
+                            count_pionqex[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_pionqexsec->at(u);
+                            count_piontotx[u]    += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piontotxsec->at(u);
+                            count_piplus[u]      += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piplus->at(u);
+                        }
+                    }
                 }
                 
-                std::cout << "-------------------------------------------" << std::endl;
+                //std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
+                //std::cout << "--- Slices for event in NuEWeights tree ---" << std::endl;
+
+                //std::cout << "reco_sliceID_weights->size() = " << reco_sliceID_weights->size() << ", reco_sliceMCTruthFlux_weight_horncurrent->size() = " << reco_sliceMCTruthFlux_weight_horncurrent->size() << std::endl;
+                for(size_t sliceWeight = 0; sliceWeight < reco_sliceID_weights->size(); ++sliceWeight){
+                    if(reco_sliceID_weights->at(sliceWeight) == -999999) continue;
+                    //std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", Interaction = " << reco_sliceInteraction_weights->at(sliceWeight) << ", True Vertex = (" << reco_sliceTrueVX_weights->at(sliceWeight) << ", " << reco_sliceTrueVY_weights->at(sliceWeight) << ", " << reco_sliceTrueVZ_weights->at(sliceWeight) << "), Origin = " << reco_sliceOrigin_weights->at(sliceWeight) << ", True CCNC = " << reco_sliceTrueCCNC_weights->at(sliceWeight) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType_weights->at(sliceWeight) << ", Number of entries in horn current vector = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).size() << std::endl;
+                    //std::cout << "  weight of horncurrent universe 1 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl;
+                    //std::cout << "  weight of horncurrent universe 2 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(1) << std::endl;
+                    std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", CRUMBS Score = " << reco_sliceScore->at(sliceWeight) << std::endl; 
+                    std::cout << "  Universe 1 Horn Current Weight for Slice = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl; 
+                }
+                
+                //std::cout << "-------------------------------------------" << std::endl;
             }
 
 
         } else{
-            std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+            //std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
         }
         
-        std::cout << "=====================================" << std::endl;
+        //std::cout << "=====================================" << std::endl;
     }
+
+    // Fill each histogram with 1000 universe totals
+    for(int u = 0; u < NUNIV; u++){
+        h_horncurrent->Fill(count_horncurrent[u]);
+        h_expskin->Fill(count_expskin[u]);
+        h_kplus->Fill(count_kplus[u]);
+        h_kmin->Fill(count_kmin[u]);
+        h_kzero->Fill(count_kzero[u]);
+        h_nucleoninex->Fill(count_nucleoninex[u]);
+        h_nucleonqex->Fill(count_nucleonqex[u]);
+        h_nucleontotx->Fill(count_nucleontotx[u]);
+        h_piminus->Fill(count_piminus[u]);
+        h_pioninex->Fill(count_pioninex[u]);
+        h_pionqex->Fill(count_pionqex[u]);
+        h_piontotx->Fill(count_piontotx[u]);
+        h_piplus->Fill(count_piplus[u]);
+    }
+
+    // Systematic uncertainty per parameter
+    std::cout << "\n=== Systematic Uncertainties on nu+e Signal Count ===" << std::endl;
+    std::cout << Form("Nominal: %.2f", actualSignalCount) << std::endl;
+
+    std::vector<double> systValues;
+
+    auto computeSyst = [&](const std::string& name, TH1D* h, double nominal){
+        double mean   = h->GetMean();
+        double stddev = h->GetStdDev();
+        double shift  = mean - nominal;
+        std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", name.c_str(), mean, shift, 100.*shift/nominal, stddev, 100.*stddev/nominal) << std::endl;
+        systValues.push_back(stddev);
+    };
+
+    computeSyst("horncurrent",  h_horncurrent,  actualSignalCount);
+    computeSyst("expskin",      h_expskin,      actualSignalCount);
+    computeSyst("kplus",        h_kplus,        actualSignalCount);
+    computeSyst("kmin",         h_kmin,         actualSignalCount);
+    computeSyst("kzero",        h_kzero,        actualSignalCount);
+    computeSyst("nucleoninex",  h_nucleoninex,  actualSignalCount);
+    computeSyst("nucleonqex",   h_nucleonqex,   actualSignalCount);
+    computeSyst("nucleontotx",  h_nucleontotx,  actualSignalCount);
+    computeSyst("piminus",      h_piminus,      actualSignalCount);
+    computeSyst("pioninex",     h_pioninex,     actualSignalCount);
+    computeSyst("pionqex",      h_pionqex,      actualSignalCount);
+    computeSyst("piontotx",     h_piontotx,     actualSignalCount);
+    computeSyst("piplus",       h_piplus,       actualSignalCount);
+
+    // Total systematic in quadrature
+    double totalSystSq = 0.0;
+    for(double s : systValues) totalSystSq += s * s;
+    double totalSyst = sqrt(totalSystSq);
+
+    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << Form("%-20s  syst=%.2f (%.1f%%)", "TOTAL (quadrature)", totalSyst, 100.*totalSyst/actualSignalCount) << std::endl;
+    std::cout << Form("%-20s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst) << std::endl;
+
+    auto plotUniverseDist = [&](const std::string& paramName, TH1D* h, double nominal){
+
+        TCanvas *c = new TCanvas(("c_" + paramName).c_str(), "", 800, 600);
+        c->SetLeftMargin(0.12);
+        c->SetBottomMargin(0.12);
+        c->SetRightMargin(0.05);
+        c->SetTopMargin(0.08);
+
+        // Style the histogram
+        h->SetLineColor(kBlue+1);
+        h->SetLineWidth(2);
+        h->GetXaxis()->SetTitle("Total nu+e Signal Count");
+        h->GetYaxis()->SetTitle("Universes");
+        h->GetXaxis()->SetTitleSize(0.05);
+        h->GetYaxis()->SetTitleSize(0.05);
+        h->GetXaxis()->SetLabelSize(0.04);
+        h->GetYaxis()->SetLabelSize(0.04);
+        h->GetXaxis()->SetTitleOffset(1.1);
+        h->GetYaxis()->SetTitleOffset(1.1);
+        h->SetStats(0);  // hide the stats box
+
+        h->Draw("HIST E");  // E draws error bars on the histogram bins
+
+        // Nominal vertical line
+        TLine *nomLine = new TLine(nominal, 0, nominal, h->GetMaximum() * 1.05);
+        nomLine->SetLineColor(kMagenta+1);
+        nomLine->SetLineWidth(2);
+        nomLine->Draw("SAME");
+
+        // Nominal label
+        TLatex latex;
+        latex.SetTextColor(kMagenta+1);
+        latex.SetTextSize(0.04);
+        latex.SetTextFont(62);  // bold
+        // Position label to the left of the nominal line
+        double labelX = nominal - (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) * 0.25;
+        double labelY = h->GetMaximum() * 0.65;
+        latex.DrawLatex(labelX, labelY, Form("Nominal: %.2f", nominal));
+
+        // POT label top right (grey, like reference)
+        TLatex potLabel;
+        potLabel.SetTextColor(kGray+1);
+        potLabel.SetTextSize(0.035);
+        potLabel.SetNDC();  // use normalised coordinates
+        potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        // Parameter name label top left
+        TLatex paramLabel;
+        paramLabel.SetTextSize(0.04);
+        paramLabel.SetNDC();
+        paramLabel.DrawLatex(0.15, 0.85, paramName.c_str());
+
+        c->Update();
+
+        std::string outPath = "/nashome/c/coackley/systPlots/nuE_signalCount_" + paramName + ".pdf";
+        c->SaveAs(outPath.c_str());
+
+        delete nomLine;
+        delete c;
+    };
+
+    // Plot all 13
+    plotUniverseDist("horncurrent", h_horncurrent, actualSignalCount);
+    plotUniverseDist("expskin",     h_expskin,     actualSignalCount);
+    plotUniverseDist("kplus",       h_kplus,       actualSignalCount);
+    plotUniverseDist("kmin",        h_kmin,        actualSignalCount);
+    plotUniverseDist("kzero",       h_kzero,       actualSignalCount);
+    plotUniverseDist("nucleoninex", h_nucleoninex, actualSignalCount);
+    plotUniverseDist("nucleonqex",  h_nucleonqex,  actualSignalCount);
+    plotUniverseDist("nucleontotx", h_nucleontotx, actualSignalCount);
+    plotUniverseDist("piminus",     h_piminus,     actualSignalCount);
+    plotUniverseDist("pioninex",    h_pioninex,    actualSignalCount);
+    plotUniverseDist("pionqex",     h_pionqex,     actualSignalCount);
+    plotUniverseDist("piontotx",    h_piontotx,    actualSignalCount);
+    plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
 
 }
