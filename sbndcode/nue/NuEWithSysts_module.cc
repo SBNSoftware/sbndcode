@@ -98,6 +98,7 @@ public:
   void analyze(art::Event const& e) override;
 
   void Slices(art::Event const& e);
+  void trueSignal(art::Event const& e);
   void clearVectors();
 
   // Selected optional functions.
@@ -109,6 +110,24 @@ private:
   unsigned int eventID; // Event num
   unsigned int runID; // Run num  
   unsigned int subRunID; // Subrun num
+
+  int nuEScatter; // 0 = no nu+e scatter, 1 = nu+e scatter in event
+  double nuEScatterTrueVX;
+  double nuEScatterTrueVY;
+  double nuEScatterTrueVZ;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_horncurrent;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_expskin;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_pioninexsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_pionqexsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_piontotxsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_nucleoninexsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_nucleonqexsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_nucleontotxsec;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_kplus;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_kmin;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_kzero;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_piplus;
+  std::vector<double> nuEScatter_MCTruthFlux_weight_piminus;
 
   TTree* NuEWeightsTree;
   std::vector<double>   reco_sliceID;
@@ -197,6 +216,25 @@ sbnd::NuEWithSysts::NuEWithSysts(fhicl::ParameterSet const& p)
   NuEWeightsTree->Branch("DLCurrent", &DLCurrent);
   NuEWeightsTree->Branch("signal", &signal);
   
+  NuEWeightsTree->Branch("nuEScatter", &nuEScatter);
+  NuEWeightsTree->Branch("nuEScatterTrueVX", &nuEScatterTrueVX);
+  NuEWeightsTree->Branch("nuEScatterTrueVY", &nuEScatterTrueVY);
+  NuEWeightsTree->Branch("nuEScatterTrueVZ", &nuEScatterTrueVZ);
+  
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_horncurrent", &nuEScatter_MCTruthFlux_weight_horncurrent);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_expskin", &nuEScatter_MCTruthFlux_weight_expskin);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_pioninexsec", &nuEScatter_MCTruthFlux_weight_pioninexsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_pionqexsec", &nuEScatter_MCTruthFlux_weight_pionqexsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_piontotxsec", &nuEScatter_MCTruthFlux_weight_piontotxsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_nucleoninexsec", &nuEScatter_MCTruthFlux_weight_nucleoninexsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_nucleonqexsec", &nuEScatter_MCTruthFlux_weight_nucleonqexsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_nucleontotxsec", &nuEScatter_MCTruthFlux_weight_nucleontotxsec);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_kplus", &nuEScatter_MCTruthFlux_weight_kplus);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_kmin", &nuEScatter_MCTruthFlux_weight_kmin);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_kzero", &nuEScatter_MCTruthFlux_weight_kzero);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_piplus", &nuEScatter_MCTruthFlux_weight_piplus);
+  NuEWeightsTree->Branch("nuEScatter_MCTruthFlux_weight_piminus", &nuEScatter_MCTruthFlux_weight_piminus);
+  
   NuEWeightsTree->Branch("reco_sliceID", &reco_sliceID);
   NuEWeightsTree->Branch("reco_sliceInteraction", &reco_sliceInteraction);
   NuEWeightsTree->Branch("reco_sliceTrueVX", &reco_sliceTrueVX);
@@ -234,8 +272,121 @@ void sbnd::NuEWithSysts::analyze(art::Event const& e)
     std::cout << "========================================================================================================" << std::endl; 
     std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << ", DL/Current: " << DLCurrent << std::endl;
     Slices(e);
-    
+    trueSignal(e);
+
     NuEWeightsTree->Fill();
+}
+
+void sbnd::NuEWithSysts::trueSignal(art::Event const& e){
+    std::cout << "============= True NuE Scatters =============" << std::endl;
+
+    art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
+    std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+    if(e.getByLabel(TruthLabel, MCTruthHandle))
+        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+    art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(MCTruthVec, e, fluxWeightLabel);
+
+    int numNuEScatters = 0;
+
+    double nuEScatterVX = -999999;
+    double nuEScatterVY = -999999;
+    double nuEScatterVZ = -999999;
+
+    if(!MCTruthVec.empty()){
+        for(auto &MCTruth : MCTruthVec){
+            if(MCTruth->Origin() == simb::kBeamNeutrino){
+                simb::MCNeutrino neutrino = MCTruth->GetNeutrino();
+                simb::MCParticle neutrinoParticle = neutrino.Nu();
+                if(neutrino.InteractionType() == 1098){
+                    // This is a nu+e elastic scattering event
+                    numNuEScatters++;
+
+                    nuEScatterVX = neutrinoParticle.Vx();
+                    nuEScatterVY = neutrinoParticle.Vy();
+                    nuEScatterVZ = neutrinoParticle.Vz();
+
+                    if(numNuEScatters == 1){
+                        const std::vector<art::Ptr<std::map<std::string,std::vector<float>>>> mcTruthFluxWeightMaps(mcTruthFluxWeightMapAssns.at(MCTruth.key()));
+
+                        std::cout << "Size of mcTruthFluxWeightMaps vector = " << mcTruthFluxWeightMaps.size() << std::endl;
+                        const art::Ptr<std::map<std::string, std::vector<float>>> &weightFluxMapPtr = mcTruthFluxWeightMaps.at(0);
+                        const std::map<std::string, std::vector<float>> &weightFluxMap = *weightFluxMapPtr;
+
+                        std::cout << "Number of map entries = " << weightFluxMap.size() << std::endl;
+                        
+                        std::unordered_map<std::string, std::vector<double>*> targetMap = {
+                            {"horncurrent_Flux",      &nuEScatter_MCTruthFlux_weight_horncurrent},
+                            {"expskin_Flux",          &nuEScatter_MCTruthFlux_weight_expskin},
+                            {"pioninexsec_Flux",      &nuEScatter_MCTruthFlux_weight_pioninexsec},
+                            {"pionqexsec_Flux",       &nuEScatter_MCTruthFlux_weight_pionqexsec},
+                            {"piontotxsec_Flux",      &nuEScatter_MCTruthFlux_weight_piontotxsec},
+                            {"nucleoninexsec_Flux",   &nuEScatter_MCTruthFlux_weight_nucleoninexsec},
+                            {"nucleonqexsec_Flux",    &nuEScatter_MCTruthFlux_weight_nucleonqexsec},
+                            {"nucleontotxsec_Flux",   &nuEScatter_MCTruthFlux_weight_nucleontotxsec},
+                            {"kplus_Flux",            &nuEScatter_MCTruthFlux_weight_kplus},
+                            {"kminus_Flux",           &nuEScatter_MCTruthFlux_weight_kmin},
+                            {"kzero_Flux",            &nuEScatter_MCTruthFlux_weight_kzero},
+                            {"piplus_Flux",           &nuEScatter_MCTruthFlux_weight_piplus},
+                            {"piminus_Flux",          &nuEScatter_MCTruthFlux_weight_piminus} 
+                        };
+
+                        for(const auto &[name, values] : weightFluxMap){
+                            
+                            std::cout << "Map key = " << name << std::endl;
+                            std::cout << "Number of universes? = " << values.size() << std::endl;
+
+                            for(float v : values){
+                                std::cout << "  Weight = " << v << std::endl;
+                            }
+                            
+                            auto mapFill = targetMap.find(name);
+                            if(mapFill == targetMap.end()) continue;
+
+                            auto &target = *(mapFill->second);
+
+                            target.assign(values.begin(), values.end());
+                        }
+
+
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    if(numNuEScatters > 1) std::cout << "MORE THAN 1 NU+E ELASTIC SCATTER!!!!!!!!!" << std::endl;
+    std::cout << "Number of nu+e elastic scatters in the event = " << numNuEScatters << std::endl;
+    std::cout << "True neutrino vertex of nu+e elastic scatter = (" << nuEScatterVX << ", " << nuEScatterVY << ", " << nuEScatterVZ << ")" << std::endl;
+
+    if(numNuEScatters != 0){
+        nuEScatter = 1;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ;
+    } else{
+        nuEScatter = 0;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ;
+
+        nuEScatter_MCTruthFlux_weight_horncurrent.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_expskin.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_pioninexsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_pionqexsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_piontotxsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_nucleoninexsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_nucleonqexsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_nucleontotxsec.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_kplus.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_kmin.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_kzero.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_piplus.push_back(-999999); 
+        nuEScatter_MCTruthFlux_weight_piminus.push_back(-999999); 
+    }
+    std::cout << "=============================================" << std::endl;
 }
 
 void sbnd::NuEWithSysts::Slices(art::Event const& e){
@@ -496,6 +647,20 @@ void sbnd::NuEWithSysts::Slices(art::Event const& e){
 }
 
 void sbnd::NuEWithSysts::clearVectors(){
+
+    nuEScatter_MCTruthFlux_weight_horncurrent.clear();
+    nuEScatter_MCTruthFlux_weight_expskin.clear();
+    nuEScatter_MCTruthFlux_weight_pioninexsec.clear();
+    nuEScatter_MCTruthFlux_weight_pionqexsec.clear();
+    nuEScatter_MCTruthFlux_weight_piontotxsec.clear();
+    nuEScatter_MCTruthFlux_weight_nucleoninexsec.clear();
+    nuEScatter_MCTruthFlux_weight_nucleonqexsec.clear();
+    nuEScatter_MCTruthFlux_weight_nucleontotxsec.clear();
+    nuEScatter_MCTruthFlux_weight_kplus.clear();
+    nuEScatter_MCTruthFlux_weight_kmin.clear();
+    nuEScatter_MCTruthFlux_weight_kzero.clear();
+    nuEScatter_MCTruthFlux_weight_piplus.clear();
+    nuEScatter_MCTruthFlux_weight_piminus.clear();
 
     reco_sliceID.clear();
     reco_sliceInteraction.clear();
