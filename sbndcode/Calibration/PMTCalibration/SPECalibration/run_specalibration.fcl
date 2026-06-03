@@ -1,0 +1,33 @@
+# services
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# analyser
+#include "specalibration_config.fcl"
+
+process_name: SPECalibration
+
+services:
+{
+  TFileService: { fileName: "specalibration.root" }
+  @table::sbnd_detsim_services
+}
+
+source:
+{
+  module_type:     RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    SPECalibration: @local::SPECal
+  }
+
+  #define the output stream, there could be more than one if using filters
+  stream1:   [ SPECalibration ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
