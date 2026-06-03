@@ -47,6 +47,14 @@
 
 namespace opdet {
   class EtaPMTAna;
+
+    enum SBNDPDSDetectorType {
+    kPDUnknown = -1,   
+    kPMTCoated = 0,       
+    kPMTUncoated = 1,
+    kXARAPUCAVUV,
+    kXARAPUCAVIS
+  };
 }
 
 
