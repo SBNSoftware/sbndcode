@@ -37,6 +37,32 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
+struct eventKey_struct{
+    UInt_t runID;
+    UInt_t subRunID;
+    UInt_t eventID;
+    int signal;
+    int DLCurrent;
+
+    bool operator == (const eventKey_struct& other) const {
+        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent;
+    }
+};
+
+struct eventKeyHash_struct{
+    std::size_t operator()(const eventKey_struct& k) const{
+        std::size_t h = 0;
+
+        h ^= std::hash<UInt_t>{}(k.runID);
+        h ^= std::hash<UInt_t>{}(k.subRunID) << 1;
+        h ^= std::hash<UInt_t>{}(k.eventID) << 2;
+        h ^= std::hash<int>{}(k.signal) << 3;
+        h ^= std::hash<int>{}(k.DLCurrent) << 4;
+
+        return h;
+    }
+};
+
 struct weights_struct{
     double signalNuE = 0;
     double BNBNuE = 0;
@@ -453,7 +479,23 @@ void nuESystWeightMatching_macro(){
     
     // NuEWeights Tree branch variable
     UInt_t eventID_weights, runID_weights, subRunID_weights;
+    int nuEScatter_weights;
+    double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
     double DLCurrent_weights, signal_weights;
+
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_horncurrent = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_expskin = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_pioninexsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_pionqexsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_piontotxsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleoninexsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleonqexsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleontotxsec = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_kplus = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_kmin = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_kzero = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_piplus = nullptr;
+    std::vector<double> *nuEScatter_MCTruthFlux_weight_piminus = nullptr;
 
     std::vector<double> *reco_sliceID_weights = nullptr;  
     std::vector<double> *reco_sliceInteraction_weights = nullptr;  
@@ -484,6 +526,25 @@ void nuESystWeightMatching_macro(){
     weightsTree->SetBranchAddress("DLCurrent", &DLCurrent_weights);
     weightsTree->SetBranchAddress("signal", &signal_weights);
     
+    weightsTree->SetBranchAddress("nuEScatter", &nuEScatter_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ_weights);
+    
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_horncurrent", &nuEScatter_MCTruthFlux_weight_horncurrent);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_expskin", &nuEScatter_MCTruthFlux_weight_expskin);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pioninexsec", &nuEScatter_MCTruthFlux_weight_pioninexsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pionqexsec", &nuEScatter_MCTruthFlux_weight_pionqexsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piontotxsec", &nuEScatter_MCTruthFlux_weight_piontotxsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleoninexsec", &nuEScatter_MCTruthFlux_weight_nucleoninexsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleonqexsec", &nuEScatter_MCTruthFlux_weight_nucleonqexsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleontotxsec", &nuEScatter_MCTruthFlux_weight_nucleontotxsec);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kplus", &nuEScatter_MCTruthFlux_weight_kplus);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kmin", &nuEScatter_MCTruthFlux_weight_kmin);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kzero", &nuEScatter_MCTruthFlux_weight_kzero);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piplus", &nuEScatter_MCTruthFlux_weight_piplus);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piminus", &nuEScatter_MCTruthFlux_weight_piminus);
+    
     weightsTree->SetBranchAddress("reco_sliceID", &reco_sliceID_weights);
     weightsTree->SetBranchAddress("reco_sliceInteraction", &reco_sliceInteraction_weights);
     weightsTree->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX_weights);
@@ -509,11 +570,25 @@ void nuESystWeightMatching_macro(){
 
     Long64_t numEntries_weights = weightsTree->GetEntries();    
 
+    std::unordered_map<eventKey_struct, Long64_t, eventKeyHash_struct> weightEntryMap;
+    for(Long64_t i = 0; i < numEntries_weights; ++i){
+        weightsTree->GetEntry(i);
+
+        eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights)};
+
+        weightEntryMap[key] = i;
+    }
+
+    TH1D* numNuEScatters_nominal = new TH1D("numNuEScatters_nominal", "Number of nu+e Elastic Scatters for 1e21 POT", 60, 0, 600);
+
+    double actualSignalCount = 0;
+
     for(Long64_t e = 0; e < numEntries; ++e){
         std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
 
         std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
+        std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
 
         if(reco_sliceID->size() == 0) continue;
 
@@ -526,8 +601,40 @@ void nuESystWeightMatching_macro(){
 
         if(signal == 2 || signal == 1){
             // This is either a BNB or signal event
-            std::cout << "This is a BNB or signal event -> Look for weights"
-            std::cout << "--- Slices for event in NuEWeights tree ---" << std::endl;
+            std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
+
+            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
+
+            auto it = weightEntryMap.find(key);
+
+            if(it == weightEntryMap.end()){
+                std::cout << "No matching weights event found" << std::endl;
+            } else{
+                Long64_t weightEntry = it->second;
+                weightsTree->GetEntry(weightEntry);
+                std::cout << "Found matching weights event at entry " << weightEntry << std::endl;
+
+                std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
+                std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
+                std::cout << "  weight of horncurrent universe 1 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(0) << std::endl;
+                if(nuEScatter_MCTruthFlux_weight_horncurrent->size() > 1){
+                    std::cout << "  weight of horncurrent universe 2 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(1) << std::endl;
+                }
+                std::cout << "" << std::endl;
+                std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
+                std::cout << "--- Slices for event in NuEWeights tree ---" << std::endl;
+
+                std::cout << "reco_sliceID_weights->size() = " << reco_sliceID_weights->size() << ", reco_sliceMCTruthFlux_weight_horncurrent->size() = " << reco_sliceMCTruthFlux_weight_horncurrent->size() << std::endl;
+                for(size_t sliceWeight = 0; sliceWeight < reco_sliceID_weights->size(); ++sliceWeight){
+                    if(reco_sliceID_weights->at(sliceWeight) == -999999) continue;
+                    std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", Interaction = " << reco_sliceInteraction_weights->at(sliceWeight) << ", True Vertex = (" << reco_sliceTrueVX_weights->at(sliceWeight) << ", " << reco_sliceTrueVY_weights->at(sliceWeight) << ", " << reco_sliceTrueVZ_weights->at(sliceWeight) << "), Origin = " << reco_sliceOrigin_weights->at(sliceWeight) << ", True CCNC = " << reco_sliceTrueCCNC_weights->at(sliceWeight) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType_weights->at(sliceWeight) << ", Number of entries in horn current vector = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).size() << std::endl;
+                    std::cout << "  weight of horncurrent universe 1 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl;
+                    std::cout << "  weight of horncurrent universe 2 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(1) << std::endl;
+                }
+                
+                std::cout << "-------------------------------------------" << std::endl;
+            }
+
 
         } else{
             std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
