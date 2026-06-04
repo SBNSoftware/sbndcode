@@ -763,6 +763,74 @@ void nuESystWeightMatching_macro(){
         }
     }
 
+// =====================================================================
+    // Per-variable systematic histograms (same structure as CRUMBS)
+    // =====================================================================
+
+    struct VarDef {
+        std::string name;
+        std::string axisLabel;
+        int nBins;
+        double xMin, xMax;
+    };
+
+    std::vector<VarDef> varDefs = {
+        {"sliceCompleteness",                   "Slice Completeness",                102,    0,       1.02   },
+        {"slicePurity",                         "Slice Purity",                      102,    0,       1.02   },
+        {"sliceNumRecoNeut",                    "Num Reco Neutrinos",                10,     0,       10     },
+        {"sliceNumPFPs",                        "Num PFPs in Slice",                 20,     0,       20     },
+        {"sliceNumPrimaryPFPs",                 "Num Primary PFPs in Slice",         20,     0,       20     },
+        {"sliceNumPrimaryPFPs10",               "Num Primary PFPs (>=10 hits)",      20,     0,       20     },
+        {"sliceFracHitsInPFPs",                 "Frac Hits in PFPs",                 20,     0,       1      },
+        {"sliceFracHitsInHighestEnergyPFP",     "Frac Hits in Highest-E PFP",        20,     0,       1      },
+        {"ERecoSumThetaReco",                   "E_{sum}#theta^{2} (reco)",          27,     0,       13.797 },
+        {"ERecoHighestThetaReco",               "E_{highest}#theta^{2} (reco)",      27,     0,       13.797 },
+        {"ERecoHighestThetaReco_pfp10cmPoints", "E_{highest}#theta^{2}_{PCA10cm}",   27,     0,       13.797 },
+        {"dEdx",                                "Best Plane dE/dx (MeV/cm)",         40,     0,       10     },
+        {"razzledPDG11",                        "Razzled Score (PDG 11)",            80,     0,       1      },
+        {"razzledPDG13",                        "Razzled Score (PDG 13)",            80,     0,       1      },
+        {"razzledPDG22",                        "Razzled Score (PDG 22)",            80,     0,       1      },
+        {"razzledPDG211",                       "Razzled Score (PDG 211)",           80,     0,       1      },
+        {"razzledPDG2212",                      "Razzled Score (PDG 2212)",          80,     0,       1      },
+        {"pfpCompleteness",                     "Highest-E PFP Completeness",        50,     0,       1      },
+        {"pfpPurity",                           "Highest-E PFP Purity",              50,     0,       1      },
+        {"pfpNumHits",                          "Highest-E PFP Num Hits",            60,     0,       3000   },
+        {"sliceNumHits",                        "Slice Num Hits",                    60,     0,       3000   },
+        {"recoVXSmallerBins",                   "Reco V_{x} (cm)",                   808,    -202,    202    },
+        {"recoVYSmallerBins",                   "Reco V_{y} (cm)",                   816,    -204,    204    },
+        {"recoVZSmallerBins",                   "Reco V_{z} (cm)",                   1020,   0,       510    },
+        {"recoEnergyHighestEnergyPFP",          "Highest-E PFP Reco Energy (MeV)",   40,     0,       2000   },
+        {"recoAngleHighestEnergyPFP",           "Highest-E PFP Reco Angle (deg)",    40,     0,       2000   },
+        {"recoAngle_pfp10cmPoints",             "PCA 10cm Reco Angle (deg)",         40,     0,       180    },
+        {"trueRecoilElectronAngle",             "True Recoil e^{-} Angle (deg)",     90,     0,       90     },
+        {"trueRecoilElectronEnergy",            "True Recoil e^{-} Energy (MeV)",    40,     0,       2000   },
+    };
+
+    int nVars = varDefs.size();
+
+    // nominal_vars[cat][p][var], univ_vars[cat][p][var][u]
+    std::vector<std::vector<std::vector<TH1D*>>> nominal_vars(
+        nCats, std::vector<std::vector<TH1D*>>(nParams, std::vector<TH1D*>(nVars, nullptr)));
+    std::vector<std::vector<std::vector<std::vector<TH1D*>>>> univ_vars(
+        nCats, std::vector<std::vector<std::vector<TH1D*>>>(nParams,
+            std::vector<std::vector<TH1D*>>(nVars, std::vector<TH1D*>(NUNIV, nullptr))));
+
+    for(int cat = 0; cat < nCats; cat++){
+        for(int p = 0; p < nParams; p++){
+            for(int v = 0; v < nVars; v++){
+                std::string nomName = "h_" + varDefs[v].name + "_nominal_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
+                nominal_vars[cat][p][v] = new TH1D(nomName.c_str(), nomName.c_str(),
+                    varDefs[v].nBins, varDefs[v].xMin, varDefs[v].xMax);
+                for(int u = 0; u < NUNIV; u++){
+                    std::string univName = "h_" + varDefs[v].name + "_univ" + std::to_string(u)
+                                        + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
+                    univ_vars[cat][p][v][u] = new TH1D(univName.c_str(), univName.c_str(),
+                        varDefs[v].nBins, varDefs[v].xMin, varDefs[v].xMax);
+                }
+            }
+        }
+    }
+
     // Running totals across events, one entry per universe
     std::vector<double> count_horncurrent(NUNIV, 0.0);
     std::vector<double> count_expskin(NUNIV, 0.0);
@@ -1257,6 +1325,106 @@ void nuESystWeightMatching_macro(){
                 }
             }
 
+            // --- Fill per-variable systematic histograms ---
+            if(sliceCategoryPlottingMacro != -999999){
+                int cat = (int)sliceCategoryPlottingMacro;
+
+                double potWeight = 0.0;
+                if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
+                else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
+                else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
+
+                bool isCosmic = (sliceCategoryPlottingMacro == 0);
+
+                // Compute all 14 per-universe syst weights for this slice once,
+                // reused across all variables
+                std::vector<std::array<double, 14>> sliceSystW(NUNIV);
+                for(int u = 0; u < NUNIV; u++){
+                    double wh  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    slice, u, weightsFound);
+                    double wes = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        slice, u, weightsFound);
+                    double wkp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          slice, u, weightsFound);
+                    double wkm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           slice, u, weightsFound);
+                    double wkz = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          slice, u, weightsFound);
+                    double wni = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
+                    double wnq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
+                    double wnt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
+                    double wpm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        slice, u, weightsFound);
+                    double wpi = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    slice, u, weightsFound);
+                    double wpq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     slice, u, weightsFound);
+                    double wpt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    slice, u, weightsFound);
+                    double wpp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         slice, u, weightsFound);
+                    double wc  = wh*wes*wkp*wkm*wkz*wni*wnq*wnt*wpm*wpi*wpq*wpt*wpp;
+                    sliceSystW[u] = {wh, wes, wkp, wkm, wkz, wni, wnq, wnt, wpm, wpi, wpq, wpt, wpp, wc};
+                }
+
+                // Compute the value for each variable. Use -999999 as sentinel for "don't fill".
+                double sliceHits = reco_sliceNumHits->at(slice);
+
+                std::vector<double> varVals(nVars, -999999.0);
+                std::vector<bool>   varFill(nVars, true);
+
+                varVals[0]  = reco_sliceCompleteness->at(slice);
+                varVals[1]  = reco_slicePurity->at(slice);
+                varVals[2]  = (double)numRecoNeutrinos;
+                varVals[3]  = numPFPsSlice_beforeCuts;
+                varVals[4]  = numPrimaryPFPsSlice_beforeCuts;
+                varVals[5]  = numPrimaryPFPs10Slice_beforeCuts;
+                varVals[6]  = (sliceHits > 0) ? (numHitsInPFPs_beforeCuts / sliceHits) : -999999.0;
+                varVals[7]  = (sliceHits > 0 && highestEnergyPFP_beforeCuts.numHits != -999999)
+                                ? (highestEnergyPFP_beforeCuts.numHits / sliceHits) : -999999.0;
+                varVals[8]  = (highestEnergyPFP_beforeCuts.theta != -999999)
+                                ? (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
+                varVals[9]  = (highestEnergyPFP_beforeCuts.energy != -999999 && highestEnergyPFP_beforeCuts.theta != -999999)
+                                ? (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
+                varVals[10] = (highestEnergyPFP_beforeCuts.energy != -999999 && pfp10cm_PCAAngle_beforeCuts != -999999)
+                                ? (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts) : -999999.0;
+                varVals[11] = highestEnergyPFP_beforeCuts.bestPlanedEdx;
+                varVals[12] = highestEnergyPFP_beforeCuts.razzledPDG11;
+                varVals[13] = highestEnergyPFP_beforeCuts.razzledPDG13;
+                varVals[14] = highestEnergyPFP_beforeCuts.razzledPDG22;
+                varVals[15] = highestEnergyPFP_beforeCuts.razzledPDG211;
+                varVals[16] = highestEnergyPFP_beforeCuts.razzledPDG2212;
+                varVals[17] = highestEnergyPFP_beforeCuts.completeness;
+                varVals[18] = highestEnergyPFP_beforeCuts.purity;
+                varVals[19] = highestEnergyPFP_beforeCuts.numHits;
+                varVals[20] = sliceHits;
+                varVals[21] = recoVX;
+                varVals[22] = recoVY;
+                varVals[23] = recoVZ;
+                varVals[24] = highestEnergyPFP_beforeCuts.energy;
+                varVals[25] = (highestEnergyPFP_beforeCuts.theta != -999999)
+                                ? (highestEnergyPFP_beforeCuts.theta * TMath::RadToDeg()) : -999999.0;
+                varVals[26] = (pfp10cm_PCAAngle_beforeCuts != -999999)
+                                ? (pfp10cm_PCAAngle_beforeCuts * TMath::RadToDeg()) : -999999.0;
+                // Variables 27 and 28: true recoil electron — only for trueSignal events
+                varVals[27] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
+                                ? (recoilElectron.angle * TMath::RadToDeg()) : -999999.0;
+                varVals[28] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
+                                ? recoilElectron.energy : -999999.0;
+
+                // Mark sentinel values as don't-fill
+                for(int v = 0; v < nVars; v++){
+                    if(varVals[v] == -999999.0) varFill[v] = false;
+                }
+
+                for(int v = 0; v < nVars; v++){
+                    if(!varFill[v]) continue;
+                    double val = varVals[v];
+
+                    // Fill nominal for all params (same value)
+                    for(int p = 0; p < nParams; p++){
+                        nominal_vars[cat][p][v]->Fill(val, potWeight);
+                    }
+
+                    // Fill universe histograms
+                    for(int u = 0; u < NUNIV; u++){
+                        for(int p = 0; p < nParams; p++){
+                            univ_vars[cat][p][v][u]->Fill(val, potWeight * sliceSystW[u][p]);
+                        }
+                    }
+                }
+            } 
+
             // getSliceWeight returns 1.0 for cosmics (weightsFound==false) or if the weight vector is the wrong size
             if(sliceCategoryPlottingMacro == 0){
                 std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
@@ -1585,6 +1753,119 @@ auto plotCRUMBSSyst = [&](int cat, int p){
     for(int cat = 0; cat < nCats; cat++){
         for(int p = 0; p < nParams; p++){
             plotCRUMBSSyst(cat, p);
+        }
+    }
+
+// --- Plot per-variable systematic band plots ---
+    auto plotVarSyst = [&](int cat, int p, int v){
+
+        const std::string& varName  = varDefs[v].name;
+        const std::string& axisLbl  = varDefs[v].axisLabel;
+
+        // --- Left plot: nominal + all universes ---
+        std::string cLeftName = "c_var_univ_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
+        TCanvas *cLeft = new TCanvas(cLeftName.c_str(), "", 800, 600);
+        cLeft->SetLeftMargin(0.12);
+        cLeft->SetBottomMargin(0.12);
+        cLeft->SetRightMargin(0.05);
+        cLeft->SetTopMargin(0.08);
+
+        bool firstDrawn = false;
+        for(int u = 0; u < NUNIV; u++){
+            univ_vars[cat][p][v][u]->SetLineColor(kMagenta-9);
+            univ_vars[cat][p][v][u]->SetLineWidth(1);
+            univ_vars[cat][p][v][u]->SetLineColorAlpha(kMagenta-9, 0.08);
+            univ_vars[cat][p][v][u]->GetXaxis()->SetTitle(axisLbl.c_str());
+            univ_vars[cat][p][v][u]->GetYaxis()->SetTitle("Slices");
+            univ_vars[cat][p][v][u]->GetXaxis()->SetTitleSize(0.05);
+            univ_vars[cat][p][v][u]->GetYaxis()->SetTitleSize(0.05);
+            univ_vars[cat][p][v][u]->GetXaxis()->SetLabelSize(0.04);
+            univ_vars[cat][p][v][u]->GetYaxis()->SetLabelSize(0.04);
+            univ_vars[cat][p][v][u]->SetStats(0);
+            if(!firstDrawn){ univ_vars[cat][p][v][u]->Draw("HIST");      firstDrawn = true; }
+            else            { univ_vars[cat][p][v][u]->Draw("HIST SAME"); }
+        }
+
+        nominal_vars[cat][p][v]->SetLineColor(kBlack);
+        nominal_vars[cat][p][v]->SetLineWidth(2);
+        nominal_vars[cat][p][v]->SetStats(0);
+        nominal_vars[cat][p][v]->Draw("HIST SAME");
+
+        TLegend *legL = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legL->SetBorderSize(0); legL->SetFillStyle(0);
+        legL->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
+        legL->AddEntry(univ_vars[cat][p][v][0], "Universes", "l");
+        legL->Draw();
+
+        TLatex lblL; lblL.SetTextSize(0.04); lblL.SetNDC();
+        lblL.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+        TLatex potL; potL.SetTextColor(kGray+1); potL.SetTextSize(0.035); potL.SetNDC();
+        potL.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        cLeft->Update();
+        std::string outL = "/nashome/c/coackley/systPlots/" + varName + "_universes_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cLeft->SaveAs(outL.c_str());
+        delete legL; delete cLeft;
+
+        // --- Right plot: nominal + mean +/- 1 sigma ---
+        int nBins = nominal_vars[cat][p][v]->GetNbinsX();
+        std::string meanName = "h_mean_" + varName + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
+        TH1D* h_mean = (TH1D*)nominal_vars[cat][p][v]->Clone(meanName.c_str());
+        h_mean->Reset();
+
+        for(int b = 1; b <= nBins; b++){
+            double sum = 0.0, sumSq = 0.0;
+            for(int u = 0; u < NUNIV; u++){
+                double val = univ_vars[cat][p][v][u]->GetBinContent(b);
+                sum   += val;
+                sumSq += val * val;
+            }
+            double mean   = sum / NUNIV;
+            double stddev = std::sqrt(std::max(0.0, sumSq / NUNIV - mean * mean));
+            h_mean->SetBinContent(b, mean);
+            h_mean->SetBinError(b, stddev);
+        }
+
+        std::string cRightName = "c_var_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
+        TCanvas *cRight = new TCanvas(cRightName.c_str(), "", 800, 600);
+        cRight->SetLeftMargin(0.12); cRight->SetBottomMargin(0.12);
+        cRight->SetRightMargin(0.05); cRight->SetTopMargin(0.08);
+
+        h_mean->SetLineColor(kViolet+1); h_mean->SetLineWidth(2);
+        h_mean->SetMarkerColor(kViolet+1); h_mean->SetMarkerSize(0);
+        h_mean->GetXaxis()->SetTitle(axisLbl.c_str());
+        h_mean->GetYaxis()->SetTitle("Slices");
+        h_mean->GetXaxis()->SetTitleSize(0.05); h_mean->GetYaxis()->SetTitleSize(0.05);
+        h_mean->GetXaxis()->SetLabelSize(0.04); h_mean->GetYaxis()->SetLabelSize(0.04);
+        h_mean->SetStats(0);
+        h_mean->Draw("HIST E");
+
+        nominal_vars[cat][p][v]->SetLineColor(kBlack);
+        nominal_vars[cat][p][v]->SetLineWidth(2);
+        nominal_vars[cat][p][v]->Draw("HIST SAME");
+
+        TLegend *legR = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legR->SetBorderSize(0); legR->SetFillStyle(0);
+        legR->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
+        legR->AddEntry(h_mean, "CV #pm 1#sigma", "l");
+        legR->Draw();
+
+        TLatex lblR; lblR.SetTextSize(0.04); lblR.SetNDC();
+        lblR.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+        TLatex potR; potR.SetTextColor(kGray+1); potR.SetTextSize(0.035); potR.SetNDC();
+        potR.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        cRight->Update();
+        std::string outR = "/nashome/c/coackley/systPlots/" + varName + "_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cRight->SaveAs(outR.c_str());
+        delete legR; delete h_mean; delete cRight;
+    };
+
+    for(int cat = 0; cat < nCats; cat++){
+        for(int p = 0; p < nParams; p++){
+            for(int v = 0; v < nVars; v++){
+                plotVarSyst(cat, p, v);
+            }
         }
     }
 
