@@ -640,6 +640,17 @@ void nuESystWeightMatching_macro(){
 
     double actualSignalCount = 0.0;
 
+    // Helper to get a nuEScatter universe weight, returning 1.0 if no weights available
+    auto getNuEWeight = [&](std::vector<double>* vec, int u) -> double {
+        if(!vec || (int)vec->size() != NUNIV) return 1.0;
+        return vec->at(u);
+    };
+
+    // Helper to get a per-slice universe weight, returning 1.0 if no weights available
+    auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u) -> double {
+        if(!vec || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
+        return vec->at(sliceIdx).at(u);
+    };
 
     for(Long64_t e = 0; e < numEntries; ++e){
         std::cout << "============= New Event =============" << std::endl;
@@ -650,440 +661,222 @@ void nuESystWeightMatching_macro(){
 
         int trueSignal = 0;
 
-        if(signal == 2 || signal == 1){
-            // This is either a BNB or signal event
+        // --- Weight lookup: only signal==1 or signal==2 events have entries in the weights tree ---
+        // For signal==3 (intime cosmics), weightsFound stays false and all weight helpers return 1.0
+        bool weightsFound = false;
+        if(signal == 1 || signal == 2){
             std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
 
             eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
-
             auto it = weightEntryMap.find(key);
 
             if(it == weightEntryMap.end()){
                 std::cout << "No matching weights event found" << std::endl;
-            } else{
-                Long64_t weightEntry = it->second;
-                weightsTree->GetEntry(weightEntry);
-                //std::cout << "Found matching weights event at entry " << weightEntry << std::endl;
+            } else {
+                weightsTree->GetEntry(it->second);
+                weightsFound = true;
 
                 std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
                 std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
-                //std::cout << "  weight of horncurrent universe 1 = " << nuEScatter_MCTruthFlux_weight_horncurrent->at(0) << std::endl;
-                
-                if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-                    // This is an event with a nu+e elastic scatter in it (from the signal files)
-                    if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
-                        // True nu+e elastic scattering event within the active volume or FV
-                        actualSignalCount += weights.signalNuE; // nominal value
-                        trueSignal = 1;
-
-                        bool weightsValid = (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
-
-                        if(weightsValid){
-                            for(int u = 0; u < NUNIV; u++){
-                                double combinedWeight = nuEScatter_MCTruthFlux_weight_horncurrent->at(u) * nuEScatter_MCTruthFlux_weight_expskin->at(u) * nuEScatter_MCTruthFlux_weight_kplus->at(u) * nuEScatter_MCTruthFlux_weight_kmin->at(u) * nuEScatter_MCTruthFlux_weight_kzero->at(u) * nuEScatter_MCTruthFlux_weight_nucleoninexsec->at(u) * nuEScatter_MCTruthFlux_weight_nucleonqexsec->at(u) * nuEScatter_MCTruthFlux_weight_nucleontotxsec->at(u) * nuEScatter_MCTruthFlux_weight_piminus->at(u) * nuEScatter_MCTruthFlux_weight_pioninexsec->at(u) * nuEScatter_MCTruthFlux_weight_pionqexsec->at(u) * nuEScatter_MCTruthFlux_weight_piontotxsec->at(u) * nuEScatter_MCTruthFlux_weight_piplus->at(u); 
-
-                                count_horncurrent[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_horncurrent->at(u);
-                                count_expskin[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_expskin->at(u);
-                                count_kplus[u]       += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kplus->at(u);
-                                count_kmin[u]        += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kmin->at(u);
-                                count_kzero[u]       += weights.signalNuE * nuEScatter_MCTruthFlux_weight_kzero->at(u);
-                                count_nucleoninex[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleoninexsec->at(u);
-                                count_nucleonqex[u]  += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleonqexsec->at(u);
-                                count_nucleontotx[u] += weights.signalNuE * nuEScatter_MCTruthFlux_weight_nucleontotxsec->at(u);
-                                count_piminus[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piminus->at(u);
-                                count_pioninex[u]    += weights.signalNuE * nuEScatter_MCTruthFlux_weight_pioninexsec->at(u);
-                                count_pionqex[u]     += weights.signalNuE * nuEScatter_MCTruthFlux_weight_pionqexsec->at(u);
-                                count_piontotx[u]    += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piontotxsec->at(u);
-                                count_piplus[u]      += weights.signalNuE * nuEScatter_MCTruthFlux_weight_piplus->at(u);
-                                count_combined[u]    += weights.signalNuE * combinedWeight;
-                            }
-                        }
-                    }
-                }
-               
-                // Looking at the true recoil electron in the event (if there is one)
-                recoilElectron_struct recoilElectron;
-                for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
-                    if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
-                    if(truth_recoilElectronPDG->at(i) != -999999){
-                        // There is a true recoil electron in the event
-                        recoilElectron.energy = truth_recoilElectronEnergy->at(i);
-                        recoilElectron.angle = truth_recoilElectronAngle->at(i);
-                        recoilElectron.dx = truth_recoilElectronDX->at(i);
-                        recoilElectron.dy = truth_recoilElectronDY->at(i);
-                        recoilElectron.dz = truth_recoilElectronDZ->at(i);
-                    } else if(truth_recoilElectronPDG->size() == 1 && truth_recoilElectronPDG->at(i) == -999999){
-                        // There is no recoil electron in the event
-                        recoilElectron.energy = -999999;
-                        recoilElectron.angle = -999999;
-                        recoilElectron.dx = -999999;
-                        recoilElectron.dy = -999999;
-                        recoilElectron.dz = -999999;
-                    }
-
-                }
-
-                double weight = 0;
-                if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-                if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
-                if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
-        
-                // Looking at the reco slices
-
-                // There are no reco slices in the event
-                if(reco_sliceID->size() == 0) continue;
-
-                std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
-                std::cout << "--- Slices for event in NuEWeights tree ---" << std::endl;
-
-                for(size_t sliceWeight = 0; sliceWeight < reco_sliceID_weights->size(); ++sliceWeight){
-                    // Loop through slices in event
-                    if(reco_sliceID_weights->at(sliceWeight) == -999999) continue;
-                    //std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", Interaction = " << reco_sliceInteraction_weights->at(sliceWeight) << ", True Vertex = (" << reco_sliceTrueVX_weights->at(sliceWeight) << ", " << reco_sliceTrueVY_weights->at(sliceWeight) << ", " << reco_sliceTrueVZ_weights->at(sliceWeight) << "), Origin = " << reco_sliceOrigin_weights->at(sliceWeight) << ", True CCNC = " << reco_sliceTrueCCNC_weights->at(sliceWeight) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType_weights->at(sliceWeight) << ", Number of entries in horn current vector = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).size() << std::endl;
-                    //std::cout << "  weight of horncurrent universe 1 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl;
-                    //std::cout << "  weight of horncurrent universe 2 = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(1) << std::endl;
-                    std::cout << "Slice " << sliceWeight << ": ID = " << reco_sliceID_weights->at(sliceWeight) << ", CRUMBS Score from sliceWeight index = " << reco_sliceScore->at(sliceWeight) << std::endl; 
-               
-                    double sliceRecoVX = -999999;
-                    double sliceRecoVY = -999999;
-                    double sliceRecoVZ = -999999;
-
-                    for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
-                        if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(sliceWeight)){
-                            sliceRecoVX = reco_neutrinoVX->at(recoNeut);
-                            sliceRecoVY = reco_neutrinoVY->at(recoNeut);
-                            sliceRecoVZ = reco_neutrinoVZ->at(recoNeut);
-                        }
-                    }
-
-                    // Assigning a category to the slices
-                    // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
-                    double sliceCategoryPlottingMacro = -999999;
-                    if(reco_sliceOrigin->at(sliceWeight) == 0){
-                        // This is a cosmic slice
-                        sliceCategoryPlottingMacro = 0;
-                        //std::cout << "Cosmic Slice: sliceCategoryPlottingMacro = 0" << std::endl;
-                    } else if(reco_sliceOrigin->at(sliceWeight) == 1){
-                        // This is a nu+e elastic scatter slice
-                        if(reco_sliceCompleteness->at(sliceWeight) > 0.5){
-                            if(FVCut == 0 && (reco_sliceTrueVX->at(sliceWeight) < 201.3 && reco_sliceTrueVX->at(sliceWeight) > -201.3) && (reco_sliceTrueVY->at(sliceWeight) < 203.8 && reco_sliceTrueVY->at(sliceWeight) > -203.8) && (reco_sliceTrueVZ->at(sliceWeight) > 0 && reco_sliceTrueVZ->at(sliceWeight) < 509.5)){
-                                // True neutrino vertex is within the active volume (this is the signal definition if we aren't using the FV cuts
-                                // -201.3 < x < 201.3, -203.8 < y < 203.8, 0 < z < 509.5
-                                sliceCategoryPlottingMacro = 1;
-                                //std::cout << "Nu+E Slice: sliceCategoryPlottingMacro = 1" << std::endl;
-                            } else if(FVCut == 1 && (reco_sliceTrueVX->at(sliceWeight) < FVCut_xHigh && reco_sliceTrueVX->at(sliceWeight) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(sliceWeight)) > FVCut_xCentre) && (reco_sliceTrueVY->at(sliceWeight) < FVCut_yHigh && reco_sliceTrueVY->at(sliceWeight) > FVCut_yLow) && (reco_sliceTrueVZ->at(sliceWeight) < FVCut_zHigh && reco_sliceTrueVZ->at(sliceWeight) > FVCut_zLow)){
-                                // True neutrino vertex is within the FV (this is signal definition if we are using the FV cut)
-                                sliceCategoryPlottingMacro = 1;
-                            } else{
-                                sliceCategoryPlottingMacro = 2;
-                            }
-                        } else{
-                            sliceCategoryPlottingMacro = 2;
-                            //std::cout << "Nu+E Fuzzy Slice: sliceCategoryPlottingMacro = 2" << std::endl;
-                        }
-                    } else if(reco_sliceOrigin->at(sliceWeight) == 3){
-                        // This is a BNB slice
-                        if(reco_sliceCompleteness->at(sliceWeight) > 0.5){
-                            sliceCategoryPlottingMacro = 3;
-                            //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
-                        } else{
-                            sliceCategoryPlottingMacro = 4;
-                            //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
-                        }
-                    }
-
-                    if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
-                    if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
-                    if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
-                    if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
-                    
-                    if(sliceCategoryPlottingMacro == 0){
-                        std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
-                    } else{
-                        std::cout << "  Universe 1 Horn Current Weight for Slice = " << reco_sliceMCTruthFlux_weight_horncurrent->at(sliceWeight).at(0) << std::endl;
-                    }
-
-                    for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                        if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(sliceWeight)){
-                            if(truth_particleStatusCode->at(trueParticle) == 1){
-                                //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
-                            }
-                        }
-                    }
-
-                    // Assigning a interaction category to the slices
-                    // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
-                    // Other = 8, Fuzzy nu+e = 9
-                    int sliceInteractionType = -999999;
-                    if(reco_sliceOrigin->at(sliceWeight) != 0){
-                        // This is a slice that isn't truth-matched to a cosmic
-                        if(reco_sliceOrigin->at(sliceWeight) == 1){
-                            // This is a slice that is truth-matched to a nu+e elastic scatter
-                            if(reco_sliceCompleteness->at(sliceWeight) > 0.5){
-                                // This is a slice that is truth-matched to a nu+e elastic scatter AND has completeness > 0.5 (signal slice)
-                                //if(FVCut == 0 && (sliceRecoVX < 201.3 && sliceRecoVX > -201.3) && (sliceRecoVY < 203.8 && sliceRecoVY > -203.8) && (sliceRecoVZ > 0 && sliceRecoVZ < 509.5)){
-                                if(FVCut == 0 && (reco_sliceTrueVX->at(sliceWeight) > -201.3 && reco_sliceTrueVX->at(sliceWeight) < 201.3 && reco_sliceTrueVY->at(sliceWeight) > -203.8 && reco_sliceTrueVY->at(sliceWeight) < 203.8 && reco_sliceTrueVZ->at(sliceWeight) > 0 && reco_sliceTrueVZ->at(sliceWeight) < 509.5)){
-                                    // Interaction happened inside the TPC (in truth)
-                                    sliceInteractionType = 1;
-                                //} else if(FVCut == 1 && (sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow && std::abs(sliceRecoVX) > FVCut_xCentre) && (sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow) && (sliceRecoVZ < FVCut_zHigh && sliceRecoVZ > FVCut_zLow)){
-                                } else if(FVCut == 1 && ((reco_sliceTrueVX->at(sliceWeight) < FVCut_xHigh && reco_sliceTrueVX->at(sliceWeight) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(sliceWeight)) > FVCut_xCentre) && (reco_sliceTrueVY->at(sliceWeight) > FVCut_yLow && reco_sliceTrueVY->at(sliceWeight) < FVCut_yHigh) && (reco_sliceTrueVZ->at(sliceWeight) > FVCut_zLow && reco_sliceTrueVZ->at(sliceWeight) < FVCut_zHigh))){
-                                    // Interaction happened inside the FV (in truth)
-                                    sliceInteractionType = 1;
-                                } else{
-                                    sliceInteractionType = 7;
-                                }
-                            } else{
-                                // This is a slice that is truth-mathced to a nu+e elastic scatter with completeness < 0.5 (not signal)
-                                sliceInteractionType = 9;
-                            }
-                        } else if(reco_sliceOrigin->at(sliceWeight) == 3){
-                            // This is a slice that is truth-matched to a beam neutrino that isn't a nu+e elastic scatter
-                            if((FVCut == 0 && (reco_sliceTrueVX->at(sliceWeight) < 201.3 && reco_sliceTrueVX->at(sliceWeight) > -201.3) && (reco_sliceTrueVY->at(sliceWeight) < 203.8 && reco_sliceTrueVY->at(sliceWeight) > -203.8) && (reco_sliceTrueVZ->at(sliceWeight) > 0 && reco_sliceTrueVZ->at(sliceWeight) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(sliceWeight) < FVCut_xHigh && reco_sliceTrueVX->at(sliceWeight) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(sliceWeight)) > FVCut_xCentre) && (reco_sliceTrueVY->at(sliceWeight) < FVCut_yHigh && reco_sliceTrueVY->at(sliceWeight) > FVCut_yLow) && (reco_sliceTrueVZ->at(sliceWeight) < FVCut_zHigh && reco_sliceTrueVZ->at(sliceWeight) > FVCut_zLow))){
-                                // Interaction happened inside the TPC/FV (in truth)
-                                if(reco_sliceTrueCCNC->at(sliceWeight) == 0){
-                                    // This is a CC process
-                                    if(reco_sliceTrueNeutrinoType->at(sliceWeight) == 12){
-                                        // This is a CC nue
-                                        sliceInteractionType = 5;
-                                    } else if(reco_sliceTrueNeutrinoType->at(sliceWeight) == 14){
-                                        // This is a CC numu
-                                        sliceInteractionType = 4;
-                                    }
-                                } else if(reco_sliceTrueCCNC->at(sliceWeight) == 1){
-                                    // This is an NC process
-                                    int neutralPion = 0; // Number of neutral pions with status code = 1
-                                    for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                                        if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(sliceWeight)){
-                                            // True particle is in the slice
-                                            if(truth_particleStatusCode->at(trueParticle) == 1){
-                                                // True particle has status code of 1 -> Tracked by GENIE
-                                                if(truth_particlePDG->at(trueParticle) == 111){
-                                                    // True particle is a neutral pion
-                                                    neutralPion++;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if(neutralPion > 0){
-                                        // Slice has a true pi0 in it
-                                        // This is an NC Npi0 process
-                                        sliceInteractionType = 2;
-                                    } else{
-                                        // This is an NC other process
-                                        sliceInteractionType = 3;
-                                    }
-                                }
-                            } else{
-                                // Interaction happened outside the TPC/FV - Dirt event
-                                sliceInteractionType = 6;
-                            }
-                        }
-                        
-                    } else{
-                        // This is a cosmic events
-                        sliceInteractionType = 0;
-                    }
-
-                    if(sliceInteractionType == -999999){
-                        sliceInteractionType = 8;
-                    }
-
-
-                }
-                
-                std::cout << "-------------------------------------------" << std::endl;
             }
-
-
-        } else{
-            // This is an intime cosmic event -> no match in the weight tree
+        } else {
             std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+        }
 
+        // --- Shared code from here ---
 
-            if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-                // This is an event with a nu+e elastic scatter in it (from the signal files)
-                if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
-                    // The true neutrino interaction is within the active volume
-                    actualSignalCount += weights.signalNuE;
-                    trueSignal = 1;
-                }
-            }
+        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+            // This is an event with a nu+e elastic scatter in it (from the signal files)
+            if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
+                // True nu+e elastic scattering event within the active volume or FV
+                actualSignalCount += weights.signalNuE; // nominal value
+                trueSignal = 1;
 
-            // Looking at the true recoil electron in the event (if there is one)
-            recoilElectron_struct recoilElectron;
-            for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
-                if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
-                if(truth_recoilElectronPDG->at(i) != -999999){
-                    // There is a true recoil electron in the event
-                    recoilElectron.energy = truth_recoilElectronEnergy->at(i);
-                    recoilElectron.angle = truth_recoilElectronAngle->at(i);
-                    recoilElectron.dx = truth_recoilElectronDX->at(i);
-                    recoilElectron.dy = truth_recoilElectronDY->at(i);
-                    recoilElectron.dz = truth_recoilElectronDZ->at(i);
-                } else if(truth_recoilElectronPDG->size() == 1 && truth_recoilElectronPDG->at(i) == -999999){
-                    // There is no recoil electron in the event
-                    recoilElectron.energy = -999999;
-                    recoilElectron.angle = -999999;
-                    recoilElectron.dx = -999999;
-                    recoilElectron.dy = -999999;
-                    recoilElectron.dz = -999999;
-                }
+                // weightsFound guards access to nuEScatter weight vectors;
+                // getNuEWeight returns 1.0 if weightsFound is false (i.e. no entry was loaded)
+                bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
 
-            }
+                if(nuEWeightsValid){
+                    for(int u = 0; u < NUNIV; u++){
+                        double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
 
-            double weight = 0;
-            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-            if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
-            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
-
-            // Looking at the reco slices
-            if(reco_sliceID->size() == 0) continue;
-
-            for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
-                if(reco_sliceID->at(slice) == -999999) continue;
-                // There is a reco slice in the event
-                //std::cout << "============================== NEW SLICE ==============================" << std::endl;
-
-                double sliceRecoVX = -999999;
-                double sliceRecoVY = -999999;
-                double sliceRecoVZ = -999999;
-
-                for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
-                    if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
-                        sliceRecoVX = reco_neutrinoVX->at(recoNeut); 
-                        sliceRecoVY = reco_neutrinoVY->at(recoNeut); 
-                        sliceRecoVZ = reco_neutrinoVZ->at(recoNeut); 
+                        count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
+                        count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
+                        count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
+                        count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
+                        count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
+                        count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
+                        count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
+                        count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
+                        count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
+                        count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
+                        count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
+                        count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
+                        count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+                        count_combined[u]    += weights.signalNuE * combinedWeight;
                     }
-                }
-
-                // Assigning a category to the slices
-                // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
-                double sliceCategoryPlottingMacro = -999999;
-                if(reco_sliceOrigin->at(slice) == 0){
-                    // This is a cosmic slice
-                    sliceCategoryPlottingMacro = 0;
-                    //std::cout << "Cosmic Slice: sliceCategoryPlottingMacro = 0" << std::endl;
-                } else if(reco_sliceOrigin->at(slice) == 1){
-                    // This is a nu+e elastic scatter slice
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
-                        if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
-                            // True neutrino vertex is within the active volume (this is the signal definition if we aren't using the FV cuts
-                            // -201.3 < x < 201.3, -203.8 < y < 203.8, 0 < z < 509.5
-                            sliceCategoryPlottingMacro = 1;
-                            //std::cout << "Nu+E Slice: sliceCategoryPlottingMacro = 1" << std::endl;
-                        } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
-                            // True neutrino vertex is within the FV (this is signal definition if we are using the FV cut)
-                            sliceCategoryPlottingMacro = 1;
-                        } else{
-                            sliceCategoryPlottingMacro = 2;
-                        }
-                    } else{
-                        sliceCategoryPlottingMacro = 2;
-                        //std::cout << "Nu+E Fuzzy Slice: sliceCategoryPlottingMacro = 2" << std::endl;
-                    }
-                } else if(reco_sliceOrigin->at(slice) == 3){
-                    // This is a BNB slice
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
-                        sliceCategoryPlottingMacro = 3;
-                        //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
-                    } else{
-                        sliceCategoryPlottingMacro = 4;
-                        //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
-                    }
-                }
-
-                //std::cout << "Slice Origin = " << reco_sliceOrigin->at(slice) << ", CCNC = " << reco_sliceTrueCCNC->at(slice) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType->at(slice) << ", Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << ")" << std::endl;
-                for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                    if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
-                        if(truth_particleStatusCode->at(trueParticle) == 1){
-                            //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
-                        }
-                    }
-                }
-
-                // Assigning a interaction category to the slices
-                // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
-                // Other = 8, Fuzzy nu+e = 9
-                int sliceInteractionType = -999999;
-                if(reco_sliceOrigin->at(slice) != 0){
-                    // This is a slice that isn't truth-matched to a cosmic
-                    if(reco_sliceOrigin->at(slice) == 1){
-                        // This is a slice that is truth-matched to a nu+e elastic scatter
-                        if(reco_sliceCompleteness->at(slice) > 0.5){
-                            // This is a slice that is truth-matched to a nu+e elastic scatter AND has completeness > 0.5 (signal slice)
-                            //if(FVCut == 0 && (sliceRecoVX < 201.3 && sliceRecoVX > -201.3) && (sliceRecoVY < 203.8 && sliceRecoVY > -203.8) && (sliceRecoVZ > 0 && sliceRecoVZ < 509.5)){
-                            if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
-                                // Interaction happened inside the TPC (in truth)
-                                sliceInteractionType = 1;
-                            //} else if(FVCut == 1 && (sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow && std::abs(sliceRecoVX) > FVCut_xCentre) && (sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow) && (sliceRecoVZ < FVCut_zHigh && sliceRecoVZ > FVCut_zLow)){
-                            } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
-                                // Interaction happened inside the FV (in truth)
-                                sliceInteractionType = 1;
-                            } else{
-                                sliceInteractionType = 7;
-                            }
-                        } else{
-                            // This is a slice that is truth-mathced to a nu+e elastic scatter with completeness < 0.5 (not signal)
-                            sliceInteractionType = 9;
-                        }
-                    } else if(reco_sliceOrigin->at(slice) == 3){
-                        // This is a slice that is truth-matched to a beam neutrino that isn't a nu+e elastic scatter
-                        if((FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow))){
-                            // Interaction happened inside the TPC/FV (in truth)
-                            if(reco_sliceTrueCCNC->at(slice) == 0){
-                                // This is a CC process
-                                if(reco_sliceTrueNeutrinoType->at(slice) == 12){
-                                    // This is a CC nue
-                                    sliceInteractionType = 5;
-                                } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
-                                    // This is a CC numu
-                                    sliceInteractionType = 4;
-                                }
-                            } else if(reco_sliceTrueCCNC->at(slice) == 1){
-                                // This is an NC process
-                                int neutralPion = 0; // Number of neutral pions with status code = 1
-                                for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                                    if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
-                                        // True particle is in the slice
-                                        if(truth_particleStatusCode->at(trueParticle) == 1){
-                                            // True particle has status code of 1 -> Tracked by GENIE
-                                            if(truth_particlePDG->at(trueParticle) == 111){
-                                                // True particle is a neutral pion
-                                                neutralPion++;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if(neutralPion > 0){
-                                    // Slice has a true pi0 in it
-                                    // This is an NC Npi0 process
-                                    sliceInteractionType = 2;
-                                } else{
-                                    // This is an NC other process
-                                    sliceInteractionType = 3;
-                                }
-                            }
-                        } else{
-                            // Interaction happened outside the TPC/FV - Dirt event
-                            sliceInteractionType = 6;
-                        }
-                    }
-                    
-                } else{
-                    // This is a cosmic events
-                    sliceInteractionType = 0;
-                }
-
-                if(sliceInteractionType == -999999){
-                    sliceInteractionType = 8;
                 }
             }
         }
-        
-        //std::cout << "=====================================" << std::endl;
+
+        // Looking at the true recoil electron in the event (if there is one)
+        recoilElectron_struct recoilElectron;
+        for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
+            if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
+            if(truth_recoilElectronPDG->at(i) != -999999){
+                // There is a true recoil electron in the event
+                recoilElectron.energy = truth_recoilElectronEnergy->at(i);
+                recoilElectron.angle = truth_recoilElectronAngle->at(i);
+                recoilElectron.dx = truth_recoilElectronDX->at(i);
+                recoilElectron.dy = truth_recoilElectronDY->at(i);
+                recoilElectron.dz = truth_recoilElectronDZ->at(i);
+            } else if(truth_recoilElectronPDG->size() == 1 && truth_recoilElectronPDG->at(i) == -999999){
+                // There is no recoil electron in the event
+                recoilElectron.energy = -999999;
+                recoilElectron.angle = -999999;
+                recoilElectron.dx = -999999;
+                recoilElectron.dy = -999999;
+                recoilElectron.dz = -999999;
+            }
+        }
+
+        double weight = 0;
+        if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+        if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
+        if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
+
+        // Looking at the reco slices
+        if(reco_sliceID->size() == 0) continue;
+
+        if(weightsFound) std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
+        std::cout << "--- Slices for event ---" << std::endl;
+
+        for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
+            // Loop through slices in event
+            if(reco_sliceID->at(slice) == -999999) continue;
+
+            std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", CRUMBS Score = " << reco_sliceScore->at(slice) << std::endl;
+
+            double sliceRecoVX = -999999;
+            double sliceRecoVY = -999999;
+            double sliceRecoVZ = -999999;
+
+            for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                    sliceRecoVX = reco_neutrinoVX->at(recoNeut);
+                    sliceRecoVY = reco_neutrinoVY->at(recoNeut);
+                    sliceRecoVZ = reco_neutrinoVZ->at(recoNeut);
+                }
+            }
+
+            // Assigning a category to the slices
+            // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
+            double sliceCategoryPlottingMacro = -999999;
+            if(reco_sliceOrigin->at(slice) == 0){
+                sliceCategoryPlottingMacro = 0;
+            } else if(reco_sliceOrigin->at(slice) == 1){
+                if(reco_sliceCompleteness->at(slice) > 0.5){
+                    if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                        sliceCategoryPlottingMacro = 1;
+                    } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
+                        sliceCategoryPlottingMacro = 1;
+                    } else{
+                        sliceCategoryPlottingMacro = 2;
+                    }
+                } else{
+                    sliceCategoryPlottingMacro = 2;
+                }
+            } else if(reco_sliceOrigin->at(slice) == 3){
+                if(reco_sliceCompleteness->at(slice) > 0.5){
+                    sliceCategoryPlottingMacro = 3;
+                } else{
+                    sliceCategoryPlottingMacro = 4;
+                }
+            }
+
+            if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
+            if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
+            if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
+            if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
+            if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
+
+            // getSliceWeight returns 1.0 for cosmics (weightsFound==false) or if the weight vector is the wrong size
+            if(sliceCategoryPlottingMacro == 0){
+                std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
+            } else{
+                std::cout << "  Universe 1 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 0) << std::endl;
+                std::cout << "  Universe 2 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 1) << std::endl;
+                std::cout << "  Universe 3 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 2) << std::endl;
+                std::cout << "" << std::endl; 
+                std::cout << "  Universe 1 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 0) << std::endl;
+                std::cout << "  Universe 2 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 1) << std::endl;
+                std::cout << "  Universe 3 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 2) << std::endl;
+            }
+
+            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                    if(truth_particleStatusCode->at(trueParticle) == 1){
+                        //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
+                    }
+                }
+            }
+
+            // Assigning an interaction category to the slices
+            // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
+            // Other = 8, Fuzzy nu+e = 9
+            int sliceInteractionType = -999999;
+            if(reco_sliceOrigin->at(slice) != 0){
+                if(reco_sliceOrigin->at(slice) == 1){
+                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                        if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                            sliceInteractionType = 1;
+                        } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
+                            sliceInteractionType = 1;
+                        } else{
+                            sliceInteractionType = 7;
+                        }
+                    } else{
+                        sliceInteractionType = 9;
+                    }
+                } else if(reco_sliceOrigin->at(slice) == 3){
+                    if((FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow))){
+                        if(reco_sliceTrueCCNC->at(slice) == 0){
+                            if(reco_sliceTrueNeutrinoType->at(slice) == 12){
+                                sliceInteractionType = 5;
+                            } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
+                                sliceInteractionType = 4;
+                            }
+                        } else if(reco_sliceTrueCCNC->at(slice) == 1){
+                            int neutralPion = 0;
+                            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                                    if(truth_particleStatusCode->at(trueParticle) == 1){
+                                        if(truth_particlePDG->at(trueParticle) == 111){
+                                            neutralPion++;
+                                        }
+                                    }
+                                }
+                            }
+                            if(neutralPion > 0){
+                                sliceInteractionType = 2;
+                            } else{
+                                sliceInteractionType = 3;
+                            }
+                        }
+                    } else{
+                        sliceInteractionType = 6;
+                    }
+                }
+            } else{
+                sliceInteractionType = 0;
+            }
+
+            if(sliceInteractionType == -999999){
+                sliceInteractionType = 8;
+            }
+        }
+
+        std::cout << "-------------------------------------------" << std::endl;
     }
 
     // Fill each histogram with 1000 universe totals
@@ -1153,7 +946,6 @@ void nuESystWeightMatching_macro(){
         c->SetRightMargin(0.05);
         c->SetTopMargin(0.08);
 
-        // Style the histogram
         h->SetLineColor(kBlue+1);
         h->SetLineWidth(2);
         h->GetXaxis()->SetTitle("Total nu+e Signal Count");
@@ -1164,34 +956,29 @@ void nuESystWeightMatching_macro(){
         h->GetYaxis()->SetLabelSize(0.04);
         h->GetXaxis()->SetTitleOffset(1.1);
         h->GetYaxis()->SetTitleOffset(1.1);
-        h->SetStats(0);  // hide the stats box
+        h->SetStats(0);
 
-        h->Draw("HIST E");  // E draws error bars on the histogram bins
+        h->Draw("HIST E");
 
-        // Nominal vertical line
         TLine *nomLine = new TLine(nominal, 0, nominal, h->GetMaximum() * 1.05);
         nomLine->SetLineColor(kMagenta+1);
         nomLine->SetLineWidth(2);
         nomLine->Draw("SAME");
 
-        // Nominal label
         TLatex latex;
         latex.SetTextColor(kMagenta+1);
         latex.SetTextSize(0.04);
-        latex.SetTextFont(62);  // bold
-        // Position label to the left of the nominal line
+        latex.SetTextFont(62);
         double labelX = nominal - (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin()) * 0.25;
         double labelY = h->GetMaximum() * 0.65;
         latex.DrawLatex(labelX, labelY, Form("Nominal: %.2f", nominal));
 
-        // POT label top right (grey, like reference)
         TLatex potLabel;
         potLabel.SetTextColor(kGray+1);
         potLabel.SetTextSize(0.035);
-        potLabel.SetNDC();  // use normalised coordinates
+        potLabel.SetNDC();
         potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
 
-        // Parameter name label top left
         TLatex paramLabel;
         paramLabel.SetTextSize(0.04);
         paramLabel.SetNDC();
@@ -1206,7 +993,6 @@ void nuESystWeightMatching_macro(){
         delete c;
     };
 
-    // Plot all 13
     plotUniverseDist("horncurrent", h_horncurrent, actualSignalCount);
     plotUniverseDist("expskin",     h_expskin,     actualSignalCount);
     plotUniverseDist("kplus",       h_kplus,       actualSignalCount);
