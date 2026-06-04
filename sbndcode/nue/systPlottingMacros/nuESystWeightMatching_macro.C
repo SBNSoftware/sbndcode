@@ -622,6 +622,30 @@ void nuESystWeightMatching_macro(){
     TH1D* h_piplus       = new TH1D("h_piplus",       "Pi+;Total nu+e count;Universes",              60, 0, 600);
     TH1D* h_combined = new TH1D("h_combined", "All Parameters Combined", 60, 0, 600); 
 
+    int nCRUMBSBins = 25;
+    double CRUMBSMin = -1.0;
+    double CRUMBSMax = 1.0;
+
+    std::vector<std::string> paramNames_CRUMBS = {"horncurrent", "expskin", "kplus", "kmin", "kzero", "nucleoninex", "nucleonqex", "nucleontotx", "piminus", "pioninex", "pionqex", "piontotx", "piplus", "combined_allParams"};
+    std::vector<std::string> catNames = {"cosmic", "signal", "signal_fuzzy", "BNB", "BNB_fuzzy"};
+
+    int nParams = paramNames_CRUMBS.size();
+    int nCats   = catNames.size();
+
+    std::vector<std::vector<TH1D*>> nominal_CRUMBS(nCats, std::vector<TH1D*>(nParams, nullptr));
+    std::vector<std::vector<std::vector<TH1D*>>> univ_CRUMBS(nCats, std::vector<std::vector<TH1D*>>(nParams, std::vector<TH1D*>(NUNIV, nullptr)));
+
+    for(int cat = 0; cat < nCats; cat++){
+        for(int p = 0; p < nParams; p++){
+            std::string nomName = "h_CRUMBS_nominal_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
+            nominal_CRUMBS[cat][p] = new TH1D(nomName.c_str(), nomName.c_str(), nCRUMBSBins, CRUMBSMin, CRUMBSMax);
+            for(int u = 0; u < NUNIV; u++){
+                std::string univName = "h_CRUMBS_univ" + std::to_string(u) + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
+                univ_CRUMBS[cat][p][u] = new TH1D(univName.c_str(), univName.c_str(), nCRUMBSBins, CRUMBSMin, CRUMBSMax);
+            }
+        }
+    }
+
     // Running totals across events, one entry per universe
     std::vector<double> count_horncurrent(NUNIV, 0.0);
     std::vector<double> count_expskin(NUNIV, 0.0);
@@ -646,9 +670,8 @@ void nuESystWeightMatching_macro(){
         return vec->at(u);
     };
 
-    // Helper to get a per-slice universe weight, returning 1.0 if no weights available
-    auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u) -> double {
-        if(!vec || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
+    auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
+        if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
         return vec->at(sliceIdx).at(u);
     };
 
@@ -800,17 +823,70 @@ void nuESystWeightMatching_macro(){
             if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
             if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
 
+            // --- Fill CRUMBS score histograms ---
+            if(sliceCategoryPlottingMacro != -999999){
+                int cat = (int)sliceCategoryPlottingMacro; // 0,1,2,3,4
+
+                double crumbsScore = reco_sliceScore->at(slice);
+
+                // POT weight for this slice (no systematic weight)
+                double potWeight = 0.0;
+                if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
+                else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
+                else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
+
+                // Fill nominal for all 14 params (same value, just POT weight)
+                for(int p = 0; p < nParams; p++){
+                    nominal_CRUMBS[cat][p]->Fill(crumbsScore, potWeight);
+                }
+
+                // Fill universe histograms
+                // Cosmic slices (cat==0) have no systematic weights -> weight = 1.0 for all universes
+                for(int u = 0; u < NUNIV; u++){
+
+                    // Get per-parameter weights for this slice and universe
+                    bool isCosmic = (sliceCategoryPlottingMacro == 0);
+                    double w_horncurrent = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, u, weightsFound);
+                    double w_expskin     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,     slice, u, weightsFound);
+                    double w_kplus       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,       slice, u, weightsFound);
+                    double w_kmin        = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,        slice, u, weightsFound);
+                    double w_kzero       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,       slice, u, weightsFound);
+                    double w_nucleoninex = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
+                    double w_nucleonqex  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
+                    double w_nucleontotx = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
+                    double w_piminus     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,     slice, u, weightsFound);
+                    double w_pioninex    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, u, weightsFound);
+                    double w_pionqex     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,  slice, u, weightsFound);
+                    double w_piontotx    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, u, weightsFound);
+                    double w_piplus      = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,      slice, u, weightsFound);
+                    double w_combined    = w_horncurrent * w_expskin * w_kplus * w_kmin * w_kzero
+                                        * w_nucleoninex * w_nucleonqex * w_nucleontotx
+                                        * w_piminus * w_pioninex * w_pionqex * w_piontotx * w_piplus;
+
+                    std::vector<double> systWeights = {
+                        w_horncurrent, w_expskin, w_kplus, w_kmin, w_kzero,
+                        w_nucleoninex, w_nucleonqex, w_nucleontotx,
+                        w_piminus, w_pioninex, w_pionqex, w_piontotx, w_piplus,
+                        w_combined
+                    };
+
+                    for(int p = 0; p < nParams; p++){
+                        univ_CRUMBS[cat][p][u]->Fill(crumbsScore, potWeight * systWeights[p]);
+                    }
+                }
+            }
+
             // getSliceWeight returns 1.0 for cosmics (weightsFound==false) or if the weight vector is the wrong size
             if(sliceCategoryPlottingMacro == 0){
                 std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
             } else{
-                std::cout << "  Universe 1 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 0) << std::endl;
-                std::cout << "  Universe 2 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 1) << std::endl;
-                std::cout << "  Universe 3 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 2) << std::endl;
+                std::cout << "  Universe 1 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 0, weightsFound) << std::endl;
+                std::cout << "  Universe 2 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 1, weightsFound) << std::endl;
+                std::cout << "  Universe 3 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 2, weightsFound) << std::endl;
                 std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 0) << std::endl;
-                std::cout << "  Universe 2 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 1) << std::endl;
-                std::cout << "  Universe 3 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 2) << std::endl;
+                std::cout << "  Universe 1 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 0, weightsFound) << std::endl;
+                std::cout << "  Universe 2 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 1, weightsFound) << std::endl;
+                std::cout << "  Universe 3 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 2, weightsFound) << std::endl;
             }
 
             for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
@@ -1007,5 +1083,143 @@ void nuESystWeightMatching_macro(){
     plotUniverseDist("piontotx",    h_piontotx,    actualSignalCount);
     plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
     plotUniverseDist("combined_allParams", h_combined, actualSignalCount);
+
+    // --- Plot CRUMBS score systematic band plots ---
+auto plotCRUMBSSyst = [&](int cat, int p){
+
+        // --- Left plot: nominal + all universes ---
+        TCanvas *cLeft = new TCanvas(("c_CRUMBS_univ_" + catNames[cat] + "_" + paramNames_CRUMBS[p]).c_str(), "", 800, 600);
+        cLeft->SetLeftMargin(0.12);
+        cLeft->SetBottomMargin(0.12);
+        cLeft->SetRightMargin(0.05);
+        cLeft->SetTopMargin(0.08);
+
+        bool firstDrawn = false;
+        for(int u = 0; u < NUNIV; u++){
+            univ_CRUMBS[cat][p][u]->SetLineColor(kMagenta-9);
+            univ_CRUMBS[cat][p][u]->SetLineWidth(1);
+            univ_CRUMBS[cat][p][u]->SetLineColorAlpha(kMagenta-9, 0.08);
+            univ_CRUMBS[cat][p][u]->GetXaxis()->SetTitle("CRUMBS Score");
+            univ_CRUMBS[cat][p][u]->GetYaxis()->SetTitle("Slices");
+            univ_CRUMBS[cat][p][u]->GetXaxis()->SetTitleSize(0.05);
+            univ_CRUMBS[cat][p][u]->GetYaxis()->SetTitleSize(0.05);
+            univ_CRUMBS[cat][p][u]->GetXaxis()->SetLabelSize(0.04);
+            univ_CRUMBS[cat][p][u]->GetYaxis()->SetLabelSize(0.04);
+            univ_CRUMBS[cat][p][u]->SetStats(0);
+            if(!firstDrawn){
+                univ_CRUMBS[cat][p][u]->Draw("HIST");
+                firstDrawn = true;
+            } else {
+                univ_CRUMBS[cat][p][u]->Draw("HIST SAME");
+            }
+        }
+
+        nominal_CRUMBS[cat][p]->SetLineColor(kBlack);
+        nominal_CRUMBS[cat][p]->SetLineWidth(2);
+        nominal_CRUMBS[cat][p]->SetStats(0);
+        nominal_CRUMBS[cat][p]->Draw("HIST SAME");
+
+        TLegend *legLeft = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legLeft->SetBorderSize(0);
+        legLeft->SetFillStyle(0);
+        legLeft->AddEntry(nominal_CRUMBS[cat][p], "Nominal", "l");
+        legLeft->AddEntry(univ_CRUMBS[cat][p][0], "Universes", "l");
+        legLeft->Draw();
+
+        TLatex labelLeft;
+        labelLeft.SetTextSize(0.04);
+        labelLeft.SetNDC();
+        labelLeft.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+
+        TLatex potLabelLeft;
+        potLabelLeft.SetTextColor(kGray+1);
+        potLabelLeft.SetTextSize(0.035);
+        potLabelLeft.SetNDC();
+        potLabelLeft.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        cLeft->Update();
+        std::string outPathLeft = "/nashome/c/coackley/systPlots/CRUMBS_universes_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cLeft->SaveAs(outPathLeft.c_str());
+        delete legLeft;
+        delete cLeft;
+
+        // --- Right plot: nominal + mean +/- 1 sigma ---
+
+        // Build a histogram of mean and std dev bin-by-bin across universes
+        int nBins = nominal_CRUMBS[cat][p]->GetNbinsX();
+        TH1D* h_mean = (TH1D*)nominal_CRUMBS[cat][p]->Clone(("h_mean_" + catNames[cat] + "_" + paramNames_CRUMBS[p]).c_str());
+        h_mean->Reset();
+
+        for(int b = 1; b <= nBins; b++){
+            // Collect bin contents across all universes
+            double sum = 0.0;
+            double sumSq = 0.0;
+            for(int u = 0; u < NUNIV; u++){
+                double val = univ_CRUMBS[cat][p][u]->GetBinContent(b);
+                sum   += val;
+                sumSq += val * val;
+            }
+            double mean   = sum / NUNIV;
+            double stddev = std::sqrt(sumSq / NUNIV - mean * mean);
+
+            h_mean->SetBinContent(b, mean);
+            h_mean->SetBinError(b, stddev);
+        }
+
+        TCanvas *cRight = new TCanvas(("c_CRUMBS_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p]).c_str(), "", 800, 600);
+        cRight->SetLeftMargin(0.12);
+        cRight->SetBottomMargin(0.12);
+        cRight->SetRightMargin(0.05);
+        cRight->SetTopMargin(0.08);
+
+        h_mean->SetLineColor(kViolet+1);
+        h_mean->SetLineWidth(2);
+        h_mean->SetMarkerColor(kViolet+1);
+        h_mean->SetMarkerSize(0);
+        h_mean->GetXaxis()->SetTitle("CRUMBS Score");
+        h_mean->GetYaxis()->SetTitle("Slices");
+        h_mean->GetXaxis()->SetTitleSize(0.05);
+        h_mean->GetYaxis()->SetTitleSize(0.05);
+        h_mean->GetXaxis()->SetLabelSize(0.04);
+        h_mean->GetYaxis()->SetLabelSize(0.04);
+        h_mean->SetStats(0);
+        h_mean->Draw("HIST E");  // E draws the error bars as the 1 sigma band
+
+        nominal_CRUMBS[cat][p]->SetLineColor(kBlack);
+        nominal_CRUMBS[cat][p]->SetLineWidth(2);
+        nominal_CRUMBS[cat][p]->SetStats(0);
+        nominal_CRUMBS[cat][p]->Draw("HIST SAME");
+
+        TLegend *legRight = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legRight->SetBorderSize(0);
+        legRight->SetFillStyle(0);
+        legRight->AddEntry(nominal_CRUMBS[cat][p], "Nominal", "l");
+        legRight->AddEntry(h_mean, "CV #pm 1#sigma", "l");
+        legRight->Draw();
+
+        TLatex labelRight;
+        labelRight.SetTextSize(0.04);
+        labelRight.SetNDC();
+        labelRight.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+
+        TLatex potLabelRight;
+        potLabelRight.SetTextColor(kGray+1);
+        potLabelRight.SetTextSize(0.035);
+        potLabelRight.SetNDC();
+        potLabelRight.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        cRight->Update();
+        std::string outPathRight = "/nashome/c/coackley/systPlots/CRUMBS_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cRight->SaveAs(outPathRight.c_str());
+        delete legRight;
+        delete h_mean;
+        delete cRight;
+    };
+
+    for(int cat = 0; cat < nCats; cat++){
+        for(int p = 0; p < nParams; p++){
+            plotCRUMBSSyst(cat, p);
+        }
+    }
 
 }
