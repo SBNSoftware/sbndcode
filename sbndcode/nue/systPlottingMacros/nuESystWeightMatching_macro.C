@@ -1861,12 +1861,15 @@ auto plotCRUMBSSyst = [&](int cat, int p){
         delete legR; delete h_mean; delete cRight;
     };
 
+    std::cout << "nCats = " << nCats << ", nParams = " << nParams << ", nVars = " << nVars << std::endl;
     for(int cat = 0; cat < nCats; cat++){
         for(int p = 0; p < nParams; p++){
             for(int v = 0; v < nVars; v++){
                 plotVarSyst(cat, p, v);
+                std::cout << "cat = " << cat << ", p = " << p << ", v = " << v << std::endl;
             }
         }
     }
 
+    std::cout << "Done plotting now" << std::endl;
 }
