@@ -200,6 +200,8 @@ struct eventCounting_struct{
 
 void nuESystWeightMatching_macro(){
 
+    gROOT->SetBatch(kTRUE);
+
     int FVCut = 0;
 
     double FVCut_xHigh = 194; 
@@ -756,14 +758,16 @@ void nuESystWeightMatching_macro(){
         for(int p = 0; p < nParams; p++){
             std::string nomName = "h_CRUMBS_nominal_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
             nominal_CRUMBS[cat][p] = new TH1D(nomName.c_str(), nomName.c_str(), nCRUMBSBins, CRUMBSMin, CRUMBSMax);
+            nominal_CRUMBS[cat][p]->SetDirectory(0);
             for(int u = 0; u < NUNIV; u++){
                 std::string univName = "h_CRUMBS_univ" + std::to_string(u) + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
                 univ_CRUMBS[cat][p][u] = new TH1D(univName.c_str(), univName.c_str(), nCRUMBSBins, CRUMBSMin, CRUMBSMax);
+                univ_CRUMBS[cat][p][u]->SetDirectory(0);
             }
         }
     }
 
-// =====================================================================
+    // =====================================================================
     // Per-variable systematic histograms (same structure as CRUMBS)
     // =====================================================================
 
@@ -811,22 +815,20 @@ void nuESystWeightMatching_macro(){
     // nominal_vars[cat][p][var], univ_vars[cat][p][var][u]
     std::vector<std::vector<std::vector<TH1D*>>> nominal_vars(
         nCats, std::vector<std::vector<TH1D*>>(nParams, std::vector<TH1D*>(nVars, nullptr)));
-    std::vector<std::vector<std::vector<std::vector<TH1D*>>>> univ_vars(
-        nCats, std::vector<std::vector<std::vector<TH1D*>>>(nParams,
-            std::vector<std::vector<TH1D*>>(nVars, std::vector<TH1D*>(NUNIV, nullptr))));
 
+    // univ_vars only holds one variable at a time to save memory
+    // Indexed as [cat][p][u]
+    std::vector<std::vector<std::vector<TH1D*>>> univ_vars_current(
+        nCats, std::vector<std::vector<TH1D*>>(nParams, std::vector<TH1D*>(NUNIV, nullptr)));
+
+    // Only allocate nominal_vars upfront; univ_vars allocated per-variable during plotting
     for(int cat = 0; cat < nCats; cat++){
         for(int p = 0; p < nParams; p++){
             for(int v = 0; v < nVars; v++){
                 std::string nomName = "h_" + varDefs[v].name + "_nominal_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
                 nominal_vars[cat][p][v] = new TH1D(nomName.c_str(), nomName.c_str(),
                     varDefs[v].nBins, varDefs[v].xMin, varDefs[v].xMax);
-                for(int u = 0; u < NUNIV; u++){
-                    std::string univName = "h_" + varDefs[v].name + "_univ" + std::to_string(u)
-                                        + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
-                    univ_vars[cat][p][v][u] = new TH1D(univName.c_str(), univName.c_str(),
-                        varDefs[v].nBins, varDefs[v].xMin, varDefs[v].xMax);
-                }
+                nominal_vars[cat][p][v]->SetDirectory(0);
             }
         }
     }
@@ -859,634 +861,778 @@ void nuESystWeightMatching_macro(){
         if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
         return vec->at(sliceIdx).at(u);
     };
+    
+    // --- Plot per-variable systematic band plots ---
+    auto plotVarSyst = [&](int cat, int p, int v, std::vector<std::vector<std::vector<TH1D*>>>& univ_vars_current){
+        const std::string& varName  = varDefs[v].name;
+        const std::string& axisLbl  = varDefs[v].axisLabel;
 
-    for(Long64_t e = 0; e < numEntries; ++e){
-        std::cout << "============= New Event =============" << std::endl;
-        tree->GetEntry(e);
+        // --- Left plot: nominal + all universes ---
+        std::string cLeftName = "c_var_univ_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
+        TCanvas *cLeft = new TCanvas(cLeftName.c_str(), "", 800, 600);
+        cLeft->SetLeftMargin(0.12);
+        cLeft->SetBottomMargin(0.12);
+        cLeft->SetRightMargin(0.05);
+        cLeft->SetTopMargin(0.08);
 
-        std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
-        std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
-
-        int trueSignal = 0;
-
-        // --- Weight lookup: only signal==1 or signal==2 events have entries in the weights tree ---
-        // For signal==3 (intime cosmics), weightsFound stays false and all weight helpers return 1.0
-        bool weightsFound = false;
-        if(signal == 1 || signal == 2){
-            std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
-
-            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
-            auto it = weightEntryMap.find(key);
-
-            if(it == weightEntryMap.end()){
-                std::cout << "No matching weights event found" << std::endl;
-            } else {
-                weightsTree->GetEntry(it->second);
-                weightsFound = true;
-
-                std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
-                std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
-            }
-        } else {
-            std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+        bool firstDrawn = false;
+        for(int u = 0; u < NUNIV; u++){
+            univ_vars_current[cat][p][u]->SetLineColor(kMagenta-9);
+            univ_vars_current[cat][p][u]->SetLineWidth(1);
+            univ_vars_current[cat][p][u]->SetLineColorAlpha(kMagenta-9, 0.08);
+            univ_vars_current[cat][p][u]->GetXaxis()->SetTitle(axisLbl.c_str());
+            univ_vars_current[cat][p][u]->GetYaxis()->SetTitle("Slices");
+            univ_vars_current[cat][p][u]->GetXaxis()->SetTitleSize(0.05);
+            univ_vars_current[cat][p][u]->GetYaxis()->SetTitleSize(0.05);
+            univ_vars_current[cat][p][u]->GetXaxis()->SetLabelSize(0.04);
+            univ_vars_current[cat][p][u]->GetYaxis()->SetLabelSize(0.04);
+            univ_vars_current[cat][p][u]->SetStats(0);
+            if(!firstDrawn){ univ_vars_current[cat][p][u]->Draw("HIST");      firstDrawn = true; }
+            else            { univ_vars_current[cat][p][u]->Draw("HIST SAME"); }
         }
 
-        // --- Shared code from here ---
+        nominal_vars[cat][p][v]->SetLineColor(kBlack);
+        nominal_vars[cat][p][v]->SetLineWidth(2);
+        nominal_vars[cat][p][v]->SetStats(0);
+        nominal_vars[cat][p][v]->Draw("HIST SAME");
 
-        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-            // This is an event with a nu+e elastic scatter in it (from the signal files)
-            if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
-                // True nu+e elastic scattering event within the active volume or FV
-                actualSignalCount += weights.signalNuE; // nominal value
-                trueSignal = 1;
+        TLegend *legL = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legL->SetBorderSize(0); legL->SetFillStyle(0);
+        legL->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
+        legL->AddEntry(&univ_vars_current[cat][p][v][0], "Universes", "l");
+        legL->Draw();
 
-                // weightsFound guards access to nuEScatter weight vectors;
-                // getNuEWeight returns 1.0 if weightsFound is false (i.e. no entry was loaded)
-                bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
+        TLatex lblL; lblL.SetTextSize(0.04); lblL.SetNDC();
+        lblL.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+        TLatex potL; potL.SetTextColor(kGray+1); potL.SetTextSize(0.035); potL.SetNDC();
+        potL.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
 
-                if(nuEWeightsValid){
-                    for(int u = 0; u < NUNIV; u++){
-                        double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+        cLeft->Update();
+        std::string outL = "/nashome/c/coackley/systPlots/" + varName + "_universes_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cLeft->SaveAs(outL.c_str());
+        delete legL; delete cLeft;
 
-                        count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
-                        count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
-                        count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
-                        count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
-                        count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
-                        count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
-                        count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
-                        count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
-                        count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
-                        count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
-                        count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
-                        count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
-                        count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
-                        count_combined[u]    += weights.signalNuE * combinedWeight;
+        // --- Right plot: nominal + mean +/- 1 sigma ---
+        int nBins = nominal_vars[cat][p][v]->GetNbinsX();
+
+        static int varMeanCounter = 0;
+        std::string meanName = "h_mean_" + varName + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + std::to_string(varMeanCounter++);
+        TH1D* h_mean = (TH1D*)nominal_vars[cat][p][v]->Clone(meanName.c_str());
+        h_mean->SetDirectory(0);
+        h_mean->Reset();        
+
+        for(int b = 1; b <= nBins; b++){
+            double sum = 0.0, sumSq = 0.0;
+            for(int u = 0; u < NUNIV; u++){
+                double val = univ_vars_current[cat][p][u]->GetBinContent(b);
+                sum   += val;
+                sumSq += val * val;
+            }
+            double mean   = sum / NUNIV;
+            double stddev = std::sqrt(std::max(0.0, sumSq / NUNIV - mean * mean));
+            h_mean->SetBinContent(b, mean);
+            h_mean->SetBinError(b, stddev);
+        }
+
+        std::string cRightName = "c_var_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
+        TCanvas *cRight = new TCanvas(cRightName.c_str(), "", 800, 600);
+        cRight->SetLeftMargin(0.12); cRight->SetBottomMargin(0.12);
+        cRight->SetRightMargin(0.05); cRight->SetTopMargin(0.08);
+
+        h_mean->SetLineColor(kViolet+1); h_mean->SetLineWidth(2);
+        h_mean->SetMarkerColor(kViolet+1); h_mean->SetMarkerSize(0);
+        h_mean->GetXaxis()->SetTitle(axisLbl.c_str());
+        h_mean->GetYaxis()->SetTitle("Slices");
+        h_mean->GetXaxis()->SetTitleSize(0.05); h_mean->GetYaxis()->SetTitleSize(0.05);
+        h_mean->GetXaxis()->SetLabelSize(0.04); h_mean->GetYaxis()->SetLabelSize(0.04);
+        h_mean->SetStats(0);
+        h_mean->Draw("HIST E");
+
+        nominal_vars[cat][p][v]->SetLineColor(kBlack);
+        nominal_vars[cat][p][v]->SetLineWidth(2);
+        nominal_vars[cat][p][v]->Draw("HIST SAME");
+
+        TLegend *legR = new TLegend(0.55, 0.72, 0.92, 0.88);
+        legR->SetBorderSize(0); legR->SetFillStyle(0);
+        legR->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
+        legR->AddEntry(h_mean, "CV #pm 1#sigma", "l");
+        legR->Draw();
+
+        TLatex lblR; lblR.SetTextSize(0.04); lblR.SetNDC();
+        lblR.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
+        TLatex potR; potR.SetTextColor(kGray+1); potR.SetTextSize(0.035); potR.SetNDC();
+        potR.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+        cRight->Update();
+        std::string outR = "/nashome/c/coackley/systPlots/" + varName + "_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
+        cRight->SaveAs(outR.c_str());
+        delete legR; delete h_mean; delete cRight;
+    };
+
+    for(int vCurrent = 0; vCurrent < nVars; vCurrent++){
+        std::cout << "Processing variable " << vCurrent << ": " << varDefs[vCurrent].name << std::endl;
+
+        // Allocate universe histograms for this variable only
+        for(int cat = 0; cat < nCats; cat++){
+            for(int p = 0; p < nParams; p++){
+                for(int u = 0; u < NUNIV; u++){
+                    std::string univName = "h_" + varDefs[vCurrent].name + "_univ" + std::to_string(u)
+                                        + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p]
+                                        + "_" + std::to_string(vCurrent);
+                    univ_vars_current[cat][p][u] = new TH1D(univName.c_str(), univName.c_str(),
+                        varDefs[vCurrent].nBins, varDefs[vCurrent].xMin, varDefs[vCurrent].xMax);
+                    univ_vars_current[cat][p][u]->SetDirectory(0);
+                }
+            }
+        }
+
+        for(Long64_t e = 0; e < numEntries; ++e){
+            std::cout << "============= New Event =============" << std::endl;
+            tree->GetEntry(e);
+
+            std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
+            std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
+
+            int trueSignal = 0;
+
+            // --- Weight lookup: only signal==1 or signal==2 events have entries in the weights tree ---
+            // For signal==3 (intime cosmics), weightsFound stays false and all weight helpers return 1.0
+            bool weightsFound = false;
+            if(signal == 1 || signal == 2){
+                std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
+
+                eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
+                auto it = weightEntryMap.find(key);
+
+                if(it == weightEntryMap.end()){
+                    std::cout << "No matching weights event found" << std::endl;
+                } else {
+                    weightsTree->GetEntry(it->second);
+                    weightsFound = true;
+
+                    std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
+                    std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
+                }
+            } else {
+                std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+            }
+
+            // --- Shared code from here ---
+
+            if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+                // This is an event with a nu+e elastic scatter in it (from the signal files)
+                if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
+                    // True nu+e elastic scattering event within the active volume or FV
+                    actualSignalCount += weights.signalNuE; // nominal value
+                    trueSignal = 1;
+
+                    // weightsFound guards access to nuEScatter weight vectors;
+                    // getNuEWeight returns 1.0 if weightsFound is false (i.e. no entry was loaded)
+                    bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
+
+                    if(nuEWeightsValid){
+                        for(int u = 0; u < NUNIV; u++){
+                            double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+
+                            count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
+                            count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
+                            count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
+                            count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
+                            count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
+                            count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
+                            count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
+                            count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
+                            count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
+                            count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
+                            count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
+                            count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
+                            count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+                            count_combined[u]    += weights.signalNuE * combinedWeight;
+                        }
                     }
                 }
             }
-        }
 
-        // Looking at the true recoil electron in the event (if there is one)
-        recoilElectron_struct recoilElectron;
-        for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
-            if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
-            if(truth_recoilElectronPDG->at(i) != -999999){
-                // There is a true recoil electron in the event
-                recoilElectron.energy = truth_recoilElectronEnergy->at(i);
-                recoilElectron.angle = truth_recoilElectronAngle->at(i);
-                recoilElectron.dx = truth_recoilElectronDX->at(i);
-                recoilElectron.dy = truth_recoilElectronDY->at(i);
-                recoilElectron.dz = truth_recoilElectronDZ->at(i);
-            } else if(truth_recoilElectronPDG->size() == 1 && truth_recoilElectronPDG->at(i) == -999999){
-                // There is no recoil electron in the event
-                recoilElectron.energy = -999999;
-                recoilElectron.angle = -999999;
-                recoilElectron.dx = -999999;
-                recoilElectron.dy = -999999;
-                recoilElectron.dz = -999999;
-            }
-        }
-
-        double weight = 0;
-        if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-        if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
-        if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
-
-        // Looking at the reco slices
-        if(reco_sliceID->size() == 0) continue;
-
-        if(weightsFound) std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
-        std::cout << "--- Slices for event ---" << std::endl;
-
-        for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
-            // Loop through slices in event
-            if(reco_sliceID->at(slice) == -999999) continue;
-
-            std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", CRUMBS Score = " << reco_sliceScore->at(slice) << std::endl;
-
-            double sliceRecoVX = -999999;
-            double sliceRecoVY = -999999;
-            double sliceRecoVZ = -999999;
-
-            for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
-                if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
-                    sliceRecoVX = reco_neutrinoVX->at(recoNeut);
-                    sliceRecoVY = reco_neutrinoVY->at(recoNeut);
-                    sliceRecoVZ = reco_neutrinoVZ->at(recoNeut);
+            // Looking at the true recoil electron in the event (if there is one)
+            recoilElectron_struct recoilElectron;
+            for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
+                if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
+                if(truth_recoilElectronPDG->at(i) != -999999){
+                    // There is a true recoil electron in the event
+                    recoilElectron.energy = truth_recoilElectronEnergy->at(i);
+                    recoilElectron.angle = truth_recoilElectronAngle->at(i);
+                    recoilElectron.dx = truth_recoilElectronDX->at(i);
+                    recoilElectron.dy = truth_recoilElectronDY->at(i);
+                    recoilElectron.dz = truth_recoilElectronDZ->at(i);
+                } else if(truth_recoilElectronPDG->size() == 1 && truth_recoilElectronPDG->at(i) == -999999){
+                    // There is no recoil electron in the event
+                    recoilElectron.energy = -999999;
+                    recoilElectron.angle = -999999;
+                    recoilElectron.dx = -999999;
+                    recoilElectron.dy = -999999;
+                    recoilElectron.dz = -999999;
                 }
             }
 
-            // Assigning a category to the slices
-            // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
-            double sliceCategoryPlottingMacro = -999999;
-            if(reco_sliceOrigin->at(slice) == 0){
-                sliceCategoryPlottingMacro = 0;
-            } else if(reco_sliceOrigin->at(slice) == 1){
-                if(reco_sliceCompleteness->at(slice) > 0.5){
-                    if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
-                        sliceCategoryPlottingMacro = 1;
-                    } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
-                        sliceCategoryPlottingMacro = 1;
+            double weight = 0;
+            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+            if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
+            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
+
+            // Looking at the reco slices
+            if(reco_sliceID->size() == 0) continue;
+
+            if(weightsFound) std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
+            std::cout << "--- Slices for event ---" << std::endl;
+
+            for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
+                // Loop through slices in event
+                if(reco_sliceID->at(slice) == -999999) continue;
+
+                std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", CRUMBS Score = " << reco_sliceScore->at(slice) << std::endl;
+
+                double sliceRecoVX = -999999;
+                double sliceRecoVY = -999999;
+                double sliceRecoVZ = -999999;
+
+                for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                    if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                        sliceRecoVX = reco_neutrinoVX->at(recoNeut);
+                        sliceRecoVY = reco_neutrinoVY->at(recoNeut);
+                        sliceRecoVZ = reco_neutrinoVZ->at(recoNeut);
+                    }
+                }
+
+                // Assigning a category to the slices
+                // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
+                double sliceCategoryPlottingMacro = -999999;
+                if(reco_sliceOrigin->at(slice) == 0){
+                    sliceCategoryPlottingMacro = 0;
+                } else if(reco_sliceOrigin->at(slice) == 1){
+                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                        if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                            sliceCategoryPlottingMacro = 1;
+                        } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
+                            sliceCategoryPlottingMacro = 1;
+                        } else{
+                            sliceCategoryPlottingMacro = 2;
+                        }
                     } else{
                         sliceCategoryPlottingMacro = 2;
                     }
-                } else{
-                    sliceCategoryPlottingMacro = 2;
-                }
-            } else if(reco_sliceOrigin->at(slice) == 3){
-                if(reco_sliceCompleteness->at(slice) > 0.5){
-                    sliceCategoryPlottingMacro = 3;
-                } else{
-                    sliceCategoryPlottingMacro = 4;
-                }
-            }
-
-            if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
-            
-            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
-                    if(truth_particleStatusCode->at(trueParticle) == 1){
-                        //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
-                    }
-                }
-            }
-
-            // Assigning an interaction category to the slices
-            // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
-            // Other = 8, Fuzzy nu+e = 9
-            int sliceInteractionType = -999999;
-            if(reco_sliceOrigin->at(slice) != 0){
-                if(reco_sliceOrigin->at(slice) == 1){
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
-                        if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
-                            sliceInteractionType = 1;
-                        } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
-                            sliceInteractionType = 1;
-                        } else{
-                            sliceInteractionType = 7;
-                        }
-                    } else{
-                        sliceInteractionType = 9;
-                    }
                 } else if(reco_sliceOrigin->at(slice) == 3){
-                    if((FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow))){
-                        if(reco_sliceTrueCCNC->at(slice) == 0){
-                            if(reco_sliceTrueNeutrinoType->at(slice) == 12){
-                                sliceInteractionType = 5;
-                            } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
-                                sliceInteractionType = 4;
+                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                        sliceCategoryPlottingMacro = 3;
+                    } else{
+                        sliceCategoryPlottingMacro = 4;
+                    }
+                }
+
+                if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
+                if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
+                if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
+                if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
+                if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
+                
+                for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                    if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                        if(truth_particleStatusCode->at(trueParticle) == 1){
+                            //std::cout << "True particle in slice: PDG = " << truth_particlePDG->at(trueParticle) << std::endl;
+                        }
+                    }
+                }
+
+                // Assigning an interaction category to the slices
+                // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
+                // Other = 8, Fuzzy nu+e = 9
+                int sliceInteractionType = -999999;
+                if(reco_sliceOrigin->at(slice) != 0){
+                    if(reco_sliceOrigin->at(slice) == 1){
+                        if(reco_sliceCompleteness->at(slice) > 0.5){
+                            if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                                sliceInteractionType = 1;
+                            } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
+                                sliceInteractionType = 1;
+                            } else{
+                                sliceInteractionType = 7;
                             }
-                        } else if(reco_sliceTrueCCNC->at(slice) == 1){
-                            int neutralPion = 0;
-                            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
-                                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
-                                    if(truth_particleStatusCode->at(trueParticle) == 1){
-                                        if(truth_particlePDG->at(trueParticle) == 111){
-                                            neutralPion++;
+                        } else{
+                            sliceInteractionType = 9;
+                        }
+                    } else if(reco_sliceOrigin->at(slice) == 3){
+                        if((FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow))){
+                            if(reco_sliceTrueCCNC->at(slice) == 0){
+                                if(reco_sliceTrueNeutrinoType->at(slice) == 12){
+                                    sliceInteractionType = 5;
+                                } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
+                                    sliceInteractionType = 4;
+                                }
+                            } else if(reco_sliceTrueCCNC->at(slice) == 1){
+                                int neutralPion = 0;
+                                for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                                    if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                                        if(truth_particleStatusCode->at(trueParticle) == 1){
+                                            if(truth_particlePDG->at(trueParticle) == 111){
+                                                neutralPion++;
+                                            }
                                         }
                                     }
                                 }
+                                if(neutralPion > 0){
+                                    sliceInteractionType = 2;
+                                } else{
+                                    sliceInteractionType = 3;
+                                }
                             }
-                            if(neutralPion > 0){
-                                sliceInteractionType = 2;
-                            } else{
-                                sliceInteractionType = 3;
-                            }
-                        }
-                    } else{
-                        sliceInteractionType = 6;
-                    }
-                }
-            } else{
-                sliceInteractionType = 0;
-            }
-
-            if(sliceInteractionType == -999999){
-                sliceInteractionType = 8;
-            }
-
-            double summedEnergy_beforeCuts = 0;
-            double numPFPsSlice_beforeCuts = 0;
-            double numPrimaryPFPsSlice_beforeCuts = 0;
-            double numPrimaryPFPs10Slice_beforeCuts = 0;
-            double numHitsInPFPs_beforeCuts = 0;
-            
-            highestEnergyPFP_struct highestEnergyPFP_beforeCuts; 
-
-            //std::cout << "------ PFPs before cuts ------" << std::endl;
-            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
-                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
-                    // PFP is in the slice
-                    numPFPsSlice_beforeCuts++;
-                    if(reco_particleIsPrimary->at(pfp) == 1){
-                        numPrimaryPFPsSlice_beforeCuts++;
-                        if(reco_particleNumHits->at(pfp) >= 10) numPrimaryPFPs10Slice_beforeCuts++;
-                    }
-                    
-                    numHitsInPFPs_beforeCuts += reco_particleNumHits->at(pfp);
-
-                    //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
-                    summedEnergy_beforeCuts += reco_particleBestPlaneEnergy->at(pfp);
-
-                    if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_beforeCuts.energy){
-                        highestEnergyPFP_beforeCuts.energy = reco_particleBestPlaneEnergy->at(pfp);
-                        highestEnergyPFP_beforeCuts.theta = reco_particleTheta->at(pfp);
-                        highestEnergyPFP_beforeCuts.PFPID = reco_particleID->at(pfp);
-                        highestEnergyPFP_beforeCuts.dx = reco_particleDX->at(pfp);
-                        highestEnergyPFP_beforeCuts.dy = reco_particleDY->at(pfp);
-                        highestEnergyPFP_beforeCuts.dz = reco_particleDZ->at(pfp);
-                        highestEnergyPFP_beforeCuts.vx = reco_particleVX->at(pfp);
-                        highestEnergyPFP_beforeCuts.vy = reco_particleVY->at(pfp);
-                        highestEnergyPFP_beforeCuts.vz = reco_particleVZ->at(pfp);
-                        highestEnergyPFP_beforeCuts.completeness = reco_particleCompleteness->at(pfp);
-                        highestEnergyPFP_beforeCuts.purity = reco_particlePurity->at(pfp);
-                        highestEnergyPFP_beforeCuts.trackscore = reco_particleTrackScore->at(pfp);
-                        highestEnergyPFP_beforeCuts.primary = reco_particleIsPrimary->at(pfp);
-                        highestEnergyPFP_beforeCuts.truePDG = reco_particleTruePDG->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueOrigin = reco_particleTrueOrigin->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueInt = reco_particleTrueInteractionType->at(pfp);
-                        highestEnergyPFP_beforeCuts.bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
-                        highestEnergyPFP_beforeCuts.razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueVX = reco_particleTrueVX->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueVY = reco_particleTrueVY->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueVZ = reco_particleTrueVZ->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueEndX = reco_particleTrueEndX->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueEndY = reco_particleTrueEndY->at(pfp);
-                        highestEnergyPFP_beforeCuts.trueEndZ = reco_particleTrueEndZ->at(pfp);
-                        highestEnergyPFP_beforeCuts.numHits = reco_particleNumHits->at(pfp);
-                        highestEnergyPFP_beforeCuts.clearCosmic = reco_particleClearCosmic->at(pfp);
-
-                        if(highestEnergyPFP_beforeCuts.trueVX != -999999 && highestEnergyPFP_beforeCuts.trueVY != -999999 && highestEnergyPFP_beforeCuts.trueVZ != -999999 && highestEnergyPFP_beforeCuts.trueEndX != -999999 && highestEnergyPFP_beforeCuts.trueEndY != -999999 && highestEnergyPFP_beforeCuts.trueEndZ != -999999){
-                            double xCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVX - highestEnergyPFP_beforeCuts.trueEndX);
-                            double yCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVY - highestEnergyPFP_beforeCuts.trueEndY);
-                            double zCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVZ - highestEnergyPFP_beforeCuts.trueEndZ);
-                            highestEnergyPFP_beforeCuts.trueLength = std::sqrt((xCoordDiff_length * xCoordDiff_length) + (yCoordDiff_length * yCoordDiff_length) + (zCoordDiff_length * zCoordDiff_length));
+                        } else{
+                            sliceInteractionType = 6;
                         }
                     }
-                    
-                }
-            }
-
-            double pfp10cm_PCAAngle_beforeCuts = -999999;
-            double pfp10cm_PCADX_beforeCuts = -999999;
-            double pfp10cm_PCADY_beforeCuts = -999999;
-            double pfp10cm_PCADZ_beforeCuts = -999999;
-
-            for(size_t pfpAngle = 0; pfpAngle < angleRecalculationPCAPFP10cm_pfpID->size(); ++pfpAngle){
-                if(angleRecalculationPCAPFP10cm_pfpID->at(pfpAngle) == highestEnergyPFP_beforeCuts.PFPID){
-                    pfp10cm_PCAAngle_beforeCuts = angleRecalculationPCAPFP10cm_angle->at(pfpAngle);
-                    pfp10cm_PCADX_beforeCuts = angleRecalculationPCAPFP10cm_dx->at(pfpAngle);
-                    pfp10cm_PCADY_beforeCuts = angleRecalculationPCAPFP10cm_dy->at(pfpAngle);
-                    pfp10cm_PCADZ_beforeCuts = angleRecalculationPCAPFP10cm_dz->at(pfpAngle);
-                }
-            }
-
-            // Looped through all PFPs in the slice and now have the highest energy PFP out
-            double angleDifference_beforeCuts = -999999;
-            double angleDifferencePCAPFP10cm_beforeCuts = -999999;
-
-            if((highestEnergyPFP_beforeCuts.dx != -999999) && (recoilElectron.dx != -999999)){
-                double aDOTb = ((highestEnergyPFP_beforeCuts.dx * recoilElectron.dx) + (highestEnergyPFP_beforeCuts.dy * recoilElectron.dy) + (highestEnergyPFP_beforeCuts.dz * recoilElectron.dz));
-                double aMagnitude = std::sqrt((highestEnergyPFP_beforeCuts.dx * highestEnergyPFP_beforeCuts.dx) + (highestEnergyPFP_beforeCuts.dy * highestEnergyPFP_beforeCuts.dy) + (highestEnergyPFP_beforeCuts.dz * highestEnergyPFP_beforeCuts.dz));
-                double bMagnitude = std::sqrt((recoilElectron.dx * recoilElectron.dx) + (recoilElectron.dy * recoilElectron.dy) + (recoilElectron.dz * recoilElectron.dz));
-                double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
-                angleDifference_beforeCuts = (TMath::ACos(cosAngle) * TMath::RadToDeg());
-            }
-
-            if((pfp10cm_PCADX_beforeCuts != -999999) && (recoilElectron.dx != -999999)){
-                double aDOTb = ((pfp10cm_PCADX_beforeCuts * recoilElectron.dx) + (pfp10cm_PCADY_beforeCuts * recoilElectron.dy) + (pfp10cm_PCADZ_beforeCuts * recoilElectron.dz));
-                double aMagnitude = std::sqrt((pfp10cm_PCADX_beforeCuts * pfp10cm_PCADX_beforeCuts) + (pfp10cm_PCADY_beforeCuts * pfp10cm_PCADY_beforeCuts) + (pfp10cm_PCADZ_beforeCuts * pfp10cm_PCADZ_beforeCuts));
-                double bMagnitude = std::sqrt((recoilElectron.dx * recoilElectron.dx) + (recoilElectron.dy * recoilElectron.dy) + (recoilElectron.dz * recoilElectron.dz));
-                double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
-                angleDifferencePCAPFP10cm_beforeCuts = (TMath::ACos(cosAngle) * TMath::RadToDeg());
-            }
-
-            double recoVX = -999999;
-            double recoVY = -999999;
-            double recoVZ = -999999;
-            int numRecoNeutrinos = 0;
-
-            for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
-                if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
-                    // Reco neutrino is in the slice
-                    numRecoNeutrinos++;
-                    recoVX = reco_neutrinoVX->at(recoNeut);
-                    recoVY = reco_neutrinoVY->at(recoNeut);
-                    recoVZ = reco_neutrinoVZ->at(recoNeut);
-                }
-            }
-
-
-            // Assigning event type based on true PDG of highest energy PFP in slice
-            int slicePFPType_beforeCuts = -999999;
-            if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueInt == 1098 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && signal == 1){
-                // This is an electron from a nu+e elastic scatter
-                slicePFPType_beforeCuts = 0;
-            } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && signal == 1){
-                // This is something other than an electron from a nu+e elastic scatter
-                slicePFPType_beforeCuts = 1;
-            } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && signal != 1){
-                // This is a nu+e elastic scatter not from the signal file
-                slicePFPType_beforeCuts = 15;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && highestEnergyPFP_beforeCuts.trueInt != 1098){
-                // This is an electron from a beam neutrino
-                slicePFPType_beforeCuts = 2;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 2212 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is a proton from a beam neutrino
-                slicePFPType_beforeCuts = 3;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is a muon from a beam neutrino
-                slicePFPType_beforeCuts = 4;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 111 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is a pi0 fron a beam neutrino
-                slicePFPType_beforeCuts = 5;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 211 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is a charged pi from a beam neutrino
-                slicePFPType_beforeCuts = 6;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is a proton from a beam neutrino
-                slicePFPType_beforeCuts = 7;
-            } else if(highestEnergyPFP_beforeCuts.trueOrigin == 1){
-                // This is something else from a beam neutrino
-                slicePFPType_beforeCuts = 8;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
-                // This is a muon from a cosmic
-                slicePFPType_beforeCuts = 9;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
-                // This is a photon from a cosmic
-                slicePFPType_beforeCuts = 10;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
-                // This is an electron from a cosmic
-                slicePFPType_beforeCuts = 11;
-            } else if(highestEnergyPFP_beforeCuts.trueOrigin == 2){
-                // This is something else from a cosmic
-                slicePFPType_beforeCuts = 12;
-            }
-
-            // Counting number of events before cuts
-            if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0){
-                    eventsBeforeCuts_DLNuE.background += weight;
-                } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                    eventsBeforeCuts_DLNuE.signal += weight;
-                } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
-                    eventsBeforeCuts_DLNuE.background += weight;
-                } else if(sliceCategoryPlottingMacro == 3){
-                    eventsBeforeCuts_DLNuE.background += weight;
-                } else if(sliceCategoryPlottingMacro == 4){
-                    eventsBeforeCuts_DLNuE.background += weight;
+                } else{
+                    sliceInteractionType = 0;
                 }
 
-                if(sliceInteractionType == 0){
-                    eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;   
-                } else if(sliceInteractionType == 1 && signal == 1){
-                    eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
-                } else if(sliceInteractionType == 2){
-                    eventsBeforeCuts_DLNuE.splitInt.NCNPi0 += weight;
-                } else if(sliceInteractionType == 3){
-                    eventsBeforeCuts_DLNuE.splitInt.otherNC += weight;
-                } else if(sliceInteractionType == 4){
-                    eventsBeforeCuts_DLNuE.splitInt.CCnumu += weight;
-                } else if(sliceInteractionType == 5){
-                    eventsBeforeCuts_DLNuE.splitInt.CCnue += weight;
-                } else if(sliceInteractionType == 6){
-                    eventsBeforeCuts_DLNuE.splitInt.dirt += weight;
-                } else if(sliceInteractionType == 7 && signal == 1){
-                    eventsBeforeCuts_DLNuE.splitInt.nuEDirt += weight;
-                } else if(sliceInteractionType == 8){
-                    eventsBeforeCuts_DLNuE.splitInt.other += weight;
-                } else if(sliceInteractionType == 9 && signal == 1){
-                    eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy += weight;
-                }
-            }
-
-            // START FILLING HISTOGRAMS HERE
-
-            // --- Fill CRUMBS score histograms ---
-            if(sliceCategoryPlottingMacro != -999999){
-                int cat = (int)sliceCategoryPlottingMacro; // 0,1,2,3,4
-
-                double crumbsScore = reco_sliceScore->at(slice);
-
-                // POT weight for this slice (no systematic weight)
-                double potWeight = 0.0;
-                if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
-                else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
-                else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
-
-                // Fill nominal for all 14 params (same value, just POT weight)
-                for(int p = 0; p < nParams; p++){
-                    nominal_CRUMBS[cat][p]->Fill(crumbsScore, potWeight);
+                if(sliceInteractionType == -999999){
+                    sliceInteractionType = 8;
                 }
 
-                // Fill universe histograms
-                // Cosmic slices (cat==0) have no systematic weights -> weight = 1.0 for all universes
-                for(int u = 0; u < NUNIV; u++){
+                double summedEnergy_beforeCuts = 0;
+                double numPFPsSlice_beforeCuts = 0;
+                double numPrimaryPFPsSlice_beforeCuts = 0;
+                double numPrimaryPFPs10Slice_beforeCuts = 0;
+                double numHitsInPFPs_beforeCuts = 0;
+                
+                highestEnergyPFP_struct highestEnergyPFP_beforeCuts; 
 
-                    // Get per-parameter weights for this slice and universe
-                    bool isCosmic = (sliceCategoryPlottingMacro == 0);
-                    double w_horncurrent = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, u, weightsFound);
-                    double w_expskin     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,     slice, u, weightsFound);
-                    double w_kplus       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,       slice, u, weightsFound);
-                    double w_kmin        = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,        slice, u, weightsFound);
-                    double w_kzero       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,       slice, u, weightsFound);
-                    double w_nucleoninex = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
-                    double w_nucleonqex  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
-                    double w_nucleontotx = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
-                    double w_piminus     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,     slice, u, weightsFound);
-                    double w_pioninex    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, u, weightsFound);
-                    double w_pionqex     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,  slice, u, weightsFound);
-                    double w_piontotx    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, u, weightsFound);
-                    double w_piplus      = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,      slice, u, weightsFound);
-                    double w_combined    = w_horncurrent * w_expskin * w_kplus * w_kmin * w_kzero
-                                        * w_nucleoninex * w_nucleonqex * w_nucleontotx
-                                        * w_piminus * w_pioninex * w_pionqex * w_piontotx * w_piplus;
+                //std::cout << "------ PFPs before cuts ------" << std::endl;
+                for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                        // PFP is in the slice
+                        numPFPsSlice_beforeCuts++;
+                        if(reco_particleIsPrimary->at(pfp) == 1){
+                            numPrimaryPFPsSlice_beforeCuts++;
+                            if(reco_particleNumHits->at(pfp) >= 10) numPrimaryPFPs10Slice_beforeCuts++;
+                        }
+                        
+                        numHitsInPFPs_beforeCuts += reco_particleNumHits->at(pfp);
 
-                    std::vector<double> systWeights = {
-                        w_horncurrent, w_expskin, w_kplus, w_kmin, w_kzero,
-                        w_nucleoninex, w_nucleonqex, w_nucleontotx,
-                        w_piminus, w_pioninex, w_pionqex, w_piontotx, w_piplus,
-                        w_combined
-                    };
+                        //std::cout << "PFP " << pfp << ": Energy = " << reco_particleBestPlaneEnergy->at(pfp) << ", Clear Cosmic = " << reco_particleClearCosmic->at(pfp) << ", True PDG = " << reco_particleTruePDG->at(pfp) << ", Vertex = (" << reco_particleVX->at(pfp) << ", " << reco_particleVY->at(pfp) << ", " << reco_particleVZ->at(pfp) << ")" << std::endl;
+                        summedEnergy_beforeCuts += reco_particleBestPlaneEnergy->at(pfp);
 
-                    for(int p = 0; p < nParams; p++){
-                        univ_CRUMBS[cat][p][u]->Fill(crumbsScore, potWeight * systWeights[p]);
+                        if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP_beforeCuts.energy){
+                            highestEnergyPFP_beforeCuts.energy = reco_particleBestPlaneEnergy->at(pfp);
+                            highestEnergyPFP_beforeCuts.theta = reco_particleTheta->at(pfp);
+                            highestEnergyPFP_beforeCuts.PFPID = reco_particleID->at(pfp);
+                            highestEnergyPFP_beforeCuts.dx = reco_particleDX->at(pfp);
+                            highestEnergyPFP_beforeCuts.dy = reco_particleDY->at(pfp);
+                            highestEnergyPFP_beforeCuts.dz = reco_particleDZ->at(pfp);
+                            highestEnergyPFP_beforeCuts.vx = reco_particleVX->at(pfp);
+                            highestEnergyPFP_beforeCuts.vy = reco_particleVY->at(pfp);
+                            highestEnergyPFP_beforeCuts.vz = reco_particleVZ->at(pfp);
+                            highestEnergyPFP_beforeCuts.completeness = reco_particleCompleteness->at(pfp);
+                            highestEnergyPFP_beforeCuts.purity = reco_particlePurity->at(pfp);
+                            highestEnergyPFP_beforeCuts.trackscore = reco_particleTrackScore->at(pfp);
+                            highestEnergyPFP_beforeCuts.primary = reco_particleIsPrimary->at(pfp);
+                            highestEnergyPFP_beforeCuts.truePDG = reco_particleTruePDG->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueOrigin = reco_particleTrueOrigin->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueInt = reco_particleTrueInteractionType->at(pfp);
+                            highestEnergyPFP_beforeCuts.bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledPDG13 = reco_particleRazzledPDG13->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledPDG22 = reco_particleRazzledPDG22->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledPDG2212 = reco_particleRazzledPDG2212->at(pfp);
+                            highestEnergyPFP_beforeCuts.razzledBestPDG = reco_particleRazzledBestPDG->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueVX = reco_particleTrueVX->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueVY = reco_particleTrueVY->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueVZ = reco_particleTrueVZ->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueEndX = reco_particleTrueEndX->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueEndY = reco_particleTrueEndY->at(pfp);
+                            highestEnergyPFP_beforeCuts.trueEndZ = reco_particleTrueEndZ->at(pfp);
+                            highestEnergyPFP_beforeCuts.numHits = reco_particleNumHits->at(pfp);
+                            highestEnergyPFP_beforeCuts.clearCosmic = reco_particleClearCosmic->at(pfp);
+
+                            if(highestEnergyPFP_beforeCuts.trueVX != -999999 && highestEnergyPFP_beforeCuts.trueVY != -999999 && highestEnergyPFP_beforeCuts.trueVZ != -999999 && highestEnergyPFP_beforeCuts.trueEndX != -999999 && highestEnergyPFP_beforeCuts.trueEndY != -999999 && highestEnergyPFP_beforeCuts.trueEndZ != -999999){
+                                double xCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVX - highestEnergyPFP_beforeCuts.trueEndX);
+                                double yCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVY - highestEnergyPFP_beforeCuts.trueEndY);
+                                double zCoordDiff_length = (highestEnergyPFP_beforeCuts.trueVZ - highestEnergyPFP_beforeCuts.trueEndZ);
+                                highestEnergyPFP_beforeCuts.trueLength = std::sqrt((xCoordDiff_length * xCoordDiff_length) + (yCoordDiff_length * yCoordDiff_length) + (zCoordDiff_length * zCoordDiff_length));
+                            }
+                        }
+                        
                     }
                 }
-            }
 
-            // --- Fill per-variable systematic histograms ---
-            if(sliceCategoryPlottingMacro != -999999){
-                int cat = (int)sliceCategoryPlottingMacro;
+                double pfp10cm_PCAAngle_beforeCuts = -999999;
+                double pfp10cm_PCADX_beforeCuts = -999999;
+                double pfp10cm_PCADY_beforeCuts = -999999;
+                double pfp10cm_PCADZ_beforeCuts = -999999;
 
-                double potWeight = 0.0;
-                if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
-                else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
-                else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
-
-                bool isCosmic = (sliceCategoryPlottingMacro == 0);
-
-                // Compute all 14 per-universe syst weights for this slice once,
-                // reused across all variables
-                std::vector<std::array<double, 14>> sliceSystW(NUNIV);
-                for(int u = 0; u < NUNIV; u++){
-                    double wh  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    slice, u, weightsFound);
-                    double wes = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        slice, u, weightsFound);
-                    double wkp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          slice, u, weightsFound);
-                    double wkm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           slice, u, weightsFound);
-                    double wkz = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          slice, u, weightsFound);
-                    double wni = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
-                    double wnq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
-                    double wnt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
-                    double wpm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        slice, u, weightsFound);
-                    double wpi = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    slice, u, weightsFound);
-                    double wpq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     slice, u, weightsFound);
-                    double wpt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    slice, u, weightsFound);
-                    double wpp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         slice, u, weightsFound);
-                    double wc  = wh*wes*wkp*wkm*wkz*wni*wnq*wnt*wpm*wpi*wpq*wpt*wpp;
-                    sliceSystW[u] = {wh, wes, wkp, wkm, wkz, wni, wnq, wnt, wpm, wpi, wpq, wpt, wpp, wc};
+                for(size_t pfpAngle = 0; pfpAngle < angleRecalculationPCAPFP10cm_pfpID->size(); ++pfpAngle){
+                    if(angleRecalculationPCAPFP10cm_pfpID->at(pfpAngle) == highestEnergyPFP_beforeCuts.PFPID){
+                        pfp10cm_PCAAngle_beforeCuts = angleRecalculationPCAPFP10cm_angle->at(pfpAngle);
+                        pfp10cm_PCADX_beforeCuts = angleRecalculationPCAPFP10cm_dx->at(pfpAngle);
+                        pfp10cm_PCADY_beforeCuts = angleRecalculationPCAPFP10cm_dy->at(pfpAngle);
+                        pfp10cm_PCADZ_beforeCuts = angleRecalculationPCAPFP10cm_dz->at(pfpAngle);
+                    }
                 }
 
-                // Compute the value for each variable. Use -999999 as sentinel for "don't fill".
-                double sliceHits = reco_sliceNumHits->at(slice);
+                // Looped through all PFPs in the slice and now have the highest energy PFP out
+                double angleDifference_beforeCuts = -999999;
+                double angleDifferencePCAPFP10cm_beforeCuts = -999999;
 
-                std::vector<double> varVals(nVars, -999999.0);
-                std::vector<bool>   varFill(nVars, true);
-
-                varVals[0]  = reco_sliceCompleteness->at(slice);
-                varVals[1]  = reco_slicePurity->at(slice);
-                varVals[2]  = (double)numRecoNeutrinos;
-                varVals[3]  = numPFPsSlice_beforeCuts;
-                varVals[4]  = numPrimaryPFPsSlice_beforeCuts;
-                varVals[5]  = numPrimaryPFPs10Slice_beforeCuts;
-                varVals[6]  = (sliceHits > 0) ? (numHitsInPFPs_beforeCuts / sliceHits) : -999999.0;
-                varVals[7]  = (sliceHits > 0 && highestEnergyPFP_beforeCuts.numHits != -999999)
-                                ? (highestEnergyPFP_beforeCuts.numHits / sliceHits) : -999999.0;
-                varVals[8]  = (highestEnergyPFP_beforeCuts.theta != -999999)
-                                ? (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
-                varVals[9]  = (highestEnergyPFP_beforeCuts.energy != -999999 && highestEnergyPFP_beforeCuts.theta != -999999)
-                                ? (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
-                varVals[10] = (highestEnergyPFP_beforeCuts.energy != -999999 && pfp10cm_PCAAngle_beforeCuts != -999999)
-                                ? (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts) : -999999.0;
-                varVals[11] = highestEnergyPFP_beforeCuts.bestPlanedEdx;
-                varVals[12] = highestEnergyPFP_beforeCuts.razzledPDG11;
-                varVals[13] = highestEnergyPFP_beforeCuts.razzledPDG13;
-                varVals[14] = highestEnergyPFP_beforeCuts.razzledPDG22;
-                varVals[15] = highestEnergyPFP_beforeCuts.razzledPDG211;
-                varVals[16] = highestEnergyPFP_beforeCuts.razzledPDG2212;
-                varVals[17] = highestEnergyPFP_beforeCuts.completeness;
-                varVals[18] = highestEnergyPFP_beforeCuts.purity;
-                varVals[19] = highestEnergyPFP_beforeCuts.numHits;
-                varVals[20] = sliceHits;
-                varVals[21] = recoVX;
-                varVals[22] = recoVY;
-                varVals[23] = recoVZ;
-                varVals[24] = highestEnergyPFP_beforeCuts.energy;
-                varVals[25] = (highestEnergyPFP_beforeCuts.theta != -999999)
-                                ? (highestEnergyPFP_beforeCuts.theta * TMath::RadToDeg()) : -999999.0;
-                varVals[26] = (pfp10cm_PCAAngle_beforeCuts != -999999)
-                                ? (pfp10cm_PCAAngle_beforeCuts * TMath::RadToDeg()) : -999999.0;
-                // Variables 27 and 28: true recoil electron — only for trueSignal events
-                varVals[27] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
-                                ? (recoilElectron.angle * TMath::RadToDeg()) : -999999.0;
-                varVals[28] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
-                                ? recoilElectron.energy : -999999.0;
-
-                // Mark sentinel values as don't-fill
-                for(int v = 0; v < nVars; v++){
-                    if(varVals[v] == -999999.0) varFill[v] = false;
+                if((highestEnergyPFP_beforeCuts.dx != -999999) && (recoilElectron.dx != -999999)){
+                    double aDOTb = ((highestEnergyPFP_beforeCuts.dx * recoilElectron.dx) + (highestEnergyPFP_beforeCuts.dy * recoilElectron.dy) + (highestEnergyPFP_beforeCuts.dz * recoilElectron.dz));
+                    double aMagnitude = std::sqrt((highestEnergyPFP_beforeCuts.dx * highestEnergyPFP_beforeCuts.dx) + (highestEnergyPFP_beforeCuts.dy * highestEnergyPFP_beforeCuts.dy) + (highestEnergyPFP_beforeCuts.dz * highestEnergyPFP_beforeCuts.dz));
+                    double bMagnitude = std::sqrt((recoilElectron.dx * recoilElectron.dx) + (recoilElectron.dy * recoilElectron.dy) + (recoilElectron.dz * recoilElectron.dz));
+                    double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
+                    angleDifference_beforeCuts = (TMath::ACos(cosAngle) * TMath::RadToDeg());
                 }
 
-                for(int v = 0; v < nVars; v++){
-                    if(!varFill[v]) continue;
-                    double val = varVals[v];
+                if((pfp10cm_PCADX_beforeCuts != -999999) && (recoilElectron.dx != -999999)){
+                    double aDOTb = ((pfp10cm_PCADX_beforeCuts * recoilElectron.dx) + (pfp10cm_PCADY_beforeCuts * recoilElectron.dy) + (pfp10cm_PCADZ_beforeCuts * recoilElectron.dz));
+                    double aMagnitude = std::sqrt((pfp10cm_PCADX_beforeCuts * pfp10cm_PCADX_beforeCuts) + (pfp10cm_PCADY_beforeCuts * pfp10cm_PCADY_beforeCuts) + (pfp10cm_PCADZ_beforeCuts * pfp10cm_PCADZ_beforeCuts));
+                    double bMagnitude = std::sqrt((recoilElectron.dx * recoilElectron.dx) + (recoilElectron.dy * recoilElectron.dy) + (recoilElectron.dz * recoilElectron.dz));
+                    double cosAngle = (aDOTb / (aMagnitude * bMagnitude));
+                    angleDifferencePCAPFP10cm_beforeCuts = (TMath::ACos(cosAngle) * TMath::RadToDeg());
+                }
 
-                    // Fill nominal for all params (same value)
+                double recoVX = -999999;
+                double recoVY = -999999;
+                double recoVZ = -999999;
+                int numRecoNeutrinos = 0;
+
+                for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                    if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                        // Reco neutrino is in the slice
+                        numRecoNeutrinos++;
+                        recoVX = reco_neutrinoVX->at(recoNeut);
+                        recoVY = reco_neutrinoVY->at(recoNeut);
+                        recoVZ = reco_neutrinoVZ->at(recoNeut);
+                    }
+                }
+
+
+                // Assigning event type based on true PDG of highest energy PFP in slice
+                int slicePFPType_beforeCuts = -999999;
+                if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueInt == 1098 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && signal == 1){
+                    // This is an electron from a nu+e elastic scatter
+                    slicePFPType_beforeCuts = 0;
+                } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && signal == 1){
+                    // This is something other than an electron from a nu+e elastic scatter
+                    slicePFPType_beforeCuts = 1;
+                } else if(highestEnergyPFP_beforeCuts.trueInt == 1098 && signal != 1){
+                    // This is a nu+e elastic scatter not from the signal file
+                    slicePFPType_beforeCuts = 15;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 1 && highestEnergyPFP_beforeCuts.trueInt != 1098){
+                    // This is an electron from a beam neutrino
+                    slicePFPType_beforeCuts = 2;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 2212 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is a proton from a beam neutrino
+                    slicePFPType_beforeCuts = 3;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is a muon from a beam neutrino
+                    slicePFPType_beforeCuts = 4;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 111 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is a pi0 fron a beam neutrino
+                    slicePFPType_beforeCuts = 5;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 211 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is a charged pi from a beam neutrino
+                    slicePFPType_beforeCuts = 6;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is a proton from a beam neutrino
+                    slicePFPType_beforeCuts = 7;
+                } else if(highestEnergyPFP_beforeCuts.trueOrigin == 1){
+                    // This is something else from a beam neutrino
+                    slicePFPType_beforeCuts = 8;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+                    // This is a muon from a cosmic
+                    slicePFPType_beforeCuts = 9;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+                    // This is a photon from a cosmic
+                    slicePFPType_beforeCuts = 10;
+                } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+                    // This is an electron from a cosmic
+                    slicePFPType_beforeCuts = 11;
+                } else if(highestEnergyPFP_beforeCuts.trueOrigin == 2){
+                    // This is something else from a cosmic
+                    slicePFPType_beforeCuts = 12;
+                }
+
+                // Counting number of events before cuts
+                if(DLCurrent == 5){
+                    if(sliceCategoryPlottingMacro == 0){
+                        eventsBeforeCuts_DLNuE.background += weight;
+                    } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                        eventsBeforeCuts_DLNuE.signal += weight;
+                    } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
+                        eventsBeforeCuts_DLNuE.background += weight;
+                    } else if(sliceCategoryPlottingMacro == 3){
+                        eventsBeforeCuts_DLNuE.background += weight;
+                    } else if(sliceCategoryPlottingMacro == 4){
+                        eventsBeforeCuts_DLNuE.background += weight;
+                    }
+
+                    if(sliceInteractionType == 0){
+                        eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;   
+                    } else if(sliceInteractionType == 1 && signal == 1){
+                        eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
+                    } else if(sliceInteractionType == 2){
+                        eventsBeforeCuts_DLNuE.splitInt.NCNPi0 += weight;
+                    } else if(sliceInteractionType == 3){
+                        eventsBeforeCuts_DLNuE.splitInt.otherNC += weight;
+                    } else if(sliceInteractionType == 4){
+                        eventsBeforeCuts_DLNuE.splitInt.CCnumu += weight;
+                    } else if(sliceInteractionType == 5){
+                        eventsBeforeCuts_DLNuE.splitInt.CCnue += weight;
+                    } else if(sliceInteractionType == 6){
+                        eventsBeforeCuts_DLNuE.splitInt.dirt += weight;
+                    } else if(sliceInteractionType == 7 && signal == 1){
+                        eventsBeforeCuts_DLNuE.splitInt.nuEDirt += weight;
+                    } else if(sliceInteractionType == 8){
+                        eventsBeforeCuts_DLNuE.splitInt.other += weight;
+                    } else if(sliceInteractionType == 9 && signal == 1){
+                        eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy += weight;
+                    }
+                }
+
+                // START FILLING HISTOGRAMS HERE
+
+                // --- Fill CRUMBS score histograms ---
+                if(sliceCategoryPlottingMacro != -999999){
+                    int cat = (int)sliceCategoryPlottingMacro; // 0,1,2,3,4
+
+                    double crumbsScore = reco_sliceScore->at(slice);
+
+                    // POT weight for this slice (no systematic weight)
+                    double potWeight = 0.0;
+                    if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
+                    else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
+                    else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
+
+                    // Fill nominal for all 14 params (same value, just POT weight)
                     for(int p = 0; p < nParams; p++){
-                        nominal_vars[cat][p][v]->Fill(val, potWeight);
+                        nominal_CRUMBS[cat][p]->Fill(crumbsScore, potWeight);
                     }
 
                     // Fill universe histograms
+                    // Cosmic slices (cat==0) have no systematic weights -> weight = 1.0 for all universes
                     for(int u = 0; u < NUNIV; u++){
+
+                        // Get per-parameter weights for this slice and universe
+                        bool isCosmic = (sliceCategoryPlottingMacro == 0);
+                        double w_horncurrent = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, u, weightsFound);
+                        double w_expskin     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,     slice, u, weightsFound);
+                        double w_kplus       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,       slice, u, weightsFound);
+                        double w_kmin        = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,        slice, u, weightsFound);
+                        double w_kzero       = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,       slice, u, weightsFound);
+                        double w_nucleoninex = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
+                        double w_nucleonqex  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
+                        double w_nucleontotx = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
+                        double w_piminus     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,     slice, u, weightsFound);
+                        double w_pioninex    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, u, weightsFound);
+                        double w_pionqex     = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,  slice, u, weightsFound);
+                        double w_piontotx    = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, u, weightsFound);
+                        double w_piplus      = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,      slice, u, weightsFound);
+                        double w_combined    = w_horncurrent * w_expskin * w_kplus * w_kmin * w_kzero
+                                            * w_nucleoninex * w_nucleonqex * w_nucleontotx
+                                            * w_piminus * w_pioninex * w_pionqex * w_piontotx * w_piplus;
+
+                        std::vector<double> systWeights = {
+                            w_horncurrent, w_expskin, w_kplus, w_kmin, w_kzero,
+                            w_nucleoninex, w_nucleonqex, w_nucleontotx,
+                            w_piminus, w_pioninex, w_pionqex, w_piontotx, w_piplus,
+                            w_combined
+                        };
+
                         for(int p = 0; p < nParams; p++){
-                            univ_vars[cat][p][v][u]->Fill(val, potWeight * sliceSystW[u][p]);
+                            univ_CRUMBS[cat][p][u]->Fill(crumbsScore, potWeight * systWeights[p]);
                         }
                     }
                 }
-            } 
 
-            // getSliceWeight returns 1.0 for cosmics (weightsFound==false) or if the weight vector is the wrong size
-            if(sliceCategoryPlottingMacro == 0){
-                std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
-            } else{
-                /*
-                std::cout << "  Universe 1 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 2, weightsFound) << std::endl;
-                std::cout << "" << std::endl; 
-                std::cout << "  Universe 1 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 0, weightsFound) << std::endl;
-                std::cout << "  Universe 2 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 1, weightsFound) << std::endl;
-                std::cout << "  Universe 3 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 2, weightsFound) << std::endl;
-                */
+                // --- Fill per-variable systematic histograms ---
+                if(sliceCategoryPlottingMacro != -999999){
+                    int cat = (int)sliceCategoryPlottingMacro;
+
+                    double potWeight = 0.0;
+                    if(signal == 1 && DLCurrent == 5)      potWeight = weights.signalNuE;
+                    else if(signal == 2 && DLCurrent == 5) potWeight = weights.BNBNuE;
+                    else if(signal == 3 && DLCurrent == 5) potWeight = weights.cosmicsNuE;
+
+                    bool isCosmic = (sliceCategoryPlottingMacro == 0);
+
+                    // Compute all 14 per-universe syst weights for this slice once,
+                    // reused across all variables
+                    std::vector<std::array<double, 14>> sliceSystW(NUNIV);
+                    for(int u = 0; u < NUNIV; u++){
+                        double wh  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    slice, u, weightsFound);
+                        double wes = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        slice, u, weightsFound);
+                        double wkp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          slice, u, weightsFound);
+                        double wkm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           slice, u, weightsFound);
+                        double wkz = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          slice, u, weightsFound);
+                        double wni = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
+                        double wnq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
+                        double wnt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
+                        double wpm = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        slice, u, weightsFound);
+                        double wpi = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    slice, u, weightsFound);
+                        double wpq = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     slice, u, weightsFound);
+                        double wpt = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    slice, u, weightsFound);
+                        double wpp = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         slice, u, weightsFound);
+                        double wc  = wh*wes*wkp*wkm*wkz*wni*wnq*wnt*wpm*wpi*wpq*wpt*wpp;
+                        sliceSystW[u] = {wh, wes, wkp, wkm, wkz, wni, wnq, wnt, wpm, wpi, wpq, wpt, wpp, wc};
+                    }
+
+                    // Compute the value for each variable. Use -999999 as sentinel for "don't fill".
+                    double sliceHits = reco_sliceNumHits->at(slice);
+
+                    std::vector<double> varVals(nVars, -999999.0);
+                    std::vector<bool>   varFill(nVars, true);
+
+                    varVals[0]  = reco_sliceCompleteness->at(slice);
+                    varVals[1]  = reco_slicePurity->at(slice);
+                    varVals[2]  = (double)numRecoNeutrinos;
+                    varVals[3]  = numPFPsSlice_beforeCuts;
+                    varVals[4]  = numPrimaryPFPsSlice_beforeCuts;
+                    varVals[5]  = numPrimaryPFPs10Slice_beforeCuts;
+                    varVals[6]  = (sliceHits > 0) ? (numHitsInPFPs_beforeCuts / sliceHits) : -999999.0;
+                    varVals[7]  = (sliceHits > 0 && highestEnergyPFP_beforeCuts.numHits != -999999)
+                                    ? (highestEnergyPFP_beforeCuts.numHits / sliceHits) : -999999.0;
+                    varVals[8]  = (highestEnergyPFP_beforeCuts.theta != -999999)
+                                    ? (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
+                    varVals[9]  = (highestEnergyPFP_beforeCuts.energy != -999999 && highestEnergyPFP_beforeCuts.theta != -999999)
+                                    ? (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta) : -999999.0;
+                    varVals[10] = (highestEnergyPFP_beforeCuts.energy != -999999 && pfp10cm_PCAAngle_beforeCuts != -999999)
+                                    ? (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts) : -999999.0;
+                    varVals[11] = highestEnergyPFP_beforeCuts.bestPlanedEdx;
+                    varVals[12] = highestEnergyPFP_beforeCuts.razzledPDG11;
+                    varVals[13] = highestEnergyPFP_beforeCuts.razzledPDG13;
+                    varVals[14] = highestEnergyPFP_beforeCuts.razzledPDG22;
+                    varVals[15] = highestEnergyPFP_beforeCuts.razzledPDG211;
+                    varVals[16] = highestEnergyPFP_beforeCuts.razzledPDG2212;
+                    varVals[17] = highestEnergyPFP_beforeCuts.completeness;
+                    varVals[18] = highestEnergyPFP_beforeCuts.purity;
+                    varVals[19] = highestEnergyPFP_beforeCuts.numHits;
+                    varVals[20] = sliceHits;
+                    varVals[21] = recoVX;
+                    varVals[22] = recoVY;
+                    varVals[23] = recoVZ;
+                    varVals[24] = highestEnergyPFP_beforeCuts.energy;
+                    varVals[25] = (highestEnergyPFP_beforeCuts.theta != -999999)
+                                    ? (highestEnergyPFP_beforeCuts.theta * TMath::RadToDeg()) : -999999.0;
+                    varVals[26] = (pfp10cm_PCAAngle_beforeCuts != -999999)
+                                    ? (pfp10cm_PCAAngle_beforeCuts * TMath::RadToDeg()) : -999999.0;
+                    // Variables 27 and 28: true recoil electron — only for trueSignal events
+                    varVals[27] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
+                                    ? (recoilElectron.angle * TMath::RadToDeg()) : -999999.0;
+                    varVals[28] = (trueSignal == 1 && recoilElectron.energy != -999999 && recoilElectron.angle != -999999)
+                                    ? recoilElectron.energy : -999999.0;
+
+                    // Mark sentinel values as don't-fill
+                    for(int v = 0; v < nVars; v++){
+                        if(varVals[v] == -999999.0) varFill[v] = false;
+                    }
+
+                    for(int v = 0; v < nVars; v++){
+                        if(!varFill[v]) continue;
+                        double val = varVals[v];
+
+                        // Fill nominal for all params (same value)
+                        for(int p = 0; p < nParams; p++){
+                            nominal_vars[cat][p][v]->Fill(val, potWeight);
+                        }
+
+                        // Fill universe histograms
+                        for(int u = 0; u < NUNIV; u++){
+                            for(int p = 0; p < nParams; p++){
+                                univ_vars_current[cat][p][u]->Fill(val, potWeight * sliceSystW[u][p]);
+                            }
+                        }
+
+                    }
+                } 
+
+                // getSliceWeight returns 1.0 for cosmics (weightsFound==false) or if the weight vector is the wrong size
+                if(sliceCategoryPlottingMacro == 0){
+                    std::cout << "  Universe 1 Horn Current Weight for Slice = 1" << std::endl;
+                } else{
+                    /*
+                    std::cout << "  Universe 1 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 Horn Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 Skin Current Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 pioninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 pionqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 piontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 nucleoninexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 nucleonqexsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 nucleontotxsec Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 kplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 kmin Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 kzero Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 piplus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, slice, 2, weightsFound) << std::endl;
+                    std::cout << "" << std::endl; 
+                    std::cout << "  Universe 1 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 0, weightsFound) << std::endl;
+                    std::cout << "  Universe 2 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 1, weightsFound) << std::endl;
+                    std::cout << "  Universe 3 piminus Weight for Slice = " << getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, slice, 2, weightsFound) << std::endl;
+                    */
+                }
+
             }
 
-        }
+            std::cout << "-------------------------------------------" << std::endl;
 
-        std::cout << "-------------------------------------------" << std::endl;
+            // Plot and delete universe histograms for this variable
+            for(int cat = 0; cat < nCats; cat++){
+                for(int p = 0; p < nParams; p++){
+                    plotVarSyst(cat, p, vCurrent, univ_vars_current);
+                }
+            }
+
+            // Free universe histograms for this variable
+            for(int cat = 0; cat < nCats; cat++){
+                for(int p = 0; p < nParams; p++){
+                    for(int u = 0; u < NUNIV; u++){
+                        delete univ_vars_current[cat][p][u];
+                        univ_vars_current[cat][p][u] = nullptr;
+                    }
+                }
+            }
+
+        } // end vCurrent loop
     }
 
     // Fill each histogram with 1000 universe totals
@@ -1681,9 +1827,12 @@ auto plotCRUMBSSyst = [&](int cat, int p){
 
         // Build a histogram of mean and std dev bin-by-bin across universes
         int nBins = nominal_CRUMBS[cat][p]->GetNbinsX();
-        TH1D* h_mean = (TH1D*)nominal_CRUMBS[cat][p]->Clone(("h_mean_" + catNames[cat] + "_" + paramNames_CRUMBS[p]).c_str());
-        h_mean->Reset();
 
+        static int crumbsMeanCounter = 0;
+        TH1D* h_mean = (TH1D*)nominal_CRUMBS[cat][p]->Clone(("h_mean_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + std::to_string(crumbsMeanCounter++)).c_str());
+        h_mean->SetDirectory(0);
+        h_mean->Reset();
+        
         for(int b = 1; b <= nBins; b++){
             // Collect bin contents across all universes
             double sum = 0.0;
@@ -1753,121 +1902,6 @@ auto plotCRUMBSSyst = [&](int cat, int p){
     for(int cat = 0; cat < nCats; cat++){
         for(int p = 0; p < nParams; p++){
             plotCRUMBSSyst(cat, p);
-        }
-    }
-
-// --- Plot per-variable systematic band plots ---
-    auto plotVarSyst = [&](int cat, int p, int v){
-
-        const std::string& varName  = varDefs[v].name;
-        const std::string& axisLbl  = varDefs[v].axisLabel;
-
-        // --- Left plot: nominal + all universes ---
-        std::string cLeftName = "c_var_univ_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
-        TCanvas *cLeft = new TCanvas(cLeftName.c_str(), "", 800, 600);
-        cLeft->SetLeftMargin(0.12);
-        cLeft->SetBottomMargin(0.12);
-        cLeft->SetRightMargin(0.05);
-        cLeft->SetTopMargin(0.08);
-
-        bool firstDrawn = false;
-        for(int u = 0; u < NUNIV; u++){
-            univ_vars[cat][p][v][u]->SetLineColor(kMagenta-9);
-            univ_vars[cat][p][v][u]->SetLineWidth(1);
-            univ_vars[cat][p][v][u]->SetLineColorAlpha(kMagenta-9, 0.08);
-            univ_vars[cat][p][v][u]->GetXaxis()->SetTitle(axisLbl.c_str());
-            univ_vars[cat][p][v][u]->GetYaxis()->SetTitle("Slices");
-            univ_vars[cat][p][v][u]->GetXaxis()->SetTitleSize(0.05);
-            univ_vars[cat][p][v][u]->GetYaxis()->SetTitleSize(0.05);
-            univ_vars[cat][p][v][u]->GetXaxis()->SetLabelSize(0.04);
-            univ_vars[cat][p][v][u]->GetYaxis()->SetLabelSize(0.04);
-            univ_vars[cat][p][v][u]->SetStats(0);
-            if(!firstDrawn){ univ_vars[cat][p][v][u]->Draw("HIST");      firstDrawn = true; }
-            else            { univ_vars[cat][p][v][u]->Draw("HIST SAME"); }
-        }
-
-        nominal_vars[cat][p][v]->SetLineColor(kBlack);
-        nominal_vars[cat][p][v]->SetLineWidth(2);
-        nominal_vars[cat][p][v]->SetStats(0);
-        nominal_vars[cat][p][v]->Draw("HIST SAME");
-
-        TLegend *legL = new TLegend(0.55, 0.72, 0.92, 0.88);
-        legL->SetBorderSize(0); legL->SetFillStyle(0);
-        legL->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
-        legL->AddEntry(univ_vars[cat][p][v][0], "Universes", "l");
-        legL->Draw();
-
-        TLatex lblL; lblL.SetTextSize(0.04); lblL.SetNDC();
-        lblL.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
-        TLatex potL; potL.SetTextColor(kGray+1); potL.SetTextSize(0.035); potL.SetNDC();
-        potL.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
-
-        cLeft->Update();
-        std::string outL = "/nashome/c/coackley/systPlots/" + varName + "_universes_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
-        cLeft->SaveAs(outL.c_str());
-        delete legL; delete cLeft;
-
-        // --- Right plot: nominal + mean +/- 1 sigma ---
-        int nBins = nominal_vars[cat][p][v]->GetNbinsX();
-        std::string meanName = "h_mean_" + varName + "_" + catNames[cat] + "_" + paramNames_CRUMBS[p];
-        TH1D* h_mean = (TH1D*)nominal_vars[cat][p][v]->Clone(meanName.c_str());
-        h_mean->Reset();
-
-        for(int b = 1; b <= nBins; b++){
-            double sum = 0.0, sumSq = 0.0;
-            for(int u = 0; u < NUNIV; u++){
-                double val = univ_vars[cat][p][v][u]->GetBinContent(b);
-                sum   += val;
-                sumSq += val * val;
-            }
-            double mean   = sum / NUNIV;
-            double stddev = std::sqrt(std::max(0.0, sumSq / NUNIV - mean * mean));
-            h_mean->SetBinContent(b, mean);
-            h_mean->SetBinError(b, stddev);
-        }
-
-        std::string cRightName = "c_var_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + "_" + varName;
-        TCanvas *cRight = new TCanvas(cRightName.c_str(), "", 800, 600);
-        cRight->SetLeftMargin(0.12); cRight->SetBottomMargin(0.12);
-        cRight->SetRightMargin(0.05); cRight->SetTopMargin(0.08);
-
-        h_mean->SetLineColor(kViolet+1); h_mean->SetLineWidth(2);
-        h_mean->SetMarkerColor(kViolet+1); h_mean->SetMarkerSize(0);
-        h_mean->GetXaxis()->SetTitle(axisLbl.c_str());
-        h_mean->GetYaxis()->SetTitle("Slices");
-        h_mean->GetXaxis()->SetTitleSize(0.05); h_mean->GetYaxis()->SetTitleSize(0.05);
-        h_mean->GetXaxis()->SetLabelSize(0.04); h_mean->GetYaxis()->SetLabelSize(0.04);
-        h_mean->SetStats(0);
-        h_mean->Draw("HIST E");
-
-        nominal_vars[cat][p][v]->SetLineColor(kBlack);
-        nominal_vars[cat][p][v]->SetLineWidth(2);
-        nominal_vars[cat][p][v]->Draw("HIST SAME");
-
-        TLegend *legR = new TLegend(0.55, 0.72, 0.92, 0.88);
-        legR->SetBorderSize(0); legR->SetFillStyle(0);
-        legR->AddEntry(nominal_vars[cat][p][v], "Nominal", "l");
-        legR->AddEntry(h_mean, "CV #pm 1#sigma", "l");
-        legR->Draw();
-
-        TLatex lblR; lblR.SetTextSize(0.04); lblR.SetNDC();
-        lblR.DrawLatex(0.15, 0.85, (paramNames_CRUMBS[p] + " | " + catNames[cat]).c_str());
-        TLatex potR; potR.SetTextColor(kGray+1); potR.SetTextSize(0.035); potR.SetNDC();
-        potR.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
-
-        cRight->Update();
-        std::string outR = "/nashome/c/coackley/systPlots/" + varName + "_sigma_" + catNames[cat] + "_" + paramNames_CRUMBS[p] + ".pdf";
-        cRight->SaveAs(outR.c_str());
-        delete legR; delete h_mean; delete cRight;
-    };
-
-    std::cout << "nCats = " << nCats << ", nParams = " << nParams << ", nVars = " << nVars << std::endl;
-    for(int cat = 0; cat < nCats; cat++){
-        for(int p = 0; p < nParams; p++){
-            for(int v = 0; v < nVars; v++){
-                plotVarSyst(cat, p, v);
-                std::cout << "cat = " << cat << ", p = " << p << ", v = " << v << std::endl;
-            }
         }
     }
 
