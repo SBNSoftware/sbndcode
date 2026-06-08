@@ -198,7 +198,7 @@ struct eventCounting_struct{
     eventCounter_struct showerEnergyIntSplit;    
 };
 
-void nuESystWeightMatching_macro(){
+void nuEVariablesWithSystematics_macro(){
 
     int FVCut = 0;
 
