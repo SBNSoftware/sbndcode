@@ -2145,7 +2145,132 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
         plotPerCutUniverseDist_purity(p,  paramNames_syst[p]);
     }
 
-// Helper: given a cut index, returns {sigSyst, backSyst, effSyst, selEffSyst, puritSyst, epsRhoSyst, selEpsRhoSyst}
+    // ===================================================================
+    // Per-cut universe distribution plots for derived quantities
+    // ===================================================================
+
+    auto plotPerCutUniverseDist_derived = [&](
+        int paramIdx,
+        const std::string& paramName,
+        const std::string& quantityName,
+        const std::string& xAxisTitle,
+        std::function<double(double s, double b, double trueSig, double selSig0)> fn,
+        double xLo, double xHi,
+        int color)
+    {
+        const std::vector<double>* trueSigVecs[14] = {
+            &count_horncurrent, &count_expskin,
+            &count_kplus,       &count_kmin,
+            &count_kzero,       &count_nucleoninex,
+            &count_nucleonqex,  &count_nucleontotx,
+            &count_piminus,     &count_pioninex,
+            &count_pionqex,     &count_piontotx,
+            &count_piplus,      &count_combined
+        };
+
+        for(int cut = 0; cut < NCUTS; cut++){
+            TCanvas *c = new TCanvas(
+                Form("cPerCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+
+            // Build per-universe values
+            std::vector<double> vals(NUNIV, 0.0);
+            for(int u = 0; u < NUNIV; u++){
+                double s       = univSig_perCutParam[paramIdx][cut][u];
+                double b       = univBack_perCutParam[paramIdx][cut][u];
+                double trueSig = (*trueSigVecs[paramIdx])[u];
+                vals[u] = fn(s, b, trueSig, initialSig);
+            }
+
+            // Auto-range if xLo == xHi == 0
+            double lo = xLo, hi = xHi;
+            if(lo == 0.0 && hi == 0.0){
+                lo = *std::min_element(vals.begin(), vals.end());
+                hi = *std::max_element(vals.begin(), vals.end());
+                double range = hi - lo;
+                lo = std::max(0.0, lo - 0.1*range);
+                hi = hi + 0.1*range;
+                if(hi <= lo) hi = lo + 1.0;
+            }
+
+            TH1D *h = new TH1D(
+                Form("h_perCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut),
+                "", 50, lo, hi);
+            for(double v : vals) h->Fill(v);
+
+            h->SetLineColor(color); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle(xAxisTitle.c_str());
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->Draw("HIST E");
+
+            // Nominal value line
+            double nomS = nomSig_perCut[cut];
+            double nomB = nomBack_perCut[cut];
+            double nomVal = fn(nomS, nomB, actualSignalCount, initialSig);
+            TLine *ln = new TLine(nomVal, 0, nomVal, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx;
+            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
+
+            TLatex nomLabel;
+            nomLabel.SetTextColor(kMagenta+1);
+            nomLabel.SetTextSize(0.035); nomLabel.SetNDC();
+            nomLabel.DrawLatex(0.15, 0.80, Form("Nominal: %.4f", nomVal));
+
+            TLatex potLabel;
+            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+            c->Update();
+            c->SaveAs((base_path + "perCut_" + quantityName + "_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+            delete ln; delete h; delete c;
+        }
+    };
+
+    // Call for all 14 parameters and all 5 derived quantities
+    for(int p = 0; p < NPARAMS_SYST; p++){
+        const std::string& pName = paramNames_syst[p];
+
+        plotPerCutUniverseDist_derived(p, pName, "efficiency", "Efficiency",
+            [](double s, double b, double ts, double ss) -> double {
+                return (ts > 0) ? s / ts : 0.0;
+            }, 0.0, 0.0, kBlue+1);
+
+        plotPerCutUniverseDist_derived(p, pName, "selEfficiency", "Selection Efficiency",
+            [](double s, double b, double ts, double ss) -> double {
+                return (ss > 0) ? s / ss : 0.0;
+            }, 0.0, 0.0, kCyan+1);
+
+        plotPerCutUniverseDist_derived(p, pName, "purity", "Purity",
+            [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                return (tot > 0) ? s / tot : 0.0;
+            }, 0.0, 1.0, kGreen+2);
+
+        plotPerCutUniverseDist_derived(p, pName, "effXpurity", "Efficiency #times Purity",
+            [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                double eff = (ts  > 0) ? s / ts  : 0.0;
+                double pur = (tot > 0) ? s / tot : 0.0;
+                return eff * pur;
+            }, 0.0, 0.0, kOrange+1);
+
+        plotPerCutUniverseDist_derived(p, pName, "selEffXpurity", "Selection Efficiency #times Purity",
+            [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                double sel = (ss  > 0) ? s / ss  : 0.0;
+                double pur = (tot > 0) ? s / tot : 0.0;
+                return sel * pur;
+            }, 0.0, 0.0, kViolet+1);
+    }
+
+    // Helper: given a cut index, returns {sigSyst, backSyst, effSyst, selEffSyst, puritSyst, epsRhoSyst, selEpsRhoSyst}
     // using the combined (paramIdx=13) universe variations
     auto getCombinedSyst = [&](int cutIdx) -> std::array<double,7> {
         const int p = 13; // combined parameter index
