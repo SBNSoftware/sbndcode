@@ -1732,7 +1732,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     // Plots: for each parameter, one canvas with NCUTS subpads showing
     // the universe distribution of signal count after each cut
     // ===================================================================
-
+    /*
     auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
 
         // One canvas, NCUTS pads arranged in a grid
@@ -1865,6 +1865,142 @@ void nuESelectionNumbersWithSystematics_macro(){
         c->SaveAs((base_path + "perCut_purity_" + paramName + ".pdf").c_str());
         delete c;
     };
+    */
+
+auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
+        for(int cut = 0; cut < NCUTS; cut++){
+            TCanvas *c = new TCanvas(
+                Form("cPerCut_sig_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+
+            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
+            double sMin = *std::min_element(svec.begin(), svec.end());
+            double sMax = *std::max_element(svec.begin(), svec.end());
+            double range = sMax - sMin;
+            double lo = std::max(0.0, sMin - 0.1*range);
+            double hi = sMax + 0.1*range;
+            if(hi <= lo) hi = lo + 1.0;
+
+            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut),
+                               "", 50, lo, hi);
+            for(double v : svec) h->Fill(v);
+
+            h->SetLineColor(kBlue+1); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Signal slice count");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->Draw("HIST E");
+
+            double nomS = nomSig_perCut[cut];
+            TLine *ln = new TLine(nomS, 0, nomS, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx;
+            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
+
+            TLatex potLabel;
+            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+            c->Update();
+            c->SaveAs((base_path + "perCut_sigCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+            delete ln; delete h; delete c;
+        }
+    };
+
+    auto plotPerCutUniverseDist_back = [&](int paramIdx, const std::string& paramName){
+        for(int cut = 0; cut < NCUTS; cut++){
+            TCanvas *c = new TCanvas(
+                Form("cPerCut_back_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+
+            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
+            double bMin = *std::min_element(bvec.begin(), bvec.end());
+            double bMax = *std::max_element(bvec.begin(), bvec.end());
+            double range = bMax - bMin;
+            double lo = std::max(0.0, bMin - 0.1*range);
+            double hi = bMax + 0.1*range;
+            if(hi <= lo) hi = lo + 1.0;
+
+            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut),
+                               "", 50, lo, hi);
+            for(double v : bvec) h->Fill(v);
+
+            h->SetLineColor(kRed+1); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Background slice count");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->Draw("HIST E");
+
+            double nomB = nomBack_perCut[cut];
+            TLine *ln = new TLine(nomB, 0, nomB, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx;
+            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
+
+            TLatex potLabel;
+            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+            c->Update();
+            c->SaveAs((base_path + "perCut_backCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+            delete ln; delete h; delete c;
+        }
+    };
+
+    auto plotPerCutUniverseDist_purity = [&](int paramIdx, const std::string& paramName){
+        for(int cut = 0; cut < NCUTS; cut++){
+            TCanvas *c = new TCanvas(
+                Form("cPerCut_pur_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+
+            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
+            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
+
+            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut),
+                               "", 50, 0, 1);
+            for(int u = 0; u < NUNIV; u++){
+                double tot = svec[u] + bvec[u];
+                if(tot > 0) h->Fill(svec[u] / tot);
+            }
+
+            h->SetLineColor(kGreen+2); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Purity");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->Draw("HIST E");
+
+            double nomS = nomSig_perCut[cut];
+            double nomB = nomBack_perCut[cut];
+            double nomPur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+            TLine *ln = new TLine(nomPur, 0, nomPur, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx;
+            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
+
+            TLatex potLabel;
+            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
+
+            c->Update();
+            c->SaveAs((base_path + "perCut_purity_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+            delete ln; delete h; delete c;
+        }
+    };
 
     // Call all three plot types for all 14 parameters
     for(int p = 0; p < NPARAMS_SYST; p++){
@@ -1873,9 +2009,86 @@ void nuESelectionNumbersWithSystematics_macro(){
         plotPerCutUniverseDist_purity(p,  paramNames_syst[p]);
     }
 
-    std::ofstream out_tablefile(tableFileName, std::ios::app);
+// Helper: given a cut index, returns {sigSyst, backSyst, effSyst, selEffSyst, puritSyst, epsRhoSyst, selEpsRhoSyst}
+    // using the combined (paramIdx=13) universe variations
+    auto getCombinedSyst = [&](int cutIdx) -> std::array<double,7> {
+        const int p = 13; // combined parameter index
+
+        std::vector<double>& svec  = univSig_perCutParam[p][cutIdx];
+        std::vector<double>& bvec  = univBack_perCutParam[p][cutIdx];
+        std::vector<double>& svec0 = univSig_perCutParam[p][0]; // beforeCuts signal for this param
+
+        std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV), epsRhoVec(NUNIV), selEpsRhoVec(NUNIV);
+        for(int u = 0; u < NUNIV; u++){
+            double s0 = svec0[u];
+            double s  = svec[u];
+            double b  = bvec[u];
+            double tot = s + b;
+            effVec[u]      = (s0    > 0) ? s / s0    : 0.0;
+            selEffVec[u]   = (initialSig > 0) ? s / initialSig : 0.0;
+            purVec[u]      = (tot   > 0) ? s / tot   : 0.0;
+            epsRhoVec[u]   = effVec[u]    * purVec[u];
+            selEpsRhoVec[u]= selEffVec[u] * purVec[u];
+        }
+
+        auto getStd = [&](const std::vector<double>& v) -> double {
+            double mean = 0; for(double x : v) mean += x; mean /= v.size();
+            double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+            return std::sqrt(var);
+        };
+
+        return {
+            getStd(svec),
+            getStd(bvec),
+            getStd(effVec),
+            getStd(selEffVec),
+            getStd(purVec),
+            getStd(epsRhoVec),
+            getStd(selEpsRhoVec)
+        };
+    };
+
+std::ofstream out_tablefile(tableFileName, std::ios::app);
     if(out_tablefile.is_open()){
-        // DL Nu+E Table 
+
+        // Pre-compute systematics for every cut stage
+        auto s_before     = getCombinedSyst(0);
+        auto s_clearCosmic= getCombinedSyst(1);
+        auto s_numPFPs0   = getCombinedSyst(2);
+        auto s_numRecoNeut= getCombinedSyst(3);
+        auto s_crumbs     = getCombinedSyst(4);
+        auto s_FV         = getCombinedSyst(5);
+        auto s_primaryPFP = getCombinedSyst(6);
+        auto s_ETheta2    = getCombinedSyst(7);
+        auto s_razzled11  = getCombinedSyst(8);
+        auto s_razzled211 = getCombinedSyst(9);
+        auto s_dEdx       = getCombinedSyst(10);
+
+        // Indices into the array returned by getCombinedSyst:
+        // 0=sigSyst, 1=backSyst, 2=effSyst, 3=selEffSyst, 4=purSyst, 5=epsRhoSyst, 6=selEpsRhoSyst
+
+        // Convenience macro-lambda: formats   "value $\pm$ syst"  with chosen precisions
+        // valPrec = decimal places for value, systPrec = decimal places for syst
+        auto fmtPM = [](double val, double syst, int valPrec, int systPrec) -> std::string {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(valPrec) << val
+                << " $\\pm$ "
+                << std::fixed << std::setprecision(systPrec) << syst;
+            return oss.str();
+        };
+        // Version for percentages: multiplies both by 100
+        auto fmtPMpct = [](double val, double syst, int valPrec, int systPrec) -> std::string {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(valPrec) << 100.*val
+                << " $\\pm$ "
+                << std::fixed << std::setprecision(systPrec) << 100.*syst
+                << "\\%";
+            return oss.str();
+        };
+
+        // ----------------------------------------------------------------
+        // Table 1: efficiency / purity / signal / background
+        // ----------------------------------------------------------------
         out_tablefile << "=========== DL Nu+E Vertexing ===========" << std::endl;
         out_tablefile << "\\begin{table}[h!]" << std::endl;
         out_tablefile << "\\centering" << std::endl;
@@ -1884,69 +2097,136 @@ void nuESelectionNumbersWithSystematics_macro(){
         out_tablefile << "\\hline" << std::endl;
         out_tablefile << "\\textbf{Cut Name} & \\textbf{$\\epsilon$ (\\%)} & \\textbf{Selection $\\epsilon$ (\\%)} & \\textbf{$\\rho$ (\\%)} & \\textbf{$\\epsilon\\rho$} & \\textbf{Selection $\\epsilon\\rho$} & Signal Left & Background Left \\\\" << std::endl;
         out_tablefile << "\\hline" << std::endl;
-        out_tablefile << std::defaultfloat << std::setprecision(7) << "No Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsBeforeCuts_DLNuE.signal/actualSignalCount << " & " << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background) << " & " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/actualSignalCount) << " & " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal) << " & " << std::fixed << std::setprecision(0) << eventsBeforeCuts_DLNuE.signal << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsBeforeCuts_DLNuE.signal/actualSignalCount << "\\%)" << std::fixed << std::setprecision(0) << " & " << eventsBeforeCuts_DLNuE.background << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsBeforeCuts_DLNuE.background/eventsBeforeCuts_DLNuE.background << "\\%)" << " \\\\ " << std::endl;
-        out_tablefile << "\\hline" << std::endl;
-       
-        if(clearCosmicCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Remove Clear Cosmic PFPs & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/(eventsAfterCuts_DLNuE.clearCosmicsSig+eventsAfterCuts_DLNuE.clearCosmicsBack) << " & " << (eventsAfterCuts_DLNuE.clearCosmicsSig/actualSignalCount)*(eventsAfterCuts_DLNuE.clearCosmicsSig/(eventsAfterCuts_DLNuE.clearCosmicsSig+eventsAfterCuts_DLNuE.clearCosmicsBack)) << " & " << (eventsAfterCuts_DLNuE.clearCosmicsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.clearCosmicsSig/(eventsAfterCuts_DLNuE.clearCosmicsSig+eventsAfterCuts_DLNuE.clearCosmicsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsSig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
 
-        if(numPFPs0Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "PFPs in Slice != 0 & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back) << " & " << (eventsAfterCuts_DLNuE.numPFPs0Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back)) << " & " << (eventsAfterCuts_DLNuE.numPFPs0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numPFPs0Sig/(eventsAfterCuts_DLNuE.numPFPs0Sig+eventsAfterCuts_DLNuE.numPFPs0Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numPFPs0Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Sig/actualSignalCount << std::fixed << std::setprecision(0) << "\\%) & " << eventsAfterCuts_DLNuE.numPFPs0Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
+        // Helper that writes one data row given the counters and the syst array
+        // sArr = getCombinedSyst result for this cut
+        // nomS, nomB = nominal signal and background for this cut
+        // prevNomS   = nominal signal at the previous cut level (for selection efficiency denominator)
+        // cutLabel   = latex string for the cut name cell
+        auto writeRow = [&](const std::string& cutLabel,
+                            double nomS, double nomB,
+                            const std::array<double,7>& sArr)
+        {
+            double eff    = (actualSignalCount > 0)                ? nomS / actualSignalCount        : 0.0;
+            double selEff = (eventsBeforeCuts_DLNuE.signal > 0)    ? nomS / eventsBeforeCuts_DLNuE.signal : 0.0;
+            double pur    = (nomS + nomB > 0)                      ? nomS / (nomS + nomB)            : 0.0;
+            double epsRho    = eff    * pur;
+            double selEpsRho = selEff * pur;
 
-        if(numRecoNeutrinosCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "1 Reco Neutrino in Slice & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back) << " & " << (eventsAfterCuts_DLNuE.numRecoNeut0Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back)) << " & " << (eventsAfterCuts_DLNuE.numRecoNeut0Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.numRecoNeut0Sig/(eventsAfterCuts_DLNuE.numRecoNeut0Sig+eventsAfterCuts_DLNuE.numRecoNeut0Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.numRecoNeut0Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numRecoNeut0Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile
+                << cutLabel << " & "
+                << fmtPMpct(eff,    sArr[2], 4, 4) << " & "
+                << fmtPMpct(selEff, sArr[3], 4, 4) << " & "
+                << fmtPMpct(pur,    sArr[4], 4, 4) << " & "
+                << fmtPM(epsRho,    sArr[5], 6, 6) << " & "
+                << fmtPM(selEpsRho, sArr[6], 6, 6) << " & "
+                << std::fixed << std::setprecision(0) << nomS
+                << " $\\pm$ " << std::fixed << std::setprecision(2) << sArr[0]
+                << std::defaultfloat << std::setprecision(4)
+                << " (" << 100.*eff << "\\%) & "
+                << std::fixed << std::setprecision(0) << nomB
+                << " $\\pm$ " << std::fixed << std::setprecision(2) << sArr[1]
+                << std::defaultfloat << std::setprecision(4)
+                << " (" << 100.*nomB/eventsBeforeCuts_DLNuE.background << "\\%)"
+                << " \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
-        }
+        };
+
+        writeRow("No Cut",
+                 eventsBeforeCuts_DLNuE.signal, eventsBeforeCuts_DLNuE.background,
+                 s_before);
+
+        if(clearCosmicCut == 1)
+            writeRow("Remove Clear Cosmic PFPs",
+                     eventsAfterCuts_DLNuE.clearCosmicsSig, eventsAfterCuts_DLNuE.clearCosmicsBack,
+                     s_clearCosmic);
+
+        if(numPFPs0Cut == 1)
+            writeRow("PFPs in Slice != 0",
+                     eventsAfterCuts_DLNuE.numPFPs0Sig, eventsAfterCuts_DLNuE.numPFPs0Back,
+                     s_numPFPs0);
+
+        if(numRecoNeutrinosCut == 1)
+            writeRow("1 Reco Neutrino in Slice",
+                     eventsAfterCuts_DLNuE.numRecoNeut0Sig, eventsAfterCuts_DLNuE.numRecoNeut0Back,
+                     s_numRecoNeut);
 
         if(CRUMBSCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.crumbsSig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack) << " & " << (eventsAfterCuts_DLNuE.crumbsSig/actualSignalCount)*(eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack)) << " & " << (eventsAfterCuts_DLNuE.crumbsSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.crumbsSig/(eventsAfterCuts_DLNuE.crumbsSig+eventsAfterCuts_DLNuE.crumbsBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsSig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-       
-        if(FVCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "FV Cut & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.FVSig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack) << " & " << (eventsAfterCuts_DLNuE.FVSig/actualSignalCount)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << " & " << (eventsAfterCuts_DLNuE.FVSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.FVSig/(eventsAfterCuts_DLNuE.FVSig+eventsAfterCuts_DLNuE.FVBack)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.FVSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVSig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+            std::ostringstream crumbsLabel;
+            crumbsLabel << std::defaultfloat << std::setprecision(7)
+                        << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high;
+            writeRow(crumbsLabel.str(),
+                     eventsAfterCuts_DLNuE.crumbsSig, eventsAfterCuts_DLNuE.crumbsBack,
+                     s_crumbs);
         }
 
-        if(primaryPFPCut == 1){ 
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice with $\\geq$ 10 Hits = " << primaryPFPCutValue << " & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.primaryPFPSig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack) << " & " << (eventsAfterCuts_DLNuE.primaryPFPSig/actualSignalCount)*(eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack)) << " & " << (eventsAfterCuts_DLNuE.primaryPFPSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.primaryPFPSig/(eventsAfterCuts_DLNuE.primaryPFPSig+eventsAfterCuts_DLNuE.primaryPFPBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPSig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+        if(FVCut == 1)
+            writeRow("FV Cut",
+                     eventsAfterCuts_DLNuE.FVSig, eventsAfterCuts_DLNuE.FVBack,
+                     s_FV);
+
+        if(primaryPFPCut == 1){
+            std::ostringstream primLabel;
+            primLabel << std::defaultfloat << std::setprecision(7)
+                      << "Primary PFPs in Slice with $\\geq$ 10 Hits = " << primaryPFPCutValue;
+            writeRow(primLabel.str(),
+                     eventsAfterCuts_DLNuE.primaryPFPSig, eventsAfterCuts_DLNuE.primaryPFPBack,
+                     s_primaryPFP);
         }
-        
+
         if(ETheta2Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+            std::ostringstream et2Label;
+            et2Label << std::defaultfloat << std::setprecision(7)
+                     << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ "
+                     << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$";
+            writeRow(et2Label.str(),
+                     eventsAfterCuts_DLNuE.ETheta2Sig, eventsAfterCuts_DLNuE.ETheta2Back,
+                     s_ETheta2);
         }
-        
+
         if(razzledPDG11Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back) << " & " << (eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back)) << " & " << (eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+            std::ostringstream r11Label;
+            r11Label << std::defaultfloat << std::setprecision(7)
+                     << "Highest Energy PFP in Slice has Electron Score $\\geq$ "
+                     << razzled11Low_highestEnergyPFP;
+            writeRow(r11Label.str(),
+                     eventsAfterCuts_DLNuE.razzled11Sig, eventsAfterCuts_DLNuE.razzled11Back,
+                     s_razzled11);
         }
-        
+
         if(razzledPDG211Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back) << " & " << (eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back)) << " & " << (eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+            std::ostringstream r211Label;
+            r211Label << std::defaultfloat << std::setprecision(7)
+                      << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ "
+                      << razzled211High_highestEnergyPFP;
+            writeRow(r211Label.str(),
+                     eventsAfterCuts_DLNuE.razzled211Sig, eventsAfterCuts_DLNuE.razzled211Back,
+                     s_razzled211);
         }
-        
+
         if(dEdxCut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " MeV cm^{-1} & " << 100*eventsAfterCuts_DLNuE.dEdxSig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack) << " & " << (eventsAfterCuts_DLNuE.dEdxSig/actualSignalCount)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << " & " << (eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxSig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxSig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxBack << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxBack/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
+            std::ostringstream dedxLabel;
+            dedxLabel << std::defaultfloat << std::setprecision(7)
+                      << "Highest Energy PFP in Slice has "
+                      << dEdxLow_highestEnergyPFP
+                      << " MeV cm$^{-1}$ $\\leq$ dE/dx $\\leq$ "
+                      << dEdxHigh_highestEnergyPFP
+                      << " MeV cm$^{-1}$";
+            writeRow(dedxLabel.str(),
+                     eventsAfterCuts_DLNuE.dEdxSig, eventsAfterCuts_DLNuE.dEdxBack,
+                     s_dEdx);
         }
-        
+
         out_tablefile << "\\end{tabular}" << std::endl;
         out_tablefile << "}" << std::endl;
         out_tablefile << "\\end{table}" << std::endl;
-       
         out_tablefile << "" << std::endl;
         out_tablefile << "" << std::endl;
         out_tablefile << "" << std::endl;
-        // ======================================== 
-        // Put split interaction table here
-        
+
+        // ----------------------------------------------------------------
+        // Table 2: interaction-type breakdown  (unchanged from your original)
+        // ----------------------------------------------------------------
         out_tablefile << "\\begin{table}[h!]" << std::endl;
         out_tablefile << "\\centering" << std::endl;
         out_tablefile << "\\resizebox{\\textwidth}{!}{%" << std::endl;
@@ -1962,60 +2242,49 @@ void nuESelectionNumbersWithSystematics_macro(){
             out_tablefile << "Remove Clear Cosmic PFPs & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-
         if(numPFPs0Cut == 1){
             out_tablefile << "PFPs in Slice != 0 & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-
         if(numRecoNeutrinosCut == 1){
             out_tablefile << "1 Reco Neutrino in Slice & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-       
         if(CRUMBSCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.crumbsIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.crumbsIntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.crumbsIntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-       
         if(FVCut == 1){
             out_tablefile << "FV Cut & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.FVIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.FVIntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.FVIntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-
-        if(primaryPFPCut == 1){ 
+        if(primaryPFPCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice with $\\geq$ 10 Hits = " << primaryPFPCutValue << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-        
-        if(ETheta2Cut == 1){ 
+        if(ETheta2Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-        
-        if(razzledPDG11Cut == 1){ 
+        if(razzledPDG11Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-        
-        if(razzledPDG211Cut == 1){ 
+        if(razzledPDG211Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-        
-        if(dEdxCut == 1){ 
+        if(dEdxCut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm^{-1} $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << " MeV cm^{-1} & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.dEdxIntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.dEdxIntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.dEdxIntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
-        
+
         out_tablefile << "\\end{tabular}" << std::endl;
         out_tablefile << "}" << std::endl;
         out_tablefile << "\\end{table}" << std::endl;
-
         out_tablefile << "" << std::endl;
         out_tablefile << "\\newpage" << std::endl;
-        out_tablefile << "" << std::endl; 
-
+        out_tablefile << "" << std::endl;
     }
 
 }
