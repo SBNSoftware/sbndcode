@@ -807,6 +807,33 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<double> count_piplus(NUNIV, 0.0);
     std::vector<double> count_combined(NUNIV, 0.0);
 
+    const int NCUTS = 11;
+    std::vector<std::string> cutNames_syst = {
+        "beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut",
+        "crumbs", "FV", "primaryPFP", "ETheta2",
+        "razzled11", "razzled211", "dEdx"
+    };
+
+    // Nominal signal and background count per cut (filled with baseWeight, no universe variation)
+    std::vector<double> nomSig_perCut(NCUTS, 0.0);
+    std::vector<double> nomBack_perCut(NCUTS, 0.0);
+
+    // Universe-varied signal counts: [paramIdx][cutIdx][universeIdx]
+    // paramIdx matches the order: horncurrent=0, expskin=1, kplus=2, kmin=3, kzero=4,
+    //   nucleoninex=5, nucleonqex=6, nucleontotx=7, piminus=8, pioninex=9, pionqex=10,
+    //   piontotx=11, piplus=12, combined=13
+    const int NPARAMS_SYST = 14;
+    std::vector<std::string> paramNames_syst = {
+        "horncurrent","expskin","kplus","kmin","kzero",
+        "nucleoninex","nucleonqex","nucleontotx","piminus",
+        "pioninex","pionqex","piontotx","piplus","combined"
+    };
+    // [paramIdx][cutIdx][universeIdx]
+    std::vector<std::vector<std::vector<double>>> univSig_perCutParam(
+        NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
+    std::vector<std::vector<std::vector<double>>> univBack_perCutParam(
+        NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
+
     double actualSignalCount = 0.0;
 
     // Helper to get a nuEScatter universe weight, returning 1.0 if no weights available
@@ -1148,6 +1175,64 @@ void nuESelectionNumbersWithSystematics_macro(){
                 }
             }
 
+            size_t wSliceIdx_cached = 999999;
+            bool sliceWeightValid_cached = false;
+            std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0)); // [param][univ]
+            if(DLCurrent == 5 && weightsFound && signal != 3){
+                for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
+                    if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
+                        wSliceIdx_cached = ws;
+                        sliceWeightValid_cached = true;
+                        break;
+                    }
+                }
+                for(int u = 0; u < NUNIV; u++){
+                    double wHorn    = getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wExp     = getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKplus   = getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKmin    = getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKzero   = getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNinex   = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNqex    = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNtotx   = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiminus = getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPinex   = getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiqex   = getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPitotx  = getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiplus  = getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wComb    = wHorn*wExp*wKplus*wKmin*wKzero*wNinex*wNqex*wNtotx*wPiminus*wPinex*wPiqex*wPitotx*wPiplus;
+                    sliceUnivWeights[0][u]  = wHorn;
+                    sliceUnivWeights[1][u]  = wExp;
+                    sliceUnivWeights[2][u]  = wKplus;
+                    sliceUnivWeights[3][u]  = wKmin;
+                    sliceUnivWeights[4][u]  = wKzero;
+                    sliceUnivWeights[5][u]  = wNinex;
+                    sliceUnivWeights[6][u]  = wNqex;
+                    sliceUnivWeights[7][u]  = wNtotx;
+                    sliceUnivWeights[8][u]  = wPiminus;
+                    sliceUnivWeights[9][u]  = wPinex;
+                    sliceUnivWeights[10][u] = wPiqex;
+                    sliceUnivWeights[11][u] = wPitotx;
+                    sliceUnivWeights[12][u] = wPiplus;
+                    sliceUnivWeights[13][u] = wComb;
+                }
+            } else {
+                // cosmics or no weights: all universe weights stay 1.0
+            }
+
+            auto fillSliceSystCounters = [&](int cutIdx){
+                bool isSigSlice = (sliceCategoryPlottingMacro == 1 && signal == 1);
+                nomSig_perCut[cutIdx]  += isSigSlice ? weight : 0.0;
+                nomBack_perCut[cutIdx] += isSigSlice ? 0.0    : weight;
+                for(int p = 0; p < NPARAMS_SYST; p++){
+                    for(int u = 0; u < NUNIV; u++){
+                        double w = weight * sliceUnivWeights[p][u];
+                        if(isSigSlice) univSig_perCutParam[p][cutIdx][u]  += w;
+                        else            univBack_perCutParam[p][cutIdx][u] += w;
+                    }
+                }
+            };
+
             if(DLCurrent == 5){
                 if(sliceCategoryPlottingMacro == 0){
                     eventsBeforeCuts_DLNuE.background += weight;
@@ -1183,6 +1268,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                     eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy += weight;
                 }
 
+                fillSliceSystCounters(0);
+
             }
 
             // Clear cosmic cut has been applied, add to counters
@@ -1203,6 +1290,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(1);
             }
 
             // Applying cuts here
@@ -1229,6 +1318,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numPFPs0IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(2);
             }
 
             if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0){
@@ -1254,6 +1345,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(3);
             }
 
             if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low || reco_sliceScore->at(slice) > crumbsScoreCut_high)){
@@ -1279,6 +1372,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(4);
             }
             
             if(FVCut == 1){
@@ -1306,6 +1401,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.FVIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(5);
             }
 
             if(primaryPFPCut == 1 && numPrimaryPFPs10Slice != primaryPFPCutValue){
@@ -1331,6 +1428,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(6);
             }
 
             if(ETheta2Cut == 1 && ((highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) > ETheta2High_highestEnergyPFP || (highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) < ETheta2Low_highestEnergyPFP)){
@@ -1355,6 +1454,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(7);
             }
                 
             if(razzledPDG11Cut == 1 && ((highestEnergyPFP.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG11 < razzled11Low_highestEnergyPFP))){
@@ -1379,6 +1480,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled11IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(8);
             }
 
             if(razzledPDG211Cut == 1 && ((highestEnergyPFP.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG211 < razzled211Low_highestEnergyPFP))){
@@ -1403,6 +1506,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled211IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(9);
             }
 
             if(dEdxCut == 1 && (highestEnergyPFP.bestPlanedEdx > dEdxHigh_highestEnergyPFP || highestEnergyPFP.bestPlanedEdx < dEdxLow_highestEnergyPFP)){
@@ -1427,6 +1532,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt += weight;
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.dEdxIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuEFuzzy += weight;
+            
+                fillSliceSystCounters(10);
             }
 
             // This slice passes all of the cuts applied
@@ -1564,6 +1671,207 @@ void nuESelectionNumbersWithSystematics_macro(){
     plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
     plotUniverseDist("combined_allParams", h_combined, actualSignalCount);
 
+// ===================================================================
+    // Per-cut systematic uncertainties on signal count, background count,
+    // efficiency, selection efficiency, and purity
+    // ===================================================================
+
+    double initialSig  = nomSig_perCut[0];
+    double initialBack = nomBack_perCut[0];
+
+    std::cout << "\n=== Per-Cut Systematic Uncertainties on Signal/Background Counts ===" << std::endl;
+
+    for(int c = 0; c < NCUTS; c++){
+        double nomS = nomSig_perCut[c];
+        double nomB = nomBack_perCut[c];
+        double nomEff     = (initialSig  > 0) ? nomS / initialSig  : 0.0;
+        double nomSelEff  = (initialSig  > 0) ? nomS / nomSig_perCut[0] : 0.0; // selection eff relative to first cut's signal
+        double nomPurity  = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+
+        std::cout << "\n--- Cut: " << cutNames_syst[c] << " ---" << std::endl;
+        std::cout << Form("  Nominal: sig=%.2f  back=%.2f  eff=%.4f  selEff=%.4f  purity=%.4f",
+                          nomS, nomB, nomEff, nomSelEff, nomPurity) << std::endl;
+
+        for(int p = 0; p < NPARAMS_SYST; p++){
+            // Build per-universe derived quantities
+            std::vector<double>& svec = univSig_perCutParam[p][c];
+            std::vector<double>& bvec = univBack_perCutParam[p][c];
+
+            // For normalising efficiency we use the beforeCuts universe signal count for the same parameter
+            std::vector<double>& svec0 = univSig_perCutParam[p][0];
+
+            std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV);
+            for(int u = 0; u < NUNIV; u++){
+                effVec[u]    = (svec0[u] > 0) ? svec[u] / svec0[u] : 0.0;
+                selEffVec[u] = (initialSig > 0) ? svec[u] / initialSig : 0.0;
+                double tot   = svec[u] + bvec[u];
+                purVec[u]    = (tot > 0) ? svec[u] / tot : 0.0;
+            }
+
+            auto getMeanStd = [&](const std::vector<double>& v) -> std::pair<double,double> {
+                double mean = 0; for(double x : v) mean += x; mean /= v.size();
+                double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+                return {mean, std::sqrt(var)};
+            };
+
+            auto [sMean,   sStd]   = getMeanStd(svec);
+            auto [bMean,   bStd]   = getMeanStd(bvec);
+            auto [effMean, effStd] = getMeanStd(effVec);
+            auto [seMean,  seStd]  = getMeanStd(selEffVec);
+            auto [purMean, purStd] = getMeanStd(purVec);
+
+            std::cout << Form("  %-14s  sig: mean=%.2f syst=%.2f(%.1f%%)  back: mean=%.2f syst=%.2f(%.1f%%)  eff syst=%.4f  selEff syst=%.4f  pur syst=%.4f",
+                              paramNames_syst[p].c_str(),
+                              sMean,   sStd,   (nomS  > 0 ? 100.*sStd/nomS  : 0.),
+                              bMean,   bStd,   (nomB  > 0 ? 100.*bStd/nomB  : 0.),
+                              effStd, seStd, purStd) << std::endl;
+        }
+    }
+
+    // ===================================================================
+    // Plots: for each parameter, one canvas with NCUTS subpads showing
+    // the universe distribution of signal count after each cut
+    // ===================================================================
+
+    auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
+
+        // One canvas, NCUTS pads arranged in a grid
+        int nCols = 4;
+        int nRows = (NCUTS + nCols - 1) / nCols;
+        TCanvas *c = new TCanvas(("cPerCut_sig_" + paramName).c_str(), ("Signal: " + paramName).c_str(),
+                                  400*nCols, 350*nRows);
+        c->Divide(nCols, nRows);
+
+        for(int cut = 0; cut < NCUTS; cut++){
+            c->cd(cut+1);
+            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
+            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
+
+            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
+            double sMin = *std::min_element(svec.begin(), svec.end());
+            double sMax = *std::max_element(svec.begin(), svec.end());
+            double range = sMax - sMin;
+            double lo = std::max(0.0, sMin - 0.1*range);
+            double hi = sMax + 0.1*range;
+            if(hi <= lo) hi = lo + 1.0;
+
+            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut),
+                               cutNames_syst[cut].c_str(), 50, lo, hi);
+            for(double v : svec) h->Fill(v);
+
+            h->SetLineColor(kBlue+1); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Signal slice count");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->Draw("HIST E");
+
+            double nomS = nomSig_perCut[cut];
+            TLine *ln = new TLine(nomS, 0, nomS, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
+            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
+        }
+        c->Update();
+        c->SaveAs((base_path + "perCut_sigCount_" + paramName + ".pdf").c_str());
+        delete c;
+    };
+
+    auto plotPerCutUniverseDist_back = [&](int paramIdx, const std::string& paramName){
+
+        int nCols = 4;
+        int nRows = (NCUTS + nCols - 1) / nCols;
+        TCanvas *c = new TCanvas(("cPerCut_back_" + paramName).c_str(), ("Background: " + paramName).c_str(),
+                                  400*nCols, 350*nRows);
+        c->Divide(nCols, nRows);
+
+        for(int cut = 0; cut < NCUTS; cut++){
+            c->cd(cut+1);
+            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
+            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
+
+            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
+            double bMin = *std::min_element(bvec.begin(), bvec.end());
+            double bMax = *std::max_element(bvec.begin(), bvec.end());
+            double range = bMax - bMin;
+            double lo = std::max(0.0, bMin - 0.1*range);
+            double hi = bMax + 0.1*range;
+            if(hi <= lo) hi = lo + 1.0;
+
+            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut),
+                               cutNames_syst[cut].c_str(), 50, lo, hi);
+            for(double v : bvec) h->Fill(v);
+
+            h->SetLineColor(kRed+1); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Background slice count");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->Draw("HIST E");
+
+            double nomB = nomBack_perCut[cut];
+            TLine *ln = new TLine(nomB, 0, nomB, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
+            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
+        }
+        c->Update();
+        c->SaveAs((base_path + "perCut_backCount_" + paramName + ".pdf").c_str());
+        delete c;
+    };
+
+    auto plotPerCutUniverseDist_purity = [&](int paramIdx, const std::string& paramName){
+
+        int nCols = 4;
+        int nRows = (NCUTS + nCols - 1) / nCols;
+        TCanvas *c = new TCanvas(("cPerCut_pur_" + paramName).c_str(), ("Purity: " + paramName).c_str(),
+                                  400*nCols, 350*nRows);
+        c->Divide(nCols, nRows);
+
+        for(int cut = 0; cut < NCUTS; cut++){
+            c->cd(cut+1);
+            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
+            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
+
+            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
+            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
+
+            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut),
+                               cutNames_syst[cut].c_str(), 50, 0, 1);
+            for(int u = 0; u < NUNIV; u++){
+                double tot = svec[u] + bvec[u];
+                if(tot > 0) h->Fill(svec[u] / tot);
+            }
+
+            h->SetLineColor(kGreen+2); h->SetLineWidth(2); h->SetStats(0);
+            h->GetXaxis()->SetTitle("Purity");
+            h->GetYaxis()->SetTitle("Universes");
+            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->Draw("HIST E");
+
+            double nomS = nomSig_perCut[cut];
+            double nomB = nomBack_perCut[cut];
+            double nomPur = (nomS+nomB > 0) ? nomS/(nomS+nomB) : 0.0;
+            TLine *ln = new TLine(nomPur, 0, nomPur, h->GetMaximum()*1.05);
+            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
+            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
+        }
+        c->Update();
+        c->SaveAs((base_path + "perCut_purity_" + paramName + ".pdf").c_str());
+        delete c;
+    };
+
+    // Call all three plot types for all 14 parameters
+    for(int p = 0; p < NPARAMS_SYST; p++){
+        plotPerCutUniverseDist(p,         paramNames_syst[p]);
+        plotPerCutUniverseDist_back(p,    paramNames_syst[p]);
+        plotPerCutUniverseDist_purity(p,  paramNames_syst[p]);
+    }
 
     std::ofstream out_tablefile(tableFileName, std::ios::app);
     if(out_tablefile.is_open()){
