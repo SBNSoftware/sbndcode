@@ -1671,7 +1671,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
     plotUniverseDist("combined_allParams", h_combined, actualSignalCount);
 
-// ===================================================================
+    // ===================================================================
     // Per-cut systematic uncertainties on signal count, background count,
     // efficiency, selection efficiency, and purity
     // ===================================================================
@@ -1679,54 +1679,190 @@ void nuESelectionNumbersWithSystematics_macro(){
     double initialSig  = nomSig_perCut[0];
     double initialBack = nomBack_perCut[0];
 
-    std::cout << "\n=== Per-Cut Systematic Uncertainties on Signal/Background Counts ===" << std::endl;
+    // ===================================================================
+    // Per-cut systematic printout
+    // ===================================================================
 
-    for(int c = 0; c < NCUTS; c++){
-        double nomS = nomSig_perCut[c];
-        double nomB = nomBack_perCut[c];
-        double nomEff     = (initialSig  > 0) ? nomS / initialSig  : 0.0;
-        double nomSelEff  = (initialSig  > 0) ? nomS / nomSig_perCut[0] : 0.0; // selection eff relative to first cut's signal
-        double nomPurity  = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+    // Helper: compute mean and stddev of a vector
+    auto getMeanStd = [&](const std::vector<double>& v) -> std::pair<double,double> {
+        double mean = 0; for(double x : v) mean += x; mean /= v.size();
+        double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+        return {mean, std::sqrt(var)};
+    };
 
-        std::cout << "\n--- Cut: " << cutNames_syst[c] << " ---" << std::endl;
-        std::cout << Form("  Nominal: sig=%.2f  back=%.2f  eff=%.4f  selEff=%.4f  purity=%.4f",
-                          nomS, nomB, nomEff, nomSelEff, nomPurity) << std::endl;
+    // Helper: print one block (like the nu+e signal count block at the top)
+    // blockName: e.g. "Signal Count", "Efficiency"
+    // nomVal: the nominal value
+    // univVecs: one vector per parameter (indices 0-12), then index 13 = combined
+    // unitStr: e.g. "" for counts, "" for fractions (printed as % if isPct=true)
+    // isPct: if true, multiply values by 100 when printing
+    auto printSystBlock = [&](
+        const std::string& blockName,
+        double nomVal,
+        const std::vector<std::vector<double>>& univVecs, // size 14, each NUNIV
+        bool isPct)
+    {
+        double scale = isPct ? 100.0 : 1.0;
+        std::string unitSuffix = isPct ? "%" : "";
 
-        for(int p = 0; p < NPARAMS_SYST; p++){
-            // Build per-universe derived quantities
-            std::vector<double>& svec = univSig_perCutParam[p][c];
-            std::vector<double>& bvec = univBack_perCutParam[p][c];
+        std::cout << "\n--- " << blockName << " ---" << std::endl;
+        std::cout << Form("Nominal: %.4f%s", nomVal * scale, unitSuffix.c_str()) << std::endl;
 
-            // For normalising efficiency we use the beforeCuts universe signal count for the same parameter
-            std::vector<double>& svec0 = univSig_perCutParam[p][0];
+        std::vector<double> systValues;
+        std::vector<std::string> pNames = {
+            "horncurrent","expskin","kplus","kmin","kzero",
+            "nucleoninex","nucleonqex","nucleontotx","piminus",
+            "pioninex","pionqex","piontotx","piplus"
+        };
 
-            std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV);
-            for(int u = 0; u < NUNIV; u++){
-                effVec[u]    = (svec0[u] > 0) ? svec[u] / svec0[u] : 0.0;
-                selEffVec[u] = (initialSig > 0) ? svec[u] / initialSig : 0.0;
-                double tot   = svec[u] + bvec[u];
-                purVec[u]    = (tot > 0) ? svec[u] / tot : 0.0;
-            }
-
-            auto getMeanStd = [&](const std::vector<double>& v) -> std::pair<double,double> {
-                double mean = 0; for(double x : v) mean += x; mean /= v.size();
-                double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
-                return {mean, std::sqrt(var)};
-            };
-
-            auto [sMean,   sStd]   = getMeanStd(svec);
-            auto [bMean,   bStd]   = getMeanStd(bvec);
-            auto [effMean, effStd] = getMeanStd(effVec);
-            auto [seMean,  seStd]  = getMeanStd(selEffVec);
-            auto [purMean, purStd] = getMeanStd(purVec);
-
-            std::cout << Form("  %-14s  sig: mean=%.2f syst=%.2f(%.1f%%)  back: mean=%.2f syst=%.2f(%.1f%%)  eff syst=%.4f  selEff syst=%.4f  pur syst=%.4f",
-                              paramNames_syst[p].c_str(),
-                              sMean,   sStd,   (nomS  > 0 ? 100.*sStd/nomS  : 0.),
-                              bMean,   bStd,   (nomB  > 0 ? 100.*bStd/nomB  : 0.),
-                              effStd, seStd, purStd) << std::endl;
+        for(int p = 0; p < 13; p++){
+            auto [mean, stddev] = getMeanStd(univVecs[p]);
+            double shift = mean - nomVal;
+            std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)",
+                pNames[p].c_str(),
+                mean   * scale, unitSuffix.c_str(),
+                shift  * scale,
+                (nomVal != 0 ? 100.*shift/nomVal : 0.),
+                stddev * scale,
+                (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
+            systValues.push_back(stddev);
         }
-    }
+
+        double totalSystSq = 0.0;
+        for(double s : systValues) totalSystSq += s * s;
+        double totalSyst = std::sqrt(totalSystSq);
+
+        auto [combMean, combStd] = getMeanStd(univVecs[13]);
+        double combShift = combMean - nomVal;
+
+        std::cout << "--------------------------------------------" << std::endl;
+        std::cout << Form("%-20s  syst=%.4f%s (%.1f%%)",
+            "TOTAL (quadrature)",
+            totalSyst * scale, unitSuffix.c_str(),
+            (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        std::cout << Form("%-20s  %.4f%s +/- %.4f%s (syst)",
+            blockName.c_str(),
+            nomVal    * scale, unitSuffix.c_str(),
+            totalSyst * scale, unitSuffix.c_str()) << std::endl;
+        std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)",
+            "COMBINED (product)",
+            combMean  * scale, unitSuffix.c_str(),
+            combShift * scale,
+            (nomVal != 0 ? 100.*combShift/nomVal : 0.),
+            combStd   * scale,
+            (nomVal != 0 ? 100.*combStd/nomVal   : 0.)) << std::endl;
+    };
+
+    // Helper: build the 14 per-parameter universe vectors for a derived quantity,
+    // given a function that maps (s, b, trueSig, selSig0) -> value for one universe
+    auto buildUnivVecs = [&](
+        int cutIdx,
+        std::function<double(double s, double b, double trueSig, double selSig0)> fn)
+        -> std::vector<std::vector<double>>  // [14][NUNIV]
+    {
+        std::vector<std::vector<double>> result(14, std::vector<double>(NUNIV, 0.0));
+
+        // Map param index to true signal universe vector
+        const std::vector<double>* trueSigVecs[14] = {
+            &count_horncurrent, &count_expskin,
+            &count_kplus,       &count_kmin,
+            &count_kzero,       &count_nucleoninex,
+            &count_nucleonqex,  &count_nucleontotx,
+            &count_piminus,     &count_pioninex,
+            &count_pionqex,     &count_piontotx,
+            &count_piplus,      &count_combined
+        };
+
+        for(int p = 0; p < 14; p++){
+            for(int u = 0; u < NUNIV; u++){
+                double s       = univSig_perCutParam[p][cutIdx][u];
+                double b       = univBack_perCutParam[p][cutIdx][u];
+                double trueSig = (*trueSigVecs[p])[u];
+                result[p][u]   = fn(s, b, trueSig, initialSig);
+            }
+        }
+        return result;
+    };
+
+    // Print one full cut stage
+    auto printCutStage = [&](const std::string& label, int cutIdx){
+
+        double nomS   = nomSig_perCut[cutIdx];
+        double nomB   = nomBack_perCut[cutIdx];
+        double nomEff = (actualSignalCount > 0) ? nomS / actualSignalCount : 0.0;
+        double nomSel = (initialSig        > 0) ? nomS / initialSig        : 0.0;
+        double nomPur = (nomS + nomB       > 0) ? nomS / (nomS + nomB)     : 0.0;
+        double nomER  = nomEff * nomPur;
+        double nomSR  = nomSel * nomPur;
+
+        int width = (int)label.size() + 8;
+        std::string bar(width, '=');
+        std::cout << "\n" << bar << std::endl;
+        std::cout << "    " << label << std::endl;
+        std::cout << bar << std::endl;
+
+        // Signal count
+        printSystBlock("Signal Count", nomS,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                return s;
+            }), false);
+
+        // Background count
+        printSystBlock("Background Count", nomB,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                return b;
+            }), false);
+
+        // Efficiency
+        printSystBlock("Efficiency", nomEff,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                return (ts > 0) ? s / ts : 0.0;
+            }), true);
+
+        // Selection efficiency
+        printSystBlock("Selection Efficiency", nomSel,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                return (ss > 0) ? s / ss : 0.0;
+            }), true);
+
+        // Purity
+        printSystBlock("Purity", nomPur,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                return (tot > 0) ? s / tot : 0.0;
+            }), true);
+
+        // Efficiency x Purity
+        printSystBlock("Efficiency x Purity", nomER,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                double eff = (ts  > 0) ? s / ts  : 0.0;
+                double pur = (tot > 0) ? s / tot : 0.0;
+                return eff * pur;
+            }), true);
+
+        // Selection Efficiency x Purity
+        printSystBlock("SelEff x Purity", nomSR,
+            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                double tot = s + b;
+                double sel = (ss  > 0) ? s / ss  : 0.0;
+                double pur = (tot > 0) ? s / tot : 0.0;
+                return sel * pur;
+            }), true);
+    };
+
+    // Print all cut stages
+    printCutStage("Before Cuts",          0);
+    if(clearCosmicCut    == 1) printCutStage("Cut 1: Clear Cosmic",          1);
+    if(numPFPs0Cut       == 1) printCutStage("Cut 2: Num PFPs != 0",         2);
+    if(numRecoNeutrinosCut==1) printCutStage("Cut 3: Num Reco Neutrinos",    3);
+    if(CRUMBSCut         == 1) printCutStage("Cut 4: CRUMBS Score",          4);
+    if(FVCut             == 1) printCutStage("Cut 5: FV Cut",                5);
+    if(primaryPFPCut     == 1) printCutStage("Cut 6: Primary PFP",           6);
+    if(ETheta2Cut        == 1) printCutStage("Cut 7: ETheta2",               7);
+    if(razzledPDG11Cut   == 1) printCutStage("Cut 8: Razzled PDG11",         8);
+    if(razzledPDG211Cut  == 1) printCutStage("Cut 9: Razzled PDG211",        9);
+    if(dEdxCut           == 1) printCutStage("Cut 10: dEdx",                10);
 
     // ===================================================================
     // Plots: for each parameter, one canvas with NCUTS subpads showing
@@ -2016,21 +2152,20 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
 
         std::vector<double>& svec  = univSig_perCutParam[p][cutIdx];
         std::vector<double>& bvec  = univBack_perCutParam[p][cutIdx];
-        std::vector<double>& svec0 = univSig_perCutParam[p][0]; // beforeCuts signal for this param
-
+       
         std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV), epsRhoVec(NUNIV), selEpsRhoVec(NUNIV);
         for(int u = 0; u < NUNIV; u++){
-            double s0 = svec0[u];
-            double s  = svec[u];
-            double b  = bvec[u];
-            double tot = s + b;
-            effVec[u]      = (s0    > 0) ? s / s0    : 0.0;
-            selEffVec[u]   = (initialSig > 0) ? s / initialSig : 0.0;
-            purVec[u]      = (tot   > 0) ? s / tot   : 0.0;
-            epsRhoVec[u]   = effVec[u]    * purVec[u];
-            selEpsRhoVec[u]= selEffVec[u] * purVec[u];
-        }
-
+            double s       = svec[u];
+            double b       = bvec[u];
+            double tot     = s + b;
+            double trueSig = count_combined[u];
+            effVec[u]       = (trueSig    > 0) ? s / trueSig    : 0.0;
+            selEffVec[u]    = (initialSig > 0) ? s / initialSig : 0.0;
+            purVec[u]       = (tot         > 0) ? s / tot         : 0.0;
+            epsRhoVec[u]    = effVec[u]    * purVec[u];
+            selEpsRhoVec[u] = selEffVec[u] * purVec[u];
+        } 
+        
         auto getStd = [&](const std::vector<double>& v) -> double {
             double mean = 0; for(double x : v) mean += x; mean /= v.size();
             double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
