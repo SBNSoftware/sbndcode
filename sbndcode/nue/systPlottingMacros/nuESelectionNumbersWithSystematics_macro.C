@@ -201,7 +201,7 @@ struct eventCounting_struct{
 void nuESelectionNumbersWithSystematics_macro(){
 
     std::string cutsApplied = "clearCosmic";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers8June_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers10June_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table.txt";
 
     int clearCosmicCut = 1;
@@ -259,7 +259,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     clearTableFile.close();
 
     // Load in the NuE and SubRun TTrees
-    TFile *fNuE = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_noWeights.root");
+    //TFile *fNuE = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_noWeights.root");
+    TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withoutWeights.root");
     if(!fNuE){
         std::cerr << "Error opening the NuE TTree file" << std::endl;
         return;
@@ -284,7 +285,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     }
 
     // Load in the NuEWeights TTree
-    TFile *fNuEWeights = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_weights.root");
+    //TFile *fNuEWeights = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_weights.root");
+    TFile *fNuEWeights = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withWeights.root");
     
     if(!fNuEWeights){
         std::cerr << "Error opening the NuEWeights TTree file" << std::endl;
@@ -848,11 +850,11 @@ void nuESelectionNumbersWithSystematics_macro(){
     };
 
     for(Long64_t e = 0; e < numEntries; ++e){
-        std::cout << "============= New Event =============" << std::endl;
+        //std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
 
-        std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
-        std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
+        //std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
+        //std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
 
         int trueSignal = 0;
 
@@ -860,22 +862,22 @@ void nuESelectionNumbersWithSystematics_macro(){
         // For signal==3 (intime cosmics), weightsFound stays false and all weight helpers return 1.0
         bool weightsFound = false;
         if(signal == 1 || signal == 2){
-            std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
+            //std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
 
             eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
             auto it = weightEntryMap.find(key);
 
             if(it == weightEntryMap.end()){
-                std::cout << "No matching weights event found" << std::endl;
+                //std::cout << "No matching weights event found" << std::endl;
             } else {
                 weightsTree->GetEntry(it->second);
                 weightsFound = true;
 
-                std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
-                std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
+                //std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
+                //std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
             }
         } else {
-            std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+            //std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
         }
 
         // --- Shared code from here ---
@@ -917,7 +919,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         // Looking at the true recoil electron in the event (if there is one)
         recoilElectron_struct recoilElectron;
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
-            if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
+            //if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
             if(truth_recoilElectronPDG->at(i) != -999999){
                 // There is a true recoil electron in the event
                 recoilElectron.energy = truth_recoilElectronEnergy->at(i);
@@ -943,14 +945,14 @@ void nuESelectionNumbersWithSystematics_macro(){
         // Looking at the reco slices
         if(reco_sliceID->size() == 0) continue;
 
-        if(weightsFound) std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
-        std::cout << "--- Slices for event ---" << std::endl;
+        //if(weightsFound) std::cout << "Number of slices = " << reco_sliceID_weights->size() << std::endl;
+        //std::cout << "--- Slices for event ---" << std::endl;
 
         for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
             // Loop through slices in event
             if(reco_sliceID->at(slice) == -999999) continue;
 
-            std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", CRUMBS Score = " << reco_sliceScore->at(slice) << std::endl;
+            //std::cout << "Slice " << slice << ": ID = " << reco_sliceID->at(slice) << ", CRUMBS Score = " << reco_sliceScore->at(slice) << std::endl;
 
             double sliceRecoVX = -999999;
             double sliceRecoVY = -999999;
@@ -989,11 +991,11 @@ void nuESelectionNumbersWithSystematics_macro(){
                 }
             }
 
-            if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
-            if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
+            //if(sliceCategoryPlottingMacro == 0) std::cout << "Cosmic Slice" << std::endl;
+            //if(sliceCategoryPlottingMacro == 1 && signal == 1) std::cout << "Signal Slice" << std::endl;
+            //if(sliceCategoryPlottingMacro == 2 && signal == 1) std::cout << "Signal Fuzzy Slice" << std::endl;
+            //if(sliceCategoryPlottingMacro == 3) std::cout << "BNB Slice" << std::endl;
+            //if(sliceCategoryPlottingMacro == 4) std::cout << "BNB Fuzzy Slice" << std::endl;
             
             for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
                 if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
@@ -1539,7 +1541,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             // This slice passes all of the cuts applied
         }
 
-        std::cout << "-------------------------------------------" << std::endl;
+        //std::cout << "-------------------------------------------" << std::endl;
     }
 
     // Fill each histogram with 1000 universe totals
