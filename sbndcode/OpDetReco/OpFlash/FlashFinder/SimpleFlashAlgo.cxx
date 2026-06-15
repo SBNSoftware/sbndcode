@@ -4,6 +4,7 @@
 #include "SimpleFlashAlgo.h"
 #include <set>
 #include <algorithm>
+#include <cmath>
 
 namespace lightana{
 
@@ -23,21 +24,20 @@ namespace lightana{
     void SimpleFlashAlgo::Configure(const Config_t &p)
     {
         Reset();
-        _debug          = p.get<bool>("DebugMode",false);       // Print couts debug info
-        _min_pe_flash   = p.get<double>("PEThreshold",10);      // Minimum PE to declare a flash (20 in config file)
-        _min_pe_coinc   = p.get<double>("MinPECoinc",  5);      // Minimum PE in coincidence window (6 in config file)
-        _min_mult_coinc = p.get<double>("MinMultCoinc", 2);     // Minimum multiplicity in coincidence window (3 in config file)
-        _integral_time = p.get<double>("IntegralTime",8);       // Default integration time for flash
-        _pre_sample    = p.get<double>("PreSample",0.1);        // Time before the peak time to start integration
-        _veto_time     = p.get<double>("VetoSize",8.);          // Veto time after a flash is found
-        _time_res      = p.get<double>("TimeResolution",0.03);  // Time resolution = bin size (0.01(us) in config file)
+        _debug          = p.get<bool>("DebugMode");             // Print couts debug info (false in config file)
+        _min_pe_flash   = p.get<double>("PEThreshold");         // Minimum PE to declare a flash (20PE in config file)
+        _min_pe_coinc   = p.get<double>("MinPECoinc");          // Minimum PE in coincidence window (6PE in config file)
+        _min_mult_coinc = p.get<double>("MinMultCoinc");        // Minimum multiplicity in coincidence window (3 PDs in config file)
+        _integral_time = p.get<double>("IntegralTime");         // Default integration time for flash (8us in config file)
+        _pre_sample    = p.get<double>("PreSample");            // Time before the peak time to start integration (0.1us in config file)
+        _veto_time     = p.get<double>("VetoSize");             // Veto time after a flash is found (8us in config file)
+        _time_res      = p.get<double>("TimeResolution");       // Time resolution = bin size (0.01us in config file)
         _tpc           = p.get<int>("TPC");                     // TPC to associate the flash with (0 or 1)
-        //_pe_baseline_v.clear();
-        //_pe_baseline_v = p.get<std::vector<double> >("PEBaseline",_pe_baseline_v);
 
-        _min_pe_repeated = p.get<double>("MinPECoincRepeated", 20);              // Minimum PE in one bin to declare a repeated flash during an existing OpFlash
-        _min_time_before = p.get<double>("MinTimeBefore", 0.5);             // minimum time separation to declare a repeated flash before an existing OpFlash
-        _time_dif_flash_before = p.get<double>("TimeDifferenceFlashBefore", 0.05);             // minimum time separation to declare a repeated flash before an existing OpFlash
+        // For shortened flashes
+        _min_pe_repeated = p.get<double>("MinPECoincRepeated");                // Minimum PE in one bin to declare a repeated flash during an existing OpFlash (20PE in config file)
+        _min_time_before = p.get<double>("MinTimeBefore");                     // minimum time separation to declare a repeated flash before an existing OpFlash (0.5us in config file)
+        _time_dif_flash_before = p.get<double>("TimeDifferenceFlashBefore");   // time before the existing flash to stop the integration (0.05us in config file)
 
         // Check that integral_time > veto_time (they are set equal)
         if(_integral_time > _veto_time) {
@@ -47,7 +47,7 @@ namespace lightana{
 
         // Check that _min_pe_repeated >= _min_pe_coinc
         if(_min_pe_coinc > _min_pe_repeated) {
-            std::cerr << "MinPERepeated cannot be smaller than MinPECoinc!" << std::endl;
+            std::cerr << "MinPECoincRepeated cannot be smaller than MinPECoinc!" << std::endl;
             throw std::exception();
         }
 
@@ -128,9 +128,9 @@ namespace lightana{
         Creates an internal index of the channels
         Example:
         IDs of the channels to use: [2, 3, 7, 10, ...]
-        Internal new index (_index_to_opch_v): [-1, -1, 0, 1, -1, -1, -1, 2, -1, -1, 3, ...]
+        Internal new index (_opch_to_index_v): [-1, -1, 0, 1, -1, -1, -1, 2, -1, -1, 3, ...]
         -1: unused
-        0, 1, 2, 3, ...: used channels such that _index_to_opch_v[2] = 0, _index_to_opch_v[3] = 1, _index_to_opch_v[7] = 2, _index_to_opch_v[10] = 3, ...
+        0, 1, 2, 3, ...: used channels such that _opch_to_index_v[2] = 0, _opch_to_index_v[3] = 1, _opch_to_index_v[7] = 2, _opch_to_index_v[10] = 3, ...
         */
         size_t valid_id=0;
         std::set<size_t> duplicate;
@@ -213,7 +213,7 @@ namespace lightana{
         if(_debug)
             std::cout << "T span: " << min_time << " => " << max_time << " ... " << (size_t)((max_time - min_time) / _time_res) << std::endl;
 
-        // calculate the number of bins needed of size _time_res = 10ns
+        // calculate the number of bins needed of size _time_res
         size_t nbins_pesum_v = (size_t)((max_time - min_time) / _time_res) + 1;
         // resize static vectors to size = number of bins. Fill them with value 0
         if(_pesum_v.size() < nbins_pesum_v) _pesum_v.resize(nbins_pesum_v,0);
@@ -248,7 +248,6 @@ namespace lightana{
             }
             // Find the time bin index
             size_t index = (size_t)((oph.peak_time - min_time) / _time_res);
-            // std::cout << "Ophit from ch " << oph.channel << " at time " << oph.peak_time << " with PE " << oph.pe << ", index " << index << std::endl;
             // Fill _pesum_v, mult_v, pespec_v, hitidx_v
             _pesum_v[index] += oph.pe;
             mult_v[index] += 1;
@@ -260,7 +259,7 @@ namespace lightana{
         // Order by pe (above threshold)
         // To do that, we create a MAP of (1/pe_sum) --> index of the bin
         // We do 1/pe_sum so that the map is ordered from highest to lowest pe_sum
-        std::map<double,size_t> pesum_idx_map;  // map: 1/pe_sum --> index of then bin
+        std::multimap<double,size_t> pesum_idx_map;  // map: 1/pe_sum --> index of then bin
         // Loop over all time bins (already filled)
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
             // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << std::endl;
@@ -269,7 +268,7 @@ namespace lightana{
             // std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
             if(mult_v[idx]  < _min_mult_coinc ) continue;   // at least _min_mult_coinc = 3 OpHits in the bin
             // Add to the map
-            pesum_idx_map[1./(_pesum_v[idx])] = idx;
+            pesum_idx_map.emplace(1./(_pesum_v[idx]), idx);
         }
 
         // Get candidate flash times
@@ -315,12 +314,22 @@ namespace lightana{
                 // create a shortened integration window and a new flash
                 if( (start_time <= used_period.first && (start_time + veto_ctr) > used_period.first) && (pe >= _min_pe_repeated) ) {
                     // To avoid super small integration windows (<0.5us), check that the shortened window is at least _min_time_before long
-                    if( (start_time + (size_t)(_min_time_before/_time_res)) <= used_period.first ) {
+                    if( (start_time + (size_t)(std::ceil(_min_time_before/_time_res))) <= used_period.first ) {
                         if(_debug) 
                             std::cout << "Possible shortened OpFlash before existing OpFlash at time " << min_time + start_time * _time_res
                             << " (previous flash @ " << min_time + used_period.first*_time_res << " until " << min_time + (used_period.first + used_period.second)*_time_res
                             <<") "<< std::endl;
-                        integral_ctr = used_period.first - start_time - (size_t)(_time_dif_flash_before/_time_res);  // _time_dif_flash_before/_time_res = number of bins before the existing flash to stop the integration = 0.05us before the existing flash
+                        
+                        // Explicitely make sure that the integration window ends at least _time_dif_flash_before before the existing flash
+                        const size_t gap_bins = (size_t)(std::ceil(_time_dif_flash_before/_time_res));
+                        const size_t available_bins = used_period.first - start_time;
+
+                        if(available_bins > gap_bins) {
+                            integral_ctr = available_bins - gap_bins;
+                        } else {
+                            skip=true;
+                            break;
+                        }
                     // If the shortened window would be too small, skip this candidate
                     }else{
                         skip=true;
@@ -346,7 +355,7 @@ namespace lightana{
                 if(_debug) {
                     std::cout << "Flash @ " << min_time + used_period.first * _time_res
                     << " => " << min_time + (used_period.first + used_period.second) * _time_res
-                    << " does not interfare with THIS flash @ " << min_time + start_time * _time_res
+                    << " does not interfere with THIS flash @ " << min_time + start_time * _time_res
                     << " => " << min_time + (start_time + integral_ctr) * _time_res << std::endl;
                 }
             }
@@ -433,7 +442,7 @@ namespace lightana{
             /*
             - time: min_time + time * _time_res --> time of the start of the flash 
             - time width: period * _time_res / 2. = half of the integration window
-            - TPC: _tpc --> TPC where the interactio occurs
+            - TPC: _tpc --> TPC where the interaction occurs
             - PE spectrum: pe_v --> vector with the PE in each PMT
             - Associated OpHits: asshit_v --> vector with the indices of the associated OpHits
             */
