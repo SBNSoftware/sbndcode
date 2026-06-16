@@ -242,15 +242,17 @@ void nuESelectionNumbersWithSystematics_macro(){
     double ETheta2High_highestEnergyPFP = 1.533;
     double ETheta2Low_highestEnergyPFP = 0;
     
-
+    // AV boundaries
     double xMin = -201.3; double xMax = 201.3;
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0;      double zMax = 509.4;
-   
+  
+    // Creates the output directory if it doesn't already exist 
     if (gSystem->AccessPathName(base_path.c_str())) {
         gSystem->mkdir(base_path.c_str(), kTRUE);
     }
 
+    // Open and clear the table txt file
     std::ofstream clearTableFile(tableFileName, std::ios::trunc);
     if (!clearTableFile.is_open()) {
         std::cerr << "Error: could not open or create " << tableFileName << std::endl;
@@ -259,6 +261,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     clearTableFile.close();
 
     // Load in the NuE and SubRun TTrees
+    // NuE file contains the reco information and subrun information (for POT weighting)
     //TFile *fNuE = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_noWeights.root");
     TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withoutWeights.root");
     if(!fNuE){
@@ -272,19 +275,21 @@ void nuESelectionNumbersWithSystematics_macro(){
         return;
     }
 
+    // tree contains reco info
     TTree *tree = (TTree*)dirNuE->Get("NuE");
     if(!tree){
         std::cerr << "NuE TTree not found" << std::endl;
         return;
     }
 
+    // subRunTree contains the subrun/POT weighting info
     TTree *subRunTree = (TTree*)dirNuE->Get("SubRun");
     if(!subRunTree){
         std::cerr << "SubRun TTree not found" << std::endl;
         return;
     }
 
-    // Load in the NuEWeights TTree
+    // Load in the NuEWeights TTree (contains the systematic weights)
     //TFile *fNuEWeights = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_weights.root");
     TFile *fNuEWeights = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withWeights.root");
     
@@ -305,6 +310,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         return;
     }
 
+    // Initialise the counters used to count number of slices before and after cuts
     beforeEventCount_struct eventsBeforeCuts_DLNuE;
     eventCounting_struct eventsAfterCuts_DLNuE;
 
@@ -376,6 +382,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     double targetGates = ((1333568/6.293443e+18)*targetPOT);
     double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
 
+    // Weights used to scale everything to 1e21 POT
     weights_struct weights;
     weights.signalNuE = targetPOT / POTSignalNuE_notMissing;
     weights.BNBNuE = targetPOT /POTBNBNuE_notMissing;
@@ -757,7 +764,8 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     Long64_t numEntries_weights = weightsTree->GetEntries();    
 
-    std::unordered_map<eventKey_struct, Long64_t, eventKeyHash_struct> weightEntryMap;
+    // Builds an index to find an event in the weightsTree given the run, subrun, event, signal and DLCurrent values
+    std::unordered_map<eventKey_struct, Long64_t, eventKeyHash_struct> weightEntryMap; // hash table where key = eventKey_struct (combination of identifiers) and value = entry number in weightsTree
     for(Long64_t i = 0; i < numEntries_weights; ++i){
         weightsTree->GetEntry(i);
 
@@ -766,9 +774,10 @@ void nuESelectionNumbersWithSystematics_macro(){
         weightEntryMap[key] = i;
     }
 
-    const int NUNIV = 1000;
+    const int NUNIV = 1000; // number of universes
 
-    // Per-parameter histograms: each shows how total signal count varies across 1000 universes
+    // Histograms for each flux parameter (13) + combined (1) = 14 total
+    // For total number of true nu+e elastic scattering events (before cuts)
     TH1D* h_horncurrent  = new TH1D("h_horncurrent",  "Horn Current;Total nu+e count;Universes",     60, 0, 600);
     TH1D* h_expskin      = new TH1D("h_expskin",      "Exp Skin;Total nu+e count;Universes",         60, 0, 600);
     TH1D* h_kplus        = new TH1D("h_kplus",        "K+;Total nu+e count;Universes",               60, 0, 600);
@@ -784,16 +793,22 @@ void nuESelectionNumbersWithSystematics_macro(){
     TH1D* h_piplus       = new TH1D("h_piplus",       "Pi+;Total nu+e count;Universes",              60, 0, 600);
     TH1D* h_combined = new TH1D("h_combined", "All Parameters Combined", 60, 0, 600); 
 
+    // Names of the 13 flux parameters + combined
     std::vector<std::string> paramNames = {"horncurrent", "expskin", "kplus", "kmin", "kzero", "nucleoninex", "nucleonqex", "nucleontotx", "piminus", "pioninex", "pionqex", "piontotx", "piplus", "combined_allParams"};
-    std::vector<std::string> catNames = {"cosmic", "signal", "signal_fuzzy", "BNB", "BNB_fuzzy"};
-
     int nParams = paramNames.size();
+    
+    // Names of the 5 slice categories
+    std::vector<std::string> catNames = {"cosmic", "signal", "signal_fuzzy", "BNB", "BNB_fuzzy"};
     int nCats   = catNames.size();
 
+    // Creates vectors to store nominal histograms (2D array of histogram pointers): nominal[category][parameter]
     std::vector<std::vector<TH1D*>> nominal(nCats, std::vector<TH1D*>(nParams, nullptr));
+
+    // Creates vectors to store universe histograms (3D array of histogram pointers): univ[category][parameter][universe]
     std::vector<std::vector<std::vector<TH1D*>>> univ(nCats, std::vector<std::vector<TH1D*>>(nParams, std::vector<TH1D*>(NUNIV, nullptr)));
 
-    // Running totals across events, one entry per universe
+    // Running totals across events for number of true nu+e elastic scattering events
+    // One entry per universe, i.e. count_horncurrent[u] = total weighted true nu+e signal count in universe u for the horn current parameter variation
     std::vector<double> count_horncurrent(NUNIV, 0.0);
     std::vector<double> count_expskin(NUNIV, 0.0);
     std::vector<double> count_kplus(NUNIV, 0.0);
@@ -809,6 +824,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<double> count_piplus(NUNIV, 0.0);
     std::vector<double> count_combined(NUNIV, 0.0);
 
+    // The cuts to be applied
     const int NCUTS = 11;
     std::vector<std::string> cutNames_syst = {
         "beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut",
@@ -816,39 +832,47 @@ void nuESelectionNumbersWithSystematics_macro(){
         "razzled11", "razzled211", "dEdx"
     };
 
-    // Nominal signal and background count per cut (filled with baseWeight, no universe variation)
+    // Vectors that store running totals of nominal signal and background slice counts at each cut
     std::vector<double> nomSig_perCut(NCUTS, 0.0);
     std::vector<double> nomBack_perCut(NCUTS, 0.0);
 
-    // Universe-varied signal counts: [paramIdx][cutIdx][universeIdx]
-    // paramIdx matches the order: horncurrent=0, expskin=1, kplus=2, kmin=3, kzero=4,
-    //   nucleoninex=5, nucleonqex=6, nucleontotx=7, piminus=8, pioninex=9, pionqex=10,
-    //   piontotx=11, piplus=12, combined=13
+    // parameter numbers: horncurrent=0, expskin=1, kplus=2, kmin=3, kzero=4, nucleoninex=5, nucleonqex=6, nucleontotx=7, piminus=8, pioninex=9, 
+    // pionqex=10, piontotx=11, piplus=12, combined=13
     const int NPARAMS_SYST = 14;
     std::vector<std::string> paramNames_syst = {
         "horncurrent","expskin","kplus","kmin","kzero",
         "nucleoninex","nucleonqex","nucleontotx","piminus",
         "pioninex","pionqex","piontotx","piplus","combined"
     };
-    // [paramIdx][cutIdx][universeIdx]
-    std::vector<std::vector<std::vector<double>>> univSig_perCutParam(
-        NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
-    std::vector<std::vector<std::vector<double>>> univBack_perCutParam(
-        NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
+    
+    // Creates a 3D array: univSig_perCutParam[parameter][cut][universe]
+    // Used to store the (weighted + universe varied) number of signal slices after each cut for each systematic parameter and universe
+    std::vector<std::vector<std::vector<double>>> univSig_perCutParam(NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
+    
+    // Creates a 3D array: univBack_perCutParam[parameter][cut][universe]
+    // Used to store the (weighted + universe varied) number of background slices after each cut for each systematic parameter and universe
+    std::vector<std::vector<std::vector<double>>> univBack_perCutParam(NPARAMS_SYST, std::vector<std::vector<double>>(NCUTS, std::vector<double>(NUNIV, 0.0)));
 
+    // Number of true nu+e elastic scattering events
     double actualSignalCount = 0.0;
 
-    // Helper to get a nuEScatter universe weight, returning 1.0 if no weights available
+    // Helper to get a universe weight given a vector of weights and universe number, returns 1.0 (no reweighting) if no weight
+    // This is only used for the nuEScatter weights (associated with a true nu+e elastic scatter, not a slice)
     auto getNuEWeight = [&](std::vector<double>* vec, int u) -> double {
         if(!vec || (int)vec->size() != NUNIV) return 1.0;
+        // Checks that the vector exists and is the same size as the number of universes
         return vec->at(u);
     };
 
+    // Helper to get a universe weight given a 2D array containing the weights and sliceID, given the universe number, and sliceID
+    // 2D array is vec[sliceID][universe], contains weights for a specific flux parameter
+    // Returns 1 if no event match is found between the 2 trees (wFound == 0), or sliceID index > size of vector
     auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
         if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
         return vec->at(sliceIdx).at(u);
     };
 
+    // Start looping through the events
     for(Long64_t e = 0; e < numEntries; ++e){
         //std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
@@ -856,47 +880,51 @@ void nuESelectionNumbersWithSystematics_macro(){
         //std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
         //std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
 
+        // Gets set to 1 if there is a true nu+e elastic scatter in any slice in the event
         int trueSignal = 0;
 
-        // --- Weight lookup: only signal==1 or signal==2 events have entries in the weights tree ---
-        // For signal==3 (intime cosmics), weightsFound stays false and all weight helpers return 1.0
         bool weightsFound = false;
+        
+        // Only look for weights is signal == 1 (nu+e elastic scatter) or signal == 2 (BNB)
+        // Intime cosmic events (signal == 3) have no weights in the tree, skip these events. weightsFound = false -> weight = 1.0
         if(signal == 1 || signal == 2){
             //std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
 
             eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
+            // Look for a matching event in the weights tree
             auto it = weightEntryMap.find(key);
-
+            
             if(it == weightEntryMap.end()){
                 //std::cout << "No matching weights event found" << std::endl;
             } else {
                 weightsTree->GetEntry(it->second);
                 weightsFound = true;
-
-                //std::cout << "DLCurrent = " << DLCurrent_weights << ", signal = " << signal_weights << ", eventID = " << eventID_weights << ", subRunID = " << subRunID_weights << ", runID = " << runID_weights << std::endl;
-                //std::cout << "True nu+e elastic scatter in event = " << nuEScatter_weights << ", True vertex = (" << nuEScatterTrueVX_weights << ", " << nuEScatterTrueVY_weights << ", " << nuEScatterTrueVZ_weights << ")" << std::endl;
             }
         } else {
             //std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
         }
 
-        // --- Shared code from here ---
 
         if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
             // This is an event with a nu+e elastic scatter in it (from the signal files)
             if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
-                // True nu+e elastic scattering event within the active volume or FV
+                // True nu+e elastic scattering event within the active volume (if FVCut == 0) or FV (if FVCut == 1))
                 actualSignalCount += weights.signalNuE; // nominal value
                 trueSignal = 1;
 
-                // weightsFound guards access to nuEScatter weight vectors;
-                // getNuEWeight returns 1.0 if weightsFound is false (i.e. no entry was loaded)
+                // Check whether there is a weight associated with the true nu+e elastic scatter
+                // if weightsFound == 0 then no event was found to match between the 2 trees
+                // nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV checks whether there are the same number of entries as universes
                 bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
 
                 if(nuEWeightsValid){
+                    // Loop through the universes
                     for(int u = 0; u < NUNIV; u++){
+                        // combinedWeight is the 13 flux parameter weights for that universe multiplied together to get the combined weight in that universe
                         double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
 
+                        // Add to the count (number of true nu+e elastic scattering events) for that universe the POT weight * universe weight for that flux parameter
+                        // After looping through all events count_horncurrent[u] will be the number of true nu+e elastic scatters in universe u under a shift of the horn current parameter, etc, etc
                         count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
                         count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
                         count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
@@ -1068,10 +1096,12 @@ void nuESelectionNumbersWithSystematics_macro(){
             highestEnergyPFP_struct highestEnergyPFP; 
 
             //std::cout << "------ PFPs before cuts ------" << std::endl;
+            // Looping through all PFPs in the slice
             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                 if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
                     // PFP is in the slice
 
+                    // If the clearCosmicCut == 1 then don't look at PFPs that are classed as clear cosmic
                     if((clearCosmicCut == 1 && reco_particleClearCosmic->at(pfp) == 0) || clearCosmicCut == 0){
                         numPFPsSlice++;
                         if(reco_particleIsPrimary->at(pfp) == 1){
@@ -1085,6 +1115,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                         summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
 
                         if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP.energy){
+                            // This is the highest energy PFP out of the PFPs looked at so far
                             highestEnergyPFP.energy = reco_particleBestPlaneEnergy->at(pfp);
                             highestEnergyPFP.theta = reco_particleTheta->at(pfp);
                             highestEnergyPFP.PFPID = reco_particleID->at(pfp);
@@ -1167,6 +1198,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             double recoVZ = -999999;
             int numRecoNeutrinos = 0;
 
+            // Looking for the reco neutrino in the slice
             for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
                 if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
                     // Reco neutrino is in the slice
@@ -1179,16 +1211,20 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             size_t wSliceIdx_cached = 999999;
             bool sliceWeightValid_cached = false;
-            std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0)); // [param][univ]
+            // Creates a 2D array which will store the systematic weights associated with the slice: sliceUnivWeights[parameter][universe]
+            std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0));
             if(DLCurrent == 5 && weightsFound && signal != 3){
                 for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
+                    // Finds the matching slice in the weights tree by comparing sliceID numbers
                     if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
-                        wSliceIdx_cached = ws;
+                        wSliceIdx_cached = ws; // ID of the slice being looked at
                         sliceWeightValid_cached = true;
                         break;
                     }
                 }
+            
                 for(int u = 0; u < NUNIV; u++){
+                    // Gets the systematic weights correspinding to the slice for the parameter in the universe
                     double wHorn    = getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    wSliceIdx_cached, u, sliceWeightValid_cached);
                     double wExp     = getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        wSliceIdx_cached, u, sliceWeightValid_cached);
                     double wKplus   = getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          wSliceIdx_cached, u, sliceWeightValid_cached);
@@ -1203,6 +1239,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                     double wPitotx  = getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    wSliceIdx_cached, u, sliceWeightValid_cached);
                     double wPiplus  = getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         wSliceIdx_cached, u, sliceWeightValid_cached);
                     double wComb    = wHorn*wExp*wKplus*wKmin*wKzero*wNinex*wNqex*wNtotx*wPiminus*wPinex*wPiqex*wPitotx*wPiplus;
+                
+                    // Puts all the systematic weights corresponding to the slice for the parameter in the universe into the 2D array
                     sliceUnivWeights[0][u]  = wHorn;
                     sliceUnivWeights[1][u]  = wExp;
                     sliceUnivWeights[2][u]  = wKplus;
@@ -1219,22 +1257,37 @@ void nuESelectionNumbersWithSystematics_macro(){
                     sliceUnivWeights[13][u] = wComb;
                 }
             } else {
-                // cosmics or no weights: all universe weights stay 1.0
+                // Cosmics or no weights: all universe weights stay 1.0 (default value set above)
             }
 
+            // Lambda function which takes 1 input (the cut index)
+            // Used to fill the nominal and universe, parameter counts for signal and background slices
             auto fillSliceSystCounters = [&](int cutIdx){
+                // Checks whether the slice is a signal slice
                 bool isSigSlice = (sliceCategoryPlottingMacro == 1 && signal == 1);
-                nomSig_perCut[cutIdx]  += isSigSlice ? weight : 0.0;
+                // If it is a signal slice then add the POT weight to the nominal signal slice counter, if it isn't signal slice then add 0
+                nomSig_perCut[cutIdx] += isSigSlice ? weight : 0.0;
+
+                // If it isn't a signal slice then add the POT weight to the nominal background slice counter, if it is a signal slice then add 0
                 nomBack_perCut[cutIdx] += isSigSlice ? 0.0    : weight;
+
+                // Loop through the parameters
                 for(int p = 0; p < NPARAMS_SYST; p++){
+                    // Loop through the universes
                     for(int u = 0; u < NUNIV; u++){
+                        // Weight = POT weight * universe parameter systematic weight
                         double w = weight * sliceUnivWeights[p][u];
+                        // If it is a signal slice then add the (POT weight * systematic weight) to the universe signal slice counter, if it isn't signal slice then add 0
                         if(isSigSlice) univSig_perCutParam[p][cutIdx][u]  += w;
-                        else            univBack_perCutParam[p][cutIdx][u] += w;
+                        
+                        // If it isn't a signal slice then add the (POT weight * systematic weight) to the universe background slice counter, if it is signal slice then add 0
+                        else univBack_perCutParam[p][cutIdx][u] += w;
                     }
                 }
             };
 
+            // Fill the counters of event categories before any cuts are applied, these are nominal counts
+            // eventsBeforeCuts_DLNuE.background, eventsBeforeCuts_DLNuE.signal and the other counters after each cut (eventsAfterCuts_DLNuE.cutSig/Back) should be the same as the nomSig_perCut[cutIdx] and nomBack_perCut[cutIdx] counters 
             if(DLCurrent == 5){
                 if(sliceCategoryPlottingMacro == 0){
                     eventsBeforeCuts_DLNuE.background += weight;
@@ -1270,6 +1323,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                     eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy += weight;
                 }
 
+                // Fill slice category signal/background counters before cuts (cut index 0 = before cuts)
                 fillSliceSystCounters(0);
 
             }
@@ -1293,6 +1347,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic cut (cut index 1 = clear cosmic cut)
                 fillSliceSystCounters(1);
             }
 
@@ -1321,6 +1376,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numPFPs0IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs cuts (cut index 2 = clear cosmic + num PFPs cuts)
                 fillSliceSystCounters(2);
             }
 
@@ -1348,6 +1404,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos cuts (cut index 2 = clear cosmic + num PFPs + num reco neut cuts)
                 fillSliceSystCounters(3);
             }
 
@@ -1375,6 +1432,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs cuts (cut index 2 = clear cosmic + num PFPs + num reco neut + crumbs cuts)
                 fillSliceSystCounters(4);
             }
             
@@ -1404,6 +1462,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.FVIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV cuts (cut index 2 = clear cosmic + num PFPs + num reco neut + crumbs + FV cuts)
                 fillSliceSystCounters(5);
             }
 
@@ -1431,6 +1490,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP cuts (cut index 2 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP cuts)
                 fillSliceSystCounters(6);
             }
 
@@ -1457,6 +1517,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 cuts (cut index 7 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 cuts)
                 fillSliceSystCounters(7);
             }
                 
@@ -1483,6 +1544,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled11IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 + razzled 11 cuts (cut index 8 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 + razzled11 cuts)
                 fillSliceSystCounters(8);
             }
 
@@ -1509,6 +1571,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled211IntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 + razzled 11 + razzled 211 cuts (cut index 9 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 + razzled11 + razzled211 cuts)
                 fillSliceSystCounters(9);
             }
 
@@ -1535,6 +1598,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.dEdxIntSplit.other += weight;
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuEFuzzy += weight;
             
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 + razzled 11 + razzled 211 + dE/dx cuts (cut index 10 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 + razzled11 + razzled211 + dE/dx cuts)
                 fillSliceSystCounters(10);
             }
 
@@ -1544,7 +1608,11 @@ void nuESelectionNumbersWithSystematics_macro(){
         //std::cout << "-------------------------------------------" << std::endl;
     }
 
-    // Fill each histogram with 1000 universe totals
+    // Fill the universe distribution histograms, there is 1000 entries, 1 for each universe
+    // These histograms show the distribution of the total true nu+e elastic scattering events across 1000 universes
+    //
+    // For example: h_horncurrent is the distribution of the number of true nu+e elastic scattering events in universes under the horncurrent parameter variation
+    // count_horncurrent[u] is the number of true nu+e elastic scattering events in universe u under a horncurrent parameter shift 
     for(int u = 0; u < NUNIV; u++){
         h_horncurrent->Fill(count_horncurrent[u]);
         h_expskin->Fill(count_expskin[u]);
@@ -1568,14 +1636,20 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     std::vector<double> systValues;
 
+    // Lambda function to calculate the mean, std deviation and shift from a TH1D
     auto computeSyst = [&](const std::string& name, TH1D* h, double nominal){
+        // Mean is calculated as 1/N*sum(x)
         double mean   = h->GetMean();
+
+        // Std Dev is calculated as sqrt(1/N * sum((x - mean)^2)) - might need to change this
         double stddev = h->GetStdDev();
+
         double shift  = mean - nominal;
         std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", name.c_str(), mean, shift, 100.*shift/nominal, stddev, 100.*stddev/nominal) << std::endl;
         systValues.push_back(stddev);
     };
 
+    // Compute the mean, std deviation and shift for each parameter + combined
     computeSyst("horncurrent",  h_horncurrent,  actualSignalCount);
     computeSyst("expskin",      h_expskin,      actualSignalCount);
     computeSyst("kplus",        h_kplus,        actualSignalCount);
@@ -1590,7 +1664,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     computeSyst("piontotx",     h_piontotx,     actualSignalCount);
     computeSyst("piplus",       h_piplus,       actualSignalCount);
 
-    // Total systematic in quadrature
+    // Combines the systematics in quadrature (assumes the parameters are uncorrelated)
     double totalSystSq = 0.0;
     for(double s : systValues) totalSystSq += s * s;
     double totalSyst = sqrt(totalSystSq);
@@ -1603,6 +1677,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     double combinedMean = h_combined->GetMean();
     std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", "COMBINED (product)", combinedMean, combinedMean - actualSignalCount, 100.*(combinedMean - actualSignalCount)/actualSignalCount, combinedSyst, 100.*combinedSyst/actualSignalCount) << std::endl;
 
+    // For each parameter, the histogram of the universe varied total true nu+e elastic scattering event count is drawn with a vertical line at the nominal value
+    // Takes the parameter name, the histogram and the nominal value as inputs
     auto plotUniverseDist = [&](const std::string& paramName, TH1D* h, double nominal){
 
         TCanvas *c = new TCanvas(("c_" + paramName).c_str(), "", 800, 600);
@@ -1611,6 +1687,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         c->SetRightMargin(0.05);
         c->SetTopMargin(0.08);
 
+        // universe varied histograms being drawn
         h->SetLineColor(kBlue+1);
         h->SetLineWidth(2);
         h->GetXaxis()->SetTitle("Total nu+e Signal Count");
@@ -1625,6 +1702,7 @@ void nuESelectionNumbersWithSystematics_macro(){
 
         h->Draw("HIST E");
 
+        // Nominal line being drawn
         TLine *nomLine = new TLine(nominal, 0, nominal, h->GetMaximum() * 1.05);
         nomLine->SetLineColor(kMagenta+1);
         nomLine->SetLineWidth(2);
@@ -1673,37 +1751,25 @@ void nuESelectionNumbersWithSystematics_macro(){
     plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
     plotUniverseDist("combined_allParams", h_combined, actualSignalCount);
 
-    // ===================================================================
-    // Per-cut systematic uncertainties on signal count, background count,
-    // efficiency, selection efficiency, and purity
-    // ===================================================================
 
+    // The number of signal and background slices (nominal) before any cuts have been applied
     double initialSig  = nomSig_perCut[0];
     double initialBack = nomBack_perCut[0];
 
-    // ===================================================================
-    // Per-cut systematic printout
-    // ===================================================================
-
-    // Helper: compute mean and stddev of a vector
+    // Helper to compute mean and standard deviation of the inputted vector
     auto getMeanStd = [&](const std::vector<double>& v) -> std::pair<double,double> {
         double mean = 0; for(double x : v) mean += x; mean /= v.size();
         double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+        // returns the mean = 1/N * sum(x) and variance = sqrt(1/N * sum((x - mean)^2)) - check this is the correct variance, maybe change it to 1/N-1 and mean->nominal value
         return {mean, std::sqrt(var)};
     };
 
-    // Helper: print one block (like the nu+e signal count block at the top)
-    // blockName: e.g. "Signal Count", "Efficiency"
-    // nomVal: the nominal value
-    // univVecs: one vector per parameter (indices 0-12), then index 13 = combined
-    // unitStr: e.g. "" for counts, "" for fractions (printed as % if isPct=true)
-    // isPct: if true, multiply values by 100 when printing
-    auto printSystBlock = [&](
-        const std::string& blockName,
-        double nomVal,
-        const std::vector<std::vector<double>>& univVecs, // size 14, each NUNIV
-        bool isPct)
-    {
+    // Helper to print a block showing the mean, shift, and standard deviation/systematic for all of the 13 parameters + combined
+    // Takes the following inputs: blockName = "Signal Count"/"Efficiency"/etc, it is the name of the block
+    //                             nomVal = the nominal value
+    //                             univVecs = a 2D array, univVec[parameter][universe]
+    //                             isPct = flag for whether to print it as a percentage
+    auto printSystBlock = [&](const std::string& blockName, double nomVal, const std::vector<std::vector<double>>& univVecs, bool isPct){
         double scale = isPct ? 100.0 : 1.0;
         std::string unitSuffix = isPct ? "%" : "";
 
@@ -1711,181 +1777,161 @@ void nuESelectionNumbersWithSystematics_macro(){
         std::cout << Form("Nominal: %.4f%s", nomVal * scale, unitSuffix.c_str()) << std::endl;
 
         std::vector<double> systValues;
-        std::vector<std::string> pNames = {
-            "horncurrent","expskin","kplus","kmin","kzero",
-            "nucleoninex","nucleonqex","nucleontotx","piminus",
-            "pioninex","pionqex","piontotx","piplus"
-        };
+        std::vector<std::string> pNames = {"horncurrent", "expskin", "kplus", "kmin", "kzero", "nucleoninex", "nucleonqex", "nucleontotx", "piminus", "pioninex", "pionqex", "piontotx", "piplus"};
 
+        // Loop through the 13 flux parameters
         for(int p = 0; p < 13; p++){
+            // Use the getMeanStd helper function to get the mean and std deviation
             auto [mean, stddev] = getMeanStd(univVecs[p]);
             double shift = mean - nomVal;
-            std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)",
-                pNames[p].c_str(),
-                mean   * scale, unitSuffix.c_str(),
-                shift  * scale,
-                (nomVal != 0 ? 100.*shift/nomVal : 0.),
-                stddev * scale,
-                (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
+            std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)", pNames[p].c_str(), (mean * scale, unitSuffix.c_str()), (shift * scale), (nomVal != 0 ? 100. * shift/nomVal : 0.), (stddev * scale), (nomVal != 0 ? 100. * stddev/nomVal : 0.)) << std::endl;
             systValues.push_back(stddev);
         }
 
+        // Adds the systematic in quadrature to get the total systematic 
         double totalSystSq = 0.0;
         for(double s : systValues) totalSystSq += s * s;
         double totalSyst = std::sqrt(totalSystSq);
 
+        // Gets the mean and standard devaition of the combined parameter shifts
         auto [combMean, combStd] = getMeanStd(univVecs[13]);
         double combShift = combMean - nomVal;
 
         std::cout << "--------------------------------------------" << std::endl;
-        std::cout << Form("%-20s  syst=%.4f%s (%.1f%%)",
-            "TOTAL (quadrature)",
-            totalSyst * scale, unitSuffix.c_str(),
-            (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
-        std::cout << Form("%-20s  %.4f%s +/- %.4f%s (syst)",
-            blockName.c_str(),
-            nomVal    * scale, unitSuffix.c_str(),
-            totalSyst * scale, unitSuffix.c_str()) << std::endl;
-        std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)",
-            "COMBINED (product)",
-            combMean  * scale, unitSuffix.c_str(),
-            combShift * scale,
-            (nomVal != 0 ? 100.*combShift/nomVal : 0.),
-            combStd   * scale,
-            (nomVal != 0 ? 100.*combStd/nomVal   : 0.)) << std::endl;
+        std::cout << Form("%-20s  syst=%.4f%s (%.1f%%)", "TOTAL (quadrature)", totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        std::cout << Form("%-20s  %.4f%s +/- %.4f%s (syst)", blockName.c_str(), (nomVal * scale), unitSuffix.c_str(), (totalSyst * scale), unitSuffix.c_str()) << std::endl;
+        std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)", "COMBINED (product)", (combMean * scale), unitSuffix.c_str(), (combShift * scale), (nomVal != 0 ? 100. * (combShift/nomVal) : 0.), (combStd * scale), (nomVal != 0 ? 100. * combStd/nomVal   : 0.)) << std::endl;
     };
 
-    // Helper: build the 14 per-parameter universe vectors for a derived quantity,
-    // given a function that maps (s, b, trueSig, selSig0) -> value for one universe
-    auto buildUnivVecs = [&](
-        int cutIdx,
-        std::function<double(double s, double b, double trueSig, double selSig0)> fn)
-        -> std::vector<std::vector<double>>  // [14][NUNIV]
-    {
+    // Helper function used to build the per parameter, per universe values of derived quantities such as efficiency and purity
+    // Inputs are cutIdx = index of the cut applied, fn = an std::function which takes 4 doubles and returns 1 double
+    // Function returns a 2D array with [parameter][universe]
+    // Input s = universe varied signal slice count,    b = universe varied background slice count
+    //       trueSig = universe varied true nu+e count  selSig0 = nominal 
+    auto buildUnivVecs = [&](int cutIdx, std::function<double(double s, double b, double trueSig, double selSig0)> fn) -> std::vector<std::vector<double>>{
         std::vector<std::vector<double>> result(14, std::vector<double>(NUNIV, 0.0));
 
-        // Map param index to true signal universe vector
-        const std::vector<double>* trueSigVecs[14] = {
-            &count_horncurrent, &count_expskin,
-            &count_kplus,       &count_kmin,
-            &count_kzero,       &count_nucleoninex,
-            &count_nucleonqex,  &count_nucleontotx,
-            &count_piminus,     &count_pioninex,
-            &count_pionqex,     &count_piontotx,
-            &count_piplus,      &count_combined
-        };
+        // Create true signal vector where each element is a pointer which points to a std::vector<double> containing the number of true nu+e elastic scattering events (1000 entries, 1 for each universe)
+        const std::vector<double>* trueSigVecs[14] = {&count_horncurrent, &count_expskin, &count_kplus, &count_kmin, &count_kzero, &count_nucleoninex, &count_nucleonqex, &count_nucleontotx, &count_piminus, &count_pioninex, &count_pionqex, &count_piontotx, &count_piplus, &count_combined};
 
+        // Loop through the 13 + 1 parameters
         for(int p = 0; p < 14; p++){
+            // Loop through the 1000 universes
             for(int u = 0; u < NUNIV; u++){
-                double s       = univSig_perCutParam[p][cutIdx][u];
-                double b       = univBack_perCutParam[p][cutIdx][u];
-                double trueSig = (*trueSigVecs[p])[u];
-                result[p][u]   = fn(s, b, trueSig, initialSig);
+                double s = univSig_perCutParam[p][cutIdx][u]; // number of signal slices passing the cuts for parameter p and universe u
+                double b = univBack_perCutParam[p][cutIdx][u]; // number of background slices passing the cuts for parameter p and universe u
+                double trueSig = (*trueSigVecs[p])[u]; // number of true nu+e elastic scattering events for parameter p and universe u before cuts
+                double s_beforeCuts = univSig_perCutParam[p][0][u]; // number of signal slices for parameter p and universe u before cuts
+                result[p][u] = fn(s, b, trueSig, s_beforeCuts); 
             }
         }
         return result;
     };
 
     // Print one full cut stage
+    // Helper function used to compute the nominal values of efficiency, selection efficiency, purity, efficiency x purity and selection efficiency x purity
+    // Also generates the universe vectors using buildUnivVecs
     auto printCutStage = [&](const std::string& label, int cutIdx){
 
-        double nomS   = nomSig_perCut[cutIdx];
-        double nomB   = nomBack_perCut[cutIdx];
+        double nomS = nomSig_perCut[cutIdx];
+        double nomB = nomBack_perCut[cutIdx];
         double nomEff = (actualSignalCount > 0) ? nomS / actualSignalCount : 0.0;
-        double nomSel = (initialSig        > 0) ? nomS / initialSig        : 0.0;
-        double nomPur = (nomS + nomB       > 0) ? nomS / (nomS + nomB)     : 0.0;
-        double nomER  = nomEff * nomPur;
-        double nomSR  = nomSel * nomPur;
+        double nomSel = (initialSig > 0) ? nomS / initialSig : 0.0;
+        double nomPur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+        double nomER = nomEff * nomPur;
+        double nomSR = nomSel * nomPur;
 
+        // Prints header
         int width = (int)label.size() + 8;
         std::string bar(width, '=');
         std::cout << "\n" << bar << std::endl;
         std::cout << "    " << label << std::endl;
         std::cout << bar << std::endl;
 
-        // Signal count
-        printSystBlock("Signal Count", nomS,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
-                return s;
-            }), false);
+        // Prints the nominal number of signal slices passing the cut and the mean, shift and syst of the universe varied number of signal slices passing the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the number of signal slices passing the cut with [parameter][universe]
+        printSystBlock("Signal Count", nomS, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                    return s;
+        }), false);
 
-        // Background count
-        printSystBlock("Background Count", nomB,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
-                return b;
-            }), false);
+        // Prints the nominal number of background slices passing the cut and the mean, shift and syst of the universe varied number of background slices passing the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the number of background slices passing the cut with [parameter][universe]
+        printSystBlock("Background Count", nomB, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                    return b;
+        }), false);
 
-        // Efficiency
-        printSystBlock("Efficiency", nomEff,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
-                return (ts > 0) ? s / ts : 0.0;
-            }), true);
+        // Prints the nominal efficiency after applying the cut and the mean, shift and syst of the universe varied efficiency after applying the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the efficiency after applying the cut with [parameter][universe]
+        // selection efficiency = s/ts (number of signal slices passing cuts/number of true nu+e elastic scatter events before cuts)
+        printSystBlock("Efficiency", nomEff, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                    return (ts > 0) ? s / ts : 0.0;
+        }), true);
 
-        // Selection efficiency
-        printSystBlock("Selection Efficiency", nomSel,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
-                return (ss > 0) ? s / ss : 0.0;
-            }), true);
+        // Prints the nominal selection efficiency after applying the cut and the mean, shift and syst of the universe varied selection efficiency after applying the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the selection efficiency after applying the cut with [parameter][universe]
+        // selection efficiency = s/ss (number of signal slices passing cuts/number of signal slices before cuts)
+        printSystBlock("Selection Efficiency", nomSel, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                    return (ss > 0) ? s / ss : 0.0;
+        }), true);
 
-        // Purity
-        printSystBlock("Purity", nomPur,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+        // Prints the nominal purity after applying the cut and the mean, shift and syst of the universe varied purity after applying the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the purity after applying the cut with [parameter][universe]
+        // purity = s/(s+b) (number of signal slices passing cuts/total number of slices passing cuts)
+        printSystBlock("Purity", nomPur, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+                    double tot = s + b; 
+                    return (tot > 0) ? s / tot : 0.0;
+        }), true);
+
+
+        // Prints the nominal eff x purity after applying the cut and the mean, shift and syst of the universe varied eff x purity after applying the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the eff x purity after applying the cut with [parameter][universe]
+        // eff x purity = s/ts * s/(s+b) (number of signal slices passing cuts/number of true nu+e elastic scatter events before cuts * number of signal slices passing cuts/total number of slices passing cuts)
+        printSystBlock("Efficiency x Purity", nomER, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
-                return (tot > 0) ? s / tot : 0.0;
-            }), true);
-
-        // Efficiency x Purity
-        printSystBlock("Efficiency x Purity", nomER,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
-                double tot = s + b;
-                double eff = (ts  > 0) ? s / ts  : 0.0;
+                double eff = (ts  > 0) ? s / ts : 0.0;
                 double pur = (tot > 0) ? s / tot : 0.0;
                 return eff * pur;
-            }), true);
+        }), true);
 
-        // Selection Efficiency x Purity
-        printSystBlock("SelEff x Purity", nomSR,
-            buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
+        // Prints the nominal selection eff x purity after applying the cut and the mean, shift and syst of the universe varied selection eff x purity after applying the cut (for the 13 + 1 combined parameters)
+        // buildUnivVecs returns a 2D array of the selection eff x purity after applying the cut with [parameter][universe]
+        // selection eff x purity = s/ss * s/(s+b) (number of signal slices passing cuts/number of signal slices before cuts * number of signal slices passing cuts/total number of slices passing cuts)
+        printSystBlock("SelEff x Purity", nomSR, buildUnivVecs(cutIdx, [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
-                double sel = (ss  > 0) ? s / ss  : 0.0;
+                double sel = (ss  > 0) ? s / ss : 0.0;
                 double pur = (tot > 0) ? s / tot : 0.0;
                 return sel * pur;
-            }), true);
+        }), true);
     };
 
     // Print all cut stages
-    printCutStage("Before Cuts",          0);
-    if(clearCosmicCut    == 1) printCutStage("Cut 1: Clear Cosmic",          1);
-    if(numPFPs0Cut       == 1) printCutStage("Cut 2: Num PFPs != 0",         2);
-    if(numRecoNeutrinosCut==1) printCutStage("Cut 3: Num Reco Neutrinos",    3);
-    if(CRUMBSCut         == 1) printCutStage("Cut 4: CRUMBS Score",          4);
-    if(FVCut             == 1) printCutStage("Cut 5: FV Cut",                5);
-    if(primaryPFPCut     == 1) printCutStage("Cut 6: Primary PFP",           6);
-    if(ETheta2Cut        == 1) printCutStage("Cut 7: ETheta2",               7);
-    if(razzledPDG11Cut   == 1) printCutStage("Cut 8: Razzled PDG11",         8);
-    if(razzledPDG211Cut  == 1) printCutStage("Cut 9: Razzled PDG211",        9);
-    if(dEdxCut           == 1) printCutStage("Cut 10: dEdx",                10);
+    printCutStage("Before Cuts", 0);
+    if(clearCosmicCut == 1) printCutStage("Cut 1: Clear Cosmic", 1);
+    if(numPFPs0Cut == 1) printCutStage("Cut 2: Num PFPs != 0", 2);
+    if(numRecoNeutrinosCut == 1) printCutStage("Cut 3: Num Reco Neutrinos", 3);
+    if(CRUMBSCut == 1) printCutStage("Cut 4: CRUMBS Score", 4);
+    if(FVCut == 1) printCutStage("Cut 5: FV Cut", 5);
+    if(primaryPFPCut == 1) printCutStage("Cut 6: Primary PFP", 6);
+    if(ETheta2Cut == 1) printCutStage("Cut 7: ETheta2", 7);
+    if(razzledPDG11Cut == 1) printCutStage("Cut 8: Razzled PDG11", 8);
+    if(razzledPDG211Cut == 1) printCutStage("Cut 9: Razzled PDG211", 9);
+    if(dEdxCut == 1) printCutStage("Cut 10: dEdx", 10);
 
-    // ===================================================================
-    // Plots: for each parameter, one canvas with NCUTS subpads showing
-    // the universe distribution of signal count after each cut
-    // ===================================================================
     /*
+    // Helper functions which loops over all the cuts and creates a canvas and a hist for each. Then fills it with the 1000 universe values from vectors, draws a line for the nominal line and saves it as a pdf
+    // plotPerCutUniverseDist plots the signal count per cut per parameter
+    // plotPerCutUniverseDist_back plots the background count per cut per parameter
+    // plotPerCutUniverseDist_purity plots the purity per cut per parameter
+    // plotPerCutUniverseDist_derived plots the efficiency, selection efficiency, eff x pur and selection eff x pur per cut per parameter
     auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
-
-        // One canvas, NCUTS pads arranged in a grid
-        int nCols = 4;
-        int nRows = (NCUTS + nCols - 1) / nCols;
-        TCanvas *c = new TCanvas(("cPerCut_sig_" + paramName).c_str(), ("Signal: " + paramName).c_str(),
-                                  400*nCols, 350*nRows);
-        c->Divide(nCols, nRows);
-
         for(int cut = 0; cut < NCUTS; cut++){
-            c->cd(cut+1);
-            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
-            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
+            TCanvas *c = new TCanvas(Form("cPerCut_sig_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); 
+            c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); 
+            c->SetTopMargin(0.08);
 
-            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
+            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut]; // should be size 1000 (1 entry for each universe)
             double sMin = *std::min_element(svec.begin(), svec.end());
             double sMax = *std::max_element(svec.begin(), svec.end());
             double range = sMax - sMin;
@@ -1893,169 +1939,54 @@ void nuESelectionNumbersWithSystematics_macro(){
             double hi = sMax + 0.1*range;
             if(hi <= lo) hi = lo + 1.0;
 
-            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut),
-                               cutNames_syst[cut].c_str(), 50, lo, hi);
-            for(double v : svec) h->Fill(v);
+            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut), "", 50, lo, hi);
+            for(double v : svec) h->Fill(v); // Loops through universes, adds to the hist
 
-            h->SetLineColor(kBlue+1); h->SetLineWidth(2); h->SetStats(0);
+            h->SetLineColor(kBlue+1); 
+            h->SetLineWidth(2); 
+            h->SetStats(0);
             h->GetXaxis()->SetTitle("Signal slice count");
             h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleSize(0.05); 
+            h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); 
+            h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); 
+            h->GetYaxis()->SetTitleOffset(1.1);
             h->Draw("HIST E");
 
             double nomS = nomSig_perCut[cut];
             TLine *ln = new TLine(nomS, 0, nomS, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
-
-            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
-            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
-        }
-        c->Update();
-        c->SaveAs((base_path + "perCut_sigCount_" + paramName + ".pdf").c_str());
-        delete c;
-    };
-
-    auto plotPerCutUniverseDist_back = [&](int paramIdx, const std::string& paramName){
-
-        int nCols = 4;
-        int nRows = (NCUTS + nCols - 1) / nCols;
-        TCanvas *c = new TCanvas(("cPerCut_back_" + paramName).c_str(), ("Background: " + paramName).c_str(),
-                                  400*nCols, 350*nRows);
-        c->Divide(nCols, nRows);
-
-        for(int cut = 0; cut < NCUTS; cut++){
-            c->cd(cut+1);
-            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
-            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
-
-            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
-            double bMin = *std::min_element(bvec.begin(), bvec.end());
-            double bMax = *std::max_element(bvec.begin(), bvec.end());
-            double range = bMax - bMin;
-            double lo = std::max(0.0, bMin - 0.1*range);
-            double hi = bMax + 0.1*range;
-            if(hi <= lo) hi = lo + 1.0;
-
-            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut),
-                               cutNames_syst[cut].c_str(), 50, lo, hi);
-            for(double v : bvec) h->Fill(v);
-
-            h->SetLineColor(kRed+1); h->SetLineWidth(2); h->SetStats(0);
-            h->GetXaxis()->SetTitle("Background slice count");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->Draw("HIST E");
-
-            double nomB = nomBack_perCut[cut];
-            TLine *ln = new TLine(nomB, 0, nomB, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
-
-            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
-            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
-        }
-        c->Update();
-        c->SaveAs((base_path + "perCut_backCount_" + paramName + ".pdf").c_str());
-        delete c;
-    };
-
-    auto plotPerCutUniverseDist_purity = [&](int paramIdx, const std::string& paramName){
-
-        int nCols = 4;
-        int nRows = (NCUTS + nCols - 1) / nCols;
-        TCanvas *c = new TCanvas(("cPerCut_pur_" + paramName).c_str(), ("Purity: " + paramName).c_str(),
-                                  400*nCols, 350*nRows);
-        c->Divide(nCols, nRows);
-
-        for(int cut = 0; cut < NCUTS; cut++){
-            c->cd(cut+1);
-            gPad->SetLeftMargin(0.14); gPad->SetBottomMargin(0.14);
-            gPad->SetRightMargin(0.05); gPad->SetTopMargin(0.10);
-
-            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
-            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
-
-            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut),
-                               cutNames_syst[cut].c_str(), 50, 0, 1);
-            for(int u = 0; u < NUNIV; u++){
-                double tot = svec[u] + bvec[u];
-                if(tot > 0) h->Fill(svec[u] / tot);
-            }
-
-            h->SetLineColor(kGreen+2); h->SetLineWidth(2); h->SetStats(0);
-            h->GetXaxis()->SetTitle("Purity");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->Draw("HIST E");
-
-            double nomS = nomSig_perCut[cut];
-            double nomB = nomBack_perCut[cut];
-            double nomPur = (nomS+nomB > 0) ? nomS/(nomS+nomB) : 0.0;
-            TLine *ln = new TLine(nomPur, 0, nomPur, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
-
-            TLatex lx; lx.SetTextSize(0.045); lx.SetNDC();
-            lx.DrawLatex(0.16, 0.88, cutNames_syst[cut].c_str());
-        }
-        c->Update();
-        c->SaveAs((base_path + "perCut_purity_" + paramName + ".pdf").c_str());
-        delete c;
-    };
-    */
-
-auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
-        for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(
-                Form("cPerCut_sig_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
-
-            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
-            double sMin = *std::min_element(svec.begin(), svec.end());
-            double sMax = *std::max_element(svec.begin(), svec.end());
-            double range = sMax - sMin;
-            double lo = std::max(0.0, sMin - 0.1*range);
-            double hi = sMax + 0.1*range;
-            if(hi <= lo) hi = lo + 1.0;
-
-            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut),
-                               "", 50, lo, hi);
-            for(double v : svec) h->Fill(v);
-
-            h->SetLineColor(kBlue+1); h->SetLineWidth(2); h->SetStats(0);
-            h->GetXaxis()->SetTitle("Signal slice count");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
-            h->Draw("HIST E");
-
-            double nomS = nomSig_perCut[cut];
-            TLine *ln = new TLine(nomS, 0, nomS, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+            ln->SetLineColor(kMagenta+1); 
+            ln->SetLineWidth(2); 
+            ln->Draw("SAME");
 
             TLatex lx;
-            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.SetTextSize(0.04); 
+            lx.SetNDC();
             lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
 
             TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.SetTextColor(kGray+1); 
+            potLabel.SetTextSize(0.035); 
+            potLabel.SetNDC();
             potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
 
             c->Update();
             c->SaveAs((base_path + "perCut_sigCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; delete h; delete c;
+            delete ln; 
+            delete h; 
+            delete c;
         }
     };
 
     auto plotPerCutUniverseDist_back = [&](int paramIdx, const std::string& paramName){
         for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(
-                Form("cPerCut_back_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+            TCanvas *c = new TCanvas(Form("cPerCut_back_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); 
+            c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05);
+            c->SetTopMargin(0.08);
 
             std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
             double bMin = *std::min_element(bvec.begin(), bvec.end());
@@ -2065,127 +1996,133 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
             double hi = bMax + 0.1*range;
             if(hi <= lo) hi = lo + 1.0;
 
-            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut),
-                               "", 50, lo, hi);
+            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut), "", 50, lo, hi);
             for(double v : bvec) h->Fill(v);
 
-            h->SetLineColor(kRed+1); h->SetLineWidth(2); h->SetStats(0);
+            h->SetLineColor(kRed+1); 
+            h->SetLineWidth(2); 
+            h->SetStats(0);
             h->GetXaxis()->SetTitle("Background slice count");
             h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->GetXaxis()->SetTitleSize(0.05); 
+            h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); 
+            h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); 
+            h->GetYaxis()->SetTitleOffset(1.1);
             h->Draw("HIST E");
 
             double nomB = nomBack_perCut[cut];
             TLine *ln = new TLine(nomB, 0, nomB, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+            ln->SetLineColor(kMagenta+1); 
+            ln->SetLineWidth(2); 
+            ln->Draw("SAME");
 
             TLatex lx;
-            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.SetTextSize(0.04); 
+            lx.SetNDC();
             lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
 
             TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.SetTextColor(kGray+1); 
+            potLabel.SetTextSize(0.035); 
+            potLabel.SetNDC();
             potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
 
             c->Update();
             c->SaveAs((base_path + "perCut_backCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; delete h; delete c;
+            delete ln; 
+            delete h; 
+            delete c;
         }
     };
 
     auto plotPerCutUniverseDist_purity = [&](int paramIdx, const std::string& paramName){
         for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(
-                Form("cPerCut_pur_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+            TCanvas *c = new TCanvas(Form("cPerCut_pur_%s_c%d", paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); 
+            c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); 
+            c->SetTopMargin(0.08);
 
             std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
             std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
 
-            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut),
-                               "", 50, 0, 1);
+            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut), "", 50, 0, 1);
             for(int u = 0; u < NUNIV; u++){
                 double tot = svec[u] + bvec[u];
                 if(tot > 0) h->Fill(svec[u] / tot);
             }
 
-            h->SetLineColor(kGreen+2); h->SetLineWidth(2); h->SetStats(0);
+            h->SetLineColor(kGreen+2); 
+            h->SetLineWidth(2); 
+            h->SetStats(0);
             h->GetXaxis()->SetTitle("Purity");
             h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->GetXaxis()->SetTitleSize(0.05); 
+            h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); 
+            h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); 
+            h->GetYaxis()->SetTitleOffset(1.1);
             h->Draw("HIST E");
 
             double nomS = nomSig_perCut[cut];
             double nomB = nomBack_perCut[cut];
             double nomPur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
             TLine *ln = new TLine(nomPur, 0, nomPur, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+            ln->SetLineColor(kMagenta+1); 
+            ln->SetLineWidth(2); 
+            ln->Draw("SAME");
 
             TLatex lx;
-            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.SetTextSize(0.04); 
+            lx.SetNDC();
             lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
 
             TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); potLabel.SetTextSize(0.035); potLabel.SetNDC();
+            potLabel.SetTextColor(kGray+1); 
+            potLabel.SetTextSize(0.035); 
+            potLabel.SetNDC();
             potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
 
             c->Update();
             c->SaveAs((base_path + "perCut_purity_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; delete h; delete c;
+            delete ln; 
+            delete h; 
+            delete c;
         }
     };
 
-    // Call all three plot types for all 14 parameters
+    // Make all three plot types for all 14 parameters
     for(int p = 0; p < NPARAMS_SYST; p++){
         plotPerCutUniverseDist(p,         paramNames_syst[p]);
         plotPerCutUniverseDist_back(p,    paramNames_syst[p]);
         plotPerCutUniverseDist_purity(p,  paramNames_syst[p]);
     }
+    */
 
-    // ===================================================================
-    // Per-cut universe distribution plots for derived quantities
-    // ===================================================================
 
-    auto plotPerCutUniverseDist_derived = [&](
-        int paramIdx,
-        const std::string& paramName,
-        const std::string& quantityName,
-        const std::string& xAxisTitle,
-        std::function<double(double s, double b, double trueSig, double selSig0)> fn,
-        double xLo, double xHi,
-        int color)
-    {
-        const std::vector<double>* trueSigVecs[14] = {
-            &count_horncurrent, &count_expskin,
-            &count_kplus,       &count_kmin,
-            &count_kzero,       &count_nucleoninex,
-            &count_nucleonqex,  &count_nucleontotx,
-            &count_piminus,     &count_pioninex,
-            &count_pionqex,     &count_piontotx,
-            &count_piplus,      &count_combined
-        };
+    auto plotPerCutUniverseDist_derived = [&](int paramIdx, const std::string& paramName, const std::string& quantityName, const std::string& xAxisTitle, std::function<double(double s, double b, double trueSig, double selSig0)> fn, double xLo, double xHi, int color){
+        const std::vector<double>* trueSigVecs[14] = {&count_horncurrent, &count_expskin, &count_kplus, &count_kmin, &count_kzero, &count_nucleoninex, &count_nucleonqex, &count_nucleontotx, &count_piminus, &count_pioninex, &count_pionqex, &count_piontotx, &count_piplus, &count_combined};
 
         for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(
-                Form("cPerCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+            TCanvas *c = new TCanvas(Form("cPerCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut), "", 800, 600);
+            c->SetLeftMargin(0.12); 
+            c->SetBottomMargin(0.12);
+            c->SetRightMargin(0.05); 
+            c->SetTopMargin(0.08);
 
             // Build per-universe values
             std::vector<double> vals(NUNIV, 0.0);
             for(int u = 0; u < NUNIV; u++){
-                double s       = univSig_perCutParam[paramIdx][cut][u];
-                double b       = univBack_perCutParam[paramIdx][cut][u];
+                double s = univSig_perCutParam[paramIdx][cut][u];
+                double b = univBack_perCutParam[paramIdx][cut][u];
                 double trueSig = (*trueSigVecs[paramIdx])[u];
-                vals[u] = fn(s, b, trueSig, initialSig);
+                double s_beforeCuts = univSig_perCutParam[p][0][u]; 
+                vals[u] = fn(s, b, trueSig, s_beforeCuts);
             }
 
-            // Auto-range if xLo == xHi == 0
             double lo = xLo, hi = xHi;
             if(lo == 0.0 && hi == 0.0){
                 lo = *std::min_element(vals.begin(), vals.end());
@@ -2196,9 +2133,8 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
                 if(hi <= lo) hi = lo + 1.0;
             }
 
-            TH1D *h = new TH1D(
-                Form("h_perCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut),
-                "", 50, lo, hi);
+            // Creates and fills the histogram with the 1000 universe values
+            TH1D *h = new TH1D(Form("h_perCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut), "", 50, lo, hi);
             for(double v : vals) h->Fill(v);
 
             h->SetLineColor(color); h->SetLineWidth(2); h->SetStats(0);
@@ -2214,10 +2150,13 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
             double nomB = nomBack_perCut[cut];
             double nomVal = fn(nomS, nomB, actualSignalCount, initialSig);
             TLine *ln = new TLine(nomVal, 0, nomVal, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+            ln->SetLineColor(kMagenta+1); 
+            ln->SetLineWidth(2); 
+            ln->Draw("SAME");
 
             TLatex lx;
-            lx.SetTextSize(0.04); lx.SetNDC();
+            lx.SetTextSize(0.04); 
+            lx.SetNDC();
             lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
 
             TLatex nomLabel;
@@ -2231,45 +2170,55 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
 
             c->Update();
             c->SaveAs((base_path + "perCut_" + quantityName + "_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; delete h; delete c;
+            delete ln; 
+            delete h; 
+            delete c;
         }
     };
 
     // Call for all 14 parameters and all 5 derived quantities
     for(int p = 0; p < NPARAMS_SYST; p++){
         const std::string& pName = paramNames_syst[p];
+        
+        plotPerCutUniverseDist_derived(p, pName, "signalSlice", "Number of Signal Slices",[](double s, double b, double ts, double ss) -> double {
+                return s;
+        }, 0.0, 0.0, kBlue+1);
 
-        plotPerCutUniverseDist_derived(p, pName, "efficiency", "Efficiency",
-            [](double s, double b, double ts, double ss) -> double {
+        plotPerCutUniverseDist_derived(p, pName, "backgroundSlice", "Number of Background Slices",[](double s, double b, double ts, double ss) -> double {
+                return b;
+        }, 0.0, 0.0, kRed+1);
+
+        // Efficiency = s/ts (number of signal slices after cuts/total number of true nu+e elastic scattering events before cuts)
+        plotPerCutUniverseDist_derived(p, pName, "efficiency", "Efficiency",[](double s, double b, double ts, double ss) -> double {
                 return (ts > 0) ? s / ts : 0.0;
-            }, 0.0, 0.0, kBlue+1);
+        }, 0.0, 0.0, kBlue+1);
 
-        plotPerCutUniverseDist_derived(p, pName, "selEfficiency", "Selection Efficiency",
-            [](double s, double b, double ts, double ss) -> double {
+        // Selection efficiency = s/ss (number of signal slices after cuts/number of signal slices before cuts)
+        plotPerCutUniverseDist_derived(p, pName, "selEfficiency", "Selection Efficiency", [](double s, double b, double ts, double ss) -> double {
                 return (ss > 0) ? s / ss : 0.0;
-            }, 0.0, 0.0, kCyan+1);
+        }, 0.0, 0.0, kCyan+1);
 
-        plotPerCutUniverseDist_derived(p, pName, "purity", "Purity",
-            [](double s, double b, double ts, double ss) -> double {
+        // Purity = s/(s+b) (number of signal slices after cuts/number of slices after cuts)
+        plotPerCutUniverseDist_derived(p, pName, "purity", "Purity", [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
                 return (tot > 0) ? s / tot : 0.0;
-            }, 0.0, 1.0, kGreen+2);
+        }, 0.0, 1.0, kGreen+2);
 
-        plotPerCutUniverseDist_derived(p, pName, "effXpurity", "Efficiency #times Purity",
-            [](double s, double b, double ts, double ss) -> double {
+        // Eff x Pur = s/ts * s/(s+b) (number of signal slices after cuts/total number of true nu+e elastic scattering events before cuts * number of signal slices after cuts/number of slices after cuts)
+        plotPerCutUniverseDist_derived(p, pName, "effXpurity", "Efficiency #times Purity", [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
                 double eff = (ts  > 0) ? s / ts  : 0.0;
                 double pur = (tot > 0) ? s / tot : 0.0;
                 return eff * pur;
-            }, 0.0, 0.0, kOrange+1);
+        }, 0.0, 0.0, kOrange+1);
 
-        plotPerCutUniverseDist_derived(p, pName, "selEffXpurity", "Selection Efficiency #times Purity",
-            [](double s, double b, double ts, double ss) -> double {
+        // Selection Eff x Pur = s/ss * s/(s+b) (number of signal slices after cuts/number of signal slices before cuts * number of signal slices after cuts/number of slices after cuts)
+        plotPerCutUniverseDist_derived(p, pName, "selEffXpurity", "Selection Efficiency #times Purity", [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
                 double sel = (ss  > 0) ? s / ss  : 0.0;
                 double pur = (tot > 0) ? s / tot : 0.0;
                 return sel * pur;
-            }, 0.0, 0.0, kViolet+1);
+        }, 0.0, 0.0, kViolet+1);
     }
 
     // Helper: given a cut index, returns {sigSyst, backSyst, effSyst, selEffSyst, puritSyst, epsRhoSyst, selEpsRhoSyst}
@@ -2286,10 +2235,12 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
             double b       = bvec[u];
             double tot     = s + b;
             double trueSig = count_combined[u];
-            effVec[u]       = (trueSig    > 0) ? s / trueSig    : 0.0;
-            selEffVec[u]    = (initialSig > 0) ? s / initialSig : 0.0;
-            purVec[u]       = (tot         > 0) ? s / tot         : 0.0;
-            epsRhoVec[u]    = effVec[u]    * purVec[u];
+            double s_beforeCuts = univSig_perCutParam[p][0][u];
+
+            effVec[u]       = (trueSig > 0) ? s / trueSig : 0.0;
+            selEffVec[u]    = (s_beforeCuts > 0) ? s / s_beforeCuts : 0.0;
+            purVec[u]       = (tot > 0) ? s / tot : 0.0;
+            epsRhoVec[u]    = effVec[u] * purVec[u];
             selEpsRhoVec[u] = selEffVec[u] * purVec[u];
         } 
         
@@ -2310,7 +2261,7 @@ auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
         };
     };
 
-std::ofstream out_tablefile(tableFileName, std::ios::app);
+    std::ofstream out_tablefile(tableFileName, std::ios::app);
     if(out_tablefile.is_open()){
 
         // Pre-compute systematics for every cut stage
@@ -2329,22 +2280,18 @@ std::ofstream out_tablefile(tableFileName, std::ios::app);
         // Indices into the array returned by getCombinedSyst:
         // 0=sigSyst, 1=backSyst, 2=effSyst, 3=selEffSyst, 4=purSyst, 5=epsRhoSyst, 6=selEpsRhoSyst
 
-        // Convenience macro-lambda: formats   "value $\pm$ syst"  with chosen precisions
+        // Convenience macro-lambda: formats "value $\pm$ syst" with chosen precisions
         // valPrec = decimal places for value, systPrec = decimal places for syst
         auto fmtPM = [](double val, double syst, int valPrec, int systPrec) -> std::string {
             std::ostringstream oss;
-            oss << std::fixed << std::setprecision(valPrec) << val
-                << " $\\pm$ "
-                << std::fixed << std::setprecision(systPrec) << syst;
+            oss << std::fixed << std::setprecision(valPrec) << val << " $\\pm$ " << std::fixed << std::setprecision(systPrec) << syst;
             return oss.str();
         };
+
         // Version for percentages: multiplies both by 100
         auto fmtPMpct = [](double val, double syst, int valPrec, int systPrec) -> std::string {
             std::ostringstream oss;
-            oss << std::fixed << std::setprecision(valPrec) << 100.*val
-                << " $\\pm$ "
-                << std::fixed << std::setprecision(systPrec) << 100.*syst
-                << "\\%";
+            oss << std::fixed << std::setprecision(valPrec) << 100.*val << " $\\pm$ " << std::fixed << std::setprecision(systPrec) << 100.*syst << "\\%";
             return oss.str();
         };
 
@@ -2365,14 +2312,11 @@ std::ofstream out_tablefile(tableFileName, std::ios::app);
         // nomS, nomB = nominal signal and background for this cut
         // prevNomS   = nominal signal at the previous cut level (for selection efficiency denominator)
         // cutLabel   = latex string for the cut name cell
-        auto writeRow = [&](const std::string& cutLabel,
-                            double nomS, double nomB,
-                            const std::array<double,7>& sArr)
-        {
-            double eff    = (actualSignalCount > 0)                ? nomS / actualSignalCount        : 0.0;
-            double selEff = (eventsBeforeCuts_DLNuE.signal > 0)    ? nomS / eventsBeforeCuts_DLNuE.signal : 0.0;
-            double pur    = (nomS + nomB > 0)                      ? nomS / (nomS + nomB)            : 0.0;
-            double epsRho    = eff    * pur;
+        auto writeRow = [&](const std::string& cutLabel, double nomS, double nomB, const std::array<double,7>& sArr){
+            double eff = (actualSignalCount > 0) ? nomS / actualSignalCount : 0.0;
+            double selEff = (eventsBeforeCuts_DLNuE.signal > 0) ? nomS / eventsBeforeCuts_DLNuE.signal : 0.0;
+            double pur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+            double epsRho = eff * pur;
             double selEpsRho = selEff * pur;
 
             out_tablefile
