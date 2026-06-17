@@ -310,6 +310,12 @@ void nuESelectionNumbersWithSystematics_macro(){
         return;
     }
 
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_16June.root", "RECREATE");
+    if(!fOut || fOut->IsZombie()){
+        std::cerr << "Error creating output ROOT file" << std::endl;
+        return;
+    }
+    
     // Initialise the counters used to count number of slices before and after cuts
     beforeEventCount_struct eventsBeforeCuts_DLNuE;
     eventCounting_struct eventsAfterCuts_DLNuE;
@@ -870,6 +876,18 @@ void nuESelectionNumbersWithSystematics_macro(){
     auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
         if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
         return vec->at(sliceIdx).at(u);
+    };
+
+    // Helper to calculate the systematic given a vector of values. Calculates it as sqrt((1/(N-1) * sum from 1 to N(x_j - nominal))
+    auto calcSystFromUniverses = [&](const std::vector<double>& values, double nominal) -> double {
+        int N = values.size();
+        if(N < 2) return 0.0;
+        double sumSq = 0.0;
+
+        for(double x : values)
+            sumSq += (x - nominal)*(x - nominal);
+
+        return std::sqrt(sumSq/(N-1));
     };
 
     // Start looping through the events
@@ -1637,12 +1655,14 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<double> systValues;
 
     // Lambda function to calculate the mean, std deviation and shift from a TH1D
-    auto computeSyst = [&](const std::string& name, TH1D* h, double nominal){
+    auto computeSyst = [&](const std::string& name, TH1D* h, const std::vector<double>& universes, double nominal){
         // Mean is calculated as 1/N*sum(x)
         double mean   = h->GetMean();
 
         // Std Dev is calculated as sqrt(1/N * sum((x - mean)^2)) - might need to change this
-        double stddev = h->GetStdDev();
+        //double stddev = h->GetStdDev();
+
+        double stddev = calcSystFromUniverses(universes, nominal);
 
         double shift  = mean - nominal;
         std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", name.c_str(), mean, shift, 100.*shift/nominal, stddev, 100.*stddev/nominal) << std::endl;
@@ -1650,19 +1670,19 @@ void nuESelectionNumbersWithSystematics_macro(){
     };
 
     // Compute the mean, std deviation and shift for each parameter + combined
-    computeSyst("horncurrent",  h_horncurrent,  actualSignalCount);
-    computeSyst("expskin",      h_expskin,      actualSignalCount);
-    computeSyst("kplus",        h_kplus,        actualSignalCount);
-    computeSyst("kmin",         h_kmin,         actualSignalCount);
-    computeSyst("kzero",        h_kzero,        actualSignalCount);
-    computeSyst("nucleoninex",  h_nucleoninex,  actualSignalCount);
-    computeSyst("nucleonqex",   h_nucleonqex,   actualSignalCount);
-    computeSyst("nucleontotx",  h_nucleontotx,  actualSignalCount);
-    computeSyst("piminus",      h_piminus,      actualSignalCount);
-    computeSyst("pioninex",     h_pioninex,     actualSignalCount);
-    computeSyst("pionqex",      h_pionqex,      actualSignalCount);
-    computeSyst("piontotx",     h_piontotx,     actualSignalCount);
-    computeSyst("piplus",       h_piplus,       actualSignalCount);
+    computeSyst("horncurrent", h_horncurrent, count_horncurrent, actualSignalCount);
+    computeSyst("expskin", h_expskin, count_expskin, actualSignalCount);
+    computeSyst("kplus", h_kplus, count_kplus, actualSignalCount);
+    computeSyst("kmin", h_kmin, count_kmin, actualSignalCount);
+    computeSyst("kzero", h_kzero, count_kzero, actualSignalCount);
+    computeSyst("nucleoninex", h_nucleoninex, count_nucleoninex, actualSignalCount);
+    computeSyst("nucleonqex", h_nucleonqex, count_nucleonqex, actualSignalCount);
+    computeSyst("nucleontotx", h_nucleontotx, count_nucleontotx, actualSignalCount);
+    computeSyst("piminus", h_piminus, count_piminus, actualSignalCount);
+    computeSyst("pioninex", h_pioninex, count_pioninex, actualSignalCount);
+    computeSyst("pionqex", h_pionqex, count_pionqex, actualSignalCount);
+    computeSyst("piontotx", h_piontotx, count_piontotx, actualSignalCount);
+    computeSyst("piplus", h_piplus, count_piplus, actualSignalCount);
 
     // Combines the systematics in quadrature (assumes the parameters are uncorrelated)
     double totalSystSq = 0.0;
@@ -1673,7 +1693,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::cout << Form("%-20s  syst=%.2f (%.1f%%)", "TOTAL (quadrature)", totalSyst, 100.*totalSyst/actualSignalCount) << std::endl;
     std::cout << Form("%-20s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst) << std::endl;
 
-    double combinedSyst = h_combined->GetStdDev();
+    //double combinedSyst = h_combined->GetStdDev();
+    double combinedSyst = calcSystFromUniverses(count_combined, actualSignalCount);
     double combinedMean = h_combined->GetMean();
     std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", "COMBINED (product)", combinedMean, combinedMean - actualSignalCount, 100.*(combinedMean - actualSignalCount)/actualSignalCount, combinedSyst, 100.*combinedSyst/actualSignalCount) << std::endl;
 
@@ -1732,6 +1753,13 @@ void nuESelectionNumbersWithSystematics_macro(){
         std::string outPath = base_path + "nuE_signalCount_" + paramName + ".pdf";
         c->SaveAs(outPath.c_str());
 
+        fOut->cd();
+        TDirectory *dir = fOut->GetDirectory("nuESignalCount");
+        if(!dir) dir = fOut->mkdir("nuESignalCount");
+        dir->cd();
+        h->Write(("nuESignalCount_" + paramName).c_str());
+        fOut->cd();
+
         delete nomLine;
         delete c;
     };
@@ -1757,10 +1785,11 @@ void nuESelectionNumbersWithSystematics_macro(){
     double initialBack = nomBack_perCut[0];
 
     // Helper to compute mean and standard deviation of the inputted vector
-    auto getMeanStd = [&](const std::vector<double>& v) -> std::pair<double,double> {
+    auto getMeanStd = [&](const std::vector<double>& v, double nominal) -> std::pair<double,double> {
         double mean = 0; for(double x : v) mean += x; mean /= v.size();
-        double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
-        // returns the mean = 1/N * sum(x) and variance = sqrt(1/N * sum((x - mean)^2)) - check this is the correct variance, maybe change it to 1/N-1 and mean->nominal value
+        //double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+        double var = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size()-1);
+        // returns the mean = 1/N * sum(x) and variance = sqrt(1/N-1 * sum((x - nominal)^2)
         return {mean, std::sqrt(var)};
     };
 
@@ -1782,9 +1811,9 @@ void nuESelectionNumbersWithSystematics_macro(){
         // Loop through the 13 flux parameters
         for(int p = 0; p < 13; p++){
             // Use the getMeanStd helper function to get the mean and std deviation
-            auto [mean, stddev] = getMeanStd(univVecs[p]);
+            auto [mean, stddev] = getMeanStd(univVecs[p], nomVal);
             double shift = mean - nomVal;
-            std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)", pNames[p].c_str(), (mean * scale, unitSuffix.c_str()), (shift * scale), (nomVal != 0 ? 100. * shift/nomVal : 0.), (stddev * scale), (nomVal != 0 ? 100. * stddev/nomVal : 0.)) << std::endl;
+            std::cout << Form("%-20s  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f (%.1f%%)", pNames[p].c_str(), (mean * scale), unitSuffix.c_str(), (shift * scale), (nomVal != 0 ? 100. * shift/nomVal : 0.), (stddev * scale), (nomVal != 0 ? 100. * stddev/nomVal : 0.)) << std::endl;
             systValues.push_back(stddev);
         }
 
@@ -1794,7 +1823,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         double totalSyst = std::sqrt(totalSystSq);
 
         // Gets the mean and standard devaition of the combined parameter shifts
-        auto [combMean, combStd] = getMeanStd(univVecs[13]);
+        auto [combMean, combStd] = getMeanStd(univVecs[13], nomVal);
         double combShift = combMean - nomVal;
 
         std::cout << "--------------------------------------------" << std::endl;
@@ -2119,7 +2148,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 double s = univSig_perCutParam[paramIdx][cut][u];
                 double b = univBack_perCutParam[paramIdx][cut][u];
                 double trueSig = (*trueSigVecs[paramIdx])[u];
-                double s_beforeCuts = univSig_perCutParam[p][0][u]; 
+                double s_beforeCuts = univSig_perCutParam[paramIdx][0][u]; 
                 vals[u] = fn(s, b, trueSig, s_beforeCuts);
             }
 
@@ -2133,8 +2162,10 @@ void nuESelectionNumbersWithSystematics_macro(){
                 if(hi <= lo) hi = lo + 1.0;
             }
 
+            std::string histName = Form("perCut_%s_%s_%s", quantityName.c_str(), paramName.c_str(), cutNames_syst[cut].c_str());
+
             // Creates and fills the histogram with the 1000 universe values
-            TH1D *h = new TH1D(Form("h_perCut_%s_%s_c%d", quantityName.c_str(), paramName.c_str(), cut), "", 50, lo, hi);
+            TH1D *h = new TH1D(histName.c_str(), "", 50, lo, hi);
             for(double v : vals) h->Fill(v);
 
             h->SetLineColor(color); h->SetLineWidth(2); h->SetStats(0);
@@ -2170,6 +2201,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             c->Update();
             c->SaveAs((base_path + "perCut_" + quantityName + "_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+    
+            fOut->cd();
+            std::string dirName = "perCut_" + quantityName;
+            TDirectory *dir = fOut->GetDirectory(dirName.c_str());
+            if(!dir) dir = fOut->mkdir(dirName.c_str());
+            dir->cd();
+            h->Write(histName.c_str());
+            fOut->cd();
+
             delete ln; 
             delete h; 
             delete c;
@@ -2228,7 +2268,11 @@ void nuESelectionNumbersWithSystematics_macro(){
 
         std::vector<double>& svec  = univSig_perCutParam[p][cutIdx];
         std::vector<double>& bvec  = univBack_perCutParam[p][cutIdx];
-       
+      
+        // Nominal signal and background slices left after cut 
+        double s_nom = nomSig_perCut[cutIdx];
+        double b_nom = nomBack_perCut[cutIdx];
+
         std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV), epsRhoVec(NUNIV), selEpsRhoVec(NUNIV);
         for(int u = 0; u < NUNIV; u++){
             double s       = svec[u];
@@ -2244,20 +2288,27 @@ void nuESelectionNumbersWithSystematics_macro(){
             selEpsRhoVec[u] = selEffVec[u] * purVec[u];
         } 
         
-        auto getStd = [&](const std::vector<double>& v) -> double {
+        auto getStd = [&](const std::vector<double>& v, double nominal) -> double {
             double mean = 0; for(double x : v) mean += x; mean /= v.size();
-            double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+            //double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
+            double var  = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size()-1);
             return std::sqrt(var);
         };
 
+        double eff_nom = (s_nom/actualSignalCount);
+        double selEff_nom = (s_nom/nomSig_perCut[0]);
+        double pur_nom = (s_nom/(s_nom + b_nom));
+        double epsRho_nom = (eff_nom * pur_nom);
+        double selEpsRho_nom = (selEff_nom * pur_nom);
+
         return {
-            getStd(svec),
-            getStd(bvec),
-            getStd(effVec),
-            getStd(selEffVec),
-            getStd(purVec),
-            getStd(epsRhoVec),
-            getStd(selEpsRhoVec)
+            getStd(svec, s_nom),
+            getStd(bvec, b_nom),
+            getStd(effVec, eff_nom),
+            getStd(selEffVec, selEff_nom),
+            getStd(purVec, pur_nom),
+            getStd(epsRhoVec, epsRho_nom),
+            getStd(selEpsRhoVec, selEpsRho_nom)
         };
     };
 
@@ -2492,6 +2543,18 @@ void nuESelectionNumbersWithSystematics_macro(){
         out_tablefile << "\\newpage" << std::endl;
         out_tablefile << "" << std::endl;
     }
+
+    std::cout << "nomSig_perCut[0] = " << nomSig_perCut[0] << ", eventsBeforeCuts_DLNuE.signal = " << eventsBeforeCuts_DLNuE.signal << std::endl;
+    std::cout << "nomSig_perCut[2] = " << nomSig_perCut[2] << ", eventsAfterCuts_DLNuE.numPFPs0Sig = " << eventsAfterCuts_DLNuE.numPFPs0Sig << std::endl;
+    std::cout << "nomSig_perCut[4] = " << nomSig_perCut[4] << ", eventsAfterCuts_DLNuE.crumbsSig = " << eventsAfterCuts_DLNuE.crumbsSig << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "nomBack_perCut[0] = " << nomBack_perCut[0] << ", eventsBeforeCuts_DLNuE.background = " << eventsBeforeCuts_DLNuE.background << std::endl;
+    std::cout << "nomBack_perCut[2] = " << nomBack_perCut[2] << ", eventsAfterCuts_DLNuE.numPFPs0Back = " << eventsAfterCuts_DLNuE.numPFPs0Back << std::endl;
+    std::cout << "nomBack_perCut[4] = " << nomBack_perCut[4] << ", eventsAfterCuts_DLNuE.crumbsBack = " << eventsAfterCuts_DLNuE.crumbsBack << std::endl;
+
+    fOut->Write();
+    fOut->Close();
+    delete fOut;
 
 }
 
