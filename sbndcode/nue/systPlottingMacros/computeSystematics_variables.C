@@ -182,6 +182,7 @@ struct CutConfig {
 std::vector<CutConfig> getAllCutConfigs(){
     return {
         // name                  CC  nPFP nRN  CRUMBS FV  prim ETheta2 r11  r211 dEdx
+        {"noCuts",                0,  0,   0,   0,     0,  0,   0,      0,   0,   0},
         {"clearCosmic",           1,  0,   0,   0,     0,  0,   0,      0,   0,   0},
         {"clearCosmic_numPFPs",   1,  1,   0,   0,     0,  0,   0,      0,   0,   0},
         {"clearCosmic_recoNeut",  1,  1,   1,   0,     0,  0,   0,      0,   0,   0},
@@ -197,8 +198,6 @@ std::vector<CutConfig> getAllCutConfigs(){
 
 // ============================================================
 // FILL HELPER: returns the value to fill for a given variable
-// Matches nuEVariablesWithSystematics_macro.C exactly:
-//   - NO -999999 guard on fraction variables (divide without guard)
 // ============================================================
 
 double getVariableValue(const std::string& varName,
@@ -225,7 +224,6 @@ double getVariableValue(const std::string& varName,
     if(varName == "sliceNumPFPs")                     return numPFPsSlice;
     if(varName == "sliceNumPrimaryPFPs")              return numPrimaryPFPsSlice;
     if(varName == "sliceNumPrimaryPFPs10")            return numPrimaryPFPs10Slice;
-    // No -999999 guard: divide directly, matching old macro behaviour
     if(varName == "sliceFracHitsInPFPs")              return (numHitsInPFPs / reco_sliceNumHits_val);
     if(varName == "sliceFracHitsInHighestEnergyPFPs") return (hePFP.numHits / reco_sliceNumHits_val);
     if(varName == "ERecoSumThetaReco")                return (summedEnergy * hePFP.theta * hePFP.theta);
@@ -249,12 +247,25 @@ double getVariableValue(const std::string& varName,
 
 // ============================================================
 // MAIN MACRO
+// cutIndex selects which cut to process (0-9)
 // ============================================================
 
-void computeSystematics_variables(){
+void computeSystematics_variables(int cutIndex = 0){
+
+    std::vector<CutConfig> allCutConfigs = getAllCutConfigs();
+    if(cutIndex < 0 || cutIndex >= (int)allCutConfigs.size()){
+        std::cerr << "Invalid cutIndex " << cutIndex
+                  << ". Must be 0-" << (int)allCutConfigs.size()-1 << std::endl;
+        return;
+    }
+
+    // Only process the single cut at cutIndex
+    CutConfig thisCut = allCutConfigs[cutIndex];
+    std::cout << "Processing cut " << cutIndex << ": " << thisCut.name << std::endl;
 
     // ----- Output file -----
-    std::string outputFile = "/exp/sbnd/data/users/coackley/systHistograms_allCuts_allVars.root";
+    std::string outputFile = "/exp/sbnd/data/users/coackley/systHistograms_"
+                             + thisCut.name + ".root";
 
     // ----- Cut values (shared across all cut configs) -----
     double crumbsScoreCut_low  = 0.2;
@@ -285,11 +296,9 @@ void computeSystematics_variables(){
     double yMin = -203.8; double yMax = 203.8;
     double zMin = 0;      double zMax = 509.4;
 
-    // ----- Variable and cut lists -----
+    // ----- Variable and param lists -----
     std::vector<VarConfig>  varConfigs = getAllVariableConfigs();
-    std::vector<CutConfig>  cutConfigs = getAllCutConfigs();
     int nVars = varConfigs.size();
-    int nCuts = cutConfigs.size();
 
     std::vector<std::string> catNames   = {"cosmic", "signal", "signal_fuzzy", "BNB", "BNB_fuzzy"};
     std::vector<std::string> paramNames = {"horncurrent", "expskin", "kplus", "kmin", "kzero",
@@ -301,7 +310,6 @@ void computeSystematics_variables(){
     const int NUNIV = 1000;
 
     // ----- Open input files -----
-    //TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic_withoutWeights.root");
     TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withoutWeights.root");
     if(!fNuE){ std::cerr << "Error opening NuE file" << std::endl; return; }
     TDirectory *dirNuE = (TDirectory*)fNuE->Get("ana");
@@ -311,7 +319,6 @@ void computeSystematics_variables(){
     TTree *subRunTree = (TTree*)dirNuE->Get("SubRun");
     if(!subRunTree){ std::cerr << "SubRun TTree not found" << std::endl; return; }
 
-    //TFile *fNuEWeights = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic_withWeights.root");
     TFile *fNuEWeights = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withWeights.root");
     if(!fNuEWeights){ std::cerr << "Error opening NuEWeights file" << std::endl; return; }
     TDirectory *dirNuEWeights = (TDirectory*)fNuEWeights->Get("ana");
@@ -496,7 +503,7 @@ void computeSystematics_variables(){
     std::vector<double> *angleRecalculationPCAPFP5cm_angle  = nullptr;
     std::vector<double> *angleRecalculationPCAPFP5cm_pfpID  = nullptr;
     std::vector<double> *angleRecalculationPCAPFP5cm_dx     = nullptr;
-    std::vector<double> *angleRecalculationPCAPFP5cm_dy     = nullptr;  // FIXED: was &angleRecalculationPCASlice5cm_dy
+    std::vector<double> *angleRecalculationPCAPFP5cm_dy     = nullptr;
     std::vector<double> *angleRecalculationPCAPFP5cm_dz     = nullptr;
     std::vector<double> *angleRecalculationPCAPFP10cm_angle = nullptr;
     std::vector<double> *angleRecalculationPCAPFP10cm_pfpID = nullptr;
@@ -630,7 +637,7 @@ void computeSystematics_variables(){
     tree->SetBranchAddress("angleRecalculationPCAPFP5cm_angle",  &angleRecalculationPCAPFP5cm_angle);
     tree->SetBranchAddress("angleRecalculationPCAPFP5cm_pfpID",  &angleRecalculationPCAPFP5cm_pfpID);
     tree->SetBranchAddress("angleRecalculationPCAPFP5cm_dx",     &angleRecalculationPCAPFP5cm_dx);
-    tree->SetBranchAddress("angleRecalculationPCAPFP5cm_dy",     &angleRecalculationPCAPFP5cm_dy);   // FIXED: was &angleRecalculationPCASlice5cm_dy
+    tree->SetBranchAddress("angleRecalculationPCAPFP5cm_dy",     &angleRecalculationPCAPFP5cm_dy);
     tree->SetBranchAddress("angleRecalculationPCAPFP5cm_dz",     &angleRecalculationPCAPFP5cm_dz);
     tree->SetBranchAddress("angleRecalculationPCAPFP10cm_angle", &angleRecalculationPCAPFP10cm_angle);
     tree->SetBranchAddress("angleRecalculationPCAPFP10cm_pfpID", &angleRecalculationPCAPFP10cm_pfpID);
@@ -754,75 +761,65 @@ void computeSystematics_variables(){
     };
 
     // ----- Open output file and pre-book histograms -----
-    // Directory structure: cut / var / cat / param / h_nominal + h_univ0 ... h_univ999
-    // Signal count histograms: cut / signalCount / h_sigCount_<param>
-    // Actual signal count stored as TParameter<double> per cut directory
+    // Directory structure: var / cat / param / h_nominal + h_univ0 ... h_univ999
+    // Signal count histograms: signalCount / h_sigCount_<param>
 
     TFile *fOut = TFile::Open(outputFile.c_str(), "RECREATE");
     if(!fOut){ std::cerr << "Could not open output file" << std::endl; return; }
 
-    // h_nominal[cut][var][cat][param]
-    std::vector<std::vector<std::vector<std::vector<TH1D*>>>> h_nominal(
-        nCuts, std::vector<std::vector<std::vector<TH1D*>>>(
-            nVars, std::vector<std::vector<TH1D*>>(
-                nCats, std::vector<TH1D*>(nParams, nullptr))));
+    // h_nominal[var][cat][param]
+    std::vector<std::vector<std::vector<TH1D*>>> h_nominal(
+        nVars, std::vector<std::vector<TH1D*>>(
+            nCats, std::vector<TH1D*>(nParams, nullptr)));
 
-    // h_univ[cut][var][cat][param][univ] -- all 1000 universes stored explicitly
-    // so that the plotting macro can compute mean/stddev correctly even when
-    // multiple slices contribute to the same bin in the same universe
-    std::vector<std::vector<std::vector<std::vector<std::vector<TH1D*>>>>> h_univ(
-        nCuts, std::vector<std::vector<std::vector<std::vector<TH1D*>>>>(
-            nVars, std::vector<std::vector<std::vector<TH1D*>>>(
-                nCats, std::vector<std::vector<TH1D*>>(
-                    nParams, std::vector<TH1D*>(NUNIV, nullptr)))));
+    // h_univ[var][cat][param][univ]
+    std::vector<std::vector<std::vector<std::vector<TH1D*>>>> h_univ(
+        nVars, std::vector<std::vector<std::vector<TH1D*>>>(
+            nCats, std::vector<std::vector<TH1D*>>(
+                nParams, std::vector<TH1D*>(NUNIV, nullptr))));
 
-    // Signal count histograms [cut][param]
-    std::vector<std::vector<TH1D*>> h_sigCount(
-        nCuts, std::vector<TH1D*>(nParams, nullptr));
+    // Signal count histos [param]
+    std::vector<TH1D*> h_sigCount(nParams, nullptr);
 
-    // Per-universe signal count accumulators [cut][param][univ]
-    std::vector<std::vector<std::vector<double>>> sigCountUniv(
-        nCuts, std::vector<std::vector<double>>(nParams, std::vector<double>(NUNIV, 0.0)));
-    std::vector<double> actualSignalCount(nCuts, 0.0);
+    // Per-universe signal count accumulators [param][univ]
+    std::vector<std::vector<double>> sigCountUniv(nParams, std::vector<double>(NUNIV, 0.0));
+    double actualSignalCount = 0.0;
 
     fOut->cd();
-    for(int c = 0; c < nCuts; c++){
-        TDirectory *dCut = fOut->mkdir(cutConfigs[c].name.c_str());
-        for(int v = 0; v < nVars; v++){
-            dCut->cd();
-            TDirectory *dVar = dCut->mkdir(varConfigs[v].name.c_str());
-            for(int cat = 0; cat < nCats; cat++){
-                dVar->cd();
-                TDirectory *dCat = dVar->mkdir(catNames[cat].c_str());
-                for(int p = 0; p < nParams; p++){
-                    dCat->cd();
-                    TDirectory *dParam = dCat->mkdir(paramNames[p].c_str());
-                    dParam->cd();
+    for(int v = 0; v < nVars; v++){
+        TDirectory *dVar = fOut->mkdir(varConfigs[v].name.c_str());
+        for(int cat = 0; cat < nCats; cat++){
+            dVar->cd();
+            TDirectory *dCat = dVar->mkdir(catNames[cat].c_str());
+            for(int p = 0; p < nParams; p++){
+                dCat->cd();
+                TDirectory *dParam = dCat->mkdir(paramNames[p].c_str());
+                dParam->cd();
 
-                    std::string nomName = "h_nominal";
-                    h_nominal[c][v][cat][p] = new TH1D(nomName.c_str(), nomName.c_str(),
+                std::string nomName = "h_nominal";
+                h_nominal[v][cat][p] = new TH1D(nomName.c_str(), nomName.c_str(),
+                    varConfigs[v].nBins, varConfigs[v].min, varConfigs[v].max);
+                h_nominal[v][cat][p]->SetDirectory(dParam);
+
+                for(int u = 0; u < NUNIV; u++){
+                    std::string univName = "h_univ" + std::to_string(u);
+                    h_univ[v][cat][p][u] = new TH1D(univName.c_str(), univName.c_str(),
                         varConfigs[v].nBins, varConfigs[v].min, varConfigs[v].max);
-                    h_nominal[c][v][cat][p]->SetDirectory(dParam);
-
-                    for(int u = 0; u < NUNIV; u++){
-                        std::string univName = "h_univ" + std::to_string(u);
-                        h_univ[c][v][cat][p][u] = new TH1D(univName.c_str(), univName.c_str(),
-                            varConfigs[v].nBins, varConfigs[v].min, varConfigs[v].max);
-                        h_univ[c][v][cat][p][u]->SetDirectory(dParam);
-                    }
+                    h_univ[v][cat][p][u]->SetDirectory(dParam);
                 }
             }
         }
-        // Signal count histos
-        dCut->cd();
-        TDirectory *dSig = dCut->mkdir("signalCount");
-        for(int p = 0; p < nParams; p++){
-            dSig->cd();
-            h_sigCount[c][p] = new TH1D(("h_sigCount_" + paramNames[p]).c_str(),
-                                         ("Signal count universes " + paramNames[p]).c_str(),
-                                         60, 0, 600);
-            h_sigCount[c][p]->SetDirectory(dSig);
-        }
+    }
+
+    // Signal count histos
+    fOut->cd();
+    TDirectory *dSig = fOut->mkdir("signalCount");
+    for(int p = 0; p < nParams; p++){
+        dSig->cd();
+        h_sigCount[p] = new TH1D(("h_sigCount_" + paramNames[p]).c_str(),
+                                   ("Signal count universes " + paramNames[p]).c_str(),
+                                   60, 0, 600);
+        h_sigCount[p]->SetDirectory(dSig);
     }
 
     // ----- EVENT LOOP -----
@@ -842,27 +839,23 @@ void computeSystematics_variables(){
             }
         }
 
-        // ----- Signal count: only when nuEWeightsValid, matching old macro -----
+        // ----- Signal count -----
         if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-            // FIXED: only accumulate universe signal counts when weights are valid,
-            // matching nuEVariablesWithSystematics_macro.C behaviour exactly
             bool nuEWeightsValid = weightsFound &&
                 nuEScatter_MCTruthFlux_weight_horncurrent &&
                 (int)nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV;
 
-            for(int c = 0; c < nCuts; c++){
-                int FVCutFlag = cutConfigs[c].FVCut;
-                bool inFV = false;
-                if(FVCutFlag == 0) inFV = (nuEScatterTrueVX > xMin && nuEScatterTrueVX < xMax &&
-                                            nuEScatterTrueVY > yMin && nuEScatterTrueVY < yMax &&
-                                            nuEScatterTrueVZ > zMin && nuEScatterTrueVZ < zMax);
-                else               inFV = (nuEScatterTrueVX > FVCut_xLow && nuEScatterTrueVX < FVCut_xHigh &&
-                                            std::abs(nuEScatterTrueVX) > FVCut_xCentre &&
-                                            nuEScatterTrueVY > FVCut_yLow && nuEScatterTrueVY < FVCut_yHigh &&
-                                            nuEScatterTrueVZ > FVCut_zLow && nuEScatterTrueVZ < FVCut_zHigh);
-                if(!inFV) continue;
-
-                actualSignalCount[c] += weights.signalNuE;
+            int FVCutFlag = thisCut.FVCut;
+            bool inFV = false;
+            if(FVCutFlag == 0) inFV = (nuEScatterTrueVX > xMin && nuEScatterTrueVX < xMax &&
+                                        nuEScatterTrueVY > yMin && nuEScatterTrueVY < yMax &&
+                                        nuEScatterTrueVZ > zMin && nuEScatterTrueVZ < zMax);
+            else               inFV = (nuEScatterTrueVX > FVCut_xLow && nuEScatterTrueVX < FVCut_xHigh &&
+                                        std::abs(nuEScatterTrueVX) > FVCut_xCentre &&
+                                        nuEScatterTrueVY > FVCut_yLow && nuEScatterTrueVY < FVCut_yHigh &&
+                                        nuEScatterTrueVZ > FVCut_zLow && nuEScatterTrueVZ < FVCut_zHigh);
+            if(inFV){
+                actualSignalCount += weights.signalNuE;
 
                 if(nuEWeightsValid){
                     for(int u = 0; u < NUNIV; u++){
@@ -883,7 +876,7 @@ void computeSystematics_variables(){
 
                         std::vector<double> ws = {w_horn,w_exp,w_kp,w_km,w_k0,w_nie,w_nqe,w_ntx,w_pim,w_pie,w_piq,w_pit,w_pip,w_comb};
                         for(int p = 0; p < nParams; p++)
-                            sigCountUniv[c][p][u] += weights.signalNuE * ws[p];
+                            sigCountUniv[p][u] += weights.signalNuE * ws[p];
                     }
                 }
             }
@@ -931,13 +924,13 @@ void computeSystematics_variables(){
                 }
             }
 
-            // PFP loop: compute all PFP quantities (clearCosmicCut == 1 for all cut configs)
+            // PFP loop
             double summedEnergy = 0, numPFPsSlice = 0, numPrimaryPFPsSlice = 0, numPrimaryPFPs10Slice = 0, numHitsInPFPs = 0;
             highestEnergyPFP_struct hePFP;
 
             for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                 if(reco_particleSliceID->at(pfp) != reco_sliceID->at(slice)) continue;
-                if(reco_particleClearCosmic->at(pfp) != 0) continue; // clearCosmicCut == 1
+                if(reco_particleClearCosmic->at(pfp) != 0) continue;
 
                 numPFPsSlice++;
                 if(reco_particleIsPrimary->at(pfp) == 1){
@@ -1001,168 +994,143 @@ void computeSystematics_variables(){
                 }
             }
 
-            // ----- Per-cut loop -----
-            for(int c = 0; c < nCuts; c++){
-                const CutConfig& cc = cutConfigs[c];
+            // ----- Apply cuts for this cut configuration -----
+            const CutConfig& cc = thisCut;
 
-                // clearCosmicCut == 1 for all current configs, handled in PFP loop above
+            if(cc.numPFPs0Cut         == 1 && numPFPsSlice == 0)                          continue;
+            if(cc.numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0)                       continue;
+            if(cc.CRUMBSCut          == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low ||
+                                               reco_sliceScore->at(slice) > crumbsScoreCut_high)) continue;
 
-                if(cc.numPFPs0Cut         == 1 && numPFPsSlice == 0)                          continue;
-                if(cc.numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0)                       continue;
-                if(cc.CRUMBSCut          == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low ||
-                                                    reco_sliceScore->at(slice) > crumbsScoreCut_high)) continue;
+            if(cc.FVCut == 1){
+                if(!(recoVX < FVCut_xHigh && recoVX > FVCut_xLow && std::abs(recoVX) > FVCut_xCentre &&
+                     recoVY < FVCut_yHigh && recoVY > FVCut_yLow &&
+                     recoVZ > FVCut_zLow  && recoVZ < FVCut_zHigh)) continue;
+            }
 
-                // FIXED: FV cut uses recoVX/Y/Z and the runtime FVCut flag from the cut config,
-                // matching nuEVariablesWithSystematics_macro.C exactly
-                if(cc.FVCut == 1){
-                    if(!(recoVX < FVCut_xHigh && recoVX > FVCut_xLow && std::abs(recoVX) > FVCut_xCentre &&
-                         recoVY < FVCut_yHigh && recoVY > FVCut_yLow &&
-                         recoVZ > FVCut_zLow  && recoVZ < FVCut_zHigh)) continue;
-                }
+            if(cc.primaryPFPCut  == 1 && numPrimaryPFPs10Slice != primaryPFPCutValue)           continue;
+            if(cc.ETheta2Cut     == 1 && (hePFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle > ETheta2High_highestEnergyPFP ||
+                                           hePFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle < ETheta2Low_highestEnergyPFP))  continue;
+            if(cc.razzledPDG11Cut  == 1 && (hePFP.razzledPDG11  > razzled11High_highestEnergyPFP ||
+                                              hePFP.razzledPDG11  < razzled11Low_highestEnergyPFP))  continue;
+            if(cc.razzledPDG211Cut == 1 && (hePFP.razzledPDG211 > razzled211High_highestEnergyPFP ||
+                                              hePFP.razzledPDG211 < razzled211Low_highestEnergyPFP)) continue;
+            if(cc.dEdxCut        == 1 && (hePFP.bestPlanedEdx > dEdxHigh_highestEnergyPFP ||
+                                           hePFP.bestPlanedEdx < dEdxLow_highestEnergyPFP))          continue;
 
-                if(cc.primaryPFPCut  == 1 && numPrimaryPFPs10Slice != primaryPFPCutValue)           continue;
-                if(cc.ETheta2Cut     == 1 && (hePFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle > ETheta2High_highestEnergyPFP ||
-                                               hePFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle < ETheta2Low_highestEnergyPFP))  continue;
-                if(cc.razzledPDG11Cut  == 1 && (hePFP.razzledPDG11  > razzled11High_highestEnergyPFP ||
-                                                  hePFP.razzledPDG11  < razzled11Low_highestEnergyPFP))  continue;
-                if(cc.razzledPDG211Cut == 1 && (hePFP.razzledPDG211 > razzled211High_highestEnergyPFP ||
-                                                  hePFP.razzledPDG211 < razzled211Low_highestEnergyPFP)) continue;
-                if(cc.dEdxCut        == 1 && (hePFP.bestPlanedEdx > dEdxHigh_highestEnergyPFP ||
-                                               hePFP.bestPlanedEdx < dEdxLow_highestEnergyPFP))          continue;
+            // Slice passes this cut configuration
 
-                // Slice passes this cut configuration
-
-                // FIXED: category assignment is FV-aware per cut config,
-                // matching nuEVariablesWithSystematics_macro.C exactly
-                double sliceCategoryPlottingMacro = -999999;
-                if(reco_sliceOrigin->at(slice) == 0){
-                    sliceCategoryPlottingMacro = 0;
-                } else if(reco_sliceOrigin->at(slice) == 1){
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
-                        if(cc.FVCut == 0 &&
-                           reco_sliceTrueVX->at(slice) < 201.3  && reco_sliceTrueVX->at(slice) > -201.3 &&
-                           reco_sliceTrueVY->at(slice) < 203.8  && reco_sliceTrueVY->at(slice) > -203.8 &&
-                           reco_sliceTrueVZ->at(slice) > 0      && reco_sliceTrueVZ->at(slice) < 509.5){
-                            sliceCategoryPlottingMacro = 1;
-                        } else if(cc.FVCut == 1 &&
-                                   reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow &&
-                                   std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre &&
-                                   reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow &&
-                                   reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow){
-                            sliceCategoryPlottingMacro = 1;
-                        } else {
-                            sliceCategoryPlottingMacro = 2;
-                        }
+            double sliceCategoryPlottingMacro = -999999;
+            if(reco_sliceOrigin->at(slice) == 0){
+                sliceCategoryPlottingMacro = 0;
+            } else if(reco_sliceOrigin->at(slice) == 1){
+                if(reco_sliceCompleteness->at(slice) > 0.5){
+                    if(cc.FVCut == 0 &&
+                       reco_sliceTrueVX->at(slice) < 201.3  && reco_sliceTrueVX->at(slice) > -201.3 &&
+                       reco_sliceTrueVY->at(slice) < 203.8  && reco_sliceTrueVY->at(slice) > -203.8 &&
+                       reco_sliceTrueVZ->at(slice) > 0      && reco_sliceTrueVZ->at(slice) < 509.5){
+                        sliceCategoryPlottingMacro = 1;
+                    } else if(cc.FVCut == 1 &&
+                               reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow &&
+                               std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre &&
+                               reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow &&
+                               reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow){
+                        sliceCategoryPlottingMacro = 1;
                     } else {
                         sliceCategoryPlottingMacro = 2;
                     }
-                } else if(reco_sliceOrigin->at(slice) == 3){
-                    sliceCategoryPlottingMacro = (reco_sliceCompleteness->at(slice) > 0.5) ? 3.0 : 4.0;
+                } else {
+                    sliceCategoryPlottingMacro = 2;
                 }
+            } else if(reco_sliceOrigin->at(slice) == 3){
+                sliceCategoryPlottingMacro = (reco_sliceCompleteness->at(slice) > 0.5) ? 3.0 : 4.0;
+            }
 
-                // FIXED: no continue on -999999; matches old macro which proceeds
-                // and accesses cat = (int)(-999999), which is an invalid index.
-                // Since the old macro never explicitly checks for -999999 here and
-                // just casts, we replicate that: if sliceCategoryPlottingMacro is
-                // still -999999 at this point it means reco_sliceOrigin was not
-                // 0, 1, or 3. In the old macro this falls through and causes an
-                // out-of-bounds access. To avoid a crash while preserving identical
-                // logical behaviour for all valid inputs, we skip here as both
-                // macros would produce undefined output for this edge case anyway.
-                if(sliceCategoryPlottingMacro == -999999) continue;
+            if(sliceCategoryPlottingMacro == -999999) continue;
 
-                int cat = (int)sliceCategoryPlottingMacro;
-                bool isCosmic = (cat == 0);
+            int cat = (int)sliceCategoryPlottingMacro;
+            bool isCosmic = (cat == 0);
 
-                // Fill all variables
-                for(int v = 0; v < nVars; v++){
-                    double val = getVariableValue(varConfigs[v].name,
-                        reco_sliceCompleteness->at(slice),
-                        reco_sliceScore->at(slice),
-                        reco_slicePurity->at(slice),
-                        numRecoNeutrinos,
-                        numPFPsSlice, numPrimaryPFPsSlice, numPrimaryPFPs10Slice,
-                        numHitsInPFPs, reco_sliceNumHits->at(slice),
-                        summedEnergy, hePFP, pfp10cm_PCAAngle,
-                        recoVX, recoVY, recoVZ);
+            // Fill all variables
+            for(int v = 0; v < nVars; v++){
+                double val = getVariableValue(varConfigs[v].name,
+                    reco_sliceCompleteness->at(slice),
+                    reco_sliceScore->at(slice),
+                    reco_slicePurity->at(slice),
+                    numRecoNeutrinos,
+                    numPFPsSlice, numPrimaryPFPsSlice, numPrimaryPFPs10Slice,
+                    numHitsInPFPs, reco_sliceNumHits->at(slice),
+                    summedEnergy, hePFP, pfp10cm_PCAAngle,
+                    recoVX, recoVY, recoVZ);
 
-                    // Nominal: same for all params
+                for(int p = 0; p < nParams; p++)
+                    h_nominal[v][cat][p]->Fill(val, potWeight);
+
+                for(int u = 0; u < NUNIV; u++){
+                    double w_horn = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    slice, u, weightsFound);
+                    double w_exp  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        slice, u, weightsFound);
+                    double w_kp   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          slice, u, weightsFound);
+                    double w_km   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           slice, u, weightsFound);
+                    double w_k0   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          slice, u, weightsFound);
+                    double w_nie  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
+                    double w_nqe  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
+                    double w_ntx  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
+                    double w_pim  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        slice, u, weightsFound);
+                    double w_pie  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    slice, u, weightsFound);
+                    double w_piq  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     slice, u, weightsFound);
+                    double w_pit  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    slice, u, weightsFound);
+                    double w_pip  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         slice, u, weightsFound);
+                    double w_comb = w_horn*w_exp*w_kp*w_km*w_k0*w_nie*w_nqe*w_ntx*w_pim*w_pie*w_piq*w_pit*w_pip;
+
+                    std::vector<double> sw = {w_horn,w_exp,w_kp,w_km,w_k0,w_nie,w_nqe,w_ntx,w_pim,w_pie,w_piq,w_pit,w_pip,w_comb};
                     for(int p = 0; p < nParams; p++)
-                        h_nominal[c][v][cat][p]->Fill(val, potWeight);
-
-                    // Universe fills: store each universe histogram explicitly,
-                    // matching nuEVariablesWithSystematics_macro.C.
-                    // This ensures the plotting macro can compute mean/stddev correctly
-                    // even when multiple slices contribute to the same bin per universe.
-                    for(int u = 0; u < NUNIV; u++){
-                        double w_horn = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    slice, u, weightsFound);
-                        double w_exp  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        slice, u, weightsFound);
-                        double w_kp   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          slice, u, weightsFound);
-                        double w_km   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           slice, u, weightsFound);
-                        double w_k0   = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          slice, u, weightsFound);
-                        double w_nie  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, slice, u, weightsFound);
-                        double w_nqe  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  slice, u, weightsFound);
-                        double w_ntx  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, slice, u, weightsFound);
-                        double w_pim  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        slice, u, weightsFound);
-                        double w_pie  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    slice, u, weightsFound);
-                        double w_piq  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     slice, u, weightsFound);
-                        double w_pit  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    slice, u, weightsFound);
-                        double w_pip  = isCosmic ? 1.0 : getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         slice, u, weightsFound);
-                        double w_comb = w_horn*w_exp*w_kp*w_km*w_k0*w_nie*w_nqe*w_ntx*w_pim*w_pie*w_piq*w_pit*w_pip;
-
-                        std::vector<double> sw = {w_horn,w_exp,w_kp,w_km,w_k0,w_nie,w_nqe,w_ntx,w_pim,w_pie,w_piq,w_pit,w_pip,w_comb};
-                        for(int p = 0; p < nParams; p++)
-                            h_univ[c][v][cat][p][u]->Fill(val, potWeight * sw[p]);
-                    }
+                        h_univ[v][cat][p][u]->Fill(val, potWeight * sw[p]);
                 }
-            } // cut loop
+            }
         } // slice loop
     } // event loop
 
     std::cout << "Event loop complete. Filling signal count histos and writing output..." << std::endl;
 
     // ----- Fill signal count histos -----
-    for(int c = 0; c < nCuts; c++){
-        for(int p = 0; p < nParams; p++){
-            for(int u = 0; u < NUNIV; u++)
-                h_sigCount[c][p]->Fill(sigCountUniv[c][p][u]);
-        }
+    for(int p = 0; p < nParams; p++){
+        for(int u = 0; u < NUNIV; u++)
+            h_sigCount[p]->Fill(sigCountUniv[p][u]);
     }
 
     // ----- Write systematic summary to text file -----
-    std::ofstream systSummary("/nashome/c/coackley/systSummary.txt");
+    std::string summaryPath = "/nashome/c/coackley/systSummary_" + thisCut.name + ".txt";
+    std::ofstream systSummary(summaryPath.c_str());
     systSummary << "=== Systematic Uncertainties on nu+e Signal Count ===" << std::endl;
-    for(int c = 0; c < nCuts; c++){
-        systSummary << "\nCut: " << cutConfigs[c].name << std::endl;
-        systSummary << Form("  Nominal: %.2f", actualSignalCount[c]) << std::endl;
-        double totalSystSq = 0;
-        for(int p = 0; p < nParams - 1; p++){ // exclude combined
-            double mean   = h_sigCount[c][p]->GetMean();
-            double stddev = h_sigCount[c][p]->GetStdDev();
-            double shift  = mean - actualSignalCount[c];
-            systSummary << Form("  %-20s  mean=%.2f  shift=%+.2f (%+.1f%%)  syst=%.2f (%.1f%%)",
-                paramNames[p].c_str(), mean, shift,
-                actualSignalCount[c] > 0 ? 100.*shift/actualSignalCount[c] : 0,
-                stddev,
-                actualSignalCount[c] > 0 ? 100.*stddev/actualSignalCount[c] : 0) << std::endl;
-            totalSystSq += stddev * stddev;
-        }
-        double totalSyst = std::sqrt(totalSystSq);
-        systSummary << Form("  %-20s  syst=%.2f (%.1f%%)", "TOTAL (quadrature)", totalSyst,
-            actualSignalCount[c] > 0 ? 100.*totalSyst/actualSignalCount[c] : 0) << std::endl;
-        int pComb = nParams - 1;
-        double combMean = h_sigCount[c][pComb]->GetMean();
-        double combSyst = h_sigCount[c][pComb]->GetStdDev();
-        systSummary << Form("  %-20s  mean=%.2f  syst=%.2f (%.1f%%)", "COMBINED (product)",
-            combMean, combSyst,
-            actualSignalCount[c] > 0 ? 100.*combSyst/actualSignalCount[c] : 0) << std::endl;
-
-        // Store actual signal count as TParameter in the cut directory
-        fOut->cd(cutConfigs[c].name.c_str());
-        TParameter<double> *pSigCount = new TParameter<double>("actualSignalCount", actualSignalCount[c]);
-        pSigCount->Write();
+    systSummary << "\nCut: " << thisCut.name << std::endl;
+    systSummary << Form("  Nominal: %.2f", actualSignalCount) << std::endl;
+    double totalSystSq = 0;
+    for(int p = 0; p < nParams - 1; p++){
+        double mean   = h_sigCount[p]->GetMean();
+        double stddev = h_sigCount[p]->GetStdDev();
+        double shift  = mean - actualSignalCount;
+        systSummary << Form("  %-20s  mean=%.2f  shift=%+.2f (%+.1f%%)  syst=%.2f (%.1f%%)",
+            paramNames[p].c_str(), mean, shift,
+            actualSignalCount > 0 ? 100.*shift/actualSignalCount : 0,
+            stddev,
+            actualSignalCount > 0 ? 100.*stddev/actualSignalCount : 0) << std::endl;
+        totalSystSq += stddev * stddev;
     }
+    double totalSyst = std::sqrt(totalSystSq);
+    systSummary << Form("  %-20s  syst=%.2f (%.1f%%)", "TOTAL (quadrature)", totalSyst,
+        actualSignalCount > 0 ? 100.*totalSyst/actualSignalCount : 0) << std::endl;
+    int pComb = nParams - 1;
+    double combMean = h_sigCount[pComb]->GetMean();
+    double combSyst = h_sigCount[pComb]->GetStdDev();
+    systSummary << Form("  %-20s  mean=%.2f  syst=%.2f (%.1f%%)", "COMBINED (product)",
+        combMean, combSyst,
+        actualSignalCount > 0 ? 100.*combSyst/actualSignalCount : 0) << std::endl;
     systSummary.close();
+
+    // Store actual signal count as TParameter in the output file
+    fOut->cd();
+    TParameter<double> *pSigCount = new TParameter<double>("actualSignalCount", actualSignalCount);
+    pSigCount->Write();
 
     fOut->Write();
     fOut->Close();
@@ -1170,5 +1138,5 @@ void computeSystematics_variables(){
     fNuEWeights->Close();
 
     std::cout << "\nDone! Output written to: " << outputFile << std::endl;
-    std::cout << "Systematic summary written to: /nashome/c/coackley/systSummary.txt" << std::endl;
+    std::cout << "Systematic summary written to: " << summaryPath << std::endl;
 }
