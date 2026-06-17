@@ -832,11 +832,7 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     // The cuts to be applied
     const int NCUTS = 11;
-    std::vector<std::string> cutNames_syst = {
-        "beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut",
-        "crumbs", "FV", "primaryPFP", "ETheta2",
-        "razzled11", "razzled211", "dEdx"
-    };
+    std::vector<std::string> cutNames_syst = {"beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut", "crumbs", "FV", "primaryPFP", "razzled11", "razzled211", "ETheta2", "dEdx"};
 
     // Vectors that store running totals of nominal signal and background slice counts at each cut
     std::vector<double> nomSig_perCut(NCUTS, 0.0);
@@ -1512,33 +1508,6 @@ void nuESelectionNumbersWithSystematics_macro(){
                 fillSliceSystCounters(6);
             }
 
-            if(ETheta2Cut == 1 && ((highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) > ETheta2High_highestEnergyPFP || (highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) < ETheta2Low_highestEnergyPFP)){
-                // Highest energy PFP in slice doesn't pass the ETheta2 cut
-                continue;
-            }
-
-            if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
-                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
-                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
-                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
-                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
-                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
-                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
-                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
-                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
-                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
-                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
-            
-                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 cuts (cut index 7 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 cuts)
-                fillSliceSystCounters(7);
-            }
-                
             if(razzledPDG11Cut == 1 && ((highestEnergyPFP.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG11 < razzled11Low_highestEnergyPFP))){
                 // Highest energy PFP in slice doesn't pass the razzled 11 cut
                 continue;
@@ -1563,7 +1532,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy += weight;
             
                 // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 + razzled 11 cuts (cut index 8 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 + razzled11 cuts)
-                fillSliceSystCounters(8);
+                fillSliceSystCounters(7);
             }
 
             if(razzledPDG211Cut == 1 && ((highestEnergyPFP.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG211 < razzled211Low_highestEnergyPFP))){
@@ -1590,6 +1559,33 @@ void nuESelectionNumbersWithSystematics_macro(){
                 else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy += weight;
             
                 // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 + razzled 11 + razzled 211 cuts (cut index 9 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 + razzled11 + razzled211 cuts)
+                fillSliceSystCounters(8);
+            }
+
+            if(ETheta2Cut == 1 && ((highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) > ETheta2High_highestEnergyPFP || (highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) < ETheta2Low_highestEnergyPFP)){
+                // Highest energy PFP in slice doesn't pass the ETheta2 cut
+                continue;
+            }
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+
+                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
+            
+                // Fill slice category signal/background counters after clear cosmic + num PFPs + num reco neutrinos + crumbs + FV + primary PFP + ETheta2 cuts (cut index 7 = clear cosmic + num PFPs + num reco neut + crumbs + FV + primary PFP + ETheta2 cuts)
                 fillSliceSystCounters(9);
             }
 
@@ -1941,9 +1937,9 @@ void nuESelectionNumbersWithSystematics_macro(){
     if(CRUMBSCut == 1) printCutStage("Cut 4: CRUMBS Score", 4);
     if(FVCut == 1) printCutStage("Cut 5: FV Cut", 5);
     if(primaryPFPCut == 1) printCutStage("Cut 6: Primary PFP", 6);
-    if(ETheta2Cut == 1) printCutStage("Cut 7: ETheta2", 7);
-    if(razzledPDG11Cut == 1) printCutStage("Cut 8: Razzled PDG11", 8);
-    if(razzledPDG211Cut == 1) printCutStage("Cut 9: Razzled PDG211", 9);
+    if(razzledPDG11Cut == 1) printCutStage("Cut 7: Razzled PDG11", 7);
+    if(razzledPDG211Cut == 1) printCutStage("Cut 8: Razzled PDG211", 8);
+    if(ETheta2Cut == 1) printCutStage("Cut 9: ETheta2", 9);
     if(dEdxCut == 1) printCutStage("Cut 10: dEdx", 10);
 
     /*
