@@ -1,0 +1,28 @@
+#include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
+#include "crttimingana_sbnd.fcl"
+
+process_name: CRTTimingAna
+
+services:
+{
+  TFileService: { fileName: "crttimingana_sbnd.root" }
+  @table::sbnd_basic_services
+  @table::crt_services_data_sbnd
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    crttimingana: @local::crttimingana_data_sbnd
+  }
+
+  ana:       [ crttimingana ]
+  end_paths: [ ana ]
+}
