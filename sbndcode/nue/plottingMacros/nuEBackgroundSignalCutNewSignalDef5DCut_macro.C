@@ -1488,6 +1488,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
 
         TH1D* frame = (TH1D*)numerator->Clone("frame");
         frame->Reset();
+        frame->SetStats(0);
         frame->SetTitle(Form("%s;%s;Efficiency",
             numerator->GetTitle(),
             numerator->GetXaxis()->GetTitle()));
@@ -1856,11 +1857,13 @@ double MetricToMinimise(const double *pars) {
 }
 
 void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
-    std::string txtFileName = "purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileNameKeptEventsAfterAllCuts = "eventsSurvivingAllCuts_4May.txt";
+    //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
+    std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0.txt";
+    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/eventsSurvivingAllCuts_4May.txt";
 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
+    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0/";
 
     /*
     // Creating skimmed file
@@ -1883,11 +1886,11 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 1;
-    int CRUMBSCut = 1;
-    int FVCut = 1;
-    int primaryPFPCut = 1;
-    int ETheta2Cut = 1;
+    int numRecoNeutrinosCut = 0;
+    int CRUMBSCut = 0;
+    int FVCut = 0;
+    int primaryPFPCut = 0;
+    int ETheta2Cut = 0;
     int razzledPDG11Cut = 0;
     int razzledPDG22Cut = 0;
     int razzledPDG13Cut = 0;
@@ -2705,12 +2708,26 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
     TH2D *trueAngleTrueEnergySignalBeforeCuts = new TH2D("trueAngleTrueEnergySignalBeforeCuts", "", 40, 0, 2000, 90, 0, 90);
     TH2D *trueAngleTrueEnergySignalAfterCuts = new TH2D("trueAngleTrueEnergySignalAfterCuts", "", 40, 0, 2000, 90, 0, 90);
 
+    TH1D *trueSignalEventsMatchedSliceTrueElectronEnergy = new TH1D("trueSignalEventsMatchedSliceTrueElectronEnergy", "", 100, 0, 2000);
+    TH1D *trueSignalEventsTrueElectronEnergy = new TH1D("trueSignalEventsTrueElectronEnergy", "", 100, 0, 2000);
+
+    TH1D *trueElectronEnergyNoSignalSlice = new TH1D("trueElectronEnergyNoSignalSlice", "", 100, 0, 2000);
+
+    TH2D *numHitsHighestEnergyPFPTrueRecoilElectronEnergy = new TH2D("numHitsHighestEnergyPFPTrueRecoilElectronEnergy", "", 100, 0, 2000, 60, 0, 3000);
+    TH2D *energyHighestEnergyPFPTrueRecoilElectronEnergy = new TH2D("energyHighestEnergyPFPTrueRecoilElectronEnergy", "", 100, 0, 2000, 100, 0, 2000);
+    TH2D *numHitsSliceTrueRecoilElectronEnergy = new TH2D("numHitsSliceTrueRecoilElectronEnergy", "", 100, 0, 2000, 60, 0, 3000);
+    TH2D *energySliceTrueRecoilElectronEnergy = new TH2D("energySlicePFPTrueRecoilElectronEnergy", "", 100, 0, 2000, 40, 0, 2000);
+
+    TH2D *sliceCompletenessTrueRecoilElectronEnergy = new TH2D("sliceCompletenessTrueRecoilElectronEnergy", "", 100, 0, 2000, 50, 0, 1);
+
+    /*
     // Plots for Jarek
     TH1D* h_data = new TH1D("h_data", "Reconstructed Energy;E_{reco} (GeV);# of Events", 40, 0, 2);
     TH2D* h_smear = new TH2D("h_smear", "Smearing matrix;True Energy (GeV);Reco Energy (GeV)", 40, 0, 2, 40, 0, 2);
     TH1D* h_bkg = new TH1D("h_bkg", "Reconstructed Energy (Background);E_{reco} (GeV);# of Events", 40, 0, 2);
     TH1D* h_energyBefore = new TH1D("h_energyBefore", "True Energy (Before Cuts);E_{true} (GeV);# of Events", 40, 0, 2);
     TH1D* h_energyAfter = new TH1D("h_energyAfter", "True Energy (After Cuts);E_{true} (GeV);# of Events", 40, 0, 2);
+    */
 
     double numEvents_DLNuECosmic = 0;
     double numEvents_DLNuEBNB = 0;
@@ -2723,6 +2740,7 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
         if(DLCurrent == 5 && signal == 2) numEvents_DLNuEBNB++;
         if(DLCurrent == 5 && signal == 1) numEvents_DLNuENuE++;
 
+        int trueSignalSlice = 0;
         int trueSignal = 0;
 
         if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
@@ -3366,7 +3384,7 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
             
             if(signal == 1 && sliceCategoryPlottingMacro == 1){
                 if(recoilElectron.energy != -999999) fillHistogram(&trueRecoilElectronEnergyBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoilElectron.energy/1000, &weights);
-                h_energyBefore->Fill((recoilElectron.energy/1000), weights.signalNuE);
+                //h_energyBefore->Fill((recoilElectron.energy/1000), weights.signalNuE);
             }
             
             if(signal == 1 && sliceCategoryPlottingMacro == 1 && recoilElectron.angle != -999999){
@@ -3539,7 +3557,9 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
                 fillHistogram(&sliceNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceNumHits->at(slice), &weights);
                 fillSplitIntHistogram(&sliceNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceNumHits->at(slice), &weights);
                 fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_sliceNumHits->at(slice), &weights);
-               
+          
+                if(sliceCategoryPlottingMacro == 1 && signal == 1) trueSignalSlice = 1;
+
                 double lowestHitNumber = 1000000;
                 double highestHitNumber = 0;
                 std::vector<double> hitNumbers;
@@ -3628,12 +3648,22 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
                 fillHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
                 fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVZ, &weights);
-                
+               
+                if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                    // Signal slice
+                    numHitsHighestEnergyPFPTrueRecoilElectronEnergy->Fill(recoilElectron.energy, highestEnergyPFP_beforeCuts.numHits);
+                    energyHighestEnergyPFPTrueRecoilElectronEnergy->Fill(recoilElectron.energy, highestEnergyPFP_beforeCuts.energy);
+                    numHitsSliceTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceNumHits->at(slice));
+                    energySliceTrueRecoilElectronEnergy->Fill(recoilElectron.energy, summedEnergy_beforeCuts);
+                }
+
                 if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1){
                     fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
-               
+              
+                    sliceCompletenessTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceCompleteness->at(slice));
+
                     if(sliceCategoryPlottingMacro == 1){ 
                         xCoordEnergyAsymmetry->Fill(recoVX, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy));
                         xCoordAngleDifference->Fill(recoVX, angleDifference_beforeCuts);
@@ -4989,6 +5019,8 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
                 fillSplitIntHistogram(&sliceNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceNumHits->at(slice), &weights);
                 fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, reco_sliceNumHits->at(slice), &weights);
                
+                if(sliceCategoryPlottingMacro == 1 && signal == 1) trueSignalSlice = 1;
+
                 double lowestHitNumber = 1000000;
                 double highestHitNumber = 0;
                 std::vector<double> hitNumbers;
@@ -5082,7 +5114,7 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
 
                 // Plots for Jarek                
                 if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                    h_smear->Fill((recoilElectron.energy/1000), (highestEnergyPFP_afterCuts.energy/1000), weights.signalNuE);
+                    //h_smear->Fill((recoilElectron.energy/1000), (highestEnergyPFP_afterCuts.energy/1000), weights.signalNuE);
                 } 
 
                 double w = 0.0;
@@ -5090,33 +5122,43 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
                 else if(signal == 2) w = weights.BNBNuE;
                 else if(signal == 3) w = weights.cosmicsNuE;
                 if(sliceCategoryPlottingMacro == 0){
-                    h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
-                    h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
                     //if(highestEnergyPFP_afterCuts.energy/1000 > 2) std::cout << "OUTSIDE BINS, sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << ", energy = " << highestEnergyPFP_afterCuts.energy/1000 << std::endl;
                 } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
-                    h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
                     //if(highestEnergyPFP_afterCuts.energy/1000 > 2) std::cout << "OUTSIDE BINS, sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << ", energy = " << highestEnergyPFP_afterCuts.energy/1000 << std::endl;
-                    h_energyAfter->Fill((recoilElectron.energy/1000), w);
+                    //h_energyAfter->Fill((recoilElectron.energy/1000), w);
                 } else if(sliceCategoryPlottingMacro == 2 && signal == 1){
-                    h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
-                    h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
                     //if(highestEnergyPFP_afterCuts.energy/1000 > 2) std::cout << "OUTSIDE BINS, sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << ", energy = " << highestEnergyPFP_afterCuts.energy/1000 << std::endl;
                 } else if(sliceCategoryPlottingMacro == 3){
-                    h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
-                    h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
                     //if(highestEnergyPFP_afterCuts.energy/1000 > 2) std::cout << "OUTSIDE BINS, sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << ", energy = " << highestEnergyPFP_afterCuts.energy/1000 << std::endl;
                 } else if(sliceCategoryPlottingMacro == 4){
-                    h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
-                    h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_bkg->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
+                    //h_data->Fill(highestEnergyPFP_afterCuts.energy/1000, w);
                     //if(highestEnergyPFP_afterCuts.energy/1000 > 2) std::cout << "OUTSIDE BINS, sliceCategoryPlottingMacro = " << sliceCategoryPlottingMacro << ", energy = " << highestEnergyPFP_afterCuts.energy/1000 << std::endl;
                 }
                 //
+                
+                if(sliceCategoryPlottingMacro == 1 && signal == 1){
+                    // Signal slice
+                    numHitsHighestEnergyPFPTrueRecoilElectronEnergy->Fill(recoilElectron.energy, highestEnergyPFP_afterCuts.numHits);
+                    energyHighestEnergyPFPTrueRecoilElectronEnergy->Fill(recoilElectron.energy, highestEnergyPFP_afterCuts.energy);
+                    numHitsSliceTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceNumHits->at(slice));
+                    energySliceTrueRecoilElectronEnergy->Fill(recoilElectron.energy, summedEnergy_afterCuts);
+                }
 
                 if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1){
                     // This is a slice truth-matched to a nu+e elastic scatter with any completeness
                     fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
+                    
+                    sliceCompletenessTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceCompleteness->at(slice));
               
                     if(sliceCategoryPlottingMacro == 1){
                         // This is a slice truth-matched to a nu+e elastic scatter with completeness > 0.5 
@@ -5167,7 +5209,16 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
 
         }
 
+        if(trueSignal == 1 && trueSignalSlice == 1){
+            // This is an event where there is a true nu+e elastic scatter and a signal slice
+            trueSignalEventsMatchedSliceTrueElectronEnergy->Fill(recoilElectron.energy);
+        } else if(trueSignal == 1 && trueSignalSlice == 0){
+            trueElectronEnergyNoSignalSlice->Fill(recoilElectron.energy);
+        }
 
+        if(trueSignal == 1){
+            trueSignalEventsTrueElectronEnergy->Fill(recoilElectron.energy);
+        }
     }
 
     std::cout << "Total number of signal events = " << actualSignalCount << std::endl;
@@ -5763,6 +5814,71 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
 
     TwoDEff(trueAngleTrueEnergySignalBeforeCuts, trueAngleTrueEnergySignalAfterCuts, (base_path + "trueAngleTrueEnergySignal_eff.pdf").c_str(), "Signal Efficiency vs True Energy and Angle of the Recoil Electron;Energy (MeV);Recoil Angle (degrees)");
 
+    drawTEfficiency(trueSignalEventsMatchedSliceTrueElectronEnergy, trueSignalEventsTrueElectronEnergy, (base_path + "slicingEfficiencyAfterCuts").c_str());
+
+    TwoDHistDraw(numHitsHighestEnergyPFPTrueRecoilElectronEnergy, (base_path + "numHitsHighestEnergyPFPTrueRecoilElectronEnergy.pdf").c_str(), "True Recoil Electron Energy vs Number of Hits in Highest Energy PFP in Slice;True Recoil Electron Energy (MeV);Number of Hits in Highest Energy PFP");
+    TwoDHistDraw(energyHighestEnergyPFPTrueRecoilElectronEnergy, (base_path + "energyHighestEnergyPFPTrueRecoilElectronEnergy.pdf").c_str(), "True Recoil Electron Energy vs Number of Hits in Highest Energy PFP in Slice;True Recoil Electron Energy (MeV);Energy of Highest Energy PFP (MeV)");
+    TwoDHistDraw(numHitsSliceTrueRecoilElectronEnergy, (base_path + "numHitsSliceTrueRecoilElectronEnergy.pdf").c_str(), "True Recoil Electron Energy vs Number of Hits in Highest Energy PFP in Slice;True Recoil Electron Energy (MeV);Number of Hits in Slice");
+    TwoDHistDraw(energySliceTrueRecoilElectronEnergy, (base_path + "energySliceTrueRecoilElectronEnergy.pdf").c_str(), "True Recoil Electron Energy vs Number of Hits in Highest Energy PFP in Slice;True Recoil Electron Energy (MeV);Energy in Slice (MeV)");
+    TwoDHistDraw(sliceCompletenessTrueRecoilElectronEnergy, (base_path + "sliceCompletenessTrueRecoilElectronEnergy.pdf").c_str(), "True Recoil Electron Energy vs Completeness of Slice;True Recoil Electron Energy (MeV);Slice Completeness");
+
+    // Draw plot for slice vs no slice for true recoil electron energy
+    // Create canvas
+    TCanvas *c1 = new TCanvas("c1", "True Recoil Electron Energy Comparison", 800, 600);
+
+    // Set line colors and widths
+    trueElectronEnergyNoSignalSlice->SetLineColor(kRed);
+    trueElectronEnergyNoSignalSlice->SetLineWidth(2);
+    trueElectronEnergyNoSignalSlice->SetStats(0);
+
+    trueSignalEventsMatchedSliceTrueElectronEnergy->SetLineColor(kBlue);
+    trueSignalEventsMatchedSliceTrueElectronEnergy->SetLineWidth(2);
+    trueSignalEventsMatchedSliceTrueElectronEnergy->SetStats(0);
+
+    // Axis labels and title
+    trueSignalEventsMatchedSliceTrueElectronEnergy->GetXaxis()->SetTitle("True Recoil Electron Energy (MeV)");
+    trueSignalEventsMatchedSliceTrueElectronEnergy->GetYaxis()->SetTitle("Number of Events");
+    trueSignalEventsMatchedSliceTrueElectronEnergy->SetTitle("True Recoil Electron Energy of nu+e Events With and Without Signal Slices");
+
+    // Find maximum y value between the two histograms
+    double maxY = std::max(
+        trueElectronEnergyNoSignalSlice->GetMaximum(),
+        trueSignalEventsMatchedSliceTrueElectronEnergy->GetMaximum()
+    );
+
+    // Set y-axis range from 0 to max*1.1
+    trueSignalEventsMatchedSliceTrueElectronEnergy->GetYaxis()->SetRangeUser(0, maxY * 1.1);
+
+    // Draw histograms
+    trueSignalEventsMatchedSliceTrueElectronEnergy->Draw("HIST");
+    trueElectronEnergyNoSignalSlice->Draw("HIST SAME");
+
+    // Create legend
+    TLegend *legend = new TLegend(0.55, 0.75, 0.825, 0.837);
+
+    legend->AddEntry(
+        trueElectronEnergyNoSignalSlice,
+        "nu+e event with no slice",
+        "l"
+    );
+
+    legend->AddEntry(
+        trueSignalEventsMatchedSliceTrueElectronEnergy,
+        "nu+e event with slice",
+        "l"
+    );
+
+    legend->Draw();
+
+    // Save plot
+    c1->SaveAs((base_path + "trueRecoilElectronEnergyNuEEventsWithWithoutSlices_afterCuts.pdf").c_str());
+
+    // Cleanup
+    delete legend;
+    delete c1;
+
+    // end
+
     std::cout << "Numbers of events (DL Nu+E): BNB = " << numEvents_DLNuEBNB << ", Intime Cosmics = " << numEvents_DLNuECosmic << ", Nu+E Elastic Scatters = " << numEvents_DLNuENuE << std::endl;
 
     std::cout << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
@@ -5985,8 +6101,9 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
     std::cout << "Number of signal slices with more than 1 PFP coming from the nu+e scatter = " << numSignalSlicesPFPCountMoreThan1NuE << std::endl;
     std::cout << "Number of signal slices with more than 1 PFP coming from the nu+e scatter + more than 1 Primary PFP = " << numSignalSlicesPFPCountMoreThan1NuEPrimaryPlus << std::endl;
 
+    /*
     // Plots for Jarek
-    TFile *forJarek = new TFile("forJarek.root", "RECREATE");
+    //TFile *forJarek = new TFile("forJarek.root", "RECREATE");
 
     // Calculating total number of events passing cuts
     double sum_h_data = 0.0;
@@ -6111,8 +6228,9 @@ void nuEBackgroundSignalCutNewSignalDef5DCut_macro(){
     //c7->SaveAs((base_path + "h_eff2.pdf").c_str());
     delete c7;
     
-    forJarek->Close();
+    //forJarek->Close();
 
+    */
     std::cout << "Number of signal events left = " << eventsAfterCuts_DLNuE.dEdxSig << ", Number of background events left = " << eventsAfterCuts_DLNuE.dEdxBack << std::endl;
 
     /*
