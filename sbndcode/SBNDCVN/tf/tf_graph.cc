@@ -51,7 +51,7 @@ tf::Graph::Graph(const char* graph_file_name,
     status = tensorflow::LoadSavedModel(tensorflow::SessionOptions(),
                                         tensorflow::RunOptions(),
                                         graph_file_name,
-                                        {},
+                                        {"serve"},
                                         fBundle);
     std::cout << "tf_graph loaded SavedModelBundle with status: " << status.ToString() << std::endl;
     if (!status.ok()) return;
