@@ -11,7 +11,6 @@
 
 #include "tf_graph.h"
 
-#include "tensorflow/cc/saved_model/constants.h"
 #include "tensorflow/cc/saved_model/loader.h"
 #include "tensorflow/core/platform/env.h"
 
