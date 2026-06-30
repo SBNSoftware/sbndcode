@@ -174,8 +174,8 @@ namespace lightana{
 
     /*
     We end up with:
-    - _min_pe_flash: minimum PE to declare a flash: TOTAL OR PER PMT?
-    - _min_pe_coinc: minimum PE in coincidence window to declare a flash candidate: TOTAL OR PER PMT?
+    - _min_pe_flash: minimum PE to declare a flash: TOTAL
+    - _min_pe_coinc: minimum PE in coincidence window to declare a flash candidate: TOTAL
     - _min_mult_coinc: minimum multiplicity in coincidence window to declare a flash candidate
     - _integral_time: integration time for flash
     - _pre_sample: time before the peak time to start integration
@@ -277,6 +277,8 @@ namespace lightana{
         size_t veto_ctr = (size_t)(_veto_time / _time_res);     // number of bins of the veto window of the OpFlashes
         size_t default_integral_ctr = (size_t)(_integral_time / _time_res); // number of bins of the integration window of the OpFlashes
         size_t precount = (size_t)(_pre_sample / _time_res);    // number of bins to go back from the peak time to start the integration
+        const size_t min_time_before_ctr = (size_t)(std::ceil(_min_time_before/_time_res)); // minimum time separation to declare a repeated flash before an existing OpFlash (in bins)
+        const size_t time_dif_flash_before_ctr = (size_t)(std::ceil(_time_dif_flash_before/_time_res)); // time before the existing flash to stop the integration (in bins)
         // Reserve space in the vectors
         flash_period_v.reserve(pesum_idx_map.size());          
         flash_time_v.reserve(pesum_idx_map.size());
@@ -314,18 +316,17 @@ namespace lightana{
                 // create a shortened integration window and a new flash
                 if( (start_time <= used_period.first && (start_time + veto_ctr) > used_period.first) && (pe >= _min_pe_repeated) ) {
                     // To avoid super small integration windows (<0.5us), check that the shortened window is at least _min_time_before long
-                    if( (start_time + (size_t)(std::ceil(_min_time_before/_time_res))) <= used_period.first ) {
+                    if( (start_time + min_time_before_ctr) <= used_period.first ) {
                         if(_debug) 
                             std::cout << "Possible shortened OpFlash before existing OpFlash at time " << min_time + start_time * _time_res
                             << " (previous flash @ " << min_time + used_period.first*_time_res << " until " << min_time + (used_period.first + used_period.second)*_time_res
                             <<") "<< std::endl;
                         
                         // Explicitely make sure that the integration window ends at least _time_dif_flash_before before the existing flash
-                        const size_t gap_bins = (size_t)(std::ceil(_time_dif_flash_before/_time_res));
                         const size_t available_bins = used_period.first - start_time;
 
-                        if(available_bins > gap_bins) {
-                            integral_ctr = available_bins - gap_bins;
+                        if(available_bins > time_dif_flash_before_ctr) {
+                            integral_ctr = available_bins - time_dif_flash_before_ctr;
                         } else {
                             skip=true;
                             break;
