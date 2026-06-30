@@ -16,7 +16,7 @@ simpleROIAlg:
   DefaultROI: true
   BaselineEstimationSegments: 1
   PeakWindow: true
-  Roi_max: 14
+  Roi_max: 30
   Roi_min: 1.2
 }
 

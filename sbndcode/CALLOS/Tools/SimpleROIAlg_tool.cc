@@ -57,6 +57,7 @@ private:
   float BaselineSTD(std::vector<float> &wf, float baseline);  // Cambiado a float
   std::pair<float, float> FindBestBaselineAndSTD(const std::vector<float> &wvf);
   std::pair<float, float> FindBaselineAndSTD(const std::vector<float>& wvf);
+  bool SingleinPretrigger(std::vector<float> &wf, size_t bin_start, size_t bin_end);
   // std::vector<float> calculateFFT(std::vector<float> &wvf);
 };
 
@@ -178,6 +179,78 @@ callos::SimpleROIAlg::FindBaselineAndSTD(
     const float std = std::sqrt(var / seg_end);
 
     return {baseline, std};
+}
+
+bool callos::SimpleROIAlg::SingleinPretrigger(std::vector<float> &wf,
+                                         size_t bin_start,
+                                         size_t bin_end)
+{
+    if (wf.size() < 20) return false;
+
+    const size_t N = wf.size();
+
+    bin_start = std::min(bin_start, N);
+    bin_end   = std::min(bin_end,   N);
+
+    if (bin_end <= bin_start) return false;
+
+    const size_t winN   = bin_end - bin_start;
+    const size_t sliceN = winN / 4;
+
+    auto make_slice = [&](size_t i0, size_t i1)
+    {
+        i0 = std::min(i0, N);
+        i1 = std::min(i1, N);
+        return std::vector<float>(wf.begin() + i0, wf.begin() + i1);
+    };
+
+    auto wf0 = make_slice(bin_start, bin_end);
+    float baseline0 = EstimateBaseline(wf0);
+
+    std::vector<float> baselines;
+
+    for (size_t i = 0; i < 4; ++i)
+    {
+        size_t i0 = bin_start + i * sliceN;
+        size_t i1 = bin_start + (i + 1) * sliceN;
+
+        auto slice = make_slice(i0, i1);
+        float b = EstimateBaseline(slice);
+        baselines.push_back(b);
+    }
+
+    float min_baseline =
+        std::min({ baseline0,
+                   baselines[0],
+                   baselines[1],
+                   baselines[2],
+                   baselines[3] });
+
+    auto it_max = std::max_element(wf0.begin(), wf0.end());
+    if (it_max == wf0.end()) return false;
+
+    // max_pos is relative to wf0, not wf
+    size_t max_pos = std::distance(wf0.begin(), it_max);
+
+    constexpr int LEFT  = 2;
+    constexpr int RIGHT = 9;
+
+    size_t i0 = (max_pos > LEFT) ? max_pos - LEFT : 0;
+    size_t i1 = std::min(max_pos + RIGHT, wf0.size());
+
+    auto wf_max = std::vector<float>(wf0.begin() + i0,
+                                     wf0.begin() + i1);
+
+    float baseline_max = EstimateBaseline(wf_max);
+
+    float diff = std::abs(baseline_max - min_baseline);
+
+    constexpr float BASELINE_DIFF_THR = 1.0f;
+
+    if (diff > BASELINE_DIFF_THR)
+        return false;
+
+    return true;
 }
 
 // // variable baseline subtractor 
@@ -479,7 +552,7 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> & wvf ,std::vector
 
 
               double peak_charge = 0;
-              for (int k = align_fit_pos; k < align_fit_pos + 30; k++) //De normal +30
+              for (int k = align_fit_pos; k < align_fit_pos + 30; k++) //Check the charge in the 30 bins after the peak to avoid very spread peaks
               {
                 peak_charge += wvf[k];
               }
@@ -490,11 +563,18 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> & wvf ,std::vector
                 // return false;
                 
               }
+              const size_t pre_start = (start_roi >= 70) ? static_cast<size_t>(start_roi - 100) : 0;
+              bool single_in_pretrigger = SingleinPretrigger(wvf, pre_start, static_cast<size_t>(start_roi));
+              if (!single_in_pretrigger){
+                i = last_bin;
+                if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: single in pretrigger condition not satisfied"<<std::endl;
+                continue;
+                 // return false;
+              }
 
-            
-
+              // need to check if 70 bins before the wvfm is on baseline
               std::vector<float> roi_wvf; // Declare roi_wvf here
-              roi_wvf.assign(wvf.begin() + start_roi, wvf.begin() + end_roi);
+              roi_wvf.assign(wvf.begin() + pre_start, wvf.begin() + end_roi); // add some bins before the start of the ROI to show a better baseline estimation in the ROI
               //Check if ROI waveform is below roi_max
               // for (size_t k = 0; k < roi_wvf.size(); k++)
               // {

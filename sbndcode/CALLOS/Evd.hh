@@ -10,6 +10,8 @@
 #include <vector>
 #include <TMarker.h>
 #include <TLegend.h>
+#include <TLegendEntry.h>
+#include "TLatex.h"  
 
 // #include "lareventdisplay/EventDisplay/DrawingPad.h"
 
@@ -18,7 +20,7 @@ void lets_pause()
   // TTimer *timer = new TTimer("gSystem->ProcessEvents();", 50, kFALSE);
   // timer->TurnOn();
   // timer->Reset();
-  std::cout << "q/Q to quit, other to continuee: ";
+  std::cout << "q/Q to quit, other to continue: ";
   char kkey;
   std::cin.get(kkey);
   if (kkey == 'q' || kkey == 'Q')
@@ -29,7 +31,7 @@ void lets_pause()
 
 void event_display(const std::vector<float>& inputArray, int starting_tick, int ending_tick, double baseline, double baseline_std, double peak_height, double peak_pos, int wfChannel, int FirstBin, int LastBin) {
     int size = inputArray.size();
-    baseline = 0;
+    //baseline = 0;
     std::string title = "Waveform for Channel " + std::to_string(wfChannel);
     
     auto c1 = new TCanvas("c1",title.c_str(),600,400);
@@ -128,7 +130,7 @@ void event_display(const std::vector<float>& inputArray, int starting_tick, int 
     h_line4->Draw("same");
 
     // Add a dot at coordinates (x, y)
-    TMarker *marker = new TMarker(peak_pos, 0, kFullCircle);
+    TMarker *marker = new TMarker(peak_pos, peak_height, kFullCircle);
     marker->SetMarkerColor(kRed);
     marker->SetMarkerSize(1);
     marker->Draw("same");
@@ -169,6 +171,9 @@ void event_display(const std::vector<float>& inputArray, int starting_tick, int 
     delete h_line;
     delete h_line2;
     delete h_line3;
+    delete h_line4;
+    delete marker;
+    delete legend;
 
     bool display=false;
 
@@ -202,5 +207,114 @@ void event_display_fft(const std::vector<float>& inputArray, int wfChannel) {
     delete c1;
     delete h;
 
+    lets_pause();
+}
+
+ 
+
+void event_display_paper(const std::vector<float>& inputArray, int starting_tick, int ending_tick, double baseline, double baseline_std) {
+    int size = inputArray.size();
+    //baseline = 0;
+
+    // Conversion factor: 16 ns/tick -> microseconds
+    const double tick_to_us = 16.0 / 1000.0;
+    double x_max = size * tick_to_us;
+    double start_us = starting_tick * tick_to_us;
+    double end_us   = ending_tick * tick_to_us;
+
+    
+
+    auto c1 = new TCanvas("c1", "c1", 600, 400);
+
+    // draw the waveform using a TH1F, X axis in microseconds, no title
+    auto h = new TH1F("h1f", "", size, 0, x_max);
+    for (int i = 0; i < size; i++) {
+        h->SetBinContent(i + 1, inputArray[i]);
+    }
+    h->SetTitle("");
+    h->SetStats(0);   // also remove the stats box
+    h->GetXaxis()->SetTitle("Time [#mus]");
+    h->GetYaxis()->SetTitle("ADC counts");
+    h->Draw();
+
+    // vertical line at the starting tick (in us)
+    TLine *v_line = new TLine(start_us, h->GetMinimum(), start_us, h->GetMaximum());
+    v_line->SetLineColor(kRed);
+    v_line->SetLineWidth(2);
+    v_line->SetLineStyle(kDashed);
+    v_line->Draw("same");
+
+    // vertical line at the ending tick (in us)
+    TLine *v_line2 = new TLine(end_us, h->GetMinimum(), end_us, h->GetMaximum());
+    v_line2->SetLineColor(kRed);
+    v_line2->SetLineWidth(2);
+    v_line2->SetLineStyle(kDashed);
+    v_line2->Draw("same");
+
+    // horizontal line at the baseline
+    TLine *h_line = new TLine(0, baseline, x_max, baseline);
+    h_line->SetLineColor(kMagenta+2);
+    h_line->SetLineWidth(2);
+    h_line->SetLineStyle(kDashed);
+    h_line->Draw("same");
+
+    // horizontal line at baseline + baseline_std
+    TLine *h_line2 = new TLine(0, baseline + baseline_std, x_max, baseline + baseline_std);
+    h_line2->SetLineColor(kGreen+2);
+    h_line2->SetLineWidth(2);
+    h_line2->SetLineStyle(kDashed);
+    h_line2->Draw("same");
+
+    // horizontal line at baseline - baseline_std
+    TLine *h_line3 = new TLine(0, baseline - baseline_std, x_max, baseline - baseline_std);
+    h_line3->SetLineColor(kGreen+2);
+    h_line3->SetLineWidth(2);
+    h_line3->SetLineStyle(kDashed);
+    h_line3->Draw("same");
+
+    // Crear la leyenda
+    auto legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+    legend->SetBorderSize(0);
+    legend->SetFillStyle(0);
+    // Pass a null object so the entry does not try to inherit attributes
+    // from the TLine (that inheritance is what was making every entry
+    // show up red); set color/style/width on the entry directly instead.
+    auto* entry_roi      = legend->AddEntry((TObject*)nullptr, "ROI", "l");
+    entry_roi->SetLineColor(kRed);
+    entry_roi->SetLineStyle(kDashed);
+    entry_roi->SetLineWidth(2);
+    auto* entry_baseline = legend->AddEntry((TObject*)nullptr, "Baseline", "l");
+    entry_baseline->SetLineColor(kMagenta+2);
+    entry_baseline->SetLineStyle(kDashed);
+    entry_baseline->SetLineWidth(2);
+    auto* entry_std      = legend->AddEntry((TObject*)nullptr, "Baseline STD", "l");
+    entry_std->SetLineColor(kGreen+2);
+    entry_std->SetLineStyle(kDashed);
+    entry_std->SetLineWidth(2);
+    legend->Draw();
+
+    // "SBND Data" label (top-right corner, NDC coordinates)
+    TLatex *sbnd_label = new TLatex();
+    sbnd_label->SetNDC();
+    sbnd_label->SetTextFont(62);
+    sbnd_label->SetTextSize(0.045);
+    sbnd_label->SetTextAlign(33);
+    sbnd_label->DrawLatex(0.90, 0.96, "SBND Data");
+
+    c1->Update();
+    c1->Draw();
+    c1->SaveAs("my_evd.C");
+    c1->Close();
+    delete c1;
+    delete h;
+    delete v_line;
+    delete v_line2;
+    delete h_line;
+    delete h_line2;
+    delete h_line3;
+    delete legend;
+    delete sbnd_label;
+    bool display = false;
+    if (display) system("root -l my_evd.C");
     lets_pause();
 }

@@ -11,7 +11,7 @@ SBNDCALLOS:
   PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
   ROI_samples: 768
   StartToPeak: 200
-  DEBUG: false
+  DEBUG: true
   PEMode: true
   Full_AverageWaveform: false
   MaxADC: 4000
