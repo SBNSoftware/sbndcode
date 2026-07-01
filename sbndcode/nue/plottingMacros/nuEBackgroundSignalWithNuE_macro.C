@@ -126,6 +126,7 @@ struct weights_struct{
     double signalNuE = 0;
     double BNBNuE = 0;
     double cosmicsNuE = 0;
+    double NuENuE = 0;
     double signalCurrent = 0;
     double BNBCurrent = 0;
     double cosmicsCurrent = 0;
@@ -311,11 +312,13 @@ void fillHistogram(histGroup_struct* hist, int DLCurrent, int signal, int type, 
     TH1* target = nullptr;
 
     switch(type){
-        case 0: target = hist->nuECosmic; break;
+        case 0: if(signal != 4) target = hist->nuECosmic; break;
         case 1: if(signal == 1) target = hist->nuESignal; break;
         case 2: if(signal == 1) target = hist->nuESignalFuzzy; break;
         case 3: target = hist->nuEBNB; break;
         case 4: target = hist->nuEBNBFuzzy; break;
+        case 5: target = hist->nuEBNB; break;
+        case 6: target = hist->nuEBNBFuzzy; break;
     }
 
     if(!target) return;
@@ -323,8 +326,9 @@ void fillHistogram(histGroup_struct* hist, int DLCurrent, int signal, int type, 
     double w = 0.0;
 
     if(signal == 1) w = weight->signalNuE;
-    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 2 && (type != 5 && type != 6)) w = weight->BNBNuE;
     else if(signal == 3) w = weight->cosmicsNuE;
+    else if((type == 5 || type == 6) && (signal == 2 || signal == 4)) w = weight->NuENuE;
 
     target->Fill(value, w);
 }
@@ -335,7 +339,7 @@ void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signa
     TH1* target = nullptr;
 
     switch(type){
-        case 0: target = hist->cosmic; break;
+        case 0: if(signal != 4) target = hist->cosmic; break;
         case 1: if(signal == 1) target = hist->nu_e; break;
         case 2: target = hist->NCNpi0; break;
         case 3: target = hist->otherNC; break;
@@ -352,13 +356,14 @@ void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signa
     double w = 0.0;
 
     if(signal == 1) w = weight->signalNuE;
-    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 2 && (type != 5)) w = weight->BNBNuE;
     else if(signal == 3) w = weight->cosmicsNuE;
+    else if((signal == 2 || signal == 4) && type == 5) w = weight->NuENuE;
 
     target->Fill(value, w);
 }
 
-void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int signal, int type, double value, weights_struct* weight){
+void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int signal, int type, int sliceCat, double value, weights_struct* weight){
     if(!hist || DLCurrent != 5) return;
 
     TH1* target = nullptr;
@@ -373,10 +378,10 @@ void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int si
         case 6: target = hist->chargedPi; break;
         case 7: target = hist->photon; break;
         case 8: target = hist->other; break;
-        case 9: target = hist->cosmicMuon; break;
-        case 10: target = hist->cosmicPhoton; break;
-        case 11: target = hist->cosmicElectron; break;
-        case 12: target = hist->cosmicOther; break;
+        case 9: if(signal != 4) target = hist->cosmicMuon; break;
+        case 10: if(signal != 4) target = hist->cosmicPhoton; break;
+        case 11: if(signal != 4) target = hist->cosmicElectron; break;
+        case 12: if(signal != 4) target = hist->cosmicOther; break;
     }
     
     if(!target) return;
@@ -384,7 +389,8 @@ void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int si
     double w = 0.0;
 
     if(signal == 1) w = weight->signalNuE;
-    else if(signal == 2) w = weight->BNBNuE;
+    else if(signal == 2 && (sliceCat != 5 || sliceCat != 6)) w = weight->BNBNuE;
+    else if((signal == 2 || signal == 4) && (sliceCat == 5 || sliceCat == 6)) w = weight->NuENuE;
     else if(signal == 3) w = weight->cosmicsNuE;
 
     target->Fill(value, w);
@@ -1948,12 +1954,13 @@ void drawCumulativeRetainedAndFOM(TH1D* matchedHist, TH1D* totalHist, const std:
 
 void nuEBackgroundSignalWithNuE_macro(){
     //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0.txt";
+    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/plottingMacros/purity_max_values_withCuts_1Jul_smallerRazzledBins_clearCosmic_numPFPs0.txt";
     std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/eventsSurvivingAllCuts_4May.txt";
 
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_30Jun_noWeights.root"); 
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef30June_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots1Jul_smallerRazzledBins_clearCosmic_numPFPs0/";
 
     /*
     // Creating skimmed file
@@ -2143,6 +2150,7 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalNuE;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBNuE;
+    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsNuENuE;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalCurrent;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBCurrent;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalUboone;
@@ -2150,20 +2158,22 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     double totalPOTSignalNuE = 0;
     double totalPOTBNBNuE = 0;
+    double totalPOTNuENuE = 0;
 
     double cosmicSpillsSumNuE = 0;
     double BNBSpillsSumNuE = 0;
-    double NuESpillsSumNuE = 0;
+    double SignalSpillsSumNuE = 0;
 
     double POTSignalNuE_notMissing = 0;
     double POTBNBNuE_notMissing = 0;
+    double POTNuENuE_notMissing = 0;
     
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
         else if(subRunSignal == 2 && subRunDLCurrent == 5) BNBSpillsSumNuE += subRunNumGenEvents;
-        else if(subRunSignal == 1 && subRunDLCurrent == 5) NuESpillsSumNuE += subRunNumGenEvents;
+        else if(subRunSignal == 1 && subRunDLCurrent == 5) SignalSpillsSumNuE += subRunNumGenEvents;
 
         std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
 
@@ -2182,6 +2192,14 @@ void nuEBackgroundSignalWithNuE_macro(){
             }
             
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
+
+        } else if(subRunSignal == 4){
+            if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
+                totalPOTNuENuE += subRunPOT;
+                seenSubRunsNuENuE.insert(key);
+            }
+
+            if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
         }
     }
 
@@ -2189,17 +2207,25 @@ void nuEBackgroundSignalWithNuE_macro(){
     double targetSpills = (targetPOT/(5e12));
 
     double BNBScaledSpills_NuE = ((targetPOT/POTBNBNuE_notMissing) * BNBSpillsSumNuE);
-    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * NuESpillsSumNuE);
+    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * SignalSpillsSumNuE);
 
     double targetGates = ((1333568/6.293443e+18)*targetPOT);
     double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
 
+    double totalPOTNuENuE_notMissing = (POTNuENuE_notMissing + POTBNBNuE_notMissing);
+
+    std::cout << "POT from nue sample = " << POTNuENuE_notMissing << ", POT from BNB sample = " << POTBNBNuE_notMissing << ", total nue POT = " << totalPOTNuENuE_notMissing << std::endl; 
+
     weights_struct weights;
     weights.signalNuE = targetPOT / POTSignalNuE_notMissing;
-    weights.BNBNuE = targetPOT /POTBNBNuE_notMissing;
+    weights.BNBNuE = targetPOT / POTBNBNuE_notMissing;
     weights.cosmicsNuE = cosmicsWeights_NuE;
+    weights.NuENuE = targetPOT / totalPOTNuENuE_notMissing;
 
-    std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << std::endl;
+    std::cout << "nu+e POT (not missing) = " << POTSignalNuE_notMissing << ", nu+e POT = " << totalPOTSignalNuE << std::endl;
+    std::cout << "BNB POT (not missing) = " << POTBNBNuE_notMissing << ", BNB POT = " << totalPOTBNBNuE << std::endl;
+    std::cout << "nue POT (not missing) = " << POTNuENuE_notMissing << ", nue POT = " << totalPOTNuENuE << std::endl;
+    std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << ", nue = " << weights.NuENuE << std::endl;
 
     UInt_t eventID, runID, subRunID;
     int nuEScatter;
@@ -2841,14 +2867,16 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     double numEvents_DLNuECosmic = 0;
     double numEvents_DLNuEBNB = 0;
+    double numEvents_DLNuESignal = 0;
     double numEvents_DLNuENuE = 0;
 
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
 
+        if(DLCurrent == 5 && signal == 4) numEvents_DLNuENuE++;
         if(DLCurrent == 5 && signal == 3) numEvents_DLNuECosmic++;
         if(DLCurrent == 5 && signal == 2) numEvents_DLNuEBNB++;
-        if(DLCurrent == 5 && signal == 1) numEvents_DLNuENuE++;
+        if(DLCurrent == 5 && signal == 1) numEvents_DLNuESignal++;
 
         int trueSignalSlice = 0;
         int trueSignal = 0;
@@ -2895,11 +2923,6 @@ void nuEBackgroundSignalWithNuE_macro(){
             if(recoilElectron.energy == -999999) std::cout << "This is a true nu+e elastic scatter event with no recoil electron!!!" << std::endl;
             if(recoilElectron.energy != -999999 && recoilElectron.angle != -999999) trueAngleTrueEnergySignalBeforeCuts->Fill(recoilElectron.energy, (recoilElectron.angle*TMath::RadToDeg()));
         }
-
-        double weight = 0;
-        if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-        if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
-        if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
 
         // Looking at the reco slices
         if(reco_sliceID->size() == 0) continue;
@@ -2949,13 +2972,29 @@ void nuEBackgroundSignalWithNuE_macro(){
             } else if(reco_sliceOrigin->at(slice) == 3){
                 // This is a BNB slice
                 if(reco_sliceCompleteness->at(slice) > 0.5){
-                    sliceCategoryPlottingMacro = 3;
-                    //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        // This is a slice from a nue event
+                        sliceCategoryPlottingMacro = 5;
+                    } else{
+                        // This is a BNB event (not a nue event)
+                        sliceCategoryPlottingMacro = 3;
+                        //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
+                    }
                 } else{
-                    sliceCategoryPlottingMacro = 4;
-                    //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        sliceCategoryPlottingMacro = 6;
+                    } else{
+                        sliceCategoryPlottingMacro = 4;
+                        //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
+                    }
                 }
             }
+        
+            double weight = 0;
+            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+            if(signal == 2 && DLCurrent == 5 && sliceCategoryPlottingMacro != 5 && sliceCategoryPlottingMacro != 6) weight = weights.BNBNuE;
+            if((signal == 2 || signal == 4) && DLCurrent == 5 && (sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6)) weight = weights.NuENuE;
+            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
 
             //std::cout << "Slice Origin = " << reco_sliceOrigin->at(slice) << ", CCNC = " << reco_sliceTrueCCNC->at(slice) << ", True Neutrino Type = " << reco_sliceTrueNeutrinoType->at(slice) << ", Vertex = (" << reco_sliceTrueVX->at(slice) << ", " << reco_sliceTrueVY->at(slice) << ", " << reco_sliceTrueVZ->at(slice) << ")" << std::endl;
             for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
@@ -3375,23 +3414,23 @@ void nuEBackgroundSignalWithNuE_macro(){
             } else if(highestEnergyPFP_beforeCuts.trueOrigin == 1){
                 // This is something else from a beam neutrino
                 slicePFPType_beforeCuts = 8;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 13 && highestEnergyPFP_beforeCuts.trueOrigin == 2 && signal != 4){
                 // This is a muon from a cosmic
                 slicePFPType_beforeCuts = 9;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 22 && highestEnergyPFP_beforeCuts.trueOrigin == 2 && signal != 4){
                 // This is a photon from a cosmic
                 slicePFPType_beforeCuts = 10;
-            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 2){
+            } else if(std::abs(highestEnergyPFP_beforeCuts.truePDG) == 11 && highestEnergyPFP_beforeCuts.trueOrigin == 2 && signal != 4){
                 // This is an electron from a cosmic
                 slicePFPType_beforeCuts = 11;
-            } else if(highestEnergyPFP_beforeCuts.trueOrigin == 2){
+            } else if(highestEnergyPFP_beforeCuts.trueOrigin == 2 && signal != 4){
                 // This is something else from a cosmic
                 slicePFPType_beforeCuts = 12;
             }
 
             // Counting number of events before cuts
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4){
                     eventsBeforeCuts_DLNuE.background += weight;
                 } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
                     eventsBeforeCuts_DLNuE.signal += weight;
@@ -3401,9 +3440,13 @@ void nuEBackgroundSignalWithNuE_macro(){
                     eventsBeforeCuts_DLNuE.background += weight;
                 } else if(sliceCategoryPlottingMacro == 4){
                     eventsBeforeCuts_DLNuE.background += weight;
+                } else if(sliceCategoryPlottingMacro == 5){
+                    eventsBeforeCuts_DLNuE.background += weight;
+                } else if(sliceCategoryPlottingMacro == 6){
+                    eventsBeforeCuts_DLNuE.background += weight;
                 }
 
-                if(sliceInteractionType == 0){
+                if(sliceInteractionType == 0 && signal != 4){
 			        eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;	
 				} else if(sliceInteractionType == 1 && signal == 1){
                     eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
@@ -3414,6 +3457,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 } else if(sliceInteractionType == 4){
                     eventsBeforeCuts_DLNuE.splitInt.CCnumu += weight;
                 } else if(sliceInteractionType == 5){
+                    std::cout << "NUE EVENT, WEIGHT = " << weight << std::endl;
                     eventsBeforeCuts_DLNuE.splitInt.CCnue += weight;
                 } else if(sliceInteractionType == 6){
                     eventsBeforeCuts_DLNuE.splitInt.dirt += weight;
@@ -3535,143 +3579,143 @@ void nuEBackgroundSignalWithNuE_macro(){
                 // Uses all the same variables as the plots before cuts - no PFPs are removed
                 fillHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_sliceCompleteness->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
                 
                 fillHistogram(&sliceCRUMBSAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCRUMBSAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceScore->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceCRUMBSAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_sliceScore->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceCRUMBSAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
                 
                 fillHistogram(&slicePurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
                 fillSplitIntHistogram(&slicePurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_slicePurity->at(slice), &weights);
-                fillSplitPFPHistogram(&slicePurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_slicePurity->at(slice), &weights);
+                fillSplitPFPHistogram(&slicePurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
                 
                 fillHistogram(&sliceNumRecoNeutAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
                 fillSplitIntHistogram(&sliceNumRecoNeutAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numRecoNeutrinos, &weights);
-                fillSplitPFPHistogram(&sliceNumRecoNeutAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numRecoNeutrinos, &weights);
+                fillSplitPFPHistogram(&sliceNumRecoNeutAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
                 
                 fillHistogram(&sliceNumPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPFPsSlice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPFPsSlice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPFPsSlice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPsSlice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs10AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs10Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs10Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs10Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs10Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs50AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs50Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs50Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs50Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs50Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs100AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs100Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs100Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs100Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs100Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs150AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs150Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs150Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs150Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs150Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs200AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs200Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs200Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs200Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs200Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceNumPrimaryPFPs300AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs300Slice_beforeCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs300Slice_beforeCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, numPrimaryPFPs300Slice_beforeCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, numPrimaryPFPs300Slice_beforeCuts, &weights);
                 
                 fillHistogram(&sliceFracHitsInPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
                 fillSplitIntHistogram(&sliceFracHitsInPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
-                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (numHitsInPFPs_beforeCuts/reco_sliceNumHits->at(slice)), &weights);
                 
                 fillHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
                 fillSplitIntHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
-                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
                 
                 fillHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoSumThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
-                fillSplitPFPHistogram(&ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+                fillSplitPFPHistogram(&ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slicePoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice_PCAAngle_beforeCuts * slice_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slicePoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * slice_PCAAngle_beforeCuts * slice_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slicePoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * slice_PCAAngle_beforeCuts * slice_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slicePoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice_PCAAngle_beforeCuts * slice_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice5cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice5cm_PCAAngle_beforeCuts * slice5cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice5cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * slice5cm_PCAAngle_beforeCuts * slice5cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice5cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * slice5cm_PCAAngle_beforeCuts * slice5cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice5cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice5cm_PCAAngle_beforeCuts * slice5cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice10cm_PCAAngle_beforeCuts * slice10cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * slice10cm_PCAAngle_beforeCuts * slice10cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice10cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * slice10cm_PCAAngle_beforeCuts * slice10cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice10cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice10cm_PCAAngle_beforeCuts * slice10cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice15cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice15cm_PCAAngle_beforeCuts * slice15cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice15cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * slice15cm_PCAAngle_beforeCuts * slice15cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice15cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * slice15cm_PCAAngle_beforeCuts * slice15cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice15cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * slice15cm_PCAAngle_beforeCuts * slice15cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfpPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp_PCAAngle_beforeCuts * pfp_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfpPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * pfp_PCAAngle_beforeCuts * pfp_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfpPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * pfp_PCAAngle_beforeCuts * pfp_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfpPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp_PCAAngle_beforeCuts * pfp_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp5cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp5cm_PCAAngle_beforeCuts * pfp5cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp5cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * pfp5cm_PCAAngle_beforeCuts * pfp5cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp5cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * pfp5cm_PCAAngle_beforeCuts * pfp5cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp5cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp5cm_PCAAngle_beforeCuts * pfp5cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp10cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp10cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp15cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp15cm_PCAAngle_beforeCuts * pfp15cm_PCAAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp15cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * pfp15cm_PCAAngle_beforeCuts * pfp15cm_PCAAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp15cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * pfp15cm_PCAAngle_beforeCuts * pfp15cm_PCAAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp15cmPoints, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp15cm_PCAAngle_beforeCuts * pfp15cm_PCAAngle_beforeCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_smallestAngle, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * smallestAngle_beforeCuts * smallestAngle_beforeCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_smallestAngle, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * smallestAngle_beforeCuts * smallestAngle_beforeCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_smallestAngle, DLCurrent, signal, slicePFPType_beforeCuts, (highestEnergyPFP_beforeCuts.energy * smallestAngle_beforeCuts * smallestAngle_beforeCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_smallestAngle, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * smallestAngle_beforeCuts * smallestAngle_beforeCuts), &weights);
                 
                 fillHistogram(&dEdxAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
                 fillSplitIntHistogram(&dEdxAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
-                fillSplitPFPHistogram(&dEdxAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
+                fillSplitPFPHistogram(&dEdxAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
                 
                 fillHistogram(&razzledPDG11AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
                 fillSplitIntHistogram(&razzledPDG11AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
-                fillSplitPFPHistogram(&razzledPDG11AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
+                fillSplitPFPHistogram(&razzledPDG11AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
                 
                 fillHistogram(&razzledPDG13AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
                 fillSplitIntHistogram(&razzledPDG13AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
-                fillSplitPFPHistogram(&razzledPDG13AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
+                fillSplitPFPHistogram(&razzledPDG13AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
                 
                 fillHistogram(&razzledPDG22AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
                 fillSplitIntHistogram(&razzledPDG22AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
-                fillSplitPFPHistogram(&razzledPDG22AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
+                fillSplitPFPHistogram(&razzledPDG22AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
                 
                 fillHistogram(&razzledPDG211AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
                 fillSplitIntHistogram(&razzledPDG211AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
-                fillSplitPFPHistogram(&razzledPDG211AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
+                fillSplitPFPHistogram(&razzledPDG211AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
                 
                 fillHistogram(&razzledPDG2212AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
                 fillSplitIntHistogram(&razzledPDG2212AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
-                fillSplitPFPHistogram(&razzledPDG2212AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
+                fillSplitPFPHistogram(&razzledPDG2212AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
                 
                 fillHistogram(&pfpCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.completeness, &weights);
                 fillSplitIntHistogram(&pfpCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.completeness, &weights);
-                fillSplitPFPHistogram(&pfpCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.completeness, &weights);
+                fillSplitPFPHistogram(&pfpCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.completeness, &weights);
                 
                 fillHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.purity, &weights);
                 fillSplitIntHistogram(&pfpPurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.purity, &weights);
-                fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.purity, &weights);
+                fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.purity, &weights);
                 
                 fillHistogram(&pfpNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.numHits, &weights);
                 fillSplitIntHistogram(&pfpNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.numHits, &weights);
-                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, highestEnergyPFP_beforeCuts.numHits, &weights);
+                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.numHits, &weights);
                 
                 fillHistogram(&sliceNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceNumHits->at(slice), &weights);
                 fillSplitIntHistogram(&sliceNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceNumHits->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_sliceNumHits->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, reco_sliceNumHits->at(slice), &weights);
           
                 if(sliceCategoryPlottingMacro == 1 && signal == 1) trueSignalSlice = 1;
 
@@ -3718,51 +3762,51 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 fillHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                
                 if(sliceCategoryPlottingMacro == 1 && signal == 1){
                     // Signal slice
@@ -3782,7 +3826,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 if((sliceCategoryPlottingMacro == 1 || sliceCategoryPlottingMacro == 2) && signal == 1){
                     fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
-                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
+                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy) /recoilElectron.energy), &weights);
               
                     sliceCompletenessTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceCompleteness->at(slice));
 
@@ -4172,13 +4216,15 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 // Clear cosmic cut has been applied, add to counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC += weight;
@@ -4198,13 +4244,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 
                 // Number of PFPs 0 cut has been applied, add to counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC += weight;
@@ -4223,13 +4271,15 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 // Number of reco neutrinos cut has been applied, add to counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC += weight;
@@ -4260,13 +4310,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 
                 // CRUMBS score cut has been applied, add to counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.crumbsBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
@@ -4298,13 +4350,15 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 // FV cut applied, fill counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.FVBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.FVBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.FVSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.FVBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.FVBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.FVBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.FVBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.FVBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.FVIntSplit.otherNC += weight;
@@ -4334,13 +4388,15 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 // Primary PFP cut has been applied, fill counters
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC += weight;
@@ -4392,13 +4448,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.ETheta2Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
@@ -4427,13 +4485,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled11Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled11Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled11Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC += weight;
@@ -4462,13 +4522,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled22Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled22Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled22Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled22Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled22Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled22Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled22Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled22Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled22IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled22IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled22IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled22IntSplit.otherNC += weight;
@@ -4497,13 +4559,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled13Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled13Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled13Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled13Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled13Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled13Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled13Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled13Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled13IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled13IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled13IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled13IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled13IntSplit.otherNC += weight;
@@ -4533,13 +4597,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
                 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled2212Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled2212Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled2212Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled2212Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled2212Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled2212Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled2212Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled2212Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled2212IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled2212IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled2212IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled2212IntSplit.otherNC += weight;
@@ -4568,13 +4634,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211Sig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled211Back += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled211Back += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled211Back += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC += weight;
@@ -4603,13 +4671,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.dEdxBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.dEdxBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.dEdxBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC += weight;
@@ -4713,13 +4783,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.fracHitsContainedBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.fracHitsContainedIntSplit.otherNC += weight;
@@ -4748,13 +4820,15 @@ void nuEBackgroundSignalWithNuE_macro(){
                 }
 
                 if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numHitsBack += weight;
                     else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numHitsSig += weight;
                     else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numHitsBack += weight;
                     else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numHitsBack += weight;
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numHitsBack += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numHitsBack += weight;
     
-                    if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numHitsIntSplit.cosmic += weight;
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numHitsIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numHitsIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numHitsIntSplit.NCNPi0 += weight;
                     else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numHitsIntSplit.otherNC += weight;
@@ -4824,23 +4898,23 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 fillHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, reco_sliceCompleteness->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
 
                 fillHistogram(&sliceCRUMBSAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
                 fillSplitIntHistogram(&sliceCRUMBSAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceScore->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceCRUMBSAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, reco_sliceScore->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceCRUMBSAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
                 
                 fillHistogram(&slicePurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
                 fillSplitIntHistogram(&slicePurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_slicePurity->at(slice), &weights);
-                fillSplitPFPHistogram(&slicePurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, reco_slicePurity->at(slice), &weights);
+                fillSplitPFPHistogram(&slicePurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
                 
                 fillHistogram(&sliceNumRecoNeutAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
                 fillSplitIntHistogram(&sliceNumRecoNeutAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numRecoNeutrinos, &weights);
-                fillSplitPFPHistogram(&sliceNumRecoNeutAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numRecoNeutrinos, &weights);
+                fillSplitPFPHistogram(&sliceNumRecoNeutAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
                 
                 fillHistogram(&sliceNumPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPFPsSlice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPFPsSlice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPFPsSlice_afterCuts, &weights);
 
                 if(sliceInteractionType == 1 && signal == 1){
                     numSignalSlicesPFPCount++;
@@ -4889,91 +4963,91 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 fillHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPsSlice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs10AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs10Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs10Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs10Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs10AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs10Slice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs50AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs50Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs50Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs50Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs50AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs50Slice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs100AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs100Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs100Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs100Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs100AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs100Slice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs150AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs150Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs150Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs150Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs150AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs150Slice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs200AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs200Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs200Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs200Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs200AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs200Slice_afterCuts, &weights);
 
                 fillHistogram(&sliceNumPrimaryPFPs300AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPs300Slice_afterCuts, &weights);
                 fillSplitIntHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, numPrimaryPFPs300Slice_afterCuts, &weights);
-                fillSplitPFPHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, numPrimaryPFPs300Slice_afterCuts, &weights);
+                fillSplitPFPHistogram(&sliceNumPrimaryPFPs300AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, numPrimaryPFPs300Slice_afterCuts, &weights);
                 
                 fillHistogram(&sliceFracHitsInPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
                 fillSplitIntHistogram(&sliceFracHitsInPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
-                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)), &weights);
                 
                 fillHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
                 fillSplitIntHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
-                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
+                fillSplitPFPHistogram(&sliceFracHitsInHighestEnergyPFPsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.numHits/reco_sliceNumHits->at(slice)), &weights);
                 
                 fillHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoSumThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
-                fillSplitPFPHistogram(&ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+                fillSplitPFPHistogram(&ERecoSumThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slicePoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice_PCAAngle_afterCuts * slice_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slicePoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * slice_PCAAngle_afterCuts * slice_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slicePoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * slice_PCAAngle_afterCuts * slice_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slicePoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice_PCAAngle_afterCuts * slice_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice5cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice5cm_PCAAngle_afterCuts * slice5cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice5cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * slice5cm_PCAAngle_afterCuts * slice5cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice5cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * slice5cm_PCAAngle_afterCuts * slice5cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice5cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice5cm_PCAAngle_afterCuts * slice5cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice10cm_PCAAngle_afterCuts * slice10cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * slice10cm_PCAAngle_afterCuts * slice10cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice10cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * slice10cm_PCAAngle_afterCuts * slice10cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice10cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice10cm_PCAAngle_afterCuts * slice10cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_slice15cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice15cm_PCAAngle_afterCuts * slice15cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_slice15cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * slice15cm_PCAAngle_afterCuts * slice15cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice15cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * slice15cm_PCAAngle_afterCuts * slice15cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_slice15cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * slice15cm_PCAAngle_afterCuts * slice15cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfpPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp_PCAAngle_afterCuts * pfp_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfpPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * pfp_PCAAngle_afterCuts * pfp_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfpPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * pfp_PCAAngle_afterCuts * pfp_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfpPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp_PCAAngle_afterCuts * pfp_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp5cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp5cm_PCAAngle_afterCuts * pfp5cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp5cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * pfp5cm_PCAAngle_afterCuts * pfp5cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp5cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * pfp5cm_PCAAngle_afterCuts * pfp5cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp5cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp5cm_PCAAngle_afterCuts * pfp5cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp10cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp10cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp15cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp15cm_PCAAngle_afterCuts * pfp15cm_PCAAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp15cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * pfp15cm_PCAAngle_afterCuts * pfp15cm_PCAAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp15cmPoints, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * pfp15cm_PCAAngle_afterCuts * pfp15cm_PCAAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_pfp15cmPoints, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp15cm_PCAAngle_afterCuts * pfp15cm_PCAAngle_afterCuts), &weights);
                 
                 fillHistogram(&ERecoHighestThetaRecoAfterCuts_smallestAngle, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * smallestAngle_afterCuts * smallestAngle_afterCuts), &weights);
                 fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_splitDLNuE_smallestAngle, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * smallestAngle_afterCuts * smallestAngle_afterCuts), &weights);
-                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_smallestAngle, DLCurrent, signal, slicePFPType_afterCuts, (highestEnergyPFP_afterCuts.energy * smallestAngle_afterCuts * smallestAngle_afterCuts), &weights);
+                fillSplitPFPHistogram(&ERecoHighestThetaRecoAfterCuts_splitPFPDLNuE_smallestAngle, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * smallestAngle_afterCuts * smallestAngle_afterCuts), &weights);
 
                 fillHistogram(&dEdxAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
                 fillSplitIntHistogram(&dEdxAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
-                fillSplitPFPHistogram(&dEdxAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
+                fillSplitPFPHistogram(&dEdxAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
                 
                 fillHistogram(&razzledPDG11AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
                 fillSplitIntHistogram(&razzledPDG11AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
-                fillSplitPFPHistogram(&razzledPDG11AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
+                fillSplitPFPHistogram(&razzledPDG11AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
                 
                 if(runRazzledMinimiser == 1 && !(signal != 1 && sliceCategoryPlottingMacro == 1)){
                     eventRazzled_struct event;
@@ -5036,7 +5110,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 
                 fillHistogram(&razzledPDG13AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
                 fillSplitIntHistogram(&razzledPDG13AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
-                fillSplitPFPHistogram(&razzledPDG13AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
+                fillSplitPFPHistogram(&razzledPDG13AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
                
                 if(printLowRazzledMuonMuons == 1 && (highestEnergyPFP_afterCuts.razzledPDG13 < 0.06) && (slicePFPType_afterCuts == 4)){
                     // This is a muon with a low razzled muon score
@@ -5064,7 +5138,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 
                 fillHistogram(&razzledPDG22AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
                 fillSplitIntHistogram(&razzledPDG22AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
-                fillSplitPFPHistogram(&razzledPDG22AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
+                fillSplitPFPHistogram(&razzledPDG22AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
                
                 if(printLowRazzledPhotonPhotons == 1 && (highestEnergyPFP_afterCuts.razzledPDG22 < 0.06) && (slicePFPType_afterCuts == 7)){
                     // This is a photon with a low razzled photon score
@@ -5104,7 +5178,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 
                 fillHistogram(&razzledPDG211AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
                 fillSplitIntHistogram(&razzledPDG211AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
-                fillSplitPFPHistogram(&razzledPDG211AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
+                fillSplitPFPHistogram(&razzledPDG211AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
                 
                 if(printLowRazzledChargedPiChargedPis == 1 && (highestEnergyPFP_afterCuts.razzledPDG211 < 0.06) && (slicePFPType_afterCuts == 6)){
                     // This is a charged pion with a low razzled charged pion score
@@ -5132,23 +5206,23 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 fillHistogram(&razzledPDG2212AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
                 fillSplitIntHistogram(&razzledPDG2212AfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
-                fillSplitPFPHistogram(&razzledPDG2212AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
+                fillSplitPFPHistogram(&razzledPDG2212AfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
 
                 fillHistogram(&pfpCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.completeness, &weights);
                 fillSplitIntHistogram(&pfpCompletenessAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.completeness, &weights);
-                fillSplitPFPHistogram(&pfpCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.completeness, &weights);
+                fillSplitPFPHistogram(&pfpCompletenessAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.completeness, &weights);
                 
                 fillHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.purity, &weights);
                 fillSplitIntHistogram(&pfpPurityAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.purity, &weights);
-                fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.purity, &weights);
+                fillSplitPFPHistogram(&pfpPurityAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.purity, &weights);
                 
                 fillHistogram(&pfpNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.numHits, &weights);
                 fillSplitIntHistogram(&pfpNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.numHits, &weights);
-                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, highestEnergyPFP_afterCuts.numHits, &weights);
+                fillSplitPFPHistogram(&pfpNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.numHits, &weights);
                 
                 fillHistogram(&sliceNumHitsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceNumHits->at(slice), &weights);
                 fillSplitIntHistogram(&sliceNumHitsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceNumHits->at(slice), &weights);
-                fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, reco_sliceNumHits->at(slice), &weights);
+                fillSplitPFPHistogram(&sliceNumHitsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, reco_sliceNumHits->at(slice), &weights);
                
                 if(sliceCategoryPlottingMacro == 1 && signal == 1) trueSignalSlice = 1;
 
@@ -5197,51 +5271,51 @@ void nuEBackgroundSignalWithNuE_macro(){
 
                 fillHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZSmallerBinsAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZSmallerBinsAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZLowAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZLowAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
                 
                 fillHistogram(&recoVXHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
                 fillSplitIntHistogram(&recoVXHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
-                fillSplitPFPHistogram(&recoVXHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVX, &weights);
+                fillSplitPFPHistogram(&recoVXHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVX, &weights);
                 
                 fillHistogram(&recoVYHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
                 fillSplitIntHistogram(&recoVYHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
-                fillSplitPFPHistogram(&recoVYHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVY, &weights);
+                fillSplitPFPHistogram(&recoVYHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVY, &weights);
                 
                 fillHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
                 fillSplitIntHistogram(&recoVZHighAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
-                fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, recoVZ, &weights);
+                fillSplitPFPHistogram(&recoVZHighAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_afterCuts, sliceCategoryPlottingMacro, recoVZ, &weights);
 
                 // Plots for Jarek                
                 if(sliceCategoryPlottingMacro == 1 && signal == 1){
@@ -5294,7 +5368,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                     // This is a slice truth-matched to a nu+e elastic scatter with any completeness
                     fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
                     fillSplitIntHistogram(&energyAsymmetryAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
-                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
+                    fillSplitPFPHistogram(&energyAsymmetryAfterCuts_splitPFPDLNuE, DLCurrent, signal, slicePFPType_beforeCuts, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy) /recoilElectron.energy), &weights);
                     
                     sliceCompletenessTrueRecoilElectronEnergy->Fill(recoilElectron.energy, reco_sliceCompleteness->at(slice));
               
@@ -6048,7 +6122,7 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     // end
 
-    std::cout << "Numbers of events (DL Nu+E): BNB = " << numEvents_DLNuEBNB << ", Intime Cosmics = " << numEvents_DLNuECosmic << ", Nu+E Elastic Scatters = " << numEvents_DLNuENuE << std::endl;
+    std::cout << "Numbers of events (DL Nu+E): BNB = " << numEvents_DLNuEBNB << ", Intime Cosmics = " << numEvents_DLNuECosmic << ", Nu+E Elastic Scatters = " << numEvents_DLNuESignal << "NuE = " << numEvents_DLNuENuE << std::endl;
 
     std::cout << "Cuts applied: clear cosmic = " << clearCosmicCut << ", num PFPs 0 = " << numPFPs0Cut << ", num reco neutrinos 0 = " << numRecoNeutrinosCut << ", CRUMBS = " << CRUMBSCut << ", FV = " << FVCut << std::endl;
     std::cout << "num primary PFPs 1 = " << primaryPFPCut << ", razzled 2212 = " << razzledPDG2212Cut << ", razzled 13 = " << razzledPDG13Cut << ", razzled 211 = " << razzledPDG211Cut << ", razzled 22 = " << razzledPDG22Cut << std::endl;
