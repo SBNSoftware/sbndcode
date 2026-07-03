@@ -743,7 +743,7 @@ void sbnd::NuEWithSysts::analyze(art::Event const& e)
 }
 
 void sbnd::NuEWithSysts::trueSignal(art::Event const& e){
-    //std::cout << "============= True NuE Scatters =============" << std::endl;
+    std::cout << "============= True NuE Scatters =============" << std::endl;
 
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
@@ -1129,7 +1129,7 @@ void sbnd::NuEWithSysts::Slices(art::Event const& e){
 
             for(const art::Ptr<recob::Slice> &slice : sliceVec){
                 sliceID = slice->ID();
-                //std::cout << "Slice " << sliceID << std::endl;
+                std::cout << "Slice ID = " << sliceID << std::endl;
                 if(sliceID == std::numeric_limits<int>::max()) continue;
 
                 art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
@@ -1211,7 +1211,7 @@ void sbnd::NuEWithSysts::Slices(art::Event const& e){
                 
                 }
                 
-                std::cout << "============================" << std::endl;
+                //std::cout << "============================" << std::endl;
 
                 // Looking at GENIE systematics associated with MCTruth of slice
                 
@@ -1459,6 +1459,22 @@ void sbnd::NuEWithSysts::Slices(art::Event const& e){
                         if(mapFill == targetGENIEMap.end()) continue;
                         auto &target = *(mapFill->second);
                         target.assign(values.begin(), values.end());
+                    }
+                }
+
+
+                //std::cout << "Size of mcTruthGENIEWeightMaps vector = " << mcTruthGENIEWeightMaps.size() << std::endl;
+                for(size_t i = 0; i < mcTruthGENIEWeightMaps.size(); ++i){
+                    //std::cout << "Vector " << i << ":" << std::endl;
+                    const art::Ptr<std::map<std::string, std::vector<float>>> &weightGENIEMapPtr_3Jul = mcTruthGENIEWeightMaps.at(i);
+                    const std::map<std::string, std::vector<float>> &weightGENIEMap_3Jul = *weightGENIEMapPtr_3Jul;
+                    //std::cout << "  Number of map entries = " << weightGENIEMap_3Jul.size() << std::endl;
+                    for(const auto &[name_3Jul, values_3Jul] : weightGENIEMap_3Jul){
+                        //std::cout << "  Map key = " << name_3Jul << std::endl;
+                        //std::cout << "  Number of universes = " << values_3Jul.size() << std::endl;
+                        for(size_t j = 0; j < values_3Jul.size(); j++){
+                            //std::cout << "      Weight " << j+1 << ": " << values_3Jul.at(j) << std::endl;
+                        }
                     }
                 }
 
