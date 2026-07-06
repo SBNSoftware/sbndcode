@@ -200,8 +200,8 @@ struct eventCounting_struct{
 
 void nuESelectionNumbersWithSystematics_macro(){
 
-    std::string cutsApplied = "clearCosmic";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers10June_" + cutsApplied + "/";
+    std::string cutsApplied = "allCuts";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers18June_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table.txt";
 
     int clearCosmicCut = 1;
@@ -310,7 +310,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         return;
     }
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_16June.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_18June.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
@@ -1942,192 +1942,6 @@ void nuESelectionNumbersWithSystematics_macro(){
     if(ETheta2Cut == 1) printCutStage("Cut 9: ETheta2", 9);
     if(dEdxCut == 1) printCutStage("Cut 10: dEdx", 10);
 
-    /*
-    // Helper functions which loops over all the cuts and creates a canvas and a hist for each. Then fills it with the 1000 universe values from vectors, draws a line for the nominal line and saves it as a pdf
-    // plotPerCutUniverseDist plots the signal count per cut per parameter
-    // plotPerCutUniverseDist_back plots the background count per cut per parameter
-    // plotPerCutUniverseDist_purity plots the purity per cut per parameter
-    // plotPerCutUniverseDist_derived plots the efficiency, selection efficiency, eff x pur and selection eff x pur per cut per parameter
-    auto plotPerCutUniverseDist = [&](int paramIdx, const std::string& paramName){
-        for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(Form("cPerCut_sig_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); 
-            c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); 
-            c->SetTopMargin(0.08);
-
-            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut]; // should be size 1000 (1 entry for each universe)
-            double sMin = *std::min_element(svec.begin(), svec.end());
-            double sMax = *std::max_element(svec.begin(), svec.end());
-            double range = sMax - sMin;
-            double lo = std::max(0.0, sMin - 0.1*range);
-            double hi = sMax + 0.1*range;
-            if(hi <= lo) hi = lo + 1.0;
-
-            TH1D *h = new TH1D(Form("h_perCut_sig_%s_c%d", paramName.c_str(), cut), "", 50, lo, hi);
-            for(double v : svec) h->Fill(v); // Loops through universes, adds to the hist
-
-            h->SetLineColor(kBlue+1); 
-            h->SetLineWidth(2); 
-            h->SetStats(0);
-            h->GetXaxis()->SetTitle("Signal slice count");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); 
-            h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); 
-            h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); 
-            h->GetYaxis()->SetTitleOffset(1.1);
-            h->Draw("HIST E");
-
-            double nomS = nomSig_perCut[cut];
-            TLine *ln = new TLine(nomS, 0, nomS, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); 
-            ln->SetLineWidth(2); 
-            ln->Draw("SAME");
-
-            TLatex lx;
-            lx.SetTextSize(0.04); 
-            lx.SetNDC();
-            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
-
-            TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); 
-            potLabel.SetTextSize(0.035); 
-            potLabel.SetNDC();
-            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
-
-            c->Update();
-            c->SaveAs((base_path + "perCut_sigCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; 
-            delete h; 
-            delete c;
-        }
-    };
-
-    auto plotPerCutUniverseDist_back = [&](int paramIdx, const std::string& paramName){
-        for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(Form("cPerCut_back_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); 
-            c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05);
-            c->SetTopMargin(0.08);
-
-            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
-            double bMin = *std::min_element(bvec.begin(), bvec.end());
-            double bMax = *std::max_element(bvec.begin(), bvec.end());
-            double range = bMax - bMin;
-            double lo = std::max(0.0, bMin - 0.1*range);
-            double hi = bMax + 0.1*range;
-            if(hi <= lo) hi = lo + 1.0;
-
-            TH1D *h = new TH1D(Form("h_perCut_back_%s_c%d", paramName.c_str(), cut), "", 50, lo, hi);
-            for(double v : bvec) h->Fill(v);
-
-            h->SetLineColor(kRed+1); 
-            h->SetLineWidth(2); 
-            h->SetStats(0);
-            h->GetXaxis()->SetTitle("Background slice count");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); 
-            h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); 
-            h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); 
-            h->GetYaxis()->SetTitleOffset(1.1);
-            h->Draw("HIST E");
-
-            double nomB = nomBack_perCut[cut];
-            TLine *ln = new TLine(nomB, 0, nomB, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); 
-            ln->SetLineWidth(2); 
-            ln->Draw("SAME");
-
-            TLatex lx;
-            lx.SetTextSize(0.04); 
-            lx.SetNDC();
-            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
-
-            TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); 
-            potLabel.SetTextSize(0.035); 
-            potLabel.SetNDC();
-            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
-
-            c->Update();
-            c->SaveAs((base_path + "perCut_backCount_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; 
-            delete h; 
-            delete c;
-        }
-    };
-
-    auto plotPerCutUniverseDist_purity = [&](int paramIdx, const std::string& paramName){
-        for(int cut = 0; cut < NCUTS; cut++){
-            TCanvas *c = new TCanvas(Form("cPerCut_pur_%s_c%d", paramName.c_str(), cut), "", 800, 600);
-            c->SetLeftMargin(0.12); 
-            c->SetBottomMargin(0.12);
-            c->SetRightMargin(0.05); 
-            c->SetTopMargin(0.08);
-
-            std::vector<double>& svec = univSig_perCutParam[paramIdx][cut];
-            std::vector<double>& bvec = univBack_perCutParam[paramIdx][cut];
-
-            TH1D *h = new TH1D(Form("h_perCut_pur_%s_c%d", paramName.c_str(), cut), "", 50, 0, 1);
-            for(int u = 0; u < NUNIV; u++){
-                double tot = svec[u] + bvec[u];
-                if(tot > 0) h->Fill(svec[u] / tot);
-            }
-
-            h->SetLineColor(kGreen+2); 
-            h->SetLineWidth(2); 
-            h->SetStats(0);
-            h->GetXaxis()->SetTitle("Purity");
-            h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); 
-            h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); 
-            h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); 
-            h->GetYaxis()->SetTitleOffset(1.1);
-            h->Draw("HIST E");
-
-            double nomS = nomSig_perCut[cut];
-            double nomB = nomBack_perCut[cut];
-            double nomPur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
-            TLine *ln = new TLine(nomPur, 0, nomPur, h->GetMaximum()*1.05);
-            ln->SetLineColor(kMagenta+1); 
-            ln->SetLineWidth(2); 
-            ln->Draw("SAME");
-
-            TLatex lx;
-            lx.SetTextSize(0.04); 
-            lx.SetNDC();
-            lx.DrawLatex(0.15, 0.85, (paramName + " - " + cutNames_syst[cut]).c_str());
-
-            TLatex potLabel;
-            potLabel.SetTextColor(kGray+1); 
-            potLabel.SetTextSize(0.035); 
-            potLabel.SetNDC();
-            potLabel.DrawLatex(0.70, 0.93, "1#times10^{21} POT");
-
-            c->Update();
-            c->SaveAs((base_path + "perCut_purity_" + paramName + "_" + cutNames_syst[cut] + ".pdf").c_str());
-            delete ln; 
-            delete h; 
-            delete c;
-        }
-    };
-
-    // Make all three plot types for all 14 parameters
-    for(int p = 0; p < NPARAMS_SYST; p++){
-        plotPerCutUniverseDist(p,         paramNames_syst[p]);
-        plotPerCutUniverseDist_back(p,    paramNames_syst[p]);
-        plotPerCutUniverseDist_purity(p,  paramNames_syst[p]);
-    }
-    */
-
-
     auto plotPerCutUniverseDist_derived = [&](int paramIdx, const std::string& paramName, const std::string& quantityName, const std::string& xAxisTitle, std::function<double(double s, double b, double trueSig, double selSig0)> fn, double xLo, double xHi, int color){
         const std::vector<double>* trueSigVecs[14] = {&count_horncurrent, &count_expskin, &count_kplus, &count_kmin, &count_kzero, &count_nucleoninex, &count_nucleonqex, &count_nucleontotx, &count_piminus, &count_pioninex, &count_pionqex, &count_piontotx, &count_piplus, &count_combined};
 
@@ -2238,7 +2052,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         plotPerCutUniverseDist_derived(p, pName, "purity", "Purity", [](double s, double b, double ts, double ss) -> double {
                 double tot = s + b;
                 return (tot > 0) ? s / tot : 0.0;
-        }, 0.0, 1.0, kGreen+2);
+        }, 0.0, 0.0, kGreen+2);
 
         // Eff x Pur = s/ts * s/(s+b) (number of signal slices after cuts/total number of true nu+e elastic scattering events before cuts * number of signal slices after cuts/number of slices after cuts)
         plotPerCutUniverseDist_derived(p, pName, "effXpurity", "Efficiency #times Purity", [](double s, double b, double ts, double ss) -> double {
