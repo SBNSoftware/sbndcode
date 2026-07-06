@@ -21,6 +21,7 @@ outputs: {
   rootout: {
     module_type: "RootOutput"
     fileName: "decoded_ptb.root"
+    dataTier: "reconstructed"
   }
 }
 
