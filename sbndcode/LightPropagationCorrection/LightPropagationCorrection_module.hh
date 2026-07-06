@@ -216,6 +216,7 @@ private:
     int fMinHitPE;
     double fPreWindow;
     double fPostWindow;
+    double fPDFraction;
 
 
     bool fDebug;

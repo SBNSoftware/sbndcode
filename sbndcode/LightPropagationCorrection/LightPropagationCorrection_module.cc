@@ -24,6 +24,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fMinHitPE ( p.get<int>("MinHitPE") ),
     fPreWindow ( p.get<double>("PreWindow") ),
     fPostWindow ( p.get<double>("PostWindow") ),
+    fPDFraction ( p.get<double>("PDFraction") ),
     fDebug( p.get<bool>("Debug", false) )
     // 
     // More initializers here.
@@ -638,7 +639,7 @@ void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
         fSelectedChannelList.push_back(channel);
 
         pe_count += pe;
-        if (pe_count / pe_sum > .5)
+        if (pe_count / pe_sum > fPDFraction)
             break;
     }
 }

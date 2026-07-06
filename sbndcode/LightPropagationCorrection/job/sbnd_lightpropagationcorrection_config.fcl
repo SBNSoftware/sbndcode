@@ -38,6 +38,7 @@ LightPropagationCorrection:
     MinHitPE: @local::FlashT0SelectedChannels.MinHitPE
     PreWindow: @local::FlashT0SelectedChannels.PreWindow
     PostWindow: @local::FlashT0SelectedChannels.PostWindow
+    PDFraction: @local::FlashT0SelectedChannels.PDFraction
 
     FlashMatchingTool: "BarycenterFM"
 }
