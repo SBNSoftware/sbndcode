@@ -167,6 +167,7 @@ typedef struct{
     TH1D* nu_eDirt;
     TH1D* cosmic;
     TH1D* other;
+    TH1D* nu_eFuzzy;
 } splitHistGroup_struct;
 
 typedef struct{
@@ -277,7 +278,8 @@ splitHistGroup_struct createSplitHistGroup(const std::string& baseName, const st
         (TH1D*) base->Clone((baseName + "_dirt").c_str()),
         (TH1D*) base->Clone((baseName + "_nu_eDirt").c_str()),
         (TH1D*) base->Clone((baseName + "_cosmic").c_str()),
-        (TH1D*) base->Clone((baseName + "_other").c_str())
+        (TH1D*) base->Clone((baseName + "_other").c_str()),
+        (TH1D*) base->Clone((baseName + "_nu_eFuzzy").c_str())
     };
 }
 
@@ -348,6 +350,7 @@ void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signa
         case 6: target = hist->dirt; break;
         case 7: if(signal == 1) target = hist->nu_eDirt; break;
         case 8: target = hist->other; break;
+        case 9: if(signal == 1) target = hist->nu_eFuzzy; break;
         case 15: break;
     }
 
@@ -410,7 +413,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     else
         hists.canvas->SetLogy(0);
 
-    std::vector<TH1D*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic, hists.other};
+    std::vector<TH1D*> allHists = {hists.nu_e, hists.NCNpi0, hists.otherNC, hists.CCnumu, hists.CCnue, hists.dirt, hists.nu_eDirt, hists.cosmic, hists.other, hists.nu_eFuzzy};
 
     if (useLogScale) {
         for (auto* hist : allHists) {
@@ -456,6 +459,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.nu_eDirt->SetLineWidth(2);    hists.nu_eDirt->SetLineColor(TColor::GetColor("#1845fb"));
     hists.cosmic->SetLineWidth(2);      hists.cosmic->SetLineColor(TColor::GetColor("#c849a9"));
     hists.other->SetLineWidth(2);       hists.other->SetLineColor(TColor::GetColor("#ffa90e"));
+    hists.nu_eFuzzy->SetLineWidth(2);   hists.other->SetLineColor(TColor::GetColor("#9c9ca1"));
 
     if((ymin != 999) && (ymax != 999)){
         for(auto* hist : allHists)
@@ -490,6 +494,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     hists.nu_eDirt->Draw("histsame");
     hists.cosmic->Draw("histsame");
     hists.other->Draw("histsame");
+    hists.nu_eFuzzy->Draw("histsame");
 
     int nEntries = 9;
     double height = std::max(0.03 * nEntries, 0.03);
@@ -511,6 +516,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legend->AddEntry(hists.cosmic, "Cosmic", "f");
     legend->AddEntry(hists.other, "Other", "f");
+    legend->AddEntry(hists.nu_eFuzzy, "#nu+e Fuzzy", "f");
     legend->SetTextSize(0.0225);
 
     legend->SetMargin(0.13);
@@ -535,6 +541,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     stack->Add(hists.nu_eDirt);
     stack->Add(hists.cosmic);
     stack->Add(hists.other);
+    stack->Add(hists.nu_eFuzzy);
 
     hists.canvas->cd();
     hists.canvas->Clear();
@@ -580,6 +587,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legendStack->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
     legendStack->AddEntry(hists.cosmic, "Cosmic", "f");
     legendStack->AddEntry(hists.other, "Other", "f");
+    legendStack->AddEntry(hists.nu_eFuzzy, "#nu+e Fuzzy", "f");
     legendStack->SetTextSize(0.0225);
     legendStack->SetMargin(0.13);
     legendStack->Draw();
@@ -3024,7 +3032,7 @@ void nuEBackgroundSignalWithNuE_macro(){
 
             // Assigning a interaction category to the slices
             // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
-            // Other = 8, Fuzzy nu+e = 9
+            // Other = 8, Fuzzy nu+e = 9, Dirt nuE = 10
             int sliceInteractionType = -999999;
             if(reco_sliceOrigin->at(slice) != 0){
                 // This is a slice that isn't truth-matched to a cosmic
