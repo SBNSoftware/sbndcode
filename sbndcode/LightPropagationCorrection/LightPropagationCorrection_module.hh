@@ -142,7 +142,9 @@ private:
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
-
+    void GetSelectedChannelsFlash(double , ::lightana::LiteOpHitArray_t );
+    double GetAverageParticlePropagationTime();
+    double GetAveragePhotonPropagationTime();
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
     opdet::sbndPDMapAlg fPDSMap;
@@ -177,6 +179,9 @@ private:
     bool fSaveCorrectionTree;
 
     std::vector<double> fTimeCorrectionPerChannel;
+    std::vector<double> fParticlePropagationTimePerChannel;
+    std::vector<double> fPhotonPropagationTimePerChannel;
+    std::vector<size_t> fSelectedChannelList;
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
     double fRecoVz = 0.0;
@@ -206,6 +211,12 @@ private:
 
     double fNuScoreThreshold;
     double fFMScoreThreshold;
+
+    // Parameters for the selected channel computation
+    int fMinHitPE;
+    double fPreWindow;
+    double fPostWindow;
+
 
     bool fDebug;
 
