@@ -874,7 +874,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         return vec->at(sliceIdx).at(u);
     };
 
-    // Helper to calculate the systematic given a vector of values. Calculates it as sqrt((1/(N-1) * sum from 1 to N(x_j - nominal))
+    // Helper to calculate the systematic given a vector of values. Calculates it as sqrt((1/N * sum from 1 to N(x_j - nominal))
     auto calcSystFromUniverses = [&](const std::vector<double>& values, double nominal) -> double {
         int N = values.size();
         if(N < 2) return 0.0;
@@ -883,7 +883,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         for(double x : values)
             sumSq += (x - nominal)*(x - nominal);
 
-        return std::sqrt(sumSq/(N-1));
+        return std::sqrt(sumSq/N);
     };
 
     // Start looping through the events
@@ -917,47 +917,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         } else {
             //std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
         }
-
-
-        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-            // This is an event with a nu+e elastic scatter in it (from the signal files)
-            if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
-                // True nu+e elastic scattering event within the active volume (if FVCut == 0) or FV (if FVCut == 1))
-                actualSignalCount += weights.signalNuE; // nominal value
-                trueSignal = 1;
-
-                // Check whether there is a weight associated with the true nu+e elastic scatter
-                // if weightsFound == 0 then no event was found to match between the 2 trees
-                // nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV checks whether there are the same number of entries as universes
-                bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
-
-                if(nuEWeightsValid){
-                    // Loop through the universes
-                    for(int u = 0; u < NUNIV; u++){
-                        // combinedWeight is the 13 flux parameter weights for that universe multiplied together to get the combined weight in that universe
-                        double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
-
-                        // Add to the count (number of true nu+e elastic scattering events) for that universe the POT weight * universe weight for that flux parameter
-                        // After looping through all events count_horncurrent[u] will be the number of true nu+e elastic scatters in universe u under a shift of the horn current parameter, etc, etc
-                        count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
-                        count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
-                        count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
-                        count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
-                        count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
-                        count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
-                        count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
-                        count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
-                        count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
-                        count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
-                        count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
-                        count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
-                        count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
-                        count_combined[u]    += weights.signalNuE * combinedWeight;
-                    }
-                }
-            }
-        }
-
+        
         // Looking at the true recoil electron in the event (if there is one)
         recoilElectron_struct recoilElectron;
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
@@ -976,6 +936,49 @@ void nuESelectionNumbersWithSystematics_macro(){
                 recoilElectron.dx = -999999;
                 recoilElectron.dy = -999999;
                 recoilElectron.dz = -999999;
+            }
+        }
+
+
+        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+            // This is an event with a nu+e elastic scatter in it (from the signal files)
+            if(recoilElectron.energy > 150){
+                // nu+e elastic scatter must have true recoil electron with energy > 150 MeV
+                if((FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))))){
+                    // True nu+e elastic scattering event within the active volume (if FVCut == 0) or FV (if FVCut == 1))
+                    actualSignalCount += weights.signalNuE; // nominal value
+                    trueSignal = 1;
+
+                    // Check whether there is a weight associated with the true nu+e elastic scatter
+                    // if weightsFound == 0 then no event was found to match between the 2 trees
+                    // nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV checks whether there are the same number of entries as universes
+                    bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
+
+                    if(nuEWeightsValid){
+                        // Loop through the universes
+                        for(int u = 0; u < NUNIV; u++){
+                            // combinedWeight is the 13 flux parameter weights for that universe multiplied together to get the combined weight in that universe
+                            double combinedWeight = getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u) * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+
+                            // Add to the count (number of true nu+e elastic scattering events) for that universe the POT weight * universe weight for that flux parameter
+                            // After looping through all events count_horncurrent[u] will be the number of true nu+e elastic scatters in universe u under a shift of the horn current parameter, etc, etc
+                            count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
+                            count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
+                            count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
+                            count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
+                            count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
+                            count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
+                            count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
+                            count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
+                            count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
+                            count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
+                            count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
+                            count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
+                            count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+                            count_combined[u]    += weights.signalNuE * combinedWeight;
+                        }
+                    }
+                }
             }
         }
 
@@ -1014,7 +1017,8 @@ void nuESelectionNumbersWithSystematics_macro(){
             if(reco_sliceOrigin->at(slice) == 0){
                 sliceCategoryPlottingMacro = 0;
             } else if(reco_sliceOrigin->at(slice) == 1){
-                if(reco_sliceCompleteness->at(slice) > 0.5){
+                if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
+                    // Slice must have completeness > 0.5 and have nu+e elastic scatter it comes from has true recoil electron energy > 150 MeV
                     if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
                         sliceCategoryPlottingMacro = 1;
                     } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
@@ -1053,7 +1057,8 @@ void nuESelectionNumbersWithSystematics_macro(){
             int sliceInteractionType = -999999;
             if(reco_sliceOrigin->at(slice) != 0){
                 if(reco_sliceOrigin->at(slice) == 1){
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                    if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
+                        // Slice must have completeness > 0.5 and have nu+e elastic scatter it comes from has true recoil electron energy > 150 MeV
                         if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
                             sliceInteractionType = 1;
                         } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
@@ -1783,9 +1788,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     // Helper to compute mean and standard deviation of the inputted vector
     auto getMeanStd = [&](const std::vector<double>& v, double nominal) -> std::pair<double,double> {
         double mean = 0; for(double x : v) mean += x; mean /= v.size();
-        //double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
-        double var = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size()-1);
-        // returns the mean = 1/N * sum(x) and variance = sqrt(1/N-1 * sum((x - nominal)^2)
+        double var = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size());
+        // returns the mean = 1/N * sum(x) and variance = sqrt(1/N * sum((x - nominal)^2)
         return {mean, std::sqrt(var)};
     };
 
@@ -2100,8 +2104,7 @@ void nuESelectionNumbersWithSystematics_macro(){
         
         auto getStd = [&](const std::vector<double>& v, double nominal) -> double {
             double mean = 0; for(double x : v) mean += x; mean /= v.size();
-            //double var  = 0; for(double x : v) var  += (x-mean)*(x-mean); var /= v.size();
-            double var  = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size()-1);
+            double var  = 0; for(double x : v) var  += (x-nominal)*(x-nominal); var /= (v.size());
             return std::sqrt(var);
         };
 
