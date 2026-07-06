@@ -1954,13 +1954,15 @@ void drawCumulativeRetainedAndFOM(TH1D* matchedHist, TH1D* totalHist, const std:
 
 void nuEBackgroundSignalWithNuE_macro(){
     //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/plottingMacros/purity_max_values_withCuts_1Jul_smallerRazzledBins_clearCosmic_numPFPs0.txt";
-    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/eventsSurvivingAllCuts_4May.txt";
+    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/purity_max_values_withCuts_1Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/eventsSurvivingAllCuts_1Jul_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
 
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_30Jun_noWeights.root"); 
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots1Jul_smallerRazzledBins_clearCosmic_numPFPs0/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots1Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx/";
+
+    gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/", kTRUE);
 
     /*
     // Creating skimmed file
@@ -1983,17 +1985,17 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
-    int numRecoNeutrinosCut = 0;
-    int CRUMBSCut = 0;
-    int FVCut = 0;
-    int primaryPFPCut = 0;
-    int ETheta2Cut = 0;
-    int razzledPDG11Cut = 0;
+    int numRecoNeutrinosCut = 1;
+    int CRUMBSCut = 1;
+    int FVCut = 1;
+    int primaryPFPCut = 1;
+    int razzledPDG11Cut = 1;
     int razzledPDG22Cut = 0;
     int razzledPDG13Cut = 0;
     int razzledPDG2212Cut = 0;
-    int razzledPDG211Cut = 0;
-    int dEdxCut = 0;
+    int razzledPDG211Cut = 1;
+    int ETheta2Cut = 1;
+    int dEdxCut = 1;
     int fracHitsContainedCut = 0;
     int numHitsCut = 0;
 
@@ -2036,17 +2038,17 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     // Cut values
     double crumbsScoreCut_low = 0.2;
-    double crumbsScoreCut_high = 0.68;
+    double crumbsScoreCut_high = 0.76;
 
-    double FVCut_xHigh = 194; 
-    double FVCut_xLow = -196; 
+    double FVCut_xHigh = 192; 
+    double FVCut_xLow = -192; 
     double FVCut_xCentre = 10; 
 
-    double FVCut_yHigh = 196; 
-    double FVCut_yLow = -196; 
+    double FVCut_yHigh = 194; 
+    double FVCut_yLow = -194; 
     
     double FVCut_zHigh = 450; 
-    double FVCut_zLow = 6.5; 
+    double FVCut_zLow = 6; 
    
     double primaryPFPCutValue = 1;
 
@@ -2054,15 +2056,15 @@ void nuEBackgroundSignalWithNuE_macro(){
     double razzled2212Low_highestEnergyPFP = 0.00;
     double razzled13High_highestEnergyPFP =  0.1;
     double razzled13Low_highestEnergyPFP = 0.00;
-    double razzled211High_highestEnergyPFP = 0.05;
+    double razzled211High_highestEnergyPFP = 0.0125;
     double razzled211Low_highestEnergyPFP = 0.00;
     double razzled22High_highestEnergyPFP = 0.25;
     double razzled22Low_highestEnergyPFP = 0.00;
     double razzled11High_highestEnergyPFP = 1;
-    double razzled11Low_highestEnergyPFP = 0.75;
+    double razzled11Low_highestEnergyPFP = 0.875;
     
-    double dEdxHigh_highestEnergyPFP = 3;
-    double dEdxLow_highestEnergyPFP = 0.25;
+    double dEdxHigh_highestEnergyPFP = 3.25;
+    double dEdxLow_highestEnergyPFP = 0;
 
     double numContainedHits_high = 1;
     double numContainedHits_low = 0.7; 
@@ -2070,10 +2072,17 @@ void nuEBackgroundSignalWithNuE_macro(){
     double numHits_high = 2990;
     double numHits_low = 400; 
 
-    double ETheta2High_highestEnergyPFP = 1.533;
+    double ETheta2High_highestEnergyPFP = 3.066;
     double ETheta2Low_highestEnergyPFP = 0;
 
     double actualSignalCount = 0; 
+
+    double numCosmicSlicesAfterCuts_notWeighted = 0;
+    double numCosmicSlicesSignalFileAfterCuts_notWeighted = 0;
+    double numCosmicSlicesNuEFileAfterCuts_notWeighted = 0;
+    double numCosmicSlicesBNBFileAfterCuts_notWeighted = 0;
+    double numCosmicSlicesIntimeCosmicFileAfterCuts_notWeighted = 0;
+    double numCosmicSlicesNotNuEAfterCuts_notWeighted = 0;
 
     // If the directory already exists, delete everything in it
     // If the directory doesn't exists, create it. 
@@ -2880,22 +2889,7 @@ void nuEBackgroundSignalWithNuE_macro(){
 
         int trueSignalSlice = 0;
         int trueSignal = 0;
-
-        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
-            // This is an event with a nu+e elastic scatter in it (from the signal files)
-            if(FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))){
-                // The true neutrino interaction is within the active volume
-                actualSignalCount += weights.signalNuE;
-                gTotalSig += weights.signalNuE;
-                trueSignal = 1;
-            } else if(FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh)))){
-                // The true neutrino interaction is within the fiducial volume
-                actualSignalCount += weights.signalNuE;
-                gTotalSig += weights.signalNuE;
-                trueSignal = 1;
-            }
-        }
-
+        
         // Looking at the true recoil electron in the event (if there is one)
         recoilElectron_struct recoilElectron;
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
@@ -2918,8 +2912,30 @@ void nuEBackgroundSignalWithNuE_macro(){
 
         }
 
+        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+            // This is an event with a nu+e elastic scatter in it (from the signal files)
+
+            if(recoilElectron.energy == -999999) std::cout << "No True Recoil Electron Energy Found in Nu+E Elastic Scatter Event" << std::endl;
+            std::cout << "energy of true recoil electron in nu+e event = " << recoilElectron.energy << std::endl;
+
+            if(recoilElectron.energy > 150){
+                // nu+e elastic scatter must have true recoil electron with energy > 150 MeV to be classed as signal
+                if(FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))){
+                    // The true neutrino interaction is within the active volume
+                    actualSignalCount += weights.signalNuE;
+                    gTotalSig += weights.signalNuE;
+                    trueSignal = 1;
+                } else if(FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh)))){
+                    // The true neutrino interaction is within the fiducial volume
+                    actualSignalCount += weights.signalNuE;
+                    gTotalSig += weights.signalNuE;
+                    trueSignal = 1;
+                }
+            }
+        }
+
         if(trueSignal == 1){
-            // This is an event with a true nu+e elastic scatter within defined volume
+            // This is an event with a true nu+e elastic scatter within defined volume and true recoil electron energy > 150 MeV
             if(recoilElectron.energy == -999999) std::cout << "This is a true nu+e elastic scatter event with no recoil electron!!!" << std::endl;
             if(recoilElectron.energy != -999999 && recoilElectron.angle != -999999) trueAngleTrueEnergySignalBeforeCuts->Fill(recoilElectron.energy, (recoilElectron.angle*TMath::RadToDeg()));
         }
@@ -2953,7 +2969,8 @@ void nuEBackgroundSignalWithNuE_macro(){
                 //std::cout << "Cosmic Slice: sliceCategoryPlottingMacro = 0" << std::endl;
             } else if(reco_sliceOrigin->at(slice) == 1){
                 // This is a nu+e elastic scatter slice
-                if(reco_sliceCompleteness->at(slice) > 0.5){
+                if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
+                    // Slice must have completeness > 0.5 and have nu+e elastic scatter it comes from has true recoil electron energy > 150 MeV
                     if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
                         // True neutrino vertex is within the active volume (this is the signal definition if we aren't using the FV cuts
                         // -201.3 < x < 201.3, -203.8 < y < 203.8, 0 < z < 509.5
@@ -3013,8 +3030,9 @@ void nuEBackgroundSignalWithNuE_macro(){
                 // This is a slice that isn't truth-matched to a cosmic
                 if(reco_sliceOrigin->at(slice) == 1){
                     // This is a slice that is truth-matched to a nu+e elastic scatter
-                    if(reco_sliceCompleteness->at(slice) > 0.5){
+                    if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
                         // This is a slice that is truth-matched to a nu+e elastic scatter AND has completeness > 0.5 (signal slice)
+                        // The nu+e elastic scatter it is truth matched to must have true recoil electron with energy > 150 MeV
                         //if(FVCut == 0 && (sliceRecoVX < 201.3 && sliceRecoVX > -201.3) && (sliceRecoVY < 203.8 && sliceRecoVY > -203.8) && (sliceRecoVZ > 0 && sliceRecoVZ < 509.5)){
                         if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
                             // Interaction happened inside the TPC (in truth)
@@ -4407,66 +4425,6 @@ void nuEBackgroundSignalWithNuE_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
                     else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy += weight;
                 }
-                
-                if(ETheta2Cut == 1 && ((highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) > ETheta2High_highestEnergyPFP || (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) < ETheta2Low_highestEnergyPFP)){
-                    // Highest energy PFP in slice doesn't pass the ETheta2 cut
-                    if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
-                        std::cout << "=============" << std::endl;
-                        std::cout << "Signal Fails ETheta2 Cut" << std::endl;
-                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
-                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << " rad = " << highestEnergyPFP_afterCuts.theta*TMath::RadToDeg() << " degrees, PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
-                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
-                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
-                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
-                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
-                        std::cout << "True Recoil Electron Info: energy = " << recoilElectron.energy << ", angle = " << recoilElectron.angle << " rad = " << recoilElectron.angle*TMath::RadToDeg() << " degrees, direction = (" << recoilElectron.dx << ", " << recoilElectron.dy << ", " << recoilElectron.dz << ")" << std::endl;
-                        std::cout << "PCA Angle Recalculation Slice: all points = " << slice_PCAAngle_afterCuts << " rad = " << slice_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << slice5cm_PCAAngle_afterCuts << " rad = " << slice5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << slice10cm_PCAAngle_afterCuts << " rad = " << slice10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << slice15cm_PCAAngle_afterCuts << " rad = " << slice15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                        std::cout << "PCA Angle Recalculation PFP: all points = " << pfp_PCAAngle_afterCuts << " rad = " << pfp_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << pfp5cm_PCAAngle_afterCuts << " rad = " << pfp5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << pfp10cm_PCAAngle_afterCuts << " rad = " << pfp10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << pfp15cm_PCAAngle_afterCuts << " rad = " << pfp15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                        std::cout << "Smallest angle = " << smallestAngle_afterCuts << " rad = " << smallestAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                        std::cout << "Fails with ETheta2 (using PCA angle from pfp spacepoints within 10cm) = " << (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) << std::endl;
-                        std::cout << "=============" << std::endl;
-                    }
-
-                    continue;
-                }
-                    
-                if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
-                    std::cout << "=============" << std::endl;
-                    std::cout << "Signal Passes ETheta2 Cut" << std::endl;
-                    std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
-                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << " rad = " << highestEnergyPFP_afterCuts.theta*TMath::RadToDeg() << " degrees, PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
-                    std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
-                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
-                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
-                    std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
-                    std::cout << "True Recoil Electron Info: energy = " << recoilElectron.energy << ", angle = " << recoilElectron.angle << " rad = " << recoilElectron.angle*TMath::RadToDeg() << " degrees, direction = (" << recoilElectron.dx << ", " << recoilElectron.dy << ", " << recoilElectron.dz << ")" << std::endl;
-                    std::cout << "PCA Angle Recalculation Slice: all points = " << slice_PCAAngle_afterCuts << " rad = " << slice_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << slice5cm_PCAAngle_afterCuts << " rad = " << slice5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << slice10cm_PCAAngle_afterCuts << " rad = " << slice10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << slice15cm_PCAAngle_afterCuts << " rad = " << slice15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                    std::cout << "PCA Angle Recalculation PFP: all points = " << pfp_PCAAngle_afterCuts << " rad = " << pfp_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << pfp5cm_PCAAngle_afterCuts << " rad = " << pfp5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << pfp10cm_PCAAngle_afterCuts << " rad = " << pfp10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << pfp15cm_PCAAngle_afterCuts << " rad = " << pfp15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                    std::cout << "Smallest angle = " << smallestAngle_afterCuts << " rad = " << smallestAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
-                    std::cout << "Passes with ETheta2 (using PCA angle from pfp spacepoints within 10cm) = " << (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) << std::endl;
-                    std::cout << "=============" << std::endl;
-                }
-
-                if(DLCurrent == 5){
-                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
-                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.ETheta2Back += weight;
-    
-                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
-                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
-                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
-                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
-                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
-                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
-                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
-                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
-                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
-                    else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
-                }
 
                 if(razzledPDG11Cut == 1 && ((highestEnergyPFP_afterCuts.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP_afterCuts.razzledPDG11 < razzled11Low_highestEnergyPFP))){
                     // Highest energy PFP in slice doesn't pass the razzled 11 cut
@@ -4653,6 +4611,66 @@ void nuEBackgroundSignalWithNuE_macro(){
                     else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled211IntSplit.other += weight;
                     else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy += weight;
                 }
+                
+                if(ETheta2Cut == 1 && ((highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) > ETheta2High_highestEnergyPFP || (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) < ETheta2Low_highestEnergyPFP)){
+                    // Highest energy PFP in slice doesn't pass the ETheta2 cut
+                    if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
+                        std::cout << "=============" << std::endl;
+                        std::cout << "Signal Fails ETheta2 Cut" << std::endl;
+                        std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                        std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << " rad = " << highestEnergyPFP_afterCuts.theta*TMath::RadToDeg() << " degrees, PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                        std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                        std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                        std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                        std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        std::cout << "True Recoil Electron Info: energy = " << recoilElectron.energy << ", angle = " << recoilElectron.angle << " rad = " << recoilElectron.angle*TMath::RadToDeg() << " degrees, direction = (" << recoilElectron.dx << ", " << recoilElectron.dy << ", " << recoilElectron.dz << ")" << std::endl;
+                        std::cout << "PCA Angle Recalculation Slice: all points = " << slice_PCAAngle_afterCuts << " rad = " << slice_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << slice5cm_PCAAngle_afterCuts << " rad = " << slice5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << slice10cm_PCAAngle_afterCuts << " rad = " << slice10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << slice15cm_PCAAngle_afterCuts << " rad = " << slice15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                        std::cout << "PCA Angle Recalculation PFP: all points = " << pfp_PCAAngle_afterCuts << " rad = " << pfp_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << pfp5cm_PCAAngle_afterCuts << " rad = " << pfp5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << pfp10cm_PCAAngle_afterCuts << " rad = " << pfp10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << pfp15cm_PCAAngle_afterCuts << " rad = " << pfp15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                        std::cout << "Smallest angle = " << smallestAngle_afterCuts << " rad = " << smallestAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                        std::cout << "Fails with ETheta2 (using PCA angle from pfp spacepoints within 10cm) = " << (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) << std::endl;
+                        std::cout << "=============" << std::endl;
+                    }
+
+                    continue;
+                }
+                    
+                if(sliceInteractionType == 1 && signal == 1 && ETheta2Print == 1){
+                    std::cout << "=============" << std::endl;
+                    std::cout << "Signal Passes ETheta2 Cut" << std::endl;
+                    std::cout << "eventID = " << eventID << ", runID = " << runID << ", subRunID = " << subRunID << ", signal = " << signal << ", slice ID = " << reco_sliceID->at(slice) << std::endl;
+                    std::cout << "Highest energy PFP ID = " << highestEnergyPFP_afterCuts.PFPID << ", energy = " << highestEnergyPFP_afterCuts.energy << ", theta = " << highestEnergyPFP_afterCuts.theta << " rad = " << highestEnergyPFP_afterCuts.theta*TMath::RadToDeg() << " degrees, PFP completeness = " << highestEnergyPFP_afterCuts.completeness << ", PFP purity = " << highestEnergyPFP_afterCuts.purity << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", true int = " << highestEnergyPFP_afterCuts.trueInt << ", true PDG = " << highestEnergyPFP_afterCuts.truePDG << ", true PFP vertex = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), true PFP end = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << "), true length = " << highestEnergyPFP_afterCuts.trueLength << std::endl;
+                    std::cout << "PFP Direction = (" << highestEnergyPFP_afterCuts.dx << ", " << highestEnergyPFP_afterCuts.dy << ", " << highestEnergyPFP_afterCuts.dz << "), PFP Reco Vertex = (" << highestEnergyPFP_afterCuts.vx << ", " << highestEnergyPFP_afterCuts.vy << ", " << highestEnergyPFP_afterCuts.vz << "), trackscore = " << highestEnergyPFP_afterCuts.trackscore << ", primary = " << highestEnergyPFP_afterCuts.primary << ", shower length = " << highestEnergyPFP_afterCuts.showerLength << ", shower open angle = " << highestEnergyPFP_afterCuts.showerOpenAngle << ", num hits = " << highestEnergyPFP_afterCuts.numHits << ", dE/dx = " << highestEnergyPFP_afterCuts.bestPlanedEdx << ", ETheta2 = " << (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta) << std::endl;
+                    std::cout << "Razzled scores: electron = " << highestEnergyPFP_afterCuts.razzledPDG11 << ", muon = " << highestEnergyPFP_afterCuts.razzledPDG13 << ", photon = " << highestEnergyPFP_afterCuts.razzledPDG22 << ", charged pi = " << highestEnergyPFP_afterCuts.razzledPDG211 << ", proton = " << highestEnergyPFP_afterCuts.razzledPDG2212 << std::endl;
+                    std::cout << "Number of Hits in Slice = " << reco_sliceNumHits->at(slice) << ", Fraction of Hits Contained in PFPs = " << (numHitsInPFPs_afterCuts/reco_sliceNumHits->at(slice)) << std::endl;
+                    std::cout << "Slice CRUMBS Score = " << reco_sliceScore->at(slice) << ", reco neutrino vertex = (" << recoVX << ", " << recoVY << ", " << recoVZ << "), number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                    std::cout << "True Recoil Electron Info: energy = " << recoilElectron.energy << ", angle = " << recoilElectron.angle << " rad = " << recoilElectron.angle*TMath::RadToDeg() << " degrees, direction = (" << recoilElectron.dx << ", " << recoilElectron.dy << ", " << recoilElectron.dz << ")" << std::endl;
+                    std::cout << "PCA Angle Recalculation Slice: all points = " << slice_PCAAngle_afterCuts << " rad = " << slice_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << slice5cm_PCAAngle_afterCuts << " rad = " << slice5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << slice10cm_PCAAngle_afterCuts << " rad = " << slice10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << slice15cm_PCAAngle_afterCuts << " rad = " << slice15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                    std::cout << "PCA Angle Recalculation PFP: all points = " << pfp_PCAAngle_afterCuts << " rad = " << pfp_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 5cm points = " << pfp5cm_PCAAngle_afterCuts << " rad = " << pfp5cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 10cm points = " << pfp10cm_PCAAngle_afterCuts << " rad = " << pfp10cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees, 15cm points = " << pfp15cm_PCAAngle_afterCuts << " rad = " << pfp15cm_PCAAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                    std::cout << "Smallest angle = " << smallestAngle_afterCuts << " rad = " << smallestAngle_afterCuts*TMath::RadToDeg() << " degrees" << std::endl;
+                    std::cout << "Passes with ETheta2 (using PCA angle from pfp spacepoints within 10cm) = " << (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts) << std::endl;
+                    std::cout << "=============" << std::endl;
+                }
+
+                if(DLCurrent == 5){
+                    if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
+                    else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                    else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+    
+                    if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                    else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
+                    else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
+                    else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
+                    else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
+                    else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
+                    else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
+                    else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
+                    else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
+                    else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
+                }
 
                 if(dEdxCut == 1 && (highestEnergyPFP_afterCuts.bestPlanedEdx > dEdxHigh_highestEnergyPFP || highestEnergyPFP_afterCuts.bestPlanedEdx < dEdxLow_highestEnergyPFP)){
                     // Highest energy PFP in slice doesn't pass the dE/dx cut
@@ -4678,7 +4696,25 @@ void nuEBackgroundSignalWithNuE_macro(){
                     else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
                     else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.dEdxBack += weight;
                     else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.dEdxBack += weight;
-    
+   
+                    if(sliceInteractionType == 0){
+                        numCosmicSlicesAfterCuts_notWeighted++;
+                        
+                        if(signal != 4){
+                            numCosmicSlicesNotNuEAfterCuts_notWeighted++;
+                        }
+                    }
+                    
+                    if(sliceInteractionType == 0 && signal == 1){
+                        numCosmicSlicesSignalFileAfterCuts_notWeighted++;
+                    } else if(sliceInteractionType == 0 && signal == 2){
+                        numCosmicSlicesBNBFileAfterCuts_notWeighted++;
+                    } else if(sliceInteractionType == 0 && signal == 3){
+                        numCosmicSlicesIntimeCosmicFileAfterCuts_notWeighted++;
+                    } else if(sliceInteractionType == 0 && signal == 4){
+                        numCosmicSlicesNuEFileAfterCuts_notWeighted++;
+                    }
+
                     if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
                     else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuE += weight;
                     else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 += weight;
@@ -6189,11 +6225,6 @@ void nuEBackgroundSignalWithNuE_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
         
-        if(ETheta2Cut == 1){
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-        
         if(razzledPDG11Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back) << " & " << (eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back)) << " & " << (eventsAfterCuts_DLNuE.razzled11Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled11Sig/(eventsAfterCuts_DLNuE.razzled11Sig+eventsAfterCuts_DLNuE.razzled11Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -6216,6 +6247,11 @@ void nuEBackgroundSignalWithNuE_macro(){
         
         if(razzledPDG211Cut == 1){
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << std::defaultfloat << std::setprecision(4) << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back) << " & " << (eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back)) << " & " << (eventsAfterCuts_DLNuE.razzled211Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.razzled211Sig/(eventsAfterCuts_DLNuE.razzled211Sig+eventsAfterCuts_DLNuE.razzled211Back)) << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Sig << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(ETheta2Cut == 1){
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal << " & " << 100*eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << " & " << (eventsAfterCuts_DLNuE.ETheta2Sig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.ETheta2Sig/(eventsAfterCuts_DLNuE.ETheta2Sig+eventsAfterCuts_DLNuE.ETheta2Back)) << std::fixed << std::setprecision(0) << " & " << eventsAfterCuts_DLNuE.ETheta2Sig << " ("  << std::defaultfloat << std::setprecision(4) << 100*eventsAfterCuts_DLNuE.ETheta2Sig/actualSignalCount << "\\%) & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2Back << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2Back/eventsBeforeCuts_DLNuE.background << "\\%) \\\\ " << std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -6285,11 +6321,6 @@ void nuEBackgroundSignalWithNuE_macro(){
             out_tablefile << "\\hline" << std::endl;
         }
         
-        if(ETheta2Cut == 1){ 
-            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
-            out_tablefile << "\\hline" << std::endl;
-        }
-        
         if(razzledPDG11Cut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled11IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
@@ -6312,6 +6343,11 @@ void nuEBackgroundSignalWithNuE_macro(){
         
         if(razzledPDG211Cut == 1){ 
             out_tablefile << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP << " & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.razzled211IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        }
+        
+        if(ETheta2Cut == 1){ 
+            out_tablefile << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$ & " << std::fixed << std::setprecision(0) << eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE/eventsBeforeCuts_DLNuE.splitInt.nuE << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0/eventsBeforeCuts_DLNuE.splitInt.NCNPi0 << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC/eventsBeforeCuts_DLNuE.splitInt.otherNC << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu/eventsBeforeCuts_DLNuE.splitInt.CCnumu << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue/eventsBeforeCuts_DLNuE.splitInt.CCnue << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt/eventsBeforeCuts_DLNuE.splitInt.dirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt/eventsBeforeCuts_DLNuE.splitInt.nuEDirt << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic/eventsBeforeCuts_DLNuE.splitInt.cosmic << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.other << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.other/eventsBeforeCuts_DLNuE.splitInt.other << "\\%) & " << std::fixed << std::setprecision(0) <<  eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy << std::defaultfloat << std::setprecision(4) << " (" << 100*eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy/eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy << "\\%) \\\\"<< std::endl;
             out_tablefile << "\\hline" << std::endl;
         }
         
@@ -6475,6 +6511,14 @@ void nuEBackgroundSignalWithNuE_macro(){
 
     */
     std::cout << "Number of signal events left = " << eventsAfterCuts_DLNuE.dEdxSig << ", Number of background events left = " << eventsAfterCuts_DLNuE.dEdxBack << std::endl;
+
+    std::cout << "----- Number of Cosmic Slices After Cuts (unweighted) -----" << std::endl;
+    std::cout << "Total = " << numCosmicSlicesAfterCuts_notWeighted << std::endl;
+    std::cout << "Total (skipping nue file) = " << numCosmicSlicesNotNuEAfterCuts_notWeighted << std::endl;
+    std::cout << "From Nu+E File = " << numCosmicSlicesSignalFileAfterCuts_notWeighted << std::endl;
+    std::cout << "From NuE File = " << numCosmicSlicesNuEFileAfterCuts_notWeighted << std::endl;
+    std::cout << "From BNB File = " << numCosmicSlicesBNBFileAfterCuts_notWeighted << std::endl;
+    std::cout << "From Intime Cosmic File = " << numCosmicSlicesIntimeCosmicFileAfterCuts_notWeighted << std::endl;
 
     /*
     outFile->cd();
