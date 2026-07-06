@@ -272,7 +272,7 @@ namespace blip {
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
     fESTAR_p1           = pset.get<float>         ("ESTAR_p1",            0.00003479);
-    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  false);
+    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  true);
     fSCECorr            = pset.get<bool>          ("SCECorrection",       false);
     fYZUniformityCorr   = pset.get<bool>          ("YZUniformityCorrection",true);
     fModBoxA            = pset.get<float>         ("ModBoxA",             0.93);
@@ -1141,12 +1141,18 @@ namespace blip {
       // ================================================================================
       float depEl   = std::max(0.0,(double)blip.Charge);
       float Efield  = kNominalEfield;
-
+      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
+      blip.EnergyNoDriftCorrection   = depEl * (1./recomb) * kWion;
+      // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
+      float energy_estar = Q_to_E_ESTAR(depEl);
+      float energy_pstar = Q_to_E_PSTAR(depEl);
+      blip.EnergyESTARNoDriftCorrection  = energy_estar;
+      blip.EnergyPSTARNoDriftCorrection  = energy_pstar;
       // --- Lifetime correction ---
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
+      if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
 
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
@@ -1178,12 +1184,10 @@ namespace blip {
       }
       
       // METHOD 1: recombination factor from Mod Box model with a fixed dE/dx (fCalodEdx)
-      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * kWion;
-      
       // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
-      float energy_estar = Q_to_E_ESTAR(depEl);
-      float energy_pstar = Q_to_E_PSTAR(depEl);
+      energy_estar = Q_to_E_ESTAR(depEl);
+      energy_pstar = Q_to_E_PSTAR(depEl); //reaculate after drift correction
       blip.EnergyESTAR = energy_estar;
       blip.EnergyPSTAR = energy_pstar;
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
