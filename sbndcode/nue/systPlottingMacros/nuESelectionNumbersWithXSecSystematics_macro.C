@@ -1,0 +1,1999 @@
+#include <vector>
+#include <map>
+#include <tuple>
+#include <utility>
+#include <TFile.h>
+#include <TTree.h>
+#include <TCanvas.h>
+#include <TFrame.h>
+#include <TH1F.h>
+#include <string>
+#include <sstream>
+#include <TBenchmark.h>
+#include <TRandom.h>
+#include <TSystem.h>
+#include <Rtypes.h>
+#include <cmath>
+#include <iostream>
+#include <stdlib.h>
+#include <TMath.h>
+#include <fstream>
+#include <TLegend.h>
+#include <THStack.h>
+#include <set>
+#include <utility>
+#include <TLine.h>
+#include <TLatex.h>
+#include <TROOT.h>
+#include <TEfficiency.h>
+#include <TGraphAsymmErrors.h>
+#include <iomanip>
+#include <TH2D.h>
+#include <TProfile.h>
+#include <TGaxis.h>
+#include "TRandom3.h"
+#include <algorithm>
+#include <functional>
+#include <array>
+#include "Math/Minimizer.h"
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+
+struct eventKey_struct{
+    UInt_t runID;
+    UInt_t subRunID;
+    UInt_t eventID;
+    int signal;
+    int DLCurrent;
+
+    bool operator == (const eventKey_struct& other) const {
+        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent;
+    }
+};
+
+struct eventKeyHash_struct{
+    std::size_t operator()(const eventKey_struct& k) const{
+        std::size_t h = 0;
+        h ^= std::hash<UInt_t>{}(k.runID);
+        h ^= std::hash<UInt_t>{}(k.subRunID) << 1;
+        h ^= std::hash<UInt_t>{}(k.eventID) << 2;
+        h ^= std::hash<int>{}(k.signal) << 3;
+        h ^= std::hash<int>{}(k.DLCurrent) << 4;
+        return h;
+    }
+};
+
+struct weights_struct{
+    double signalNuE = 0;
+    double BNBNuE = 0;
+    double cosmicsNuE = 0;
+    double NuENuE = 0;
+};
+
+struct recoilElectron_struct{
+    double energy;
+    double angle;
+    double dx;
+    double dy;
+    double dz;
+};
+
+struct highestEnergyPFP_struct{
+    double PFPID = -999999;
+    double energy = -999999;
+    double theta = -999999;
+    double dx = -999999;
+    double dy = -999999;
+    double dz = -999999;
+    double vx = -999999;
+    double vy = -999999;
+    double vz = -999999;
+    double completeness = -999999;
+    double purity = -999999;
+    double trackscore = -999999;
+    double primary = -999999;
+    double truePDG = -999999;
+    double trueOrigin = -999999;
+    double trueInt = -999999;
+    double bestPlanedEdx = -999999;
+    double razzledPDG11 = -999999;
+    double razzledPDG13 = -999999;
+    double razzledPDG22 = -999999;
+    double razzledPDG211 = -999999;
+    double razzledPDG2212 = -999999;
+    double razzledBestPDG = -999999;
+    double showerLength = -999999;
+    double showerOpenAngle = -999999;
+    double showerBestPlaneEnergy = -999999;
+    double trueVX = -999999;
+    double trueVY = -999999;
+    double trueVZ = -999999;
+    double trueEndX = -999999;
+    double trueEndY = -999999;
+    double trueEndZ = -999999;
+    double trueLength = -999999;
+    double numHits = -999999;
+    double clearCosmic = -999999;
+};
+
+struct eventCounter_struct{
+    double nuE = 0;
+    double NCNPi0 = 0;
+    double otherNC = 0;
+    double CCnumu = 0;
+    double CCnue = 0;
+    double dirt = 0;
+    double nuEDirt = 0;
+    double nuEFuzzy = 0;
+    double cosmic = 0;
+    double other = 0;
+};
+
+struct beforeEventCount_struct{
+    double signal = 0;
+    double background = 0;
+    eventCounter_struct splitInt;
+};
+
+struct eventCounting_struct{
+    double clearCosmicsSig = 0;    double clearCosmicsBack = 0;    eventCounter_struct clearCosmicsIntSplit;
+    double numPFPs0Sig = 0;        double numPFPs0Back = 0;        eventCounter_struct numPFPs0IntSplit;
+    double numRecoNeut0Sig = 0;    double numRecoNeut0Back = 0;    eventCounter_struct numRecoNeut0IntSplit;
+    double FVSig = 0;              double FVBack = 0;              eventCounter_struct FVIntSplit;
+    double crumbsSig = 0;          double crumbsBack = 0;          eventCounter_struct crumbsIntSplit;
+    double primaryPFPSig = 0;      double primaryPFPBack = 0;      eventCounter_struct primaryPFPIntSplit;
+    double razzled11Sig = 0;       double razzled11Back = 0;       eventCounter_struct razzled11IntSplit;
+    double razzled211Sig = 0;      double razzled211Back = 0;      eventCounter_struct razzled211IntSplit;
+    double ETheta2Sig = 0;         double ETheta2Back = 0;         eventCounter_struct ETheta2IntSplit;
+    double dEdxSig = 0;            double dEdxBack = 0;            eventCounter_struct dEdxIntSplit;
+};
+
+struct GenieParam_struct{
+    std::string mapKey;     // exact key used inside the GENIE weight maps (for lookup) -- CHECK THIS MATCHES YOUR TREE
+    std::string shortName;  // used for printing / filenames / histogram names (kept unique)
+    int nUniv;              // number of universes for this parameter
+    bool isMultisim;        // true -> genuine multisim (RMS treatment); false -> multisigma/unisim (envelope treatment)
+};
+
+void nuESelectionNumbersWithXSecSystematics_macro(){
+
+    // Toggle: set true to fully mirror the flux macro's per-cut universe-distribution
+    bool makePerCutPlots_GENIE = false;
+
+    std::string cutsApplied = "allCuts";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers18June_GENIE_" + cutsApplied + "/";
+    std::string tableFileName = base_path + "table_GENIE.txt";
+
+    int clearCosmicCut = 1;
+    int numPFPs0Cut = 1;
+    int numRecoNeutrinosCut = 1;
+    int CRUMBSCut = 1;
+    int FVCut = 1;
+    int primaryPFPCut = 1;
+    int ETheta2Cut = 1;
+    int razzledPDG11Cut = 1;
+    int razzledPDG211Cut = 1;
+    int dEdxCut = 1;
+
+    // Cut values -- UNCHANGED from the flux macro
+    double crumbsScoreCut_low = 0.2;
+    double crumbsScoreCut_high = 0.68;
+
+    double FVCut_xHigh = 194;
+    double FVCut_xLow = -196;
+    double FVCut_xCentre = 10;
+
+    double FVCut_yHigh = 196;
+    double FVCut_yLow = -196;
+
+    double FVCut_zHigh = 450;
+    double FVCut_zLow = 6.5;
+
+    double primaryPFPCutValue = 1;
+
+    double razzled211High_highestEnergyPFP = 0.05;
+    double razzled211Low_highestEnergyPFP = 0.00;
+    double razzled11High_highestEnergyPFP = 1;
+    double razzled11Low_highestEnergyPFP = 0.75;
+
+    double dEdxHigh_highestEnergyPFP = 3;
+    double dEdxLow_highestEnergyPFP = 0.25;
+
+    double ETheta2High_highestEnergyPFP = 1.533;
+    double ETheta2Low_highestEnergyPFP = 0;
+
+    // AV boundaries
+    double xMin = -201.3; double xMax = 201.3;
+    double yMin = -203.8; double yMax = 203.8;
+    double zMin = 0;      double zMax = 509.4;
+
+    if (gSystem->AccessPathName(base_path.c_str())) {
+        gSystem->mkdir(base_path.c_str(), kTRUE);
+    }
+
+    std::ofstream clearTableFile(tableFileName, std::ios::trunc);
+    if (!clearTableFile.is_open()) {
+        std::cerr << "Error: could not open or create " << tableFileName << std::endl;
+        return;
+    }
+    clearTableFile.close();
+
+    TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withoutWeights.root");
+    if(!fNuE){ std::cerr << "Error opening the NuE TTree file" << std::endl; return; }
+
+    TDirectory *dirNuE = (TDirectory*)fNuE->Get("ana");
+    if(!dirNuE){ std::cerr << "Directory 'ana' not found in NuE file" << std::endl; return; }
+
+    TTree *tree = (TTree*)dirNuE->Get("NuE");
+    if(!tree){ std::cerr << "NuE TTree not found" << std::endl; return; }
+
+    TTree *subRunTree = (TTree*)dirNuE->Get("SubRun");
+    if(!subRunTree){ std::cerr << "SubRun TTree not found" << std::endl; return; }
+
+    TFile *fNuEWeights = TFile::Open("/exp/sbnd/data/users/coackley/signalBNBIntimeCosmic14June_withWeights.root");
+    if(!fNuEWeights){ std::cerr << "Error opening the NuEWeights TTree file" << std::endl; return; }
+
+    TDirectory *dirNuEWeights = (TDirectory*)fNuEWeights->Get("ana");
+    if(!dirNuEWeights){ std::cerr << "Directory 'ana' not found in the NuEWeights file" << std::endl; return; }
+
+    TTree *weightsTree = (TTree*)dirNuEWeights->Get("NuEWeights");
+    if(!weightsTree){ std::cerr << "NuEWeights TTree not found" << std::endl; return; }
+
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_18June.root", "RECREATE");
+    if(!fOut || fOut->IsZombie()){ std::cerr << "Error creating output ROOT file" << std::endl; return; }
+
+    beforeEventCount_struct eventsBeforeCuts_DLNuE;
+    eventCounting_struct eventsAfterCuts_DLNuE;
+
+    double subRunSignal, subRunDLCurrent, subRunPOT;
+    int subRunSpills, subRunNumGenEvents;
+    unsigned int subRunNumber, subRunRun;
+
+    subRunTree->SetBranchAddress("signal", &subRunSignal);
+    subRunTree->SetBranchAddress("DLCurrent", &subRunDLCurrent);
+    subRunTree->SetBranchAddress("pot", &subRunPOT);
+    subRunTree->SetBranchAddress("spills", &subRunSpills);
+    subRunTree->SetBranchAddress("numGenEvents", &subRunNumGenEvents);
+    subRunTree->SetBranchAddress("subRun", &subRunNumber);
+    subRunTree->SetBranchAddress("run", &subRunRun);
+
+    Long64_t numEntriesSubRun = subRunTree->GetEntries();
+
+    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalNuE;
+    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBNuE;
+
+    double cosmicSpillsSumNuE = 0;
+    double BNBSpillsSumNuE = 0;
+    double NuESpillsSumNuE = 0;
+    double POTSignalNuE_notMissing = 0;
+    double POTBNBNuE_notMissing = 0;
+
+    for(Long64_t i = 0; i < numEntriesSubRun; ++i){
+        subRunTree->GetEntry(i);
+
+        if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
+        else if(subRunSignal == 2 && subRunDLCurrent == 5) BNBSpillsSumNuE += subRunNumGenEvents;
+        else if(subRunSignal == 1 && subRunDLCurrent == 5) NuESpillsSumNuE += subRunNumGenEvents;
+
+        std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
+
+        if(subRunSignal == 1){
+            if(subRunDLCurrent == 5 && seenSubRunsSignalNuE.find(key) == seenSubRunsSignalNuE.end()){
+                seenSubRunsSignalNuE.insert(key);
+            }
+            if(subRunDLCurrent == 5) POTSignalNuE_notMissing += subRunPOT;
+        } else if(subRunSignal == 2){
+            if(subRunDLCurrent == 5 && seenSubRunsBNBNuE.find(key) == seenSubRunsBNBNuE.end()){
+                seenSubRunsBNBNuE.insert(key);
+            }
+            if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
+        } else if(subRunSignal == 4){
+            if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
+                totalPOTNuENuE += subRunPOT;
+                seenSubRunsNuENuE.insert(key);
+            }
+
+            if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
+        }
+    }
+
+    double targetPOT = 1e21;
+    double targetGates = ((1333568/6.293443e+18)*targetPOT);
+    double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
+
+    double totalPOTNuENuE_notMissing = (POTNuENuE_notMissing + POTBNBNuE_notMissing);
+
+    std::cout << "POT from nue sample = " << POTNuENuE_notMissing << ", POT from BNB sample = " << POTBNBNuE_notMissing << ", total nue POT = " << totalPOTNuENuE_notMissing << std::endl;
+
+    weights_struct weights;
+    weights.signalNuE = targetPOT / POTSignalNuE_notMissing;
+    weights.BNBNuE = targetPOT / POTBNBNuE_notMissing;
+    weights.cosmicsNuE = cosmicsWeights_NuE;
+    weights.NuENuE = targetPOT / totalPOTNuENuE_notMissing;
+
+    std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << ", nue = " << weights.NuENuE << std::endl;
+
+    UInt_t eventID, runID, subRunID;
+    int nuEScatter;
+    double nuEScatterTrueVX, nuEScatterTrueVY, nuEScatterTrueVZ;
+    double DLCurrent, signal;
+
+    std::vector<double> *truth_recoilElectronPDG = nullptr;
+    std::vector<double> *truth_recoilElectronEnergy = nullptr;
+    std::vector<double> *truth_recoilElectronAngle = nullptr;
+    std::vector<double> *truth_recoilElectronDX = nullptr;
+    std::vector<double> *truth_recoilElectronDY = nullptr;
+    std::vector<double> *truth_recoilElectronDZ = nullptr;
+
+    std::vector<double> *reco_sliceID = nullptr;
+    std::vector<double> *reco_sliceCompleteness = nullptr;
+    std::vector<double> *reco_sliceScore = nullptr;
+    std::vector<double> *reco_sliceTrueVX = nullptr;
+    std::vector<double> *reco_sliceTrueVY = nullptr;
+    std::vector<double> *reco_sliceTrueVZ = nullptr;
+    std::vector<double> *reco_sliceOrigin = nullptr;
+    std::vector<double> *reco_sliceTrueCCNC = nullptr;
+    std::vector<double> *reco_sliceTrueNeutrinoType = nullptr;
+
+    std::vector<double> *truth_particleSliceID = nullptr;
+    std::vector<double> *truth_particlePDG = nullptr;
+    std::vector<double> *truth_particleStatusCode = nullptr;
+
+    std::vector<double> *reco_particlePDG = nullptr;
+    std::vector<double> *reco_particleIsPrimary = nullptr;
+    std::vector<double> *reco_particleVX = nullptr;
+    std::vector<double> *reco_particleVY = nullptr;
+    std::vector<double> *reco_particleVZ = nullptr;
+    std::vector<double> *reco_particleDX = nullptr;
+    std::vector<double> *reco_particleDY = nullptr;
+    std::vector<double> *reco_particleDZ = nullptr;
+    std::vector<double> *reco_particleSliceID = nullptr;
+    std::vector<double> *reco_particleBestPlaneEnergy = nullptr;
+    std::vector<double> *reco_particleTheta = nullptr;
+    std::vector<double> *reco_particleTrackScore = nullptr;
+    std::vector<double> *reco_particleCompleteness = nullptr;
+    std::vector<double> *reco_particlePurity = nullptr;
+    std::vector<double> *reco_particleID = nullptr;
+    std::vector<double> *reco_particleTruePDG = nullptr;
+    std::vector<double> *reco_particleTrueOrigin = nullptr;
+    std::vector<double> *reco_particleTrueInteractionType = nullptr;
+    std::vector<double> *reco_particleNumHits = nullptr;
+    std::vector<double> *reco_particleClearCosmic = nullptr;
+    std::vector<double> *reco_particleBestPlanedEdx = nullptr;
+    std::vector<double> *reco_particleRazzledPDG11 = nullptr;
+    std::vector<double> *reco_particleRazzledPDG13 = nullptr;
+    std::vector<double> *reco_particleRazzledPDG22 = nullptr;
+    std::vector<double> *reco_particleRazzledPDG211 = nullptr;
+    std::vector<double> *reco_particleRazzledPDG2212 = nullptr;
+    std::vector<double> *reco_particleRazzledBestPDG = nullptr;
+    std::vector<double> *reco_particleTrueVX = nullptr;
+    std::vector<double> *reco_particleTrueVY = nullptr;
+    std::vector<double> *reco_particleTrueVZ = nullptr;
+    std::vector<double> *reco_particleTrueEndX = nullptr;
+    std::vector<double> *reco_particleTrueEndY = nullptr;
+    std::vector<double> *reco_particleTrueEndZ = nullptr;
+
+    std::vector<double> *reco_neutrinoID = nullptr;
+    std::vector<double> *reco_neutrinoVX = nullptr;
+    std::vector<double> *reco_neutrinoVY = nullptr;
+    std::vector<double> *reco_neutrinoVZ = nullptr;
+    std::vector<double> *reco_neutrinoSliceID = nullptr;
+
+    std::vector<double> *angleRecalculationPCAPFP10cm_angle = nullptr;
+    std::vector<double> *angleRecalculationPCAPFP10cm_pfpID = nullptr;
+    std::vector<double> *angleRecalculationPCAPFP10cm_dx = nullptr;
+    std::vector<double> *angleRecalculationPCAPFP10cm_dy = nullptr;
+    std::vector<double> *angleRecalculationPCAPFP10cm_dz = nullptr;
+
+    tree->SetBranchAddress("eventID", &eventID);
+    tree->SetBranchAddress("runID", &runID);
+    tree->SetBranchAddress("subRunID", &subRunID);
+    tree->SetBranchAddress("nuEScatter", &nuEScatter);
+    tree->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX);
+    tree->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY);
+    tree->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ);
+    tree->SetBranchAddress("DLCurrent", &DLCurrent);
+    tree->SetBranchAddress("signal", &signal);
+
+    tree->SetBranchAddress("truth_recoilElectronPDG", &truth_recoilElectronPDG);
+    tree->SetBranchAddress("truth_recoilElectronEnergy", &truth_recoilElectronEnergy);
+    tree->SetBranchAddress("truth_recoilElectronAngle", &truth_recoilElectronAngle);
+    tree->SetBranchAddress("truth_recoilElectronDX", &truth_recoilElectronDX);
+    tree->SetBranchAddress("truth_recoilElectronDY", &truth_recoilElectronDY);
+    tree->SetBranchAddress("truth_recoilElectronDZ", &truth_recoilElectronDZ);
+
+    tree->SetBranchAddress("reco_sliceID", &reco_sliceID);
+    tree->SetBranchAddress("reco_sliceCompleteness", &reco_sliceCompleteness);
+    tree->SetBranchAddress("reco_sliceScore", &reco_sliceScore);
+    tree->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX);
+    tree->SetBranchAddress("reco_sliceTrueVY", &reco_sliceTrueVY);
+    tree->SetBranchAddress("reco_sliceTrueVZ", &reco_sliceTrueVZ);
+    tree->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin);
+    tree->SetBranchAddress("reco_sliceTrueCCNC", &reco_sliceTrueCCNC);
+    tree->SetBranchAddress("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType);
+
+    tree->SetBranchAddress("truth_particleSliceID", &truth_particleSliceID);
+    tree->SetBranchAddress("truth_particlePDG", &truth_particlePDG);
+    tree->SetBranchAddress("truth_particleStatusCode", &truth_particleStatusCode);
+
+    tree->SetBranchAddress("reco_particlePDG", &reco_particlePDG);
+    tree->SetBranchAddress("reco_particleIsPrimary", &reco_particleIsPrimary);
+    tree->SetBranchAddress("reco_particleVX", &reco_particleVX);
+    tree->SetBranchAddress("reco_particleVY", &reco_particleVY);
+    tree->SetBranchAddress("reco_particleVZ", &reco_particleVZ);
+    tree->SetBranchAddress("reco_particleDX", &reco_particleDX);
+    tree->SetBranchAddress("reco_particleDY", &reco_particleDY);
+    tree->SetBranchAddress("reco_particleDZ", &reco_particleDZ);
+    tree->SetBranchAddress("reco_particleSliceID", &reco_particleSliceID);
+    tree->SetBranchAddress("reco_particleBestPlaneEnergy", &reco_particleBestPlaneEnergy);
+    tree->SetBranchAddress("reco_particleTheta", &reco_particleTheta);
+    tree->SetBranchAddress("reco_particleTrackScore", &reco_particleTrackScore);
+    tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
+    tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
+    tree->SetBranchAddress("reco_particleID", &reco_particleID);
+    tree->SetBranchAddress("reco_particleTruePDG", &reco_particleTruePDG);
+    tree->SetBranchAddress("reco_particleTrueOrigin", &reco_particleTrueOrigin);
+    tree->SetBranchAddress("reco_particleTrueInteractionType", &reco_particleTrueInteractionType);
+    tree->SetBranchAddress("reco_particleNumHits", &reco_particleNumHits);
+    tree->SetBranchAddress("reco_particleClearCosmic", &reco_particleClearCosmic);
+    tree->SetBranchAddress("reco_particleBestPlanedEdx", &reco_particleBestPlanedEdx);
+    tree->SetBranchAddress("reco_particleRazzledPDG11", &reco_particleRazzledPDG11);
+    tree->SetBranchAddress("reco_particleRazzledPDG13", &reco_particleRazzledPDG13);
+    tree->SetBranchAddress("reco_particleRazzledPDG22", &reco_particleRazzledPDG22);
+    tree->SetBranchAddress("reco_particleRazzledPDG211", &reco_particleRazzledPDG211);
+    tree->SetBranchAddress("reco_particleRazzledPDG2212", &reco_particleRazzledPDG2212);
+    tree->SetBranchAddress("reco_particleRazzledBestPDG", &reco_particleRazzledBestPDG);
+    tree->SetBranchAddress("reco_particleTrueVX", &reco_particleTrueVX);
+    tree->SetBranchAddress("reco_particleTrueVY", &reco_particleTrueVY);
+    tree->SetBranchAddress("reco_particleTrueVZ", &reco_particleTrueVZ);
+    tree->SetBranchAddress("reco_particleTrueEndX", &reco_particleTrueEndX);
+    tree->SetBranchAddress("reco_particleTrueEndY", &reco_particleTrueEndY);
+    tree->SetBranchAddress("reco_particleTrueEndZ", &reco_particleTrueEndZ);
+
+    tree->SetBranchAddress("reco_neutrinoID", &reco_neutrinoID);
+    tree->SetBranchAddress("reco_neutrinoVX", &reco_neutrinoVX);
+    tree->SetBranchAddress("reco_neutrinoVY", &reco_neutrinoVY);
+    tree->SetBranchAddress("reco_neutrinoVZ", &reco_neutrinoVZ);
+    tree->SetBranchAddress("reco_neutrinoSliceID", &reco_neutrinoSliceID);
+
+    tree->SetBranchAddress("angleRecalculationPCAPFP10cm_angle", &angleRecalculationPCAPFP10cm_angle);
+    tree->SetBranchAddress("angleRecalculationPCAPFP10cm_pfpID", &angleRecalculationPCAPFP10cm_pfpID);
+    tree->SetBranchAddress("angleRecalculationPCAPFP10cm_dx", &angleRecalculationPCAPFP10cm_dx);
+    tree->SetBranchAddress("angleRecalculationPCAPFP10cm_dy", &angleRecalculationPCAPFP10cm_dy);
+    tree->SetBranchAddress("angleRecalculationPCAPFP10cm_dz", &angleRecalculationPCAPFP10cm_dz);
+
+    Long64_t numEntries = tree->GetEntries();
+
+    // NuEWeights Tree branch variable
+    UInt_t eventID_weights, runID_weights, subRunID_weights;
+    int nuEScatter_weights;
+    double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
+    double DLCurrent_weights, signal_weights;
+
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
+    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
+
+    std::vector<double> *reco_sliceID_weights = nullptr;  
+    std::vector<double> *reco_sliceInteraction_weights = nullptr;  
+    std::vector<double> *reco_sliceTrueVX_weights = nullptr;  
+    std::vector<double> *reco_sliceTrueVY_weights = nullptr;  
+    std::vector<double> *reco_sliceTrueVZ_weights = nullptr;  
+    std::vector<double> *reco_sliceOrigin_weights = nullptr;  
+    std::vector<double> *reco_sliceTrueCCNC_weights = nullptr;  
+    std::vector<double> *reco_sliceTrueNeutrinoType_weights = nullptr;
+
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
+    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
+
+    weightsTree->SetBranchAddress("eventID", &eventID_weights);
+    weightsTree->SetBranchAddress("runID", &runID_weights);
+    weightsTree->SetBranchAddress("subRunID", &subRunID_weights);
+    weightsTree->SetBranchAddress("DLCurrent", &DLCurrent_weights);
+    weightsTree->SetBranchAddress("signal", &signal_weights);
+    
+    weightsTree->SetBranchAddress("nuEScatter", &nuEScatter_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ_weights);
+
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weightGENIEReWeight_SBN_v1_multisigma_NormNCCOH_);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
+    
+    weightsTree->SetBranchAddress("reco_sliceID", &reco_sliceID_weights);
+    weightsTree->SetBranchAddress("reco_sliceInteraction", &reco_sliceInteraction_weights);
+    weightsTree->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX_weights);
+    weightsTree->SetBranchAddress("reco_sliceTrueVY", &reco_sliceTrueVY_weights);
+    weightsTree->SetBranchAddress("reco_sliceTrueVZ", &reco_sliceTrueVZ_weights);
+    weightsTree->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin_weights);
+    weightsTree->SetBranchAddress("reco_sliceTrueCCNC", &reco_sliceTrueCCNC_weights);
+    weightsTree->SetBranchAddress("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType_weights);
+
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weightGENIEReWeight_SBN_v1_multisigma_NormNCCOH_);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
+
+    Long64_t numEntries_weights = weightsTree->GetEntries();
+
+    std::unordered_map<eventKey_struct, Long64_t, eventKeyHash_struct> weightEntryMap;
+    for(Long64_t i = 0; i < numEntries_weights; ++i){
+        weightsTree->GetEntry(i);
+        eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights)};
+        weightEntryMap[key] = i;
+    }
+
+    // =====================================================================================
+    // 115 GENIE parameters. mapKey = actual lookup key in the weight maps (VERIFY against
+    // your tree). shortName = used for plots/filenames (kept globally unique).
+    // isMultisim = true only for the 30 N=100 "multisim_*" knobs.
+    // =====================================================================================
+    std::vector<GenieParam_struct> genieParams = {
+        // ---- NOvA-style non-resonant pion normalization (23 params) ----
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi","NonResPionNorm_NR_nu_n_CC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi","NonResPionNorm_NR_nu_n_CC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi","NonResPionNorm_NR_nu_n_NC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi","NonResPionNorm_NR_nu_n_NC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi","NonResPionNorm_NR_nu_n_NC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi","NonResPionNorm_NR_nu_np_CC_1Pi",7,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi","NonResPionNorm_NR_nu_p_CC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi","NonResPionNorm_NR_nu_p_CC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi","NonResPionNorm_NR_nu_p_NC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi","NonResPionNorm_NR_nu_p_NC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi","NonResPionNorm_NR_nu_p_NC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi","NonResPionNorm_NR_nubar_n_CC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi","NonResPionNorm_NR_nubar_n_CC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi","NonResPionNorm_NR_nubar_n_CC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi","NonResPionNorm_NR_nubar_n_NC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi","NonResPionNorm_NR_nubar_n_NC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi","NonResPionNorm_NR_nubar_n_NC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi","NonResPionNorm_NR_nubar_p_CC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi","NonResPionNorm_NR_nubar_p_CC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi","NonResPionNorm_NR_nubar_p_CC_3Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi","NonResPionNorm_NR_nubar_p_NC_1Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi","NonResPionNorm_NR_nubar_p_NC_2Pi",6,false},
+        {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi","NonResPionNorm_NR_nubar_p_NC_3Pi",6,false},
+
+        // ---- Misc interaction systematics (5 params) ----
+        {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu","Misc_C12ToAr40_2p2hScaling_nu",6,false},
+        {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar","Misc_C12ToAr40_2p2hScaling_nubar",6,false},
+        {"MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression","Misc_SPPLowQ2Suppression",10,false},
+        {"MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio","Misc_nuenuebar_xsec_ratio",2,false},
+        {"MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio","Misc_nuenumu_xsec_ratio",2,false},
+
+        // ---- MINERvA q0q3 weighting (1 param) ----
+        {"MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement","MINERvAq0q3_Mnv2p2hGaussEnhancement",4,false},
+
+        // ---- MINERvA E2p2h (4 params) ----
+        {"MINERvAE2p2h_SBN_v1_E2p2h_A_nu","MINERvAE2p2h_E2p2h_A_nu",6,false},
+        {"MINERvAE2p2h_SBN_v1_E2p2h_A_nubar","MINERvAE2p2h_E2p2h_A_nubar",6,false},
+        {"MINERvAE2p2h_SBN_v1_E2p2h_B_nu","MINERvAE2p2h_E2p2h_B_nu",6,false},
+        {"MINERvAE2p2h_SBN_v1_E2p2h_B_nubar","MINERvAE2p2h_E2p2h_B_nubar",6,false},
+
+        // ---- GENIEReWeight multisim (30 params, N=100 -> genuine multisim / RMS treatment) ----
+        {"GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse","multisim_CCRESVariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_COHVariationResponse","multisim_COHVariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_CoulombCCQE","multisim_CoulombCCQE",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse","multisim_DISBYVariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse","multisim_FSI_N_VariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse","multisim_FSI_pi_VariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NCELVariationResponse","multisim_NCELVariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse","multisim_NCRESVariationResponse",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi","multisim_NonRESBGvbarnCC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi","multisim_NonRESBGvbarnCC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi","multisim_NonRESBGvbarnNC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi","multisim_NonRESBGvbarnNC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi","multisim_NonRESBGvbarpCC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi","multisim_NonRESBGvbarpCC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi","multisim_NonRESBGvbarpNC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi","multisim_NonRESBGvbarpNC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi","multisim_NonRESBGvnCC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi","multisim_NonRESBGvnCC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi","multisim_NonRESBGvnNC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi","multisim_NonRESBGvnNC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi","multisim_NonRESBGvpCC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi","multisim_NonRESBGvpCC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi","multisim_NonRESBGvpNC1pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi","multisim_NonRESBGvpNC2pi",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NormCCMEC","multisim_NormCCMEC",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_NormNCMEC","multisim_NormNCMEC",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_RDecBR1eta","multisim_RDecBR1eta",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_RDecBR1gamma","multisim_RDecBR1gamma",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_RPA_CCQE","multisim_RPA_CCQE",100,true},
+        {"GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse","multisim_ZExpAVariationResponse",100,true},
+
+        // ---- GENIEReWeight multisigma (52 params -> envelope treatment) ----
+        {"GENIEReWeight_SBN_v1_multisigma_AhtBY","multisigma_AhtBY",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_BhtBY","multisigma_BhtBY",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_CV1uBY","multisigma_CV1uBY",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_CV2uBY","multisigma_CV2uBY",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_CoulombCCQE","multisigma_CoulombCCQE",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_DecayAngMEC","multisigma_DecayAngMEC",1,false},
+        {"GENIEReWeight_SBN_v1_multisigma_EtaNCEL","multisigma_EtaNCEL",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrAbs_N","multisigma_FrAbs_N",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrAbs_pi","multisigma_FrAbs_pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrCEx_N","multisigma_FrCEx_N",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrCEx_pi","multisigma_FrCEx_pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrInel_N","multisigma_FrInel_N",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrInel_pi","multisigma_FrInel_pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_N","multisigma_FrPiProd_N",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi","multisigma_FrPiProd_pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MFP_N","multisigma_MFP_N",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MFP_pi","multisigma_MFP_pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MaCCRES","multisigma_MaCCRES",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MaNCEL","multisigma_MaNCEL",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MaNCRES","multisigma_MaNCRES",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MvCCRES","multisigma_MvCCRES",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_MvNCRES","multisigma_MvNCRES",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi","multisigma_NonRESBGvbarnCC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi","multisigma_NonRESBGvbarnCC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi","multisigma_NonRESBGvbarnNC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi","multisigma_NonRESBGvbarnNC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi","multisigma_NonRESBGvbarpCC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi","multisigma_NonRESBGvbarpCC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi","multisigma_NonRESBGvbarpNC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi","multisigma_NonRESBGvbarpNC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi","multisigma_NonRESBGvnCC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi","multisigma_NonRESBGvnCC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi","multisigma_NonRESBGvnNC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi","multisigma_NonRESBGvnNC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi","multisigma_NonRESBGvpCC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi","multisigma_NonRESBGvpCC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi","multisigma_NonRESBGvpNC1pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi","multisigma_NonRESBGvpNC2pi",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NormCCCOH","multisigma_NormCCCOH",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NormCCMEC","multisigma_NormCCMEC",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NormNCCOH","multisigma_NormNCCOH",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_NormNCMEC","multisigma_NormNCMEC",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_RDecBR1eta","multisigma_RDecBR1eta",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma","multisigma_RDecBR1gamma",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_RPA_CCQE","multisigma_RPA_CCQE",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad","multisigma_ThetaDelta2NRad",1,false},
+        {"GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi","multisigma_Theta_Delta2Npi",1,false},
+        {"GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape","multisigma_VecFFCCQEshape",1,false},
+        {"GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE","multisigma_ZExpA1CCQE",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE","multisigma_ZExpA2CCQE",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE","multisigma_ZExpA3CCQE",6,false},
+        {"GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE","multisigma_ZExpA4CCQE",6,false},
+    };
+
+    const int NPARAMS_GENIE = (int)genieParams.size(); // should be 115
+    std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << std::endl;
+
+    // The cuts to be applied -- UNCHANGED order/values from the flux macro
+    const int NCUTS = 11;
+    std::vector<std::string> cutNames_syst = {"beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut", "crumbs", "FV", "primaryPFP", "razzled11", "razzled211", "ETheta2", "dEdx"};
+
+    std::vector<double> nomSig_perCut(NCUTS, 0.0);
+    std::vector<double> nomBack_perCut(NCUTS, 0.0);
+
+    std::vector<std::vector<double>> count_genie(NPARAMS_GENIE);              // count_genie[p][u]: true nu+e count (before cuts) per universe
+    std::vector<std::vector<std::vector<double>>> univSig_perCutParam_genie(NPARAMS_GENIE);
+    std::vector<std::vector<std::vector<double>>> univBack_perCutParam_genie(NPARAMS_GENIE);
+
+    for(int p = 0; p < NPARAMS_GENIE; p++){
+        count_genie[p].assign(genieParams[p].nUniv, 0.0);
+        univSig_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
+        univBack_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
+    }
+
+    double actualSignalCount = 0.0;
+
+    auto getGenieNuEWeight = [&](std::vector<std::map<std::string, std::vector<double>>>* mapsVec, const std::string& key, int u, int expectedN) -> double {
+        if(!mapsVec) return 1.0;
+        for(auto& m : *mapsVec){
+            auto it = m.find(key);
+            if(it != m.end()){
+                if((int)it->second.size() != expectedN) return 1.0;
+                if(u < 0 || u >= expectedN) return 1.0;
+                return it->second[u];
+            }
+        }
+        return 1.0;
+    };
+
+    // Slice-level weight lookup (one vector-of-maps per slice)
+    auto getGenieSliceWeight = [&](std::vector<std::vector<std::map<std::string, std::vector<double>>>>* vec, size_t sliceIdx, const std::string& key, int u, bool wFound, int expectedN) -> double {
+        if(!wFound || !vec || sliceIdx >= vec->size()) return 1.0;
+        for(auto& m : vec->at(sliceIdx)){
+            auto it = m.find(key);
+            if(it != m.end()){
+                if((int)it->second.size() != expectedN) return 1.0;
+                if(u < 0 || u >= expectedN) return 1.0;
+                return it->second[u];
+            }
+        }
+        return 1.0;
+    };
+
+    // ---- Systematic estimators ----
+    // Multisim: RMS about nominal, 1/N (matching the flux macro's current convention).
+    auto calcSystMultisim = [&](const std::vector<double>& values, double nominal) -> double {
+        int N = (int)values.size();
+        if(N < 2) return 0.0;
+        double sumSq = 0.0;
+        for(double x : values) sumSq += (x - nominal)*(x - nominal);
+        return std::sqrt(sumSq/N);
+    };
+
+    // Multisigma/unisim: envelope estimator (largest absolute deviation among the available points).
+    // NOTE: replace this if you know the true +-1 sigma ordering/pairing for your multisigma knobs.
+    auto calcSystMultisigma = [&](const std::vector<double>& values, double nominal) -> double {
+        if(values.empty()) return 0.0;
+        double maxDev = 0.0;
+        for(double x : values) maxDev = std::max(maxDev, std::fabs(x - nominal));
+        return maxDev;
+    };
+
+    auto calcSystGeneric = [&](const std::vector<double>& values, double nominal, bool isMultisim) -> double {
+        return isMultisim ? calcSystMultisim(values, nominal) : calcSystMultisigma(values, nominal);
+    };
+
+    // Loop through events
+    for(Long64_t e = 0; e < numEntries; ++e){
+        tree->GetEntry(e);
+
+        bool weightsFound = false;
+        Long64_t weightsEntryIdx = -1;
+
+        if(signal == 1 || signal == 2 || signal == 4){
+            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
+            auto it = weightEntryMap.find(key);
+            if(it != weightEntryMap.end()){
+                weightsTree->GetEntry(it->second);
+                weightsFound = true;
+                weightsEntryIdx = it->second;
+            }
+        }
+
+        recoilElectron_struct recoilElectron;
+        recoilElectron.energy = -999999; recoilElectron.dx = -999999; recoilElectron.dy = -999999; recoilElectron.dz = -999999;
+        for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
+            if(truth_recoilElectronPDG->at(i) != -999999){
+                recoilElectron.energy = truth_recoilElectronEnergy->at(i);
+                recoilElectron.dx = truth_recoilElectronDX->at(i);
+                recoilElectron.dy = truth_recoilElectronDY->at(i);
+                recoilElectron.dz = truth_recoilElectronDZ->at(i);
+            }
+        }
+
+        // ---- True nu+e elastic scatter: fill count_genie[p][u] the same way the flux macro filled count_horncurrent etc. ----
+        if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
+            if(recoilElectron.energy > 150){
+                bool passesFV = (FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))));
+                if(passesFV){
+                    actualSignalCount += weights.signalNuE;
+
+                    if(weightsFound){
+                        for(int p = 0; p < NPARAMS_GENIE; p++){
+                            int N = genieParams[p].nUniv;
+                            for(int u = 0; u < N; u++){
+                                double w = getGenieNuEWeight(nuEScatter_GENIEWeightMaps, genieParams[p].mapKey, u, N);
+                                count_genie[p][u] += weights.signalNuE * w;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if(reco_sliceID->size() == 0) continue;
+
+        for(size_t slice = 0; slice < reco_sliceID->size(); ++slice){
+            if(reco_sliceID->at(slice) == -999999) continue;
+
+            // Assigning a category to the slices
+            // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy, 5 = nue event, 6 = nue fuzzy event
+            double sliceCategoryPlottingMacro = -999999;
+            if(reco_sliceOrigin->at(slice) == 0){
+                sliceCategoryPlottingMacro = 0;
+            } else if(reco_sliceOrigin->at(slice) == 1){
+                if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
+                    // Slice must have completeness > 0.5 and have nu+e elastic scatter it comes from has true recoil electron energy > 150 MeV
+                    if(FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                        sliceCategoryPlottingMacro = 1;
+                    } else if(FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow)){
+                        sliceCategoryPlottingMacro = 1;
+                    } else{
+                        sliceCategoryPlottingMacro = 2;
+                    }
+                } else{
+                    sliceCategoryPlottingMacro = 2;
+                }
+            } else if(reco_sliceOrigin->at(slice) == 3){
+                // This is a BNB slice
+                if(reco_sliceCompleteness->at(slice) > 0.5){
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        // This is a slice from a nue event
+                        sliceCategoryPlottingMacro = 5;
+                    } else{
+                        // This is a BNB event (not a nue event)
+                        sliceCategoryPlottingMacro = 3;
+                        //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
+                    }
+                } else{
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        sliceCategoryPlottingMacro = 6;
+                    } else{
+                        sliceCategoryPlottingMacro = 4;
+                        //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
+                    }
+                }
+            }
+
+
+            // Assigning an interaction category to the slices
+            // Event types: Cosmic = 0, nu+e scatter = 1, NC Npi0 = 2, other NC = 3, CC numu = 4, CC nue = 5, Dirt = 6, Dirt nu+e = 7
+            // Other = 8, Fuzzy nu+e = 9
+            int sliceInteractionType = -999999;
+            if(reco_sliceOrigin->at(slice) != 0){
+                if(reco_sliceOrigin->at(slice) == 1){
+                    if(reco_sliceCompleteness->at(slice) > 0.5 && recoilElectron.energy > 150){
+                        // Slice must have completeness > 0.5 and have nu+e elastic scatter it comes from has true recoil electron energy > 150 MeV
+                        if(FVCut == 0 && (reco_sliceTrueVX->at(slice) > -201.3 && reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVY->at(slice) > -203.8 && reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)){
+                            sliceInteractionType = 1;
+                        } else if(FVCut == 1 && ((reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) > FVCut_yLow && reco_sliceTrueVY->at(slice) < FVCut_yHigh) && (reco_sliceTrueVZ->at(slice) > FVCut_zLow && reco_sliceTrueVZ->at(slice) < FVCut_zHigh))){
+                            sliceInteractionType = 1;
+                        } else{
+                            sliceInteractionType = 7;
+                        }
+                    } else{
+                        sliceInteractionType = 9;
+                    }
+                } else if(reco_sliceOrigin->at(slice) == 3){
+                    if((FVCut == 0 && (reco_sliceTrueVX->at(slice) < 201.3 && reco_sliceTrueVX->at(slice) > -201.3) && (reco_sliceTrueVY->at(slice) < 203.8 && reco_sliceTrueVY->at(slice) > -203.8) && (reco_sliceTrueVZ->at(slice) > 0 && reco_sliceTrueVZ->at(slice) < 509.5)) || (FVCut == 1 && (reco_sliceTrueVX->at(slice) < FVCut_xHigh && reco_sliceTrueVX->at(slice) > FVCut_xLow && std::abs(reco_sliceTrueVX->at(slice)) > FVCut_xCentre) && (reco_sliceTrueVY->at(slice) < FVCut_yHigh && reco_sliceTrueVY->at(slice) > FVCut_yLow) && (reco_sliceTrueVZ->at(slice) < FVCut_zHigh && reco_sliceTrueVZ->at(slice) > FVCut_zLow))){
+                        if(reco_sliceTrueCCNC->at(slice) == 0){
+                            if(reco_sliceTrueNeutrinoType->at(slice) == 12){
+                                sliceInteractionType = 5;
+                            } else if(reco_sliceTrueNeutrinoType->at(slice) == 14){
+                                sliceInteractionType = 4;
+                            }
+                        } else if(reco_sliceTrueCCNC->at(slice) == 1){
+                            int neutralPion = 0;
+                            for(size_t trueParticle = 0; trueParticle < truth_particleSliceID->size(); trueParticle++){
+                                if(truth_particleSliceID->at(trueParticle) == reco_sliceID->at(slice)){
+                                    if(truth_particleStatusCode->at(trueParticle) == 1){
+                                        if(truth_particlePDG->at(trueParticle) == 111){
+                                            neutralPion++;
+                                        }
+                                    }
+                                }
+                            }
+                            if(neutralPion > 0){
+                                sliceInteractionType = 2;
+                            } else{
+                                sliceInteractionType = 3;
+                            }
+                        }
+                    } else{
+                        sliceInteractionType = 6;
+                    }
+                }
+            } else{
+                sliceInteractionType = 0;
+            }
+
+            if(sliceInteractionType == -999999){
+                sliceInteractionType = 8;
+            }
+            
+            double weight = 0;
+            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+            if(signal == 2 && DLCurrent == 5 && sliceCategoryPlottingMacro != 5 && sliceCategoryPlottingMacro != 6) weight = weights.BNBNuE;
+            if((signal == 2 || signal == 4) && DLCurrent == 5 && (sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6)) weight = weights.NuENuE;
+            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
+
+            double numPFPsSlice = 0;
+            double numPrimaryPFPs10Slice = 0;
+            highestEnergyPFP_struct highestEnergyPFP;
+
+            for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
+                    if((clearCosmicCut == 1 && reco_particleClearCosmic->at(pfp) == 0) || clearCosmicCut == 0){
+                        numPFPsSlice++;
+                        if(reco_particleIsPrimary->at(pfp) == 1){
+                            if(reco_particleNumHits->at(pfp) >= 10) numPrimaryPFPs10Slice++;
+                        }
+
+                        if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergyPFP.energy){
+                            highestEnergyPFP.energy = reco_particleBestPlaneEnergy->at(pfp);
+                            highestEnergyPFP.PFPID = reco_particleID->at(pfp);
+                            highestEnergyPFP.dx = reco_particleDX->at(pfp);
+                            highestEnergyPFP.dy = reco_particleDY->at(pfp);
+                            highestEnergyPFP.dz = reco_particleDZ->at(pfp);
+                            highestEnergyPFP.bestPlanedEdx = reco_particleBestPlanedEdx->at(pfp);
+                            highestEnergyPFP.razzledPDG11 = reco_particleRazzledPDG11->at(pfp);
+                            highestEnergyPFP.razzledPDG211 = reco_particleRazzledPDG211->at(pfp);
+                        }
+                    }
+                }
+            }
+
+            double pfp10cm_PCAAngle = -999999;
+            for(size_t pfpAngle = 0; pfpAngle < angleRecalculationPCAPFP10cm_pfpID->size(); ++pfpAngle){
+                if(angleRecalculationPCAPFP10cm_pfpID->at(pfpAngle) == highestEnergyPFP.PFPID){
+                    pfp10cm_PCAAngle = angleRecalculationPCAPFP10cm_angle->at(pfpAngle);
+                }
+            }
+
+            double recoVX = -999999, recoVY = -999999, recoVZ = -999999;
+            int numRecoNeutrinos = 0;
+            for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                    numRecoNeutrinos++;
+                    recoVX = reco_neutrinoVX->at(recoNeut);
+                    recoVY = reco_neutrinoVY->at(recoNeut);
+                    recoVZ = reco_neutrinoVZ->at(recoNeut);
+                }
+            }
+
+            // ---- Build per-parameter universe weights for this slice ----
+            size_t wSliceIdx_cached = 999999;
+            bool sliceWeightValid_cached = false;
+            std::vector<std::vector<double>> sliceUnivWeights_genie(NPARAMS_GENIE);
+            for(int p = 0; p < NPARAMS_GENIE; p++) sliceUnivWeights_genie[p].assign(genieParams[p].nUniv, 1.0);
+
+            if(DLCurrent == 5 && weightsFound && signal != 3){
+                // Find this slice's index within the slice-level weight-map vector.
+                // PLACEHOLDER: assumes reco_sliceGENIEWeightMaps is ordered/indexed the same
+                // way as reco_sliceID (i.e. slice index == position in the outer vector).
+                // If instead there is a parallel reco_sliceID_weights vector (as in the flux
+                // macro) you should match on sliceID as done there.
+                if(reco_sliceGENIEWeightMaps && slice < reco_sliceGENIEWeightMaps->size()){
+                    wSliceIdx_cached = slice;
+                    sliceWeightValid_cached = true;
+                }
+
+                for(int p = 0; p < NPARAMS_GENIE; p++){
+                    int N = genieParams[p].nUniv;
+                    for(int u = 0; u < N; u++){
+                        sliceUnivWeights_genie[p][u] = getGenieSliceWeight(reco_sliceGENIEWeightMaps, wSliceIdx_cached, genieParams[p].mapKey, u, sliceWeightValid_cached, N);
+                    }
+                }
+            }
+
+            auto fillSliceSystCounters_genie = [&](int cutIdx){
+                bool isSigSlice = (sliceCategoryPlottingMacro == 1 && signal == 1);
+                nomSig_perCut[cutIdx] += isSigSlice ? weight : 0.0;
+                nomBack_perCut[cutIdx] += isSigSlice ? 0.0 : weight;
+
+                for(int p = 0; p < NPARAMS_GENIE; p++){
+                    int N = genieParams[p].nUniv;
+                    for(int u = 0; u < N; u++){
+                        double w = weight * sliceUnivWeights_genie[p][u];
+                        if(isSigSlice) univSig_perCutParam_genie[p][cutIdx][u] += w;
+                        else univBack_perCutParam_genie[p][cutIdx][u] += w;
+                    }
+                }
+            };
+
+            // ---- Nominal event-category counters (unchanged from flux macro; not weight-dependent) ----
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsBeforeCuts_DLNuE.background += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsBeforeCuts_DLNuE.signal += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsBeforeCuts_DLNuE.background += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsBeforeCuts_DLNuE.background += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsBeforeCuts_DLNuE.background += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsBeforeCuts_DLNuE.background += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsBeforeCuts_DLNuE.background += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
+                else if(sliceInteractionType == 2) eventsBeforeCuts_DLNuE.splitInt.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsBeforeCuts_DLNuE.splitInt.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsBeforeCuts_DLNuE.splitInt.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsBeforeCuts_DLNuE.splitInt.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsBeforeCuts_DLNuE.splitInt.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsBeforeCuts_DLNuE.splitInt.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsBeforeCuts_DLNuE.splitInt.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsBeforeCuts_DLNuE.splitInt.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(0);
+            }
+
+            if(DLCurrent == 5 && clearCosmicCut == 1){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsSig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+               
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuEFuzzy += weight; 
+
+                fillSliceSystCounters_genie(1);
+            }
+
+            if(numPFPs0Cut == 1 && numPFPsSlice == 0) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.numPFPs0IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.numPFPs0IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numPFPs0IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuEFuzzy += weight;                
+
+                fillSliceSystCounters_genie(2);
+            }
+
+            if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(3);
+            }
+
+            if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low || reco_sliceScore->at(slice) > crumbsScoreCut_high)) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.crumbsBack += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.crumbsIntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.crumbsIntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.crumbsIntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.crumbsIntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(4);
+            }
+
+            if(FVCut == 1){
+                if(!(recoVX < FVCut_xHigh && recoVX > FVCut_xLow && std::abs(recoVX) > FVCut_xCentre && recoVY < FVCut_yHigh && recoVY > FVCut_yLow && recoVZ > FVCut_zLow && recoVZ < FVCut_zHigh)) continue;
+            }
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.FVSig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.FVBack += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.FVIntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.FVIntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.FVIntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.FVIntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.FVIntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(5);
+            }
+
+            if(primaryPFPCut == 1 && numPrimaryPFPs10Slice != primaryPFPCutValue) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPSig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.primaryPFPIntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.primaryPFPIntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.primaryPFPIntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(6);
+            }
+
+            if(razzledPDG11Cut == 1 && ((highestEnergyPFP.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG11 < razzled11Low_highestEnergyPFP))) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled11Back += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.razzled11IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.razzled11IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.razzled11IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled11IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(7);
+            }
+
+            if(razzledPDG211Cut == 1 && ((highestEnergyPFP.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG211 < razzled211Low_highestEnergyPFP))) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled211Back += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.razzled211IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.razzled211IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.razzled211IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.razzled211IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(8);
+            }
+
+            if(ETheta2Cut == 1 && ((highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) > ETheta2High_highestEnergyPFP || (highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) < ETheta2Low_highestEnergyPFP)) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.ETheta2IntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.ETheta2IntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.ETheta2IntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(9);
+            }
+
+            if(dEdxCut == 1 && (highestEnergyPFP.bestPlanedEdx > dEdxHigh_highestEnergyPFP || highestEnergyPFP.bestPlanedEdx < dEdxLow_highestEnergyPFP)) continue;
+
+            if(DLCurrent == 5){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxSig += weight;
+                else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.dEdxBack += weight;
+
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
+                else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuE += weight;
+                else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 += weight;
+                else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC += weight;
+                else if(sliceInteractionType == 4) eventsAfterCuts_DLNuE.dEdxIntSplit.CCnumu += weight;
+                else if(sliceInteractionType == 5) eventsAfterCuts_DLNuE.dEdxIntSplit.CCnue += weight;
+                else if(sliceInteractionType == 6) eventsAfterCuts_DLNuE.dEdxIntSplit.dirt += weight;
+                else if(sliceInteractionType == 7 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuEDirt += weight;
+                else if(sliceInteractionType == 8) eventsAfterCuts_DLNuE.dEdxIntSplit.other += weight;
+                else if(sliceInteractionType == 9 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuEFuzzy += weight;
+
+                fillSliceSystCounters_genie(10);
+            }
+        }
+    }
+
+    std::cout << "\n=== GENIE Systematic Uncertainties on nu+e Signal Count (before cuts) ===" << std::endl;
+    std::cout << Form("Nominal: %.2f", actualSignalCount) << std::endl;
+
+    std::vector<double> systValues_beforeCuts(NPARAMS_GENIE, 0.0);
+
+    for(int p = 0; p < NPARAMS_GENIE; p++){
+        double stddev = calcSystGeneric(count_genie[p], actualSignalCount, genieParams[p].isMultisim);
+        systValues_beforeCuts[p] = stddev;
+
+        std::cout << Form("%-45s (N=%3d, %-10s)  syst=%.2f (%.1f%%)",
+                           genieParams[p].shortName.c_str(), genieParams[p].nUniv,
+                           genieParams[p].isMultisim ? "multisim" : "multisigma",
+                           stddev, (actualSignalCount != 0 ? 100.*stddev/actualSignalCount : 0.)) << std::endl;
+
+        // Plot the universe distribution (kept ON, unlike per-cut plots, since this is only 115 plots)
+        TH1D *h = new TH1D(("h_genie_" + genieParams[p].shortName).c_str(),
+                            (genieParams[p].shortName + ";Total nu+e count;Universes").c_str(),
+                            60, 0, 600);
+        for(double v : count_genie[p]) h->Fill(v);
+
+        TCanvas *c = new TCanvas(("c_genie_" + genieParams[p].shortName).c_str(), "", 800, 600);
+        c->SetLeftMargin(0.12); c->SetBottomMargin(0.12); c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+        h->SetLineColor(kBlue+1); h->SetLineWidth(2); h->SetStats(0);
+        h->GetXaxis()->SetTitle("Total nu+e Signal Count");
+        h->GetYaxis()->SetTitle("Universes");
+        h->Draw("HIST E");
+
+        TLine *nomLine = new TLine(actualSignalCount, 0, actualSignalCount, h->GetMaximum()*1.05);
+        nomLine->SetLineColor(kMagenta+1); nomLine->SetLineWidth(2); nomLine->Draw("SAME");
+
+        TLatex paramLabel; paramLabel.SetTextSize(0.04); paramLabel.SetNDC();
+        paramLabel.DrawLatex(0.15, 0.85, genieParams[p].shortName.c_str());
+
+        c->Update();
+        c->SaveAs((base_path + "nuE_signalCount_GENIE_" + genieParams[p].shortName + ".pdf").c_str());
+
+        fOut->cd();
+        TDirectory *dir = fOut->GetDirectory("nuESignalCount_GENIE");
+        if(!dir) dir = fOut->mkdir("nuESignalCount_GENIE");
+        dir->cd();
+        h->Write(("nuESignalCount_GENIE_" + genieParams[p].shortName).c_str());
+        fOut->cd();
+
+        delete nomLine;
+        delete c;
+        delete h;
+    }
+
+    double totalSystSq_beforeCuts = 0.0;
+    for(double s : systValues_beforeCuts) totalSystSq_beforeCuts += s*s;
+    double totalSyst_beforeCuts = std::sqrt(totalSystSq_beforeCuts);
+
+    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", "TOTAL GENIE (quadrature, 115 params)", totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
+    std::cout << Form("%-45s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst_beforeCuts) << std::endl;
+
+    double initialSig = nomSig_perCut[0];
+
+    auto buildUnivVecGenie = [&](int p, int cutIdx, std::function<double(double s, double b, double trueSig, double selSig0)> fn) -> std::vector<double> {
+        int N = genieParams[p].nUniv;
+        std::vector<double> result(N, 0.0);
+        for(int u = 0; u < N; u++){
+            double s = univSig_perCutParam_genie[p][cutIdx][u];
+            double b = univBack_perCutParam_genie[p][cutIdx][u];
+            double trueSig = (u < (int)count_genie[p].size()) ? count_genie[p][u] : 0.0;
+            double s_beforeCuts = univSig_perCutParam_genie[p][0][u];
+            result[u] = fn(s, b, trueSig, s_beforeCuts);
+        }
+        return result;
+    };
+
+    auto printSystBlock_genie = [&](const std::string& blockName, double nomVal, int cutIdx,
+                                     std::function<double(double s, double b, double ts, double ss)> fn, bool isPct){
+        double scale = isPct ? 100.0 : 1.0;
+        std::string unitSuffix = isPct ? "%" : "";
+
+        std::cout << "\n--- " << blockName << " ---" << std::endl;
+        std::cout << Form("Nominal: %.4f%s", nomVal * scale, unitSuffix.c_str()) << std::endl;
+
+        std::vector<double> systValues(NPARAMS_GENIE, 0.0);
+        for(int p = 0; p < NPARAMS_GENIE; p++){
+            std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
+            double stddev = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
+            systValues[p] = stddev;
+            std::cout << Form("%-45s (N=%3d, %-10s)  syst=%.4f%s (%.1f%%)",
+                               genieParams[p].shortName.c_str(), genieParams[p].nUniv,
+                               genieParams[p].isMultisim ? "multisim" : "multisigma",
+                               stddev * scale, unitSuffix.c_str(),
+                               (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
+        }
+
+        double totalSystSq = 0.0;
+        for(double s : systValues) totalSystSq += s*s;
+        double totalSyst = std::sqrt(totalSystSq);
+
+        std::cout << "--------------------------------------------" << std::endl;
+        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", "TOTAL GENIE (quadrature, 115 params)", totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        std::cout << Form("%-45s  %.4f%s +/- %.4f%s (syst)", blockName.c_str(), nomVal*scale, unitSuffix.c_str(), totalSyst*scale, unitSuffix.c_str()) << std::endl;
+    };
+
+    auto getQuadratureSystAllGenie = [&](int cutIdx, std::function<double(double s, double b, double ts, double ss)> fn, double nomVal) -> double {
+        double totalSq = 0.0;
+        for(int p = 0; p < NPARAMS_GENIE; p++){
+            std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
+            double s = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
+            totalSq += s*s;
+        }
+        return std::sqrt(totalSq);
+    };
+
+    auto printCutStage_genie = [&](const std::string& label, int cutIdx){
+        double nomS = nomSig_perCut[cutIdx];
+        double nomB = nomBack_perCut[cutIdx];
+        double nomEff = (actualSignalCount > 0) ? nomS / actualSignalCount : 0.0;
+        double nomSel = (initialSig > 0) ? nomS / initialSig : 0.0;
+        double nomPur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+        double nomER = nomEff * nomPur;
+        double nomSR = nomSel * nomPur;
+
+        int width = (int)label.size() + 8;
+        std::string bar(width, '=');
+        std::cout << "\n" << bar << std::endl;
+        std::cout << "    " << label << " (GENIE)" << std::endl;
+        std::cout << bar << std::endl;
+
+        printSystBlock_genie("Signal Count", nomS, cutIdx, [](double s, double b, double ts, double ss){ return s; }, false);
+        printSystBlock_genie("Background Count", nomB, cutIdx, [](double s, double b, double ts, double ss){ return b; }, false);
+        printSystBlock_genie("Efficiency", nomEff, cutIdx, [](double s, double b, double ts, double ss){ return (ts > 0) ? s/ts : 0.0; }, true);
+        printSystBlock_genie("Selection Efficiency", nomSel, cutIdx, [](double s, double b, double ts, double ss){ return (ss > 0) ? s/ss : 0.0; }, true);
+        printSystBlock_genie("Purity", nomPur, cutIdx, [](double s, double b, double ts, double ss){ double tot=s+b; return (tot>0)? s/tot : 0.0; }, true);
+        printSystBlock_genie("Efficiency x Purity", nomER, cutIdx, [](double s, double b, double ts, double ss){ double tot=s+b; double eff=(ts>0)?s/ts:0.0; double pur=(tot>0)?s/tot:0.0; return eff*pur; }, true);
+        printSystBlock_genie("SelEff x Purity", nomSR, cutIdx, [](double s, double b, double ts, double ss){ double tot=s+b; double sel=(ss>0)?s/ss:0.0; double pur=(tot>0)?s/tot:0.0; return sel*pur; }, true);
+    };
+
+    printCutStage_genie("Before Cuts", 0);
+    if(clearCosmicCut == 1) printCutStage_genie("Cut 1: Clear Cosmic", 1);
+    if(numPFPs0Cut == 1) printCutStage_genie("Cut 2: Num PFPs != 0", 2);
+    if(numRecoNeutrinosCut == 1) printCutStage_genie("Cut 3: Num Reco Neutrinos", 3);
+    if(CRUMBSCut == 1) printCutStage_genie("Cut 4: CRUMBS Score", 4);
+    if(FVCut == 1) printCutStage_genie("Cut 5: FV Cut", 5);
+    if(primaryPFPCut == 1) printCutStage_genie("Cut 6: Primary PFP", 6);
+    if(razzledPDG11Cut == 1) printCutStage_genie("Cut 7: Razzled PDG11", 7);
+    if(razzledPDG211Cut == 1) printCutStage_genie("Cut 8: Razzled PDG211", 8);
+    if(ETheta2Cut == 1) printCutStage_genie("Cut 9: ETheta2", 9);
+    if(dEdxCut == 1) printCutStage_genie("Cut 10: dEdx", 10);
+
+    if(makePerCutPlots_GENIE){
+        auto plotPerCutUniverseDist_derived_genie = [&](int p, const std::string& quantityName, const std::string& xAxisTitle,
+                                                          std::function<double(double s, double b, double trueSig, double selSig0)> fn, int color){
+            for(int cut = 0; cut < NCUTS; cut++){
+                std::vector<double> vals = buildUnivVecGenie(p, cut, fn);
+                if(vals.empty()) continue;
+
+                double lo = *std::min_element(vals.begin(), vals.end());
+                double hi = *std::max_element(vals.begin(), vals.end());
+                double range = hi - lo;
+                lo = std::max(0.0, lo - 0.1*range);
+                hi = hi + 0.1*range;
+                if(hi <= lo) hi = lo + 1.0;
+
+                std::string histName = Form("perCut_%s_%s_%s", quantityName.c_str(), genieParams[p].shortName.c_str(), cutNames_syst[cut].c_str());
+                TH1D *h = new TH1D(histName.c_str(), "", 50, lo, hi);
+                for(double v : vals) h->Fill(v);
+
+                TCanvas *c = new TCanvas(("cPerCut_" + histName).c_str(), "", 800, 600);
+                c->SetLeftMargin(0.12); c->SetBottomMargin(0.12); c->SetRightMargin(0.05); c->SetTopMargin(0.08);
+                h->SetLineColor(color); h->SetLineWidth(2); h->SetStats(0);
+                h->GetXaxis()->SetTitle(xAxisTitle.c_str());
+                h->GetYaxis()->SetTitle("Universes");
+                h->Draw("HIST E");
+
+                double nomS = nomSig_perCut[cut];
+                double nomB = nomBack_perCut[cut];
+                double nomVal = fn(nomS, nomB, actualSignalCount, initialSig);
+                TLine *ln = new TLine(nomVal, 0, nomVal, h->GetMaximum()*1.05);
+                ln->SetLineColor(kMagenta+1); ln->SetLineWidth(2); ln->Draw("SAME");
+
+                TLatex lx; lx.SetTextSize(0.04); lx.SetNDC();
+                lx.DrawLatex(0.15, 0.85, (genieParams[p].shortName + " - " + cutNames_syst[cut]).c_str());
+
+                c->Update();
+                c->SaveAs((base_path + "perCut_" + quantityName + "_" + genieParams[p].shortName + "_" + cutNames_syst[cut] + ".pdf").c_str());
+
+                fOut->cd();
+                std::string dirName = "perCut_GENIE_" + quantityName;
+                TDirectory *dir = fOut->GetDirectory(dirName.c_str());
+                if(!dir) dir = fOut->mkdir(dirName.c_str());
+                dir->cd();
+                h->Write(histName.c_str());
+                fOut->cd();
+
+                delete ln; delete h; delete c;
+            }
+        };
+
+        for(int p = 0; p < NPARAMS_GENIE; p++){
+            plotPerCutUniverseDist_derived_genie(p, "signalSlice", "Number of Signal Slices", [](double s,double b,double ts,double ss){ return s; }, kBlue+1);
+            plotPerCutUniverseDist_derived_genie(p, "backgroundSlice", "Number of Background Slices", [](double s,double b,double ts,double ss){ return b; }, kRed+1);
+            plotPerCutUniverseDist_derived_genie(p, "efficiency", "Efficiency", [](double s,double b,double ts,double ss){ return (ts>0)?s/ts:0.0; }, kBlue+1);
+            plotPerCutUniverseDist_derived_genie(p, "selEfficiency", "Selection Efficiency", [](double s,double b,double ts,double ss){ return (ss>0)?s/ss:0.0; }, kCyan+1);
+            plotPerCutUniverseDist_derived_genie(p, "purity", "Purity", [](double s,double b,double ts,double ss){ double tot=s+b; return (tot>0)?s/tot:0.0; }, kGreen+2);
+            plotPerCutUniverseDist_derived_genie(p, "effXpurity", "Efficiency #times Purity", [](double s,double b,double ts,double ss){ double tot=s+b; double eff=(ts>0)?s/ts:0.0; double pur=(tot>0)?s/tot:0.0; return eff*pur; }, kOrange+1);
+            plotPerCutUniverseDist_derived_genie(p, "selEffXpurity", "Selection Efficiency #times Purity", [](double s,double b,double ts,double ss){ double tot=s+b; double sel=(ss>0)?s/ss:0.0; double pur=(tot>0)?s/tot:0.0; return sel*pur; }, kViolet+1);
+        }
+    }
+
+    std::ofstream out_tablefile(tableFileName, std::ios::app);
+    if(out_tablefile.is_open()){
+
+        auto fmtPMpct = [](double val, double syst, int valPrec, int systPrec) -> std::string {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(valPrec) << 100.*val << " $\\pm$ " << std::fixed << std::setprecision(systPrec) << 100.*syst << "\\%";
+            return oss.str();
+        };
+        auto fmtPM = [](double val, double syst, int valPrec, int systPrec) -> std::string {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(valPrec) << val << " $\\pm$ " << std::fixed << std::setprecision(systPrec) << syst;
+            return oss.str();
+        };
+
+        out_tablefile << "=========== DL Nu+E Vertexing: GENIE Systematics (quadrature over 115 params) ===========" << std::endl;
+        out_tablefile << "\\begin{table}[h!]" << std::endl;
+        out_tablefile << "\\centering" << std::endl;
+        out_tablefile << "\\resizebox{\\textwidth}{!}{%" << std::endl;
+        out_tablefile << "\\begin{tabular}{|c|c|c|c|c|c|c|c|}" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+        out_tablefile << "\\textbf{Cut Name} & \\textbf{$\\epsilon$ (\\%)} & \\textbf{Selection $\\epsilon$ (\\%)} & \\textbf{$\\rho$ (\\%)} & \\textbf{$\\epsilon\\rho$} & \\textbf{Selection $\\epsilon\\rho$} & Signal Left & Background Left \\\\" << std::endl;
+        out_tablefile << "\\hline" << std::endl;
+
+        auto writeRow_genie = [&](const std::string& cutLabel, int cutIdx, double nomS, double nomB){
+            double eff = (actualSignalCount > 0) ? nomS / actualSignalCount : 0.0;
+            double selEff = (eventsBeforeCuts_DLNuE.signal > 0) ? nomS / eventsBeforeCuts_DLNuE.signal : 0.0;
+            double pur = (nomS + nomB > 0) ? nomS / (nomS + nomB) : 0.0;
+            double epsRho = eff * pur;
+            double selEpsRho = selEff * pur;
+
+            double sigSyst   = getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ return s; }, nomS);
+            double backSyst  = getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ return b; }, nomB);
+            double effSyst   = getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ return (ts>0)?s/ts:0.0; }, eff);
+            double selEffSyst= getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ return (ss>0)?s/ss:0.0; }, selEff);
+            double purSyst   = getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ double tot=s+b; return (tot>0)?s/tot:0.0; }, pur);
+            double epsRhoSyst= getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ double tot=s+b; double e=(ts>0)?s/ts:0.0; double p=(tot>0)?s/tot:0.0; return e*p; }, epsRho);
+            double selEpsRhoSyst= getQuadratureSystAllGenie(cutIdx, [](double s,double b,double ts,double ss){ double tot=s+b; double se=(ss>0)?s/ss:0.0; double p=(tot>0)?s/tot:0.0; return se*p; }, selEpsRho);
+
+            out_tablefile
+                << cutLabel << " & "
+                << fmtPMpct(eff, effSyst, 4, 4) << " & "
+                << fmtPMpct(selEff, selEffSyst, 4, 4) << " & "
+                << fmtPMpct(pur, purSyst, 4, 4) << " & "
+                << fmtPM(epsRho, epsRhoSyst, 6, 6) << " & "
+                << fmtPM(selEpsRho, selEpsRhoSyst, 6, 6) << " & "
+                << std::fixed << std::setprecision(0) << nomS << " $\\pm$ " << std::fixed << std::setprecision(2) << sigSyst
+                << std::defaultfloat << std::setprecision(4) << " (" << 100.*eff << "\\%) & "
+                << std::fixed << std::setprecision(0) << nomB << " $\\pm$ " << std::fixed << std::setprecision(2) << backSyst
+                << std::defaultfloat << std::setprecision(4) << " (" << 100.*nomB/eventsBeforeCuts_DLNuE.background << "\\%)"
+                << " \\\\ " << std::endl;
+            out_tablefile << "\\hline" << std::endl;
+        };
+
+        writeRow_genie("No Cut", 0, eventsBeforeCuts_DLNuE.signal, eventsBeforeCuts_DLNuE.background);
+        if(clearCosmicCut == 1) writeRow_genie("Remove Clear Cosmic PFPs", 1, eventsAfterCuts_DLNuE.clearCosmicsSig, eventsAfterCuts_DLNuE.clearCosmicsBack);
+        if(numPFPs0Cut == 1) writeRow_genie("PFPs in Slice != 0", 2, eventsAfterCuts_DLNuE.numPFPs0Sig, eventsAfterCuts_DLNuE.numPFPs0Back);
+        if(numRecoNeutrinosCut == 1) writeRow_genie("1 Reco Neutrino in Slice", 3, eventsAfterCuts_DLNuE.numRecoNeut0Sig, eventsAfterCuts_DLNuE.numRecoNeut0Back);
+        if(CRUMBSCut == 1){
+            std::ostringstream crumbsLabel;
+            crumbsLabel << std::defaultfloat << std::setprecision(7) << crumbsScoreCut_low << " $\\leq$ CRUMBS Score $\\leq$ " << crumbsScoreCut_high;
+            writeRow_genie(crumbsLabel.str(), 4, eventsAfterCuts_DLNuE.crumbsSig, eventsAfterCuts_DLNuE.crumbsBack);
+        }
+        if(FVCut == 1) writeRow_genie("FV Cut", 5, eventsAfterCuts_DLNuE.FVSig, eventsAfterCuts_DLNuE.FVBack);
+        if(primaryPFPCut == 1){
+            std::ostringstream primLabel;
+            primLabel << std::defaultfloat << std::setprecision(7) << "Primary PFPs in Slice with $\\geq$ 10 Hits = " << primaryPFPCutValue;
+            writeRow_genie(primLabel.str(), 6, eventsAfterCuts_DLNuE.primaryPFPSig, eventsAfterCuts_DLNuE.primaryPFPBack);
+        }
+        if(razzledPDG11Cut == 1){
+            std::ostringstream r11Label;
+            r11Label << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Electron Score $\\geq$ " << razzled11Low_highestEnergyPFP;
+            writeRow_genie(r11Label.str(), 7, eventsAfterCuts_DLNuE.razzled11Sig, eventsAfterCuts_DLNuE.razzled11Back);
+        }
+        if(razzledPDG211Cut == 1){
+            std::ostringstream r211Label;
+            r211Label << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has Charged Pion Score $\\leq$ " << razzled211High_highestEnergyPFP;
+            writeRow_genie(r211Label.str(), 8, eventsAfterCuts_DLNuE.razzled211Sig, eventsAfterCuts_DLNuE.razzled211Back);
+        }
+        if(ETheta2Cut == 1){
+            std::ostringstream et2Label;
+            et2Label << std::defaultfloat << std::setprecision(7) << "$\\textrm{E}\\theta^2 \\textrm{ (Highest Energy PFP + PFP Spacepoints 10cm)} $\\leq$ " << ETheta2High_highestEnergyPFP << "\\textrm{MeV rad}^2$";
+            writeRow_genie(et2Label.str(), 9, eventsAfterCuts_DLNuE.ETheta2Sig, eventsAfterCuts_DLNuE.ETheta2Back);
+        }
+        if(dEdxCut == 1){
+            std::ostringstream dedxLabel;
+            dedxLabel << std::defaultfloat << std::setprecision(7) << "Highest Energy PFP in Slice has " << dEdxLow_highestEnergyPFP << " MeV cm$^{-1}$ $\\leq$ dE/dx $\\leq$ " << dEdxHigh_highestEnergyPFP << " MeV cm$^{-1}$";
+            writeRow_genie(dedxLabel.str(), 10, eventsAfterCuts_DLNuE.dEdxSig, eventsAfterCuts_DLNuE.dEdxBack);
+        }
+
+        out_tablefile << "\\end{tabular}" << std::endl;
+        out_tablefile << "}" << std::endl;
+        out_tablefile << "\\end{table}" << std::endl;
+        out_tablefile << "" << std::endl;
+    }
+
+    fOut->Write();
+    fOut->Close();
+    delete fOut;
+}
