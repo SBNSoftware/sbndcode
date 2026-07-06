@@ -22,6 +22,9 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fVGroupVUV( p.get<double>("VGroupVUV") ),
     fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
+    fMinHitPE ( p.get<int>("MinHitPE") ),
+    fPreWindow ( p.get<double>("PreWindow") ),
+    fPostWindow ( p.get<double>("PostWindow") ),
     fDebug( p.get<bool>("Debug", false) )
     // 
     // More initializers here.
@@ -29,6 +32,8 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fNOpChannels = fWireReadout.NOpChannels();
     // Initialize the TimeCorrectionVector PerChannel
     fTimeCorrectionPerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
+    fParticlePropagationTimePerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
+    fPhotonPropagationTimePerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
 
     for(unsigned int opch=0; opch<fNOpChannels; opch++){
         auto pdCenter = fWireReadout.OpDetGeoFromOpChannel(opch).GetCenter();
@@ -259,6 +264,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         auto const flash_v = _mgr.RecoFlash(ophits);
         double originalFlashTime = flashFM[0]->Time();
         double newFlashTime = 0.0;
+        double particlePropTime = 0.0;
+        double photonPropTime = 0.0;
         for(const auto& lflash :  flash_v) {
             // Get Flash Barycenter
             double Ycenter, Zcenter, Ywidth, Zwidth;
@@ -267,16 +274,21 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             double flasht0 = lflash.time;
             // Refine t0 calculation
             flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
+            this->GetSelectedChannelsFlash(lflash.time, GetAssociatedLiteHits(lflash, ophits));
             recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
                                 ( flasht0) / 1600., lflash.channel_pe,
                                 0, 0, 1, // this are just default values
                                 100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
             newFlashTime = flasht0;
+            particlePropTime = GetAverageParticlePropagationTime()/1000;
+            photonPropTime = GetAveragePhotonPropagationTime()/1000;
             sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
             correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
             correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
             correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
             correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
+            correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
+            correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
@@ -396,6 +408,8 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fSpacePointZ.clear();
     fSpacePointIntegral.clear();
     fTimeCorrectionPerChannel.assign(fNOpChannels, 0.0); // Reset the time correction vector for each channel
+    fParticlePropagationTimePerChannel.assign(fNOpChannels, 0.0); // Reset the particle propagation time vector for each channel
+    fPhotonPropagationTimePerChannel.assign(fNOpChannels, 0.0); // Reset the photon propagation time vector for each channel
     fChargeBarycenterX.assign(2, 0.0);
     fChargeBarycenterY.assign(2, 0.0);
     fChargeBarycenterZ.assign(2, 0.0);
@@ -408,13 +422,17 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
 void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
 {   
     // Implementation
-    for(size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
+for(size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
         double _opDetX = fOpDetX[opdet];
         double _opDetY = fOpDetY[opdet];
         double _opDetZ = fOpDetZ[opdet];
         float minPropTime = 999999999.;
+        float minPartPropTime = 999999999.;
+        float minLightPropTime = 999999999.;
         for(size_t sp=0; sp<fSpacePointX.size(); sp++)
         {
+            bool isInSameTPC = (fSpacePointX[sp] * _opDetX) > 0;
+            if(!isInSameTPC) continue; // Skip points not in the same TPC
             double dx = fSpacePointX[sp] - _opDetX;
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
@@ -425,18 +443,21 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
-            const std::string pdType = fPDSMap.pdType(opdet);
-            if(pdType=="pmt_coated" || pdType=="xarapuca_vuv")
+            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
-            else if(pdType=="pmt_uncoated" || pdType=="xarapuca_vis")
+            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
                 lightPropTime = lightPropTimeVIS;
-            else
-                throw std::runtime_error("LightPropagationCorrection: unexpected pdType '" + pdType + "' for opdet " + std::to_string(opdet));
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
-            if(PropTime < minPropTime) minPropTime = PropTime;
+            if(PropTime < minPropTime) {
+                minPropTime = PropTime;
+                minPartPropTime = partPropTime;    
+                minLightPropTime = lightPropTime;
+            }
         }
         fTimeCorrectionPerChannel[opdet] = -minPropTime;
+        fParticlePropagationTimePerChannel[opdet] = minPartPropTime;
+        fPhotonPropagationTimePerChannel[opdet] = minLightPropTime;
     }
 }
 
@@ -515,7 +536,7 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
 
 
 ::lightana::LiteOpHitArray_t sbnd::LightPropagationCorrection::GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, ::lightana::LiteOpHitArray_t lite_hits_v)
-  {
+{
     ::lightana::LiteOpHitArray_t flash_hits_v;
 
     for(auto const& hitidx : lite_flash.asshit_idx) {
@@ -523,4 +544,80 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
     }
 
     return flash_hits_v;
-  }
+}
+
+double sbnd::LightPropagationCorrection::GetAverageParticlePropagationTime()
+{
+    double sum = 0.0;
+    int n = 0;
+    for (size_t i=0; i<fSelectedChannelList.size(); i++) {
+        sum+= fParticlePropagationTimePerChannel[fSelectedChannelList[i]];
+        n++;
+    }
+    double average_prop_time = n ? sum / n : 0;
+    return average_prop_time;
+    return n ? sum / n : 0.0;
+}
+
+
+double sbnd::LightPropagationCorrection::GetAveragePhotonPropagationTime()
+{
+    double sum = 0.0;
+    int n = 0;
+    for (size_t i=0; i<fSelectedChannelList.size(); i++) {
+        sum+= fPhotonPropagationTimePerChannel[fSelectedChannelList[i]];
+        n++;
+    }
+    double average_prop_time = n ? sum / n : 0;
+    return average_prop_time;
+    return n ? sum / n : 0.0;
+}
+
+void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
+    double flash_time,
+    ::lightana::LiteOpHitArray_t ophit_list)
+{
+    // Ahora guardamos también el channel ID
+    std::vector< std::tuple<double, double, size_t> > selected_hits;
+    double pe_sum = 0.0;
+
+    // Limpiar vector de salida por si ya tenía contenido
+    fSelectedChannelList.clear();
+    // Fill vector with selected hits in the specified window
+    for (auto const& hit : ophit_list) {
+
+        if (hit.peak_time < flash_time + fPostWindow &&
+            hit.peak_time > flash_time - fPreWindow &&
+            hit.pe > fMinHitPE) {
+
+            // (PE, peak_time, channel)
+            selected_hits.emplace_back(hit.pe, hit.peak_time, hit.channel);
+            pe_sum += hit.pe;
+        }
+    }
+
+    // Sort by PE in descending order
+    std::sort(
+        selected_hits.begin(),
+        selected_hits.end(),
+        [](auto const& a, auto const& b) {
+            return std::get<0>(a) > std::get<0>(b);
+        }
+    );
+
+    double pe_count = 0.0;
+
+    // Loop over selected ophits
+    for (size_t ix = 0; ix < selected_hits.size(); ix++) {
+
+        double pe      = std::get<0>(selected_hits[ix]);
+        size_t channel = std::get<2>(selected_hits[ix]);
+
+        // Guardar channel ID
+        fSelectedChannelList.push_back(channel);
+
+        pe_count += pe;
+        if (pe_count / pe_sum > .5)
+            break;
+    }
+}
