@@ -67,6 +67,7 @@ struct weights_struct{
     double signalNuE = 0;
     double BNBNuE = 0;
     double cosmicsNuE = 0;
+    double NuENuE = 0;
     double signalCurrent = 0;
     double BNBCurrent = 0;
     double cosmicsCurrent = 0;
@@ -376,6 +377,13 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
             
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
+        } else if(subRunSignal == 4){
+            if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
+                totalPOTNuENuE += subRunPOT;
+                seenSubRunsNuENuE.insert(key);
+            }
+
+            if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
         }
     }
 
@@ -388,14 +396,18 @@ void nuESelectionNumbersWithSystematics_macro(){
     double targetGates = ((1333568/6.293443e+18)*targetPOT);
     double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
 
+    double totalPOTNuENuE_notMissing = (POTNuENuE_notMissing + POTBNBNuE_notMissing);
+
+    std::cout << "POT from nue sample = " << POTNuENuE_notMissing << ", POT from BNB sample = " << POTBNBNuE_notMissing << ", total nue POT = " << totalPOTNuENuE_notMissing << std::endl;
+
     // Weights used to scale everything to 1e21 POT
     weights_struct weights;
     weights.signalNuE = targetPOT / POTSignalNuE_notMissing;
     weights.BNBNuE = targetPOT /POTBNBNuE_notMissing;
     weights.cosmicsNuE = cosmicsWeights_NuE;
+    weights.NuENuE = targetPOT / totalPOTNuENuE_notMissing;
 
-    std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << std::endl;
-
+    std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << ", nue = " << weights.NuENuE << std::endl;
 
     // NuE Tree branch variables
     UInt_t eventID, runID, subRunID;
@@ -899,9 +911,9 @@ void nuESelectionNumbersWithSystematics_macro(){
 
         bool weightsFound = false;
         
-        // Only look for weights is signal == 1 (nu+e elastic scatter) or signal == 2 (BNB)
+        // Only look for weights if signal == 1 (nu+e elastic scatter), signal == 2 (BNB), or signal == 4 (nue events)
         // Intime cosmic events (signal == 3) have no weights in the tree, skip these events. weightsFound = false -> weight = 1.0
-        if(signal == 1 || signal == 2){
+        if(signal == 1 || signal == 2 || signal == 4){
             //std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
 
             eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
@@ -982,11 +994,6 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
         }
 
-        double weight = 0;
-        if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-        if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
-        if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
-
         // Looking at the reco slices
         if(reco_sliceID->size() == 0) continue;
 
@@ -1012,7 +1019,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             // Assigning a category to the slices
-            // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy
+            // 0 = cosmic, 1 = signal, 2 = signal fuzzy, 3 = bnb, 4 = bnb fuzzy, 5 = nue event, 6 = nue fuzzy event
             double sliceCategoryPlottingMacro = -999999;
             if(reco_sliceOrigin->at(slice) == 0){
                 sliceCategoryPlottingMacro = 0;
@@ -1030,10 +1037,23 @@ void nuESelectionNumbersWithSystematics_macro(){
                     sliceCategoryPlottingMacro = 2;
                 }
             } else if(reco_sliceOrigin->at(slice) == 3){
+                // This is a BNB slice
                 if(reco_sliceCompleteness->at(slice) > 0.5){
-                    sliceCategoryPlottingMacro = 3;
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        // This is a slice from a nue event
+                        sliceCategoryPlottingMacro = 5;
+                    } else{
+                        // This is a BNB event (not a nue event)
+                        sliceCategoryPlottingMacro = 3;
+                        //std::cout << "BNB Slice: sliceCategoryPlottingMacro = 3" << std::endl;
+                    }
                 } else{
-                    sliceCategoryPlottingMacro = 4;
+                    if(reco_sliceTrueCCNC->at(slice) == 0 && reco_sliceTrueNeutrinoType->at(slice) == 12){
+                        sliceCategoryPlottingMacro = 6;
+                    } else{
+                        sliceCategoryPlottingMacro = 4;
+                        //std::cout << "BNB Fuzzy Slice: sliceCategoryPlottingMacro = 4" << std::endl;
+                    }
                 }
             }
 
@@ -1105,6 +1125,12 @@ void nuESelectionNumbersWithSystematics_macro(){
             if(sliceInteractionType == -999999){
                 sliceInteractionType = 8;
             }
+            
+            double weight = 0;
+            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+            if(signal == 2 && DLCurrent == 5 && sliceCategoryPlottingMacro != 5 && sliceCategoryPlottingMacro != 6) weight = weights.BNBNuE;
+            if((signal == 2 || signal == 4) && DLCurrent == 5 && (sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6)) weight = weights.NuENuE;
+            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
 
             double summedEnergy = 0;
             double numPFPsSlice = 0;
@@ -1297,7 +1323,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                         // Weight = POT weight * universe parameter systematic weight
                         double w = weight * sliceUnivWeights[p][u];
                         // If it is a signal slice then add the (POT weight * systematic weight) to the universe signal slice counter, if it isn't signal slice then add 0
-                        if(isSigSlice) univSig_perCutParam[p][cutIdx][u]  += w;
+                        if(isSigSlice) univSig_perCutParam[p][cutIdx][u] += w;
                         
                         // If it isn't a signal slice then add the (POT weight * systematic weight) to the universe background slice counter, if it is signal slice then add 0
                         else univBack_perCutParam[p][cutIdx][u] += w;
@@ -1308,7 +1334,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             // Fill the counters of event categories before any cuts are applied, these are nominal counts
             // eventsBeforeCuts_DLNuE.background, eventsBeforeCuts_DLNuE.signal and the other counters after each cut (eventsAfterCuts_DLNuE.cutSig/Back) should be the same as the nomSig_perCut[cutIdx] and nomBack_perCut[cutIdx] counters 
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0){
+                if(sliceCategoryPlottingMacro == 0 && signal != 4){
                     eventsBeforeCuts_DLNuE.background += weight;
                 } else if(sliceCategoryPlottingMacro == 1 && signal == 1){
                     eventsBeforeCuts_DLNuE.signal += weight;
@@ -1318,9 +1344,13 @@ void nuESelectionNumbersWithSystematics_macro(){
                     eventsBeforeCuts_DLNuE.background += weight;
                 } else if(sliceCategoryPlottingMacro == 4){
                     eventsBeforeCuts_DLNuE.background += weight;
+                } else if(sliceCategoryPlottingMacro == 5){
+                    eventsBeforeCuts_DLNuE.background += weight;
+                } else if(sliceCategoryPlottingMacro == 6){
+                    eventsBeforeCuts_DLNuE.background += weight;
                 }
 
-                if(sliceInteractionType == 0){
+                if(sliceInteractionType == 0 && signal != 4){
                     eventsBeforeCuts_DLNuE.splitInt.cosmic += weight;   
                 } else if(sliceInteractionType == 1 && signal == 1){
                     eventsBeforeCuts_DLNuE.splitInt.nuE += weight;
@@ -1349,13 +1379,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // Clear cosmic cut has been applied, add to counters
             if(DLCurrent == 5 && clearCosmicCut == 1){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsSig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.clearCosmicsBack += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.clearCosmicsIntSplit.otherNC += weight;
@@ -1378,13 +1410,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // Number of PFPs 0 cut has been applied, add to counters
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Sig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numPFPs0Back += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numPFPs0IntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numPFPs0IntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numPFPs0IntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numPFPs0IntSplit.otherNC += weight;
@@ -1406,13 +1440,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // Number of reco neutrinos cut has been applied, add to counters
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Sig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.numRecoNeut0Back += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.numRecoNeut0IntSplit.otherNC += weight;
@@ -1434,13 +1470,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // CRUMBS score cut has been applied, add to counters
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsSig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.crumbsBack += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.crumbsBack += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.crumbsBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.crumbsBack += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.crumbsIntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.crumbsIntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.crumbsIntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.crumbsIntSplit.otherNC += weight;
@@ -1464,13 +1502,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // FV cut applied, fill counters
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.FVBack += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.FVBack += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.FVSig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.FVBack += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.FVBack += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.FVBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.FVBack += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.FVIntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.FVIntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.FVIntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.FVIntSplit.otherNC += weight;
@@ -1492,13 +1532,15 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             // Primary PFP cut has been applied, fill counters
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPSig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.primaryPFPBack += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.primaryPFPIntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.primaryPFPIntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.primaryPFPIntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.primaryPFPIntSplit.otherNC += weight;
@@ -1519,13 +1561,15 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11Sig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled11Back += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled11Back += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled11Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled11Back += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled11IntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled11IntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled11IntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled11IntSplit.otherNC += weight;
@@ -1546,13 +1590,15 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211Sig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.razzled211Back += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.razzled211Back += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.razzled211Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.razzled211Back += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.razzled211IntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.razzled211IntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.razzled211IntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.razzled211IntSplit.otherNC += weight;
@@ -1573,13 +1619,15 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Sig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.ETheta2Back += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.ETheta2Back += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.ETheta2Back += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.ETheta2IntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.ETheta2IntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.ETheta2IntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.ETheta2IntSplit.otherNC += weight;
@@ -1600,13 +1648,15 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             if(DLCurrent == 5){
-                if(sliceCategoryPlottingMacro == 0) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                if(sliceCategoryPlottingMacro == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
                 else if(sliceCategoryPlottingMacro == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxSig += weight;
                 else if(sliceCategoryPlottingMacro == 2 && signal == 1) eventsAfterCuts_DLNuE.dEdxBack += weight;
                 else if(sliceCategoryPlottingMacro == 3) eventsAfterCuts_DLNuE.dEdxBack += weight;
                 else if(sliceCategoryPlottingMacro == 4) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 5) eventsAfterCuts_DLNuE.dEdxBack += weight;
+                else if(sliceCategoryPlottingMacro == 6) eventsAfterCuts_DLNuE.dEdxBack += weight;
 
-                if(sliceInteractionType == 0) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
+                if(sliceInteractionType == 0 && signal != 4) eventsAfterCuts_DLNuE.dEdxIntSplit.cosmic += weight;
                 else if(sliceInteractionType == 1 && signal == 1) eventsAfterCuts_DLNuE.dEdxIntSplit.nuE += weight;
                 else if(sliceInteractionType == 2) eventsAfterCuts_DLNuE.dEdxIntSplit.NCNPi0 += weight;
                 else if(sliceInteractionType == 3) eventsAfterCuts_DLNuE.dEdxIntSplit.otherNC += weight;
@@ -1658,14 +1708,14 @@ void nuESelectionNumbersWithSystematics_macro(){
     // Lambda function to calculate the mean, std deviation and shift from a TH1D
     auto computeSyst = [&](const std::string& name, TH1D* h, const std::vector<double>& universes, double nominal){
         // Mean is calculated as 1/N*sum(x)
-        double mean   = h->GetMean();
+        double mean = h->GetMean();
 
         // Std Dev is calculated as sqrt(1/N * sum((x - mean)^2)) - might need to change this
         //double stddev = h->GetStdDev();
 
         double stddev = calcSystFromUniverses(universes, nominal);
 
-        double shift  = mean - nominal;
+        double shift = mean - nominal;
         std::cout << Form("%-20s  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", name.c_str(), mean, shift, 100.*shift/nominal, stddev, 100.*stddev/nominal) << std::endl;
         systValues.push_back(stddev);
     };
