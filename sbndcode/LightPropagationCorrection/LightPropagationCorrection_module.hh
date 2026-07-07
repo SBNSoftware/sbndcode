@@ -141,8 +141,8 @@ private:
     void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
-    double GetAverageParticlePropagationTime(const std::vector<recob::OpHit>& );
-    double GetAveragePhotonPropagationTime(const std::vector<recob::OpHit>& );
+    double GetAverageParticlePropagationTime();
+    double GetAveragePhotonPropagationTime();
     void CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming, bool matched, int tpc);
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
     void GetSelectedChannelsFlash(double , ::lightana::LiteOpHitArray_t );
@@ -154,8 +154,6 @@ private:
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
     ::lightana::FlashFinderManager _mgr_tpc1;
-
-    opdet::sbndPDMapAlg fPDSMap;
 
     std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc0;
     std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc1;

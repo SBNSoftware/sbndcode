@@ -585,11 +585,11 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         newFlashTime = flasht0;
         particlePropTime = GetAverageParticlePropagationTime()/1000;
         photonPropTime = GetAveragePhotonPropagationTime()/1000;
-        correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+        correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
         correctedOpFlashTiming.OpFlashPE = flash.TotalPE();
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
         correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
-        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
         correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
         correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
         correctedOpFlashTiming.MatchedOpFlash = matched;
@@ -612,7 +612,7 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
     return flash_hits_v;
 }
 
-double sbnd::LightPropagationCorrection::GetAverageParticlePropagationTime( const std::vector<recob::OpHit> & OpHitList)
+double sbnd::LightPropagationCorrection::GetAverageParticlePropagationTime()
 {
     double sum = 0.0;
     int n = 0;
