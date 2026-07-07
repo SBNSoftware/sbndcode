@@ -145,9 +145,13 @@ private:
     void GetSelectedChannelsFlash(double , ::lightana::LiteOpHitArray_t );
     double GetAverageParticlePropagationTime();
     double GetAveragePhotonPropagationTime();
+    void CorrectOpFlash(art::Ptr<recob::OpFlash> const& , sbn::CorrectedOpFlashTiming &);
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
     opdet::sbndPDMapAlg fPDSMap;
+    // Flash ophit associations
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc0;
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc1;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
@@ -217,7 +221,6 @@ private:
     double fPreWindow;
     double fPostWindow;
     double fPDFraction;
-
 
     bool fDebug;
 
