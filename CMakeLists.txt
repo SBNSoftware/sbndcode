@@ -15,9 +15,9 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.20.05)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.21.00)
 find_package(cetmodules REQUIRED)
-project(sbndcode LANGUAGES CXX)
+project(sbndcode VERSION ${${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING} LANGUAGES CXX)
 
 # for CI:
 # project(sbndcode VERSION 10.05.00)
@@ -57,6 +57,7 @@ message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
+find_package( protobuf REQUIRED )
 find_package( art REQUIRED )
 find_package( art_root_io REQUIRED )
 find_package( artdaq_core REQUIRED )
