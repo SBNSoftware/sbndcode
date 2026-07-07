@@ -345,20 +345,22 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     double totalPOTSignalNuE = 0;
     double totalPOTBNBNuE = 0;
+    double totalPOTNuENuE = 0;
 
     double cosmicSpillsSumNuE = 0;
     double BNBSpillsSumNuE = 0;
-    double NuESpillsSumNuE = 0;
+    double SignalSpillsSumNuE = 0;
 
     double POTSignalNuE_notMissing = 0;
     double POTBNBNuE_notMissing = 0;
+    double POTNuENuE_notMissing = 0;
     
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
 
         if(subRunSignal == 3 && subRunDLCurrent == 5) cosmicSpillsSumNuE += subRunNumGenEvents;
         else if(subRunSignal == 2 && subRunDLCurrent == 5) BNBSpillsSumNuE += subRunNumGenEvents;
-        else if(subRunSignal == 1 && subRunDLCurrent == 5) NuESpillsSumNuE += subRunNumGenEvents;
+        else if(subRunSignal == 1 && subRunDLCurrent == 5) SignalSpillsSumNuE += subRunNumGenEvents;
 
         std::pair<unsigned int, unsigned int> key = std::make_pair(subRunRun, subRunNumber);
 
@@ -377,6 +379,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
             
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
+
         } else if(subRunSignal == 4){
             if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
                 totalPOTNuENuE += subRunPOT;
@@ -391,7 +394,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     double targetSpills = (targetPOT/(5e12));
 
     double BNBScaledSpills_NuE = ((targetPOT/POTBNBNuE_notMissing) * BNBSpillsSumNuE);
-    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * NuESpillsSumNuE);
+    double SignalScaledSpills_NuE = ((targetPOT/POTSignalNuE_notMissing) * SignalSpillsSumNuE);
 
     double targetGates = ((1333568/6.293443e+18)*targetPOT);
     double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
@@ -1308,6 +1311,9 @@ void nuESelectionNumbersWithSystematics_macro(){
             // Lambda function which takes 1 input (the cut index)
             // Used to fill the nominal and universe, parameter counts for signal and background slices
             auto fillSliceSystCounters = [&](int cutIdx){
+                // Cat == 0 && signal == 4, cosmic slices from nue sample - skip explicitly (instead of relying on weight = 0)
+                if(sliceCategoryPlottingMacro == 0 && signal == 4) return;
+
                 // Checks whether the slice is a signal slice
                 bool isSigSlice = (sliceCategoryPlottingMacro == 1 && signal == 1);
                 // If it is a signal slice then add the POT weight to the nominal signal slice counter, if it isn't signal slice then add 0
