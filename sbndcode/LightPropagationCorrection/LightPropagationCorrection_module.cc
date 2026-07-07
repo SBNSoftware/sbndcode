@@ -119,8 +119,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     //PFP to space points
     art::FindManyP<recob::SpacePoint> pfp_sp_assns(pfpHandle, e, fSpacePointLabel);
     //OpFlash to OpHit
-    art::FindManyP<recob::OpHit> flashToOpHitAssns_tpc0(opflashListHandle_tpc0, e, fOpFlashLabel_tpc0);
-    art::FindManyP<recob::OpHit> flashToOpHitAssns_tpc1(opflashListHandle_tpc1, e, fOpFlashLabel_tpc1);
+    flashToOpHitAssns_tpc0 = std::make_unique<art::FindManyP<recob::OpHit>>( opflashListHandle_tpc0, e, fOpFlashLabel_tpc0);
+    flashToOpHitAssns_tpc1 = std::make_unique<art::FindManyP<recob::OpHit>>(opflashListHandle_tpc1, e, fOpFlashLabel_tpc1);
     // PFP Metadata
     art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfpHandle, e, fReco2Label);
 
@@ -237,70 +237,14 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         }
         else throw art::Exception(art::errors::LogicError) << " Flash matching tool " <<  fFlashMatchingTool << " not supported ." << std::endl; 
 
-
-        // Get the ophits associated to the flash
-        std::vector<art::Ptr<recob::OpHit>> ophitlist;
-        if(flashFM[0]->XCenter()<0)
-        {
-            ophitlist = flashToOpHitAssns_tpc0.at(flashFM[0].key());
-            _mgr = _mgr_tpc0; // Use the TPC 0 flash finder manager
-        }
-        else
-        {
-            ophitlist = flashToOpHitAssns_tpc1.at(flashFM[0].key());
-            _mgr = _mgr_tpc1; // Use the TPC 1 flash finder manager
-        }
-
-        std::vector<recob::OpHit> newOpHitList;
-        std::vector<recob::OpHit> oldOpHitList;
-        for(const auto& ophit : ophitlist) {
-            oldOpHitList.push_back(*ophit);
-        }
-        // Get the list of the corrected OpHits
-        this->CorrectOpHitTime(ophitlist, newOpHitList);
-        // Create the list of ophit lite to be used in the flash finder
-        ::lightana::LiteOpHitArray_t ophits;
-        this->FillLiteOpHit(newOpHitList, ophits);
-        // Create the flash manager
-        auto const flash_v = _mgr.RecoFlash(ophits);
-        double originalFlashTime = flashFM[0]->Time();
-        double newFlashTime = 0.0;
-        double particlePropTime = 0.0;
-        double photonPropTime = 0.0;
-        for(const auto& lflash :  flash_v) {
-            // Get Flash Barycenter
-            double Ycenter, Zcenter, Ywidth, Zwidth;
-            _flashgeo->GetFlashLocation(lflash.channel_pe, Ycenter, Zcenter, Ywidth, Zwidth);
-            // Get flasht0
-            double flasht0 = lflash.time;
-            // Refine t0 calculation
-            flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
-            this->GetSelectedChannelsFlash(lflash.time, GetAssociatedLiteHits(lflash, ophits));
-            recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
-                                ( flasht0) / 1600., lflash.channel_pe,
-                                0, 0, 1, // this are just default values
-                                100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
-            newFlashTime = flasht0;
-            particlePropTime = GetAverageParticlePropagationTime()/1000;
-            photonPropTime = GetAveragePhotonPropagationTime()/1000;
-            sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
-            correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
-            correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
-            correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
-            correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
-            correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
-        }
-
+        sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
+        CorrectOpFlash(flashFM[0], correctedOpFlashTiming);
+        correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         art::Ptr<sbn::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
         newCorrectedOpFlashTimingSliceAssn->addSingle(slice, newCorrectedOpFlashTimingPtr);
         newCorrectedOpFlashTimingOpFlashAssn->addSingle(flashFM[0], newCorrectedOpFlashTimingPtr);
-        if(fSaveCorrectionTree){
-            this->FillCorrectionTree(newFlashTime, *flashFM[0], oldOpHitList, newOpHitList);
-        }
     }
-    if(fSaveCorrectionTree) fTree->Fill();
+
     ResetEventVars();
     e.put(std::move(correctedOpFlashTimes));
     e.put(std::move(newCorrectedOpFlashTimingSliceAssn));
@@ -578,11 +522,8 @@ void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
     double flash_time,
     ::lightana::LiteOpHitArray_t ophit_list)
 {
-    // Ahora guardamos también el channel ID
     std::vector< std::tuple<double, double, size_t> > selected_hits;
     double pe_sum = 0.0;
-
-    // Limpiar vector de salida por si ya tenía contenido
     fSelectedChannelList.clear();
     // Fill vector with selected hits in the specified window
     for (auto const& hit : ophit_list) {
@@ -598,14 +539,7 @@ void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
     }
 
     // Sort by PE in descending order
-    std::sort(
-        selected_hits.begin(),
-        selected_hits.end(),
-        [](auto const& a, auto const& b) {
-            return std::get<0>(a) > std::get<0>(b);
-        }
-    );
-
+    std::sort(selected_hits.begin(), selected_hits.end(), [](auto const& a, auto const& b) {return std::get<0>(a) > std::get<0>(b);});
     double pe_count = 0.0;
 
     // Loop over selected ophits
@@ -614,11 +548,70 @@ void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
         double pe      = std::get<0>(selected_hits[ix]);
         size_t channel = std::get<2>(selected_hits[ix]);
 
-        // Guardar channel ID
+        // Save channel ID
         fSelectedChannelList.push_back(channel);
 
         pe_count += pe;
         if (pe_count / pe_sum > fPDFraction)
             break;
+    }
+}
+
+void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming)
+{
+    // Get the ophits associated to the flash
+    std::vector<art::Ptr<recob::OpHit>> ophitlist;
+    if(flash->XCenter()<0)
+    {
+        ophitlist = flashToOpHitAssns_tpc0->at(flash.key());
+        _mgr = _mgr_tpc0; // Use the TPC 0 flash finder manager
+    }
+    else
+    {
+        ophitlist = flashToOpHitAssns_tpc1->at(flash.key());
+        _mgr = _mgr_tpc1; // Use the TPC 1 flash finder manager
+    }
+    std::vector<recob::OpHit> newOpHitList;
+    std::vector<recob::OpHit> oldOpHitList;
+    for(const auto& ophit : ophitlist) {
+        oldOpHitList.push_back(*ophit);
+    }
+    // Get the list of the corrected OpHits
+    this->CorrectOpHitTime(ophitlist, newOpHitList);
+    // Create the list of ophit lite to be used in the flash finder
+    ::lightana::LiteOpHitArray_t ophits;
+    this->FillLiteOpHit(newOpHitList, ophits);
+    // Create the flash manager
+    auto const flash_v = _mgr.RecoFlash(ophits);
+    double originalFlashTime = flash->Time();
+    double newFlashTime = 0.0;
+    double particlePropTime = 0.0;
+    double photonPropTime = 0.0;
+    for(const auto& lflash :  flash_v) {
+        // Get Flash Barycenter
+        double Ycenter, Zcenter, Ywidth, Zwidth;
+        _flashgeo->GetFlashLocation(lflash.channel_pe, Ycenter, Zcenter, Ywidth, Zwidth);
+        // Get flasht0
+        double flasht0 = lflash.time;
+        // Refine t0 calculation
+        flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
+        this->GetSelectedChannelsFlash(lflash.time, GetAssociatedLiteHits(lflash, ophits));
+        recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
+                            ( flasht0) / 1600., lflash.channel_pe,
+                            0, 0, 1, // this are just default values
+                            100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
+        newFlashTime = flasht0;
+        particlePropTime = GetAverageParticlePropagationTime()/1000;
+        photonPropTime = GetAveragePhotonPropagationTime()/1000;
+        correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
+        correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
+        correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
+        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
+        correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
+        correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
+    }
+
+    if(fSaveCorrectionTree){
+        this->FillCorrectionTree(newFlashTime, *flash, oldOpHitList, newOpHitList);
     }
 }
