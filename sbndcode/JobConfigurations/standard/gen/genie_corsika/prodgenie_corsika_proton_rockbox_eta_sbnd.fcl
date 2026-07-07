@@ -1,0 +1,12 @@
+#include "signal_filters_sbnd.fcl"
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+physics.filters.etafilter: @local::sbnd_eta_filter
+
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, 
+                        etafilter, 
+                        corsika, largeantcosmic, largeant, largeantdropped, simplemerge]
+
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter",
+                        dirtfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge,
+                        etafilter]
