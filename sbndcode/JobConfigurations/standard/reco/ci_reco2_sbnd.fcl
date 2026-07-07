@@ -1,0 +1,4 @@
+#include "standard_reco2_sbnd.fcl"
+
+physics.producers.pandora.ConfigFile: "PandoraSettings_CI_SBND.xml"
+physics.producers.pandora.EnableMCParticles: true

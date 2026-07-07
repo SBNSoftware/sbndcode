@@ -1,5 +1,7 @@
 #include "LightPropagationCorrection_module.hh"
 
+#include <stdexcept>
+
 namespace sbnd {
     class LightPropagationCorrection;
 }
@@ -13,7 +15,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fOpFlashLabel_tpc1 ( p.get<std::string>("OpFlashLabel_tpc1") ),
     fSpacePointLabel( p.get<std::string>("SpacePointLabel") ),
     fOpHitsModuleLabel( p.get<std::string>("OpHitsModuleLabel") ),
-    fSPECTDCLabel( p.get<std::string>("SPECTDCLabel") ),
     fFlashMatchingTool( p.get<std::string>("FlashMatchingTool") ),
     fSaveCorrectionTree( p.get<bool>("SaveCorrectionTree") ),
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
@@ -25,14 +26,9 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     // 
     // More initializers here.
 {
-    // Initialize the TimeCorrectionVector PerChannel
-    for(size_t i = 0; i < fWireReadout.NOpChannels(); ++i) {
-        fTimeCorrectionPerChannel.push_back(0.0); // Initialize with zero or any default value
-        fParticlePropagationTimePerChannel.push_back(0.0); // Initialize with zero or any default value
-        fPhotonPropagationTimePerChannel.push_back(0.0); // Initialize with zero or any default value
-    }
+    fNOpChannels = fWireReadout.NOpChannels();
 
-    for(unsigned int opch=0; opch<fWireReadout.NOpChannels(); opch++){
+    for(unsigned int opch=0; opch<fNOpChannels; opch++){
         auto pdCenter = fWireReadout.OpDetGeoFromOpChannel(opch).GetCenter();
         fOpDetID.push_back(opch);
         fOpDetX.push_back(pdCenter.X());
@@ -204,27 +200,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             ResetSliceInfo();
             continue; // Skip to the next slice if the nu score is below threshold
         }
-
         this->GetPropagationTimeCorrectionPerChannel();
-
-        // Get the SPECTDC product required to go to the RWM reference frame
-        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-        e.getByLabel(fSPECTDCLabel, tdcHandle);
-        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-            std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            ResetSliceInfo();
-            continue;
-        }
-        else{
-            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-            for (size_t i=0; i<tdc_v.size(); i++){
-                auto tdc = tdc_v[i];
-                const uint32_t  ch = tdc.Channel();
-                const uint64_t  ts = tdc.Timestamp();
-                if(ch == 2) fRWMTime = ts%uint64_t(1e9);
-                if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
-            }
-        }
+        
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
         if(fFlashMatchingTool == "OpT0Finder" ){
@@ -310,7 +287,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             continue;
         }
 
-
         correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming_tpc0));
         auto ptr0 = make_correctedopflashtime_ptr(correctedOpFlashTimes->size() - 1);
 
@@ -341,8 +317,6 @@ void sbnd::LightPropagationCorrection::beginJob()
         fTree->Branch("eventID", &fEvent, "eventID/i");
         fTree->Branch("runID", &fRun, "runID/i");
         fTree->Branch("subrunID", &fSubrun, "subrunID/i");
-        fTree->Branch("RWMTime", &fRWMTime);
-        fTree->Branch("EventTriggerTime", &fEventTriggerTime);
         fTree->Branch("NuScore", &fNuScore);
         fTree->Branch("FMScore", &fFMScore);
         fTree->Branch("OpFlashTimeOld", &fOpFlashTimeOld);
@@ -376,8 +350,6 @@ void sbnd::LightPropagationCorrection::ResetEventVars()
         fRun = 0;
         fSubrun = 0;
         _fNuScore = 0.0;
-        fRWMTime=-99999.;
-        fEventTriggerTime=-99999.;
         fNuScore.clear();
         fFMScore.clear();
         fOpFlashTimeOld.clear();
@@ -440,6 +412,7 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fTimeCorrectionPerChannel.resize(312, 0.0); // Reset the time correction vector for each channel
     fParticlePropagationTimePerChannel.resize(312, 0.0); // Reset the particle propagation time vector for each channel
     fPhotonPropagationTimePerChannel.resize(312, 0.0); // Reset the photon propagation time vector for each channel
+    fChargeBarycenterX.assign(2, 0.0);
     fChargeBarycenterY.assign(2, 0.0);
     fChargeBarycenterZ.assign(2, 0.0);
     fChargeWeightX.assign(2, 0.0);
@@ -472,10 +445,13 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
-            if(fPDSMap.pdType(opdet)=="pmt_coated" || fPDSMap.pdType(opdet)=="xarapuca_vuv")
+            const std::string pdType = fPDSMap.pdType(opdet);
+            if(pdType=="pmt_coated" || pdType=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
-            else if(fPDSMap.pdType(opdet)=="pmt_uncoated" || fPDSMap.pdType(opdet)=="xarapuca_vis")
+            else if(pdType=="pmt_uncoated" || pdType=="xarapuca_vis")
                 lightPropTime = lightPropTimeVIS;
+            else
+                throw std::runtime_error("LightPropagationCorrection: unexpected pdType '" + pdType + "' for opdet " + std::to_string(opdet));
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) {
