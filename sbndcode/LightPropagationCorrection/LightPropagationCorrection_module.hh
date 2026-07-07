@@ -169,9 +169,13 @@ private:
 
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
     trkf::TrackMomentumCalculator tmc;
+    void CorrectOpFlash(art::Ptr<recob::OpFlash> const& , sbn::CorrectedOpFlashTiming &);
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
     opdet::sbndPDMapAlg fPDSMap;
+    // Flash ophit associations
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc0;
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc1;
     geo::GeometryCore const& fGeom;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
