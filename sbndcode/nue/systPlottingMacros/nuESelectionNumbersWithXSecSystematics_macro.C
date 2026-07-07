@@ -261,12 +261,19 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsSignalNuE;
     std::set<std::pair<unsigned int, unsigned int>> seenSubRunsBNBNuE;
+    std::set<std::pair<unsigned int, unsigned int>> seenSubRunsNuENuE;
 
     double cosmicSpillsSumNuE = 0;
     double BNBSpillsSumNuE = 0;
     double NuESpillsSumNuE = 0;
+
+    double totalPOTSignalNuE = 0;
+    double totalPOTBNBNuE = 0;
+    double totalPOTNuENuE = 0;   
+ 
     double POTSignalNuE_notMissing = 0;
     double POTBNBNuE_notMissing = 0;
+    double POTNuENuE_notMissing = 0;
 
     for(Long64_t i = 0; i < numEntriesSubRun; ++i){
         subRunTree->GetEntry(i);
@@ -279,14 +286,20 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
         if(subRunSignal == 1){
             if(subRunDLCurrent == 5 && seenSubRunsSignalNuE.find(key) == seenSubRunsSignalNuE.end()){
+                totalPOTSignalNuE += subRunPOT;
                 seenSubRunsSignalNuE.insert(key);
             }
+
             if(subRunDLCurrent == 5) POTSignalNuE_notMissing += subRunPOT;
+
         } else if(subRunSignal == 2){
             if(subRunDLCurrent == 5 && seenSubRunsBNBNuE.find(key) == seenSubRunsBNBNuE.end()){
+                totalPOTBNBNuE += subRunPOT;
                 seenSubRunsBNBNuE.insert(key);
             }
+
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
+
         } else if(subRunSignal == 4){
             if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
                 totalPOTNuENuE += subRunPOT;
@@ -595,121 +608,121 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::vector<double> *reco_sliceTrueCCNC_weights = nullptr;  
     std::vector<double> *reco_sliceTrueNeutrinoType_weights = nullptr;
 
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
-    std::vector<double> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
+    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
 
     weightsTree->SetBranchAddress("eventID", &eventID_weights);
     weightsTree->SetBranchAddress("runID", &runID_weights);
@@ -825,7 +838,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
-    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weightGENIEReWeight_SBN_v1_multisigma_NormNCCOH_);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
     weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
@@ -950,7 +963,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
-    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weightGENIEReWeight_SBN_v1_multisigma_NormNCCOH_);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
@@ -972,11 +985,6 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         weightEntryMap[key] = i;
     }
 
-    // =====================================================================================
-    // 115 GENIE parameters. mapKey = actual lookup key in the weight maps (VERIFY against
-    // your tree). shortName = used for plots/filenames (kept globally unique).
-    // isMultisim = true only for the 30 N=100 "multisim_*" knobs.
-    // =====================================================================================
     std::vector<GenieParam_struct> genieParams = {
         // ---- NOvA-style non-resonant pion normalization (23 params) ----
         {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi","NonResPionNorm_NR_nu_n_CC_2Pi",6,false},
@@ -1107,16 +1115,15 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     };
 
     const int NPARAMS_GENIE = (int)genieParams.size(); // should be 115
-    std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << std::endl;
+    std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << " out of 115" << std::endl;
 
-    // The cuts to be applied -- UNCHANGED order/values from the flux macro
     const int NCUTS = 11;
     std::vector<std::string> cutNames_syst = {"beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut", "crumbs", "FV", "primaryPFP", "razzled11", "razzled211", "ETheta2", "dEdx"};
 
     std::vector<double> nomSig_perCut(NCUTS, 0.0);
     std::vector<double> nomBack_perCut(NCUTS, 0.0);
 
-    std::vector<std::vector<double>> count_genie(NPARAMS_GENIE);              // count_genie[p][u]: true nu+e count (before cuts) per universe
+    std::vector<std::vector<double>> count_genie(NPARAMS_GENIE); // count_genie[p][u]: true nu+e count (before cuts) per universe
     std::vector<std::vector<std::vector<double>>> univSig_perCutParam_genie(NPARAMS_GENIE);
     std::vector<std::vector<std::vector<double>>> univBack_perCutParam_genie(NPARAMS_GENIE);
 
@@ -1402,6 +1409,9 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
             }
 
             auto fillSliceSystCounters_genie = [&](int cutIdx){
+                // Cat == 0 && signal == 4, cosmic slices from nue sample - skip explicitly (instead of relying on weight = 0)
+                if(sliceCategoryPlottingMacro == 0 && signal == 4) return;
+
                 bool isSigSlice = (sliceCategoryPlottingMacro == 1 && signal == 1);
                 nomSig_perCut[cutIdx] += isSigSlice ? weight : 0.0;
                 nomBack_perCut[cutIdx] += isSigSlice ? 0.0 : weight;
