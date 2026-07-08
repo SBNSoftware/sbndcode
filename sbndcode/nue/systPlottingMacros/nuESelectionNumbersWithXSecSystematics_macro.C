@@ -1420,6 +1420,13 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return isMultisim ? calcSystMultisim(values, nominal) : calcSystMultisigma1Sigma(values, nominal);
     };
 
+    auto calcMeanFromValues = [&](const std::vector<double>& values) -> double {
+        if(values.empty()) return 0.0;
+        double sum = 0.0;
+        for(double x : values) sum += x;
+        return sum / values.size();
+    };
+
     // Loop through events
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
@@ -1941,10 +1948,11 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     for(int p = 0; p < NPARAMS_GENIE; p++){
         double stddev = calcSystGeneric(count_genie[p], actualSignalCount, genieParams[p].isMultisim);
+        double mean   = calcMeanFromValues(count_genie[p]);
+        double shift  = mean - actualSignalCount;
         systValues_beforeCuts[p] = stddev;
 
-        std::cout << Form("%-45s (N=%3d, %-10s)  syst=%.2f (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", stddev, (actualSignalCount != 0 ? 100.*stddev/actualSignalCount : 0.)) << std::endl;
-
+        std::cout << Form("%-45s (N=%3d, %-10s)  mean=%.2f  shift=%.2f (%+.1f%%)  syst=%.2f (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", mean, shift, (actualSignalCount != 0 ? 100.*shift/actualSignalCount : 0.), stddev, (actualSignalCount != 0 ? 100.*stddev/actualSignalCount : 0.)) << std::endl;
         TH1D *h = new TH1D(("h_genie_" + genieParams[p].shortName).c_str(), (genieParams[p].shortName + ";Total nu+e count;Universes").c_str(), 60, 0, 600);
         
         for(double v : count_genie[p]) h->Fill(v);
@@ -2001,7 +2009,6 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     };
 
     auto printSystBlock_genie = [&](const std::string& blockName, double nomVal, int cutIdx,
-                                     std::function<double(double s, double b, double ts, double ss)> fn, bool isPct){
         double scale = isPct ? 100.0 : 1.0;
         std::string unitSuffix = isPct ? "%" : "";
 
@@ -2012,10 +2019,11 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         for(int p = 0; p < NPARAMS_GENIE; p++){
             std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
             double stddev = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
+            double mean   = calcMeanFromValues(vals);
+            double shift  = mean - nomVal;
             systValues[p] = stddev;
-            std::cout << Form("%-45s (N=%3d, %-10s)  syst=%.4f%s (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", stddev * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
+            std::cout << Form("%-45s (N=%3d, %-10s)  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f%s (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", mean * scale, unitSuffix.c_str(), shift * scale, (nomVal != 0 ? 100.*shift/nomVal : 0.), stddev * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
         }
-
         double totalSystSq = 0.0;
         for(double s : systValues) totalSystSq += s*s;
         double totalSyst = std::sqrt(totalSystSq);
