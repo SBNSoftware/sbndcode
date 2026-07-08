@@ -901,22 +901,6 @@ void nuESelectionNumbersWithSystematics_macro(){
     // Number of true nu+e elastic scattering events
     double actualSignalCount = 0.0;
 
-    // Helper to get a universe weight given a vector of weights and universe number, returns 1.0 (no reweighting) if no weight
-    // This is only used for the nuEScatter weights (associated with a true nu+e elastic scatter, not a slice)
-    auto getNuEWeight = [&](std::vector<double>* vec, int u) -> double {
-        if(!vec || (int)vec->size() != NUNIV) return 1.0;
-        // Checks that the vector exists and is the same size as the number of universes
-        return vec->at(u);
-    };
-
-    // Helper to get a universe weight given a 2D array containing the weights and sliceID, given the universe number, and sliceID
-    // 2D array is vec[sliceID][universe], contains weights for a specific flux parameter
-    // Returns 1 if no event match is found between the 2 trees (wFound == 0), or sliceID index > size of vector
-    auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
-        if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV) return 1.0;
-        return vec->at(sliceIdx).at(u);
-    };
-
     // Helper to calculate the systematic given a vector of values. Calculates it as sqrt((1/N * sum from 1 to N(x_j - nominal))
     auto calcSystFromUniverses = [&](const std::vector<double>& values, double nominal) -> double {
         int N = values.size();
@@ -1709,10 +1693,10 @@ void nuESelectionNumbersWithSystematics_macro(){
             
             // Fill reconstructed-angle histograms (nominal + all 1000 universes) for the
             if(DLCurrent == 5 && pfp10cm_PCAAngle != -999999){
-                h_angle_CV->Fill(pfp10cm_PCAAngle, weight);
+                h_angle_CV->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
                 for(int u = 0; u < NUNIV; u++){
                     double wComb = sliceUnivWeights[13][u]; // index 13 = combined flux weight
-                    h_angle_univ[u]->Fill(pfp10cm_PCAAngle, weight * wComb);
+                    h_angle_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
                 }
             }
 
@@ -2518,6 +2502,10 @@ void nuESelectionNumbersWithSystematics_macro(){
     h_cov_angle->Write();
     h_corr_angle->Write();
     fOut->cd();
+
+    delete h_angle_CV;
+    delete h_cov_angle;
+    delete h_corr_angle;
 
     delete c_cov;
     delete c_corr;
