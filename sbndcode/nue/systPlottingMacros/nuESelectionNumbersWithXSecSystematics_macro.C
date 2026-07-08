@@ -1407,8 +1407,17 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return maxDev;
     };
 
+    // Multisigma with the standard 6-point layout [-1sig, +1sig, -2sig, +2sig, -3sig, +3sig].
+    // Uses only the +-1sigma points, symmetrized, as is standard practice.
+    auto calcSystMultisigma1Sigma = [&](const std::vector<double>& values, double nominal) -> double {
+        if(values.size() != 6) return calcSystMultisigma(values, nominal); // fallback for non-standard knobs (e.g. the 1-point unisim knobs)
+        double down1sigma = values[0];
+        double up1sigma    = values[1];
+        return std::fabs(up1sigma - down1sigma) / 2.0;
+    };
+
     auto calcSystGeneric = [&](const std::vector<double>& values, double nominal, bool isMultisim) -> double {
-        return isMultisim ? calcSystMultisim(values, nominal) : calcSystMultisigma(values, nominal);
+        return isMultisim ? calcSystMultisim(values, nominal) : calcSystMultisigma1Sigma(values, nominal);
     };
 
     // Loop through events
