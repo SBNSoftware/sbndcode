@@ -392,7 +392,7 @@ void fillSplitPFPHistogram(splitPFPHistGroup_struct* hist, int DLCurrent, int si
     double w = 0.0;
 
     if(signal == 1) w = weight->signalNuE;
-    else if(signal == 2 && (sliceCat != 5 || sliceCat != 6)) w = weight->BNBNuE;
+    else if(signal == 2 && (sliceCat != 5 && sliceCat != 6)) w = weight->BNBNuE;
     else if((signal == 2 || signal == 4) && (sliceCat == 5 || sliceCat == 6)) w = weight->NuENuE;
     else if(signal == 3) w = weight->cosmicsNuE;
 
@@ -1962,15 +1962,15 @@ void drawCumulativeRetainedAndFOM(TH1D* matchedHist, TH1D* totalHist, const std:
 
 void nuEBackgroundSignalWithNuE_macro(){
     //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/purity_max_values_withCuts_1Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
-    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/eventsSurvivingAllCuts_1Jul_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/purity_max_values_withCuts_7Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11.txt";
+    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/eventsSurvivingAllCuts_7Jul_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11.txt";
 
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_30Jun_noWeights.root"); 
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_7Jul_noWeights.root"); 
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots1Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots7Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11/";
 
-    gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro1July/", kTRUE);
+    gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/", kTRUE);
 
     /*
     // Creating skimmed file
@@ -2001,9 +2001,9 @@ void nuEBackgroundSignalWithNuE_macro(){
     int razzledPDG22Cut = 0;
     int razzledPDG13Cut = 0;
     int razzledPDG2212Cut = 0;
-    int razzledPDG211Cut = 1;
-    int ETheta2Cut = 1;
-    int dEdxCut = 1;
+    int razzledPDG211Cut = 0;
+    int ETheta2Cut = 0;
+    int dEdxCut = 0;
     int fracHitsContainedCut = 0;
     int numHitsCut = 0;
 
@@ -2045,18 +2045,18 @@ void nuEBackgroundSignalWithNuE_macro(){
     double numSignalSlicesPFPCount = 0; 
 
     // Cut values
-    double crumbsScoreCut_low = 0.2;
+    double crumbsScoreCut_low = 0.28;
     double crumbsScoreCut_high = 0.76;
 
     double FVCut_xHigh = 192; 
     double FVCut_xLow = -192; 
     double FVCut_xCentre = 10; 
 
-    double FVCut_yHigh = 194; 
-    double FVCut_yLow = -194; 
+    double FVCut_yHigh = 192; 
+    double FVCut_yLow = -192; 
     
     double FVCut_zHigh = 450; 
-    double FVCut_zLow = 6; 
+    double FVCut_zLow = 5.5; 
    
     double primaryPFPCutValue = 1;
 
