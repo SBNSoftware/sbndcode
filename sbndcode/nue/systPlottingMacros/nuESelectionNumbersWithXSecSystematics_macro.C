@@ -2056,7 +2056,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return result;
     };
 
-    auto printSystBlock_genie = [&](const std::string& blockName, double nomVal, int cutIdx,
+    auto printSystBlock_genie = [&](const std::string& blockName, double nomVal, int cutIdx, std::function<double(double s, double b, double ts, double ss)> fn, bool isPct){
         double scale = isPct ? 100.0 : 1.0;
         std::string unitSuffix = isPct ? "%" : "";
 
