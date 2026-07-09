@@ -1962,13 +1962,13 @@ void drawCumulativeRetainedAndFOM(TH1D* matchedHist, TH1D* totalHist, const std:
 
 void nuEBackgroundSignalWithNuE_macro(){
     //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/purity_max_values_withCuts_7Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11.txt";
-    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/eventsSurvivingAllCuts_7Jul_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11.txt";
+    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/purity_max_values_withCuts_7Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/eventsSurvivingAllCuts_7Jul_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
 
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_7Jul_noWeights.root"); 
     //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots7Jul_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots7Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx/";
 
     gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/", kTRUE);
 
@@ -2001,9 +2001,9 @@ void nuEBackgroundSignalWithNuE_macro(){
     int razzledPDG22Cut = 0;
     int razzledPDG13Cut = 0;
     int razzledPDG2212Cut = 0;
-    int razzledPDG211Cut = 0;
-    int ETheta2Cut = 0;
-    int dEdxCut = 0;
+    int razzledPDG211Cut = 1;
+    int ETheta2Cut = 1;
+    int dEdxCut = 1;
     int fracHitsContainedCut = 0;
     int numHitsCut = 0;
 
@@ -2045,18 +2045,18 @@ void nuEBackgroundSignalWithNuE_macro(){
     double numSignalSlicesPFPCount = 0; 
 
     // Cut values
-    double crumbsScoreCut_low = 0.28;
+    double crumbsScoreCut_low = 0.2;
     double crumbsScoreCut_high = 0.76;
 
     double FVCut_xHigh = 192; 
     double FVCut_xLow = -192; 
     double FVCut_xCentre = 10; 
 
-    double FVCut_yHigh = 192; 
-    double FVCut_yLow = -192; 
+    double FVCut_yHigh = 194; 
+    double FVCut_yLow = -194; 
     
     double FVCut_zHigh = 450; 
-    double FVCut_zLow = 5.5; 
+    double FVCut_zLow = 6; 
    
     double primaryPFPCutValue = 1;
 
@@ -2214,6 +2214,8 @@ void nuEBackgroundSignalWithNuE_macro(){
             if(subRunDLCurrent == 5 && seenSubRunsNuENuE.find(key) == seenSubRunsNuENuE.end()){
                 totalPOTNuENuE += subRunPOT;
                 seenSubRunsNuENuE.insert(key);
+            } else{
+                // Put stuff here - this is a matching event
             }
 
             if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
@@ -4711,8 +4713,27 @@ void nuEBackgroundSignalWithNuE_macro(){
                         if(signal != 4){
                             numCosmicSlicesNotNuEAfterCuts_notWeighted++;
                         }
-                    }
                     
+                        // Print info about the cosmic slice being left
+                        std::cout << "__________ Cosmic Slice Passing All Cuts!! __________" << std::endl;
+                        std::cout << "Signal = " << signal << std::endl;
+                        std::cout << "Highest energy PFP in slice: True PDG = " << highestEnergyPFP_afterCuts.truePDG << ", True Origin = " << highestEnergyPFP_afterCuts.trueOrigin << ", True Int = " << highestEnergyPFP_afterCuts.trueInt << ", True Start = (" << highestEnergyPFP_afterCuts.trueVX << ", " << highestEnergyPFP_afterCuts.trueVY << ", " << highestEnergyPFP_afterCuts.trueVZ << "), True End = (" << highestEnergyPFP_afterCuts.trueEndX << ", " << highestEnergyPFP_afterCuts.trueEndY << ", " << highestEnergyPFP_afterCuts.trueEndZ << ")" << std::endl;
+                        std::cout << "" << std::endl;
+                        std::cout << "Number of PFPs in slice = " << numPFPsSlice_afterCuts << std::endl;
+                        
+                        std::cout << "Number of hits in slice = " << reco_sliceNumTruthHits->at(slice) << ", Number of hits in highest energy PFP = " << highestEnergyPFP_afterCuts.numHits << std::endl;
+                        std::cout << "Highest energy PFP purity = " << highestEnergyPFP_afterCuts.purity << ", completeness = " << highestEnergyPFP_afterCuts.completeness << std::endl;
+                        std::cout << "Slice purity = " << reco_slicePurity->at(slice) << ", completeness = " << reco_sliceCompleteness << std::endl;
+                        double pfpCounterCosmicSlice = 1;
+                        for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
+                            if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice) && reco_particleClearCosmic->at(pfp) == 0){
+                                std::cout << "PFP " << pfpCounterCosmicSlice << ": True PDG = " << reco_particleTruePDG->at(pfp) << ", True Origin = " << reco_particleTrueOrigin->at(pfp) << ", True Int = " << reco_particleTrueInteractionType->at(pfp) << ", True Start = (" << reco_particleTrueVX->at(pfp) << ", " << reco_particleTrueVY->at(pfp) << ", " << reco_particleTrueVZ->at(pfp) << "), True End = (" << reco_particleTrueEndX->at(pfp) << ", " << reco_particleTrueEndY->at(pfp) << ", " << reco_particleTrueEndZ->at(pfp) << ")" << std::endl;
+                            }
+                        }
+
+                        std::cout << "_____________________________________________________" << std::endl;
+                    }
+                   
                     if(sliceInteractionType == 0 && signal == 1){
                         numCosmicSlicesSignalFileAfterCuts_notWeighted++;
                     } else if(sliceInteractionType == 0 && signal == 2){
