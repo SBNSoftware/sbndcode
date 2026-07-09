@@ -44,9 +44,10 @@ struct eventKey_struct{
     UInt_t eventID;
     int signal;
     int DLCurrent;
+    double firstSliceVX;
 
     bool operator == (const eventKey_struct& other) const {
-        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent;
+        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent && reco_sliceTrueVX_weights->at(0) == other.firstSliceVX;
     }
 };
 
@@ -203,7 +204,7 @@ struct eventCounting_struct{
 void nuESelectionNumbersWithSystematics_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers18June_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers9July_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table.txt";
 
     int clearCosmicCut = 1;
@@ -219,29 +220,29 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     // Cut values
     double crumbsScoreCut_low = 0.2;
-    double crumbsScoreCut_high = 0.68;
+    double crumbsScoreCut_high = 0.76;
 
-    double FVCut_xHigh = 194; 
-    double FVCut_xLow = -196; 
+    double FVCut_xHigh = 192; 
+    double FVCut_xLow = -192; 
     double FVCut_xCentre = 10; 
 
-    double FVCut_yHigh = 196; 
-    double FVCut_yLow = -196; 
+    double FVCut_yHigh = 194; 
+    double FVCut_yLow = -194; 
     
     double FVCut_zHigh = 450; 
-    double FVCut_zLow = 6.5; 
+    double FVCut_zLow = 6; 
 
     double primaryPFPCutValue = 1;
     
-    double razzled211High_highestEnergyPFP = 0.05;
+    double razzled211High_highestEnergyPFP = 0.0125;
     double razzled211Low_highestEnergyPFP = 0.00;
     double razzled11High_highestEnergyPFP = 1;
-    double razzled11Low_highestEnergyPFP = 0.75;
+    double razzled11Low_highestEnergyPFP = 0.875;
     
-    double dEdxHigh_highestEnergyPFP = 3;
-    double dEdxLow_highestEnergyPFP = 0.25;
+    double dEdxHigh_highestEnergyPFP = 3.25;
+    double dEdxLow_highestEnergyPFP = 0;
 
-    double ETheta2High_highestEnergyPFP = 1.533;
+    double ETheta2High_highestEnergyPFP = 3.066;
     double ETheta2Low_highestEnergyPFP = 0;
     
     // AV boundaries
@@ -331,7 +332,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     }
 
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_18June.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_9July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
