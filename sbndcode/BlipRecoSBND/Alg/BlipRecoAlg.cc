@@ -1155,7 +1155,7 @@ namespace blip {
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      double tau = 0 
+      double tau = 0;
       if(plist.size()==0) //Data and should use calibration db
       {
         EventTPCLifetimes = ElifetimeTool->GetRunInfo(evt.id().run());
