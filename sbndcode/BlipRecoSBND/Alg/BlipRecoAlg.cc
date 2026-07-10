@@ -269,7 +269,7 @@ namespace blip {
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
     fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
-    ElifetimeTool       = new sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
+    ElifetimeTool       = new calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);

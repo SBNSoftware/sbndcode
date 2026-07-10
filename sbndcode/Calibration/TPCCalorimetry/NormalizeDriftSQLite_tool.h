@@ -1,7 +1,7 @@
 #ifndef NORMALIZEDRIFTSQLITE_TOOL_H
 #define NORMALIZEDRIFTSQLITE_TOOL_H
 // Framework Includes
-#include "art/Framework/Core/EDProducer.h"
+//#include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
