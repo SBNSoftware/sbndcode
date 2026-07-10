@@ -219,6 +219,7 @@ namespace blip {
   BlipRecoAlg::~BlipRecoAlg()
   {
     delete fCaloAlg;
+    delete ElifetimeTool;
   }
   
   
@@ -268,6 +269,7 @@ namespace blip {
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
     fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    ElifetimeTool       = new sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"))
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
@@ -311,7 +313,6 @@ namespace blip {
     std::cout<<"\n"
     <<"=========== BlipRecoAlg =========================\n"
     <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
-
     //=======================================
     // Reset things
     //=======================================
@@ -337,6 +338,8 @@ namespace blip {
     //auto const& detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     //auto const& lifetime_provider   = art::ServiceHandle<lariov::UBElectronLifetimeService>()->GetProvider();
     //auto const& tpcCalib_provider   = art::ServiceHandle<lariov::TPCEnergyCalibService>()->GetProvider();
+    //Elifetime
+    ElifetimeTool->setup(evt);
     
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
@@ -1152,7 +1155,15 @@ namespace blip {
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
+      double tau = 0 
+      if(plist.size()==0) //Data and should use calibration db
+      {
+        EventTPCLifetimes = ElifetimeTool->GetRunInfo(evt.id().run());
+        if(blip.tpc==0) tau = EventTPCLifetimes.tau_E;
+        else tau = EventTPCLifetimes.tau_W; //west
+      }
+      else tau = detProp.ElectronLifetime();
+      if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/tau);
 
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
@@ -1289,5 +1300,4 @@ namespace blip {
     printf("\n");
     
   }
-  
 }

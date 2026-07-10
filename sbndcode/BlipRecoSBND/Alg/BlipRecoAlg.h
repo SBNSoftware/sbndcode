@@ -187,6 +187,8 @@ namespace blip {
     bool                fYZUniformityCorr;
     float               fModBoxA;
     float               fModBoxB;
+    sbnd::calo::NormalizeDriftSQLite* ElifetimeTool;
+    sbnd::calo::NormalizeDriftSQLite::RunInfo EventTPCLifetimes;
 
     // --- Splines for calo
     TSpline3* spline_PSTAR;
