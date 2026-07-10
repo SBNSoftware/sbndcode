@@ -58,7 +58,7 @@
 #include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
 #include "sbnobj/SBND/Blip/BlipDataTypes.h"
 //electron lifetime includes
-#include "sbndcode/Calibration/TPCCalorimetry/NormalizeDriftSQLite_tool.cc" //Danger of double definition
+#include "sbndcode/Calibration/TPCCalorimetry/NormalizeDriftSQLite_tool.h" //Danger of double definition
 
 // ROOT stuff
 #include "TH1D.h"
