@@ -19,7 +19,7 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 // Lab helpers
-#include "wda.h"
+//#include "wda.h"
 
 // C++
 #include <string>
@@ -37,6 +37,15 @@ public:
   void configure(const fhicl::ParameterSet& pset) override;
   void setup(const art::Event& e) override;
   double Normalize(double dQdx, const art::Event &e, const recob::Hit &h, const geo::Point_t &location, const geo::Vector_t &direction, double t0) override;
+    // Class to hold data from DB
+  class RunInfo {
+  public:
+    double tau_E;
+    double tau_W;
+  };
+
+  // Helpers
+  RunInfo GetRunInfo(uint64_t run);
 
 private:
   // Configuration
@@ -47,16 +56,6 @@ private:
   lariov::DBFolder fDB;
 
   std::optional<detinfo::DetectorClocksData> fClockData; // need delayed construction
-
-  // Class to hold data from DB
-  class RunInfo {
-  public:
-    double tau_E;
-    double tau_W;
-  };
-
-  // Helpers
-  RunInfo GetRunInfo(uint64_t run);
 
   // Cache run requests
   std::map<uint32_t, RunInfo> fRunInfos;
