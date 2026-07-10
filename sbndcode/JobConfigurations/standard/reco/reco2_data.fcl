@@ -67,5 +67,5 @@ physics.producers.blipreco.BlipAlg.CaloAlg: @local::sbnd_calorimetryalgdata
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.ana:            @local::sbnd_reco2_analyzer_sequence
-physics.ana.blipana.BlipAlg.CaloAlg: @local::sbnd_calorimetryalgdata
+physics.analyzers.blipana.BlipAlg.CaloAlg: @local::sbnd_calorimetryalgdata
 physics.end_paths: [stream1, caloskimana, ana ]
