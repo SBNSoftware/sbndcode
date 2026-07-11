@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       NuE
+// Class:       NuERecoWeights
 // Plugin Type: analyzer (Unknown Unknown)
-// File:        NuE_module.cc
+// File:        NuERecoWeights_module.cc
 //
 // Generated at Fri Oct 31 08:23:53 2025 by Rachel Coackley using cetskelgen
 // from cetlib version 3.18.02.
@@ -78,21 +78,21 @@
 constexpr double def_double = -std::numeric_limits<double>::max();
 
 namespace sbnd {
-  class NuE;
+  class NuERecoWeights;
 }
 
 
-class sbnd::NuE : public art::EDAnalyzer {
+class sbnd::NuERecoWeights : public art::EDAnalyzer {
 public:
-  explicit NuE(fhicl::ParameterSet const& p);
+  explicit NuERecoWeights(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  NuE(NuE const&) = delete;
-  NuE(NuE&&) = delete;
-  NuE& operator=(NuE const&) = delete;
-  NuE& operator=(NuE&&) = delete;
+  NuERecoWeights(NuERecoWeights const&) = delete;
+  NuERecoWeights(NuERecoWeights&&) = delete;
+  NuERecoWeights& operator=(NuERecoWeights const&) = delete;
+  NuERecoWeights& operator=(NuERecoWeights&&) = delete;
 
   // Required functions.
   void beginSubRun(const art::SubRun &sr);
@@ -112,7 +112,8 @@ public:
   void angleRecalculatePCASlice(art::Event const& e); 
   void angleRecalculatePCAPFP(art::Event const& e); 
   void trueSignal(art::Event const& e);
-
+  void SlicesWeights(art::Event const& e);
+  void trueSignalWeights(art::Event const& e);
 
   // Selected optional functions.
   void beginJob() override;
@@ -570,12 +571,12 @@ private:
   const std::string genieWeightLabel;
   const std::string mcTruthFluxLabel;
 
-  TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
+  TFile *outputFile = TFile::Open("NuERecoWeightsAnalyserOutput.root","RECREATE");
 
 };
 
 
-sbnd::NuE::NuE(fhicl::ParameterSet const& p)
+sbnd::NuERecoWeights::NuERecoWeights(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   PFParticleLabel(p.get<std::string>("PFParticleLabel")),
   sliceLabel(p.get<std::string>("SliceLabel")),
@@ -1031,7 +1032,7 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
  
 }
 
-void sbnd::NuE::beginSubRun(const art::SubRun &sr){
+void sbnd::NuERecoWeights::beginSubRun(const art::SubRun &sr){
     pot = 0.; spills = 0; numGenEvents = 0;
 
     art::Handle<sumdata::POTSummary> potHandle;
@@ -1049,12 +1050,12 @@ void sbnd::NuE::beginSubRun(const art::SubRun &sr){
 
 }
 
-void sbnd::NuE::endSubRun(const art::SubRun &sr){
+void sbnd::NuERecoWeights::endSubRun(const art::SubRun &sr){
     //printf("POT = %f, Spills = %i, Num Events Generated = %i\n", pot, spills, numGenEvents);
     SubRunTree->Fill();
 }
 
-void sbnd::NuE::analyze(art::Event const& e)
+void sbnd::NuERecoWeights::analyze(art::Event const& e)
 {
     clearVectors();
     ClearMaps(e);
@@ -1075,12 +1076,14 @@ void sbnd::NuE::analyze(art::Event const& e)
     angleRecalculatePCASlice(e);
     angleRecalculatePCAPFP(e);
     trueSignal(e);
+    SlicesWeights(e);
+    trueSignalWeights(e);
 
     NuETree->Fill();
     NuEWeightsTree->Fill();
 }
 
-void::NuE::trueSignalWeights(art::Event const& e){
+void::NuERecoWeights::trueSignalWeights(art::Event const& e){
     //std::cout << "============= True NuE Scatters =============" << std::endl;
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
@@ -1420,7 +1423,7 @@ void::NuE::trueSignalWeights(art::Event const& e){
     //std::cout << "=============================================" << std::endl;
 }
 
-void sbnd::NuE::SlicesWeights(art::Event const& e){
+void sbnd::NuERecoWeights::SlicesWeights(art::Event const& e){
 
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
     //std::cout << "_________ Slices _________" << std::endl;
@@ -2503,7 +2506,7 @@ void sbnd::NuE::SlicesWeights(art::Event const& e){
     //std::cout << "_________________________" << std::endl;
 }
 
-void sbnd::NuE::trueSignal(art::Event const& e){
+void sbnd::NuERecoWeights::trueSignal(art::Event const& e){
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
     if(e.getByLabel(TruthLabel, MCTruthHandle))
@@ -2550,7 +2553,7 @@ void sbnd::NuE::trueSignal(art::Event const& e){
     }
 }
 
-std::array<double, 4> sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>& spacePointVec, double vx, double vy, double vz){
+std::array<double, 4> sbnd::NuERecoWeights::computePCAAngle(const std::vector<art::Ptr<recob::SpacePoint>>& spacePointVec, double vx, double vy, double vz){
     size_t N = spacePointVec.size();
     if (N == 0){
         //std::cout << "No spacepoints!!!\n";
@@ -2670,7 +2673,7 @@ std::array<double, 4> sbnd::NuE::computePCAAngle(const std::vector<art::Ptr<reco
     return result;
 }
 
-void sbnd::NuE::angleRecalculatePCASlice(const art::Event &e){
+void sbnd::NuERecoWeights::angleRecalculatePCASlice(const art::Event &e){
     std::cout << "---------------- angleRecalculatePCASlice ---------------" << std::endl;
     art::Handle<std::vector<recob::Slice>> sliceHandle;
     std::vector<art::Ptr<recob::Slice>> sliceVec;
@@ -2845,7 +2848,7 @@ void sbnd::NuE::angleRecalculatePCASlice(const art::Event &e){
 
 }
 
-void sbnd::NuE::angleRecalculatePCAPFP(const art::Event &e){
+void sbnd::NuERecoWeights::angleRecalculatePCAPFP(const art::Event &e){
     std::cout << "---------------- angleRecalculatePCAPFP ---------------" << std::endl;
    
     art::Handle<std::vector<recob::SpacePoint>> spacePointHandle;
@@ -2983,7 +2986,7 @@ void sbnd::NuE::angleRecalculatePCAPFP(const art::Event &e){
     }
 }
 
-int sbnd::NuE::GetNumGenEvents(const art::Event &e){
+int sbnd::NuERecoWeights::GetNumGenEvents(const art::Event &e){
     int nGenEvents = 0;
     for(const art::ProcessConfiguration &process: e.processHistory()){
         std::optional<fhicl::ParameterSet> genConfig = e.getProcessParameterSet(process.processName());
@@ -2999,7 +3002,7 @@ int sbnd::NuE::GetNumGenEvents(const art::Event &e){
     return nGenEvents;
 }
 
-double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+double sbnd::NuERecoWeights::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
     std::map<int, int> objectHitsMap;
@@ -3012,7 +3015,7 @@ double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<r
     return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
 }
 
-double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+double sbnd::NuERecoWeights::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
     std::map<int, int> objectHitsMap;
@@ -3037,11 +3040,11 @@ double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::
     return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
 }
 
-void sbnd::NuE::ClearMaps(const art::Event &e){
+void sbnd::NuERecoWeights::ClearMaps(const art::Event &e){
     fHitsMap.clear();
 }
 
-void sbnd::NuE::SetupMaps(const art::Event &e){
+void sbnd::NuERecoWeights::SetupMaps(const art::Event &e){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
     art::Handle<std::vector<recob::Hit> > hitsHandle;
@@ -3053,7 +3056,7 @@ void sbnd::NuE::SetupMaps(const art::Event &e){
     }
 }
 
-void sbnd::NuE::PFPs(art::Event const& e){
+void sbnd::NuERecoWeights::PFPs(art::Event const& e){
     std::cout << "_________ PFParticles _________" << std::endl;
     art::Handle<std::vector<recob::PFParticle>> pfpHandle;
     std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -3357,7 +3360,7 @@ void sbnd::NuE::PFPs(art::Event const& e){
     std::cout << "_________________________" << std::endl;
 }
 
-void sbnd::NuE::MCParticles(art::Event const& e){
+void sbnd::NuERecoWeights::MCParticles(art::Event const& e){
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
     if(e.getByLabel(TruthLabel, MCTruthHandle))
@@ -3461,7 +3464,7 @@ void sbnd::NuE::MCParticles(art::Event const& e){
 
 }
 
-void sbnd::NuE::Slices(art::Event const& e){
+void sbnd::NuERecoWeights::Slices(art::Event const& e){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
     std::cout << "_________ Slices _________" << std::endl;
@@ -3723,7 +3726,7 @@ void sbnd::NuE::Slices(art::Event const& e){
 
 }
 
-void sbnd::NuE::clearVectors(){
+void sbnd::NuERecoWeights::clearVectors(){
     truth_recoilElectronPDG.clear();
     truth_recoilElectronVX.clear();
     truth_recoilElectronVY.clear();
@@ -4127,14 +4130,14 @@ void sbnd::NuE::clearVectors(){
 
 }
 
-void sbnd::NuE::beginJob()
+void sbnd::NuERecoWeights::beginJob()
 {
   // Implementation of optional member function here.
 }
 
-void sbnd::NuE::endJob()
+void sbnd::NuERecoWeights::endJob()
 {
   // Implementation of optional member function here.
 }
 
-DEFINE_ART_MODULE(sbnd::NuE)
+DEFINE_ART_MODULE(sbnd::NuERecoWeights)
