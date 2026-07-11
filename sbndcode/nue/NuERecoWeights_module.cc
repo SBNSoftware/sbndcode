@@ -2064,50 +2064,12 @@ void sbnd::NuERecoWeights::SlicesWeights(art::Event const& e){
                 reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector.clear();
                 reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector.clear();
                 reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector.clear();
-
-
-                if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
-                    reco_sliceInteraction.push_back(sliceMCNeutrino.InteractionType());
-                    reco_sliceTrueVX.push_back(sliceMCNeutrinoParticle.Vx());
-                    reco_sliceTrueVY.push_back(sliceMCNeutrinoParticle.Vy());
-                    reco_sliceTrueVZ.push_back(sliceMCNeutrinoParticle.Vz());
-                    reco_sliceTrueCCNC.push_back(sliceMCNeutrino.CCNC());
-                    reco_sliceTrueNeutrinoType.push_back(sliceMCNeutrinoParticle.PdgCode());
-                    if(sliceMCNeutrino.InteractionType() == 1098){
-                        reco_sliceOrigin.push_back(1);
-                    } else{
-                        reco_sliceOrigin.push_back(3);
-                    }
-                } else if(sliceMCTruth->Origin() == simb::kCosmicRay || sliceMCTruth->Origin() == 0){
-                    reco_sliceInteraction.push_back(-100);        
-                    reco_sliceTrueVX.push_back(-999999);
-                    reco_sliceTrueVY.push_back(-999999);
-                    reco_sliceTrueVZ.push_back(-999999);
-                    reco_sliceOrigin.push_back(0);
-                    reco_sliceTrueCCNC.push_back(-999999);
-                    reco_sliceTrueNeutrinoType.push_back(-999999);
-                } else {
-                    reco_sliceInteraction.push_back(-999999);        
-                    reco_sliceTrueVX.push_back(-999999);
-                    reco_sliceTrueVY.push_back(-999999);
-                    reco_sliceTrueVZ.push_back(-999999);
-                    reco_sliceOrigin.push_back(-999999);
-                    reco_sliceTrueCCNC.push_back(-999999);
-                    reco_sliceTrueNeutrinoType.push_back(-999999);
-                }
             }
         }
     }
 
     if(counter == 0){
-        reco_sliceID.push_back(-999999);        
-        reco_sliceInteraction.push_back(-999999);       
-        reco_sliceTrueVX.push_back(-999999); 
-        reco_sliceTrueVY.push_back(-999999); 
-        reco_sliceTrueVZ.push_back(-999999); 
-        reco_sliceOrigin.push_back(-999999);
-        reco_sliceTrueCCNC.push_back(-999999);
-        reco_sliceTrueNeutrinoType.push_back(-999999);
+        reco_sliceID_weightTree.push_back(-999999);        
        
         std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
         std::vector<float> reco_sliceMCTruthFlux_weight_expskin_vector;
