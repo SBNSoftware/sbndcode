@@ -1083,7 +1083,7 @@ void sbnd::NuERecoWeights::analyze(art::Event const& e)
     NuEWeightsTree->Fill();
 }
 
-void::NuERecoWeights::trueSignalWeights(art::Event const& e){
+void sbnd::NuERecoWeights::trueSignalWeights(art::Event const& e){
     //std::cout << "============= True NuE Scatters =============" << std::endl;
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
@@ -1280,12 +1280,10 @@ void::NuERecoWeights::trueSignalWeights(art::Event const& e){
     }
 
     if(numNuEScatters_weightTree != 0){
-        nuEScatter_weightTree = 1;
         nuEScatterTrueVX_weightTree = nuEScatterVX_weightTree; 
         nuEScatterTrueVY_weightTree = nuEScatterVY_weightTree; 
         nuEScatterTrueVZ_weightTree = nuEScatterVZ_weightTree;
     } else{
-        nuEScatter_weightTree = 0;
         nuEScatterTrueVX_weightTree = nuEScatterVX_weightTree; 
         nuEScatterTrueVY_weightTree = nuEScatterVY_weightTree; 
         nuEScatterTrueVZ_weightTree = nuEScatterVZ_weightTree;
