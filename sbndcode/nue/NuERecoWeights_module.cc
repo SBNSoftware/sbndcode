@@ -1085,6 +1085,9 @@ void sbnd::NuERecoWeights::trueSignal(art::Event const& e){
     if(e.getByLabel(TruthLabel, MCTruthHandle))
         art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
 
+    art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(MCTruthVec, e, fluxWeightLabel);
+    art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthGENIEWeightMapAssns(MCTruthVec, e, genieWeightLabel);
+
     int numNuEScatters = 0;
 
     double nuEScatterVX = -999999;
@@ -1279,12 +1282,18 @@ void sbnd::NuERecoWeights::trueSignal(art::Event const& e){
         nuEScatter = 1;
         nuEScatterTrueVX = nuEScatterVX; 
         nuEScatterTrueVY = nuEScatterVY; 
-        nuEScatterTrueVZ = nuEScatterVZ; 
+        nuEScatterTrueVZ = nuEScatterVZ;
+        nuEScatterTrueVX_weightTree = nuEScatterVX;
+        nuEScatterTrueVY_weightTree = nuEScatterVY;
+        nuEScatterTrueVZ_weightTree = nuEScatterVZ; 
     } else{
         nuEScatter = 0;
         nuEScatterTrueVX = nuEScatterVX; 
         nuEScatterTrueVY = nuEScatterVY; 
         nuEScatterTrueVZ = nuEScatterVZ;
+        nuEScatterTrueVX_weightTree = nuEScatterVX;
+        nuEScatterTrueVY_weightTree = nuEScatterVY;
+        nuEScatterTrueVZ_weightTree = nuEScatterVZ;
 
         nuEScatter_MCTruthFlux_weight_horncurrent.push_back(-999999); 
         nuEScatter_MCTruthFlux_weight_expskin.push_back(-999999); 
@@ -2342,6 +2351,11 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
     if(e.getByLabel(sliceLabel, sliceHandle))
         art::fill_ptr_vector(sliceVec, sliceHandle);
 
+    art::Handle<std::vector<simb::MCTruth>> mcTruthHandle;
+    std::vector<art::Ptr<simb::MCTruth>>    mcTruthVec;
+    if(e.getByLabel(mcTruthFluxLabel, mcTruthHandle))
+        art::fill_ptr_vector(mcTruthVec, mcTruthHandle);
+
     std::cout << "------------ Slice number of slices = " << sliceVec.size() << std::endl;
 
     if(!sliceVec.empty()){
@@ -2354,16 +2368,19 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
         if(!hitVec.empty()){
             int sliceID(std::numeric_limits<int>::max());
 
+            art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
+            art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(sliceVec, e, crumbsLabel);
+            art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(mcTruthVec, e, fluxWeightLabel);
+            art::FindManyP<std::map<std::string, std::vector<float>>> mcTruthGENIEWeightMapAssns(mcTruthVec, e, genieWeightLabel);
+            
             for(const art::Ptr<recob::Slice> &slice : sliceVec){
                 sliceID = slice->ID();
                 std::cout << "Slice " << sliceID << std::endl;
                 if(sliceID == std::numeric_limits<int>::max()) continue;
 
-                art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
                 const std::vector<art::Ptr<recob::Hit>> sliceHits(sliceHitAssns.at(slice.key()));
 
                 // Getting the CRUMBS score of the slice
-                art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(sliceVec, e, crumbsLabel);
                 const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(slice.key()); 
 
                 double sliceScoreVar = 0;
@@ -2393,7 +2410,6 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
                 const simb::MCParticle sliceMCNeutrinoParticle = sliceMCNeutrino.Nu();
 
                 // Looking at flux systematics associated with MCTruth of slice
-                art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(mcTruthVec, e, fluxWeightLabel);
                 const std::vector<art::Ptr<std::map<std::string,std::vector<float>>>> mcTruthFluxWeightMaps(mcTruthFluxWeightMapAssns.at(sliceMCTruth.key()));
         
                 std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
@@ -2453,8 +2469,6 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
                 //std::cout << "============================" << std::endl;
 
                 // Looking at GENIE systematics associated with MCTruth of slice
-                
-                art::FindManyP<std::map<std::string, std::vector<float>>> mcTruthGENIEWeightMapAssns(mcTruthVec, e, genieWeightLabel);
                 const std::vector<art::Ptr<std::map<std::string, std::vector<float>>>> mcTruthGENIEWeightMaps(mcTruthGENIEWeightMapAssns.at(sliceMCTruth.key()));
   
                 std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector;
