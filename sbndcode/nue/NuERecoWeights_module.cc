@@ -112,8 +112,6 @@ public:
   void angleRecalculatePCASlice(art::Event const& e); 
   void angleRecalculatePCAPFP(art::Event const& e); 
   void trueSignal(art::Event const& e);
-  void SlicesWeights(art::Event const& e);
-  void trueSignalWeights(art::Event const& e);
 
   // Selected optional functions.
   void beginJob() override;
@@ -1076,28 +1074,22 @@ void sbnd::NuERecoWeights::analyze(art::Event const& e)
     angleRecalculatePCASlice(e);
     angleRecalculatePCAPFP(e);
     trueSignal(e);
-    SlicesWeights(e);
-    trueSignalWeights(e);
 
     NuETree->Fill();
     NuEWeightsTree->Fill();
 }
 
-void sbnd::NuERecoWeights::trueSignalWeights(art::Event const& e){
-    //std::cout << "============= True NuE Scatters =============" << std::endl;
+void sbnd::NuERecoWeights::trueSignal(art::Event const& e){
     art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
     std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
     if(e.getByLabel(TruthLabel, MCTruthHandle))
         art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
 
-    art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(MCTruthVec, e, fluxWeightLabel);
-    art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthGENIEWeightMapAssns(MCTruthVec, e, genieWeightLabel);
+    int numNuEScatters = 0;
 
-    int numNuEScatters_weightTree = 0;
-
-    double nuEScatterVX_weightTree = -999999;
-    double nuEScatterVY_weightTree = -999999;
-    double nuEScatterVZ_weightTree = -999999;
+    double nuEScatterVX = -999999;
+    double nuEScatterVY = -999999;
+    double nuEScatterVZ = -999999;
 
     if(!MCTruthVec.empty()){
         for(auto &MCTruth : MCTruthVec){
@@ -1106,13 +1098,14 @@ void sbnd::NuERecoWeights::trueSignalWeights(art::Event const& e){
                 simb::MCParticle neutrinoParticle = neutrino.Nu();
                 if(neutrino.InteractionType() == 1098){
                     // This is a nu+e elastic scattering event
-                    numNuEScatters_weightTree++;
+                    numNuEScatters++;
 
-                    nuEScatterVX_weightTree = neutrinoParticle.Vx();
-                    nuEScatterVY_weightTree = neutrinoParticle.Vy();
-                    nuEScatterVZ_weightTree = neutrinoParticle.Vz();
+                    nuEScatterVX = neutrinoParticle.Vx();
+                    nuEScatterVY = neutrinoParticle.Vy();
+                    nuEScatterVZ = neutrinoParticle.Vz();
 
-                    if(numNuEScatters_weightTree == 1){
+
+                    if(numNuEScatters == 1){
                         const std::vector<art::Ptr<std::map<std::string,std::vector<float>>>> mcTruthFluxWeightMaps(mcTruthFluxWeightMapAssns.at(MCTruth.key()));
 
                         const art::Ptr<std::map<std::string, std::vector<float>>> &weightFluxMapPtr = mcTruthFluxWeightMaps.at(0);
@@ -1272,21 +1265,26 @@ void sbnd::NuERecoWeights::trueSignalWeights(art::Event const& e){
                                 target.assign(values.begin(), values.end());
                             }
                         }
-                    }
-
+                    }                    
                 }
             }
         }
     }
 
-    if(numNuEScatters_weightTree != 0){
-        nuEScatterTrueVX_weightTree = nuEScatterVX_weightTree; 
-        nuEScatterTrueVY_weightTree = nuEScatterVY_weightTree; 
-        nuEScatterTrueVZ_weightTree = nuEScatterVZ_weightTree;
+    if(numNuEScatters > 1) std::cout << "MORE THAN 1 NU+E ELASTIC SCATTER!!!!!!!!!" << std::endl;
+    std::cout << "Number of nu+e elastic scatters in the event = " << numNuEScatters << std::endl;
+    std::cout << "True neutrino vertex of nu+e elastic scatter = (" << nuEScatterVX << ", " << nuEScatterVY << ", " << nuEScatterVZ << ")" << std::endl;
+
+    if(numNuEScatters != 0){
+        nuEScatter = 1;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ; 
     } else{
-        nuEScatterTrueVX_weightTree = nuEScatterVX_weightTree; 
-        nuEScatterTrueVY_weightTree = nuEScatterVY_weightTree; 
-        nuEScatterTrueVZ_weightTree = nuEScatterVZ_weightTree;
+        nuEScatter = 0;
+        nuEScatterTrueVX = nuEScatterVX; 
+        nuEScatterTrueVY = nuEScatterVY; 
+        nuEScatterTrueVZ = nuEScatterVZ;
 
         nuEScatter_MCTruthFlux_weight_horncurrent.push_back(-999999); 
         nuEScatter_MCTruthFlux_weight_expskin.push_back(-999999); 
@@ -1416,1100 +1414,7 @@ void sbnd::NuERecoWeights::trueSignalWeights(art::Event const& e){
         nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE.push_back(-999999);
         nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE.push_back(-999999);
         nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE.push_back(-999999);
-        nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(-999999);
-    }
-    //std::cout << "=============================================" << std::endl;
-}
-
-void sbnd::NuERecoWeights::SlicesWeights(art::Event const& e){
-
-    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
-    //std::cout << "_________ Slices _________" << std::endl;
-
-    int counter = 0;
-
-    art::Handle<std::vector<recob::Slice>>  sliceHandle;
-    std::vector<art::Ptr<recob::Slice>>     sliceVec;
-    if(e.getByLabel(sliceLabel, sliceHandle))
-        art::fill_ptr_vector(sliceVec, sliceHandle);
-
-    art::Handle<std::vector<simb::MCTruth>> mcTruthHandle;
-    std::vector<art::Ptr<simb::MCTruth>>    mcTruthVec;
-    if(e.getByLabel(mcTruthFluxLabel, mcTruthHandle))
-        art::fill_ptr_vector(mcTruthVec, mcTruthHandle);
-
-    //std::cout << "------------ Number of slices = " << sliceVec.size() << std::endl;
-
-    if(!sliceVec.empty()){
-        art::Handle<std::vector<recob::Hit>>    hitHandle;
-        std::vector<art::Ptr<recob::Hit>>       hitVec;
-
-        if(e.getByLabel(hitLabel, hitHandle))
-            art::fill_ptr_vector(hitVec, hitHandle);
-
-        if(!hitVec.empty()){
-            int sliceID(std::numeric_limits<int>::max());
-
-            for(const art::Ptr<recob::Slice> &slice : sliceVec){
-                sliceID = slice->ID();
-                //std::cout << "Slice ID = " << sliceID << std::endl;
-                if(sliceID == std::numeric_limits<int>::max()) continue;
-
-                art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
-                const std::vector<art::Ptr<recob::Hit>> sliceHits(sliceHitAssns.at(slice.key()));
-
-
-                // Gets the true particle ID of the truth particle who owns the most hits in the slice. True is for rollup.
-                const int sliceTrueParticleID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, sliceHits, true);
-                //std::cout << "The slice has most hits coming from true particle with ID = " << sliceTrueParticleID << std::endl;
-                //std::cout << "Number of hits in slice = " << sliceHits.size() << std::endl;
-
-                if(sliceTrueParticleID == std::numeric_limits<int>::min()) continue;
-
-                // Get the MCParticle associated with the majority of the hits in the slice
-                //const simb::MCParticle* sliceMCParticle = particleInv->TrackIdToParticle_P(sliceTrueParticleID);
-                
-                // Get the MCTruth associated with the majority of the hits in the slice
-                const art::Ptr<simb::MCTruth> sliceMCTruth = particleInv->TrackIdToMCTruth_P(sliceTrueParticleID);
-
-                // Get the MCNeutrino associated with the majority of the hits in the slice
-                const simb::MCNeutrino sliceMCNeutrino = sliceMCTruth->GetNeutrino();
-                const simb::MCParticle sliceMCNeutrinoParticle = sliceMCNeutrino.Nu();
-
-                // Looking at flux systematics associated with MCTruth of slice
-                art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(mcTruthVec, e, fluxWeightLabel);
-                const std::vector<art::Ptr<std::map<std::string,std::vector<float>>>> mcTruthFluxWeightMaps(mcTruthFluxWeightMapAssns.at(sliceMCTruth.key()));
-        
-                std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_expskin_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_pioninexsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_pionqexsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_piontotxsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_nucleoninexsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_nucleonqexsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_nucleontotxsec_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_kplus_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_kmin_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_kzero_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_piplus_vector;
-                std::vector<float> reco_sliceMCTruthFlux_weight_piminus_vector;
-
-                //std::cout << "============================" << std::endl;
-                //std::cout << "Size of mcTruthFluxWeightMaps vector = " << mcTruthFluxWeightMaps.size() << std::endl;
-                const art::Ptr<std::map<std::string, std::vector<float>>> &weightFluxMapPtr = mcTruthFluxWeightMaps.at(0);
-                const std::map<std::string, std::vector<float>> &weightFluxMap = *weightFluxMapPtr;
-
-                //std::cout << "Number of map entries = " << weightFluxMap.size() << std::endl;
-
-                std::unordered_map<std::string, std::vector<float>*> targetMap = {
-                    {"horncurrent_Flux",      &reco_sliceMCTruthFlux_weight_horncurrent_vector},
-                    {"expskin_Flux",          &reco_sliceMCTruthFlux_weight_expskin_vector},
-                    {"pioninexsec_Flux",      &reco_sliceMCTruthFlux_weight_pioninexsec_vector},
-                    {"pionqexsec_Flux",       &reco_sliceMCTruthFlux_weight_pionqexsec_vector},
-                    {"piontotxsec_Flux",      &reco_sliceMCTruthFlux_weight_piontotxsec_vector},
-                    {"nucleoninexsec_Flux",   &reco_sliceMCTruthFlux_weight_nucleoninexsec_vector},
-                    {"nucleonqexsec_Flux",    &reco_sliceMCTruthFlux_weight_nucleonqexsec_vector},
-                    {"nucleontotxsec_Flux",   &reco_sliceMCTruthFlux_weight_nucleontotxsec_vector},
-                    {"kplus_Flux",            &reco_sliceMCTruthFlux_weight_kplus_vector},
-                    {"kminus_Flux",           &reco_sliceMCTruthFlux_weight_kmin_vector},
-                    {"kzero_Flux",            &reco_sliceMCTruthFlux_weight_kzero_vector},
-                    {"piplus_Flux",           &reco_sliceMCTruthFlux_weight_piplus_vector},
-                    {"piminus_Flux",          &reco_sliceMCTruthFlux_weight_piminus_vector} 
-                };
-
-                for(const auto &[name, values] : weightFluxMap){
-                    //std::cout << "Map key = " << name << std::endl;
-                    //std::cout << "Number of universes? = " << values.size() << std::endl;
-
-                    //for(float v : values){
-                        //std::cout << "  Weight = " << v << std::endl;
-                    //}
-
-                    auto mapFill = targetMap.find(name);
-                    if(mapFill == targetMap.end()) continue;
-
-                    auto &target = *(mapFill->second);
-
-                    target.assign(values.begin(), values.end());
-                
-                }
-                
-                //std::cout << "============================" << std::endl;
-
-                // Looking at GENIE systematics associated with MCTruth of slice
-                
-                art::FindManyP<std::map<std::string, std::vector<float>>> mcTruthGENIEWeightMapAssns(mcTruthVec, e, genieWeightLabel);
-                const std::vector<art::Ptr<std::map<std::string, std::vector<float>>>> mcTruthGENIEWeightMaps(mcTruthGENIEWeightMapAssns.at(sliceMCTruth.key()));
-  
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector;
-                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector;
-                
-                std::unordered_map<std::string, std::vector<float>*> targetGENIEMap = {
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector},
-                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector},
-                    {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector},
-                    {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector},
-                    {"MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector},
-                    {"MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector},
-                    {"MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector},
-                    {"MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector},
-                    {"MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector},
-                    {"MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector},
-                    {"MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector},
-                    {"MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_AhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_BhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_CV1uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_CV2uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrInel_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MFP_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MFP_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MaCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MaNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MvCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_MvNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector},
-                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector},
-                };
-
-                for(const auto &weightGENIEMapPtr : mcTruthGENIEWeightMaps){
-                    const std::map<std::string, std::vector<float>> &weightGENIEMap = *weightGENIEMapPtr;
-                    for(const auto &[name, values] : weightGENIEMap){
-                        auto mapFill = targetGENIEMap.find(name);
-                        if(mapFill == targetGENIEMap.end()) continue;
-                        auto &target = *(mapFill->second);
-                        target.assign(values.begin(), values.end());
-                    }
-                }
-
-
-                /*
-                //std::cout << "Size of mcTruthGENIEWeightMaps vector = " << mcTruthGENIEWeightMaps.size() << std::endl;
-                for(size_t i = 0; i < mcTruthGENIEWeightMaps.size(); ++i){
-                    //std::cout << "Vector " << i << ":" << std::endl;
-                    const art::Ptr<std::map<std::string, std::vector<float>>> &weightGENIEMapPtr_3Jul = mcTruthGENIEWeightMaps.at(i);
-                    const std::map<std::string, std::vector<float>> &weightGENIEMap_3Jul = *weightGENIEMapPtr_3Jul;
-                    //std::cout << "  Number of map entries = " << weightGENIEMap_3Jul.size() << std::endl;
-                    for(const auto &[name_3Jul, values_3Jul] : weightGENIEMap_3Jul){
-                        //std::cout << "  Map key = " << name_3Jul << std::endl;
-                        //std::cout << "  Number of universes = " << values_3Jul.size() << std::endl;
-                        for(size_t j = 0; j < values_3Jul.size(); j++){
-                            //std::cout << "      Weight " << j+1 << ": " << values_3Jul.at(j) << std::endl;
-                        }
-                    }
-                }
-                */
-
-                counter++;
-                reco_sliceID_weightTree.push_back(sliceID);
-                reco_sliceMCTruthFlux_weight_horncurrent.push_back(reco_sliceMCTruthFlux_weight_horncurrent_vector);
-                reco_sliceMCTruthFlux_weight_expskin.push_back(reco_sliceMCTruthFlux_weight_expskin_vector);
-                reco_sliceMCTruthFlux_weight_pioninexsec.push_back(reco_sliceMCTruthFlux_weight_pioninexsec_vector);
-                reco_sliceMCTruthFlux_weight_pionqexsec.push_back(reco_sliceMCTruthFlux_weight_pionqexsec_vector);
-                reco_sliceMCTruthFlux_weight_piontotxsec.push_back(reco_sliceMCTruthFlux_weight_piontotxsec_vector);
-                reco_sliceMCTruthFlux_weight_nucleoninexsec.push_back(reco_sliceMCTruthFlux_weight_nucleoninexsec_vector);
-                reco_sliceMCTruthFlux_weight_nucleonqexsec.push_back(reco_sliceMCTruthFlux_weight_nucleonqexsec_vector);
-                reco_sliceMCTruthFlux_weight_nucleontotxsec.push_back(reco_sliceMCTruthFlux_weight_nucleontotxsec_vector);
-                reco_sliceMCTruthFlux_weight_kplus.push_back(reco_sliceMCTruthFlux_weight_kplus_vector);
-                reco_sliceMCTruthFlux_weight_kmin.push_back(reco_sliceMCTruthFlux_weight_kmin_vector);
-                reco_sliceMCTruthFlux_weight_kzero.push_back(reco_sliceMCTruthFlux_weight_kzero_vector);
-                reco_sliceMCTruthFlux_weight_piplus.push_back(reco_sliceMCTruthFlux_weight_piplus_vector);
-                reco_sliceMCTruthFlux_weight_piminus.push_back(reco_sliceMCTruthFlux_weight_piminus_vector);
-
-                reco_sliceMCTruthFlux_weight_horncurrent_vector.clear();
-                reco_sliceMCTruthFlux_weight_expskin_vector.clear();
-                reco_sliceMCTruthFlux_weight_pioninexsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_pionqexsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_piontotxsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_nucleoninexsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_nucleonqexsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_nucleontotxsec_vector.clear();
-                reco_sliceMCTruthFlux_weight_kplus_vector.clear();
-                reco_sliceMCTruthFlux_weight_kmin_vector.clear();
-                reco_sliceMCTruthFlux_weight_kzero_vector.clear();
-                reco_sliceMCTruthFlux_weight_piplus_vector.clear();
-                reco_sliceMCTruthFlux_weight_piminus_vector.clear();
-
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector);
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector);
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector);
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector);
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector);
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector);
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector);
-                reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement.push_back(reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector);
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector);
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector);
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector);
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector);
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector);
-
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector.clear();
-                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector.clear();
-                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector.clear();
-            }
-        }
-    }
-
-    if(counter == 0){
-        reco_sliceID_weightTree.push_back(-999999);        
-       
-        std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_expskin_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_pioninexsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_pionqexsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_piontotxsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_nucleoninexsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_nucleonqexsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_nucleontotxsec_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_kplus_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_kmin_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_kzero_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_piplus_vector;
-        std::vector<float> reco_sliceMCTruthFlux_weight_piminus_vector;
-
-        reco_sliceMCTruthFlux_weight_horncurrent_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_expskin_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_pioninexsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_pionqexsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_piontotxsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_nucleoninexsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_nucleonqexsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_nucleontotxsec_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_kplus_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_kmin_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_kzero_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_piplus_vector.push_back(-999999);
-        reco_sliceMCTruthFlux_weight_piminus_vector.push_back(-999999);
-
-        reco_sliceMCTruthFlux_weight_horncurrent.push_back(reco_sliceMCTruthFlux_weight_horncurrent_vector);
-        reco_sliceMCTruthFlux_weight_expskin.push_back(reco_sliceMCTruthFlux_weight_expskin_vector);
-        reco_sliceMCTruthFlux_weight_pioninexsec.push_back(reco_sliceMCTruthFlux_weight_pioninexsec_vector);
-        reco_sliceMCTruthFlux_weight_pionqexsec.push_back(reco_sliceMCTruthFlux_weight_pionqexsec_vector);
-        reco_sliceMCTruthFlux_weight_piontotxsec.push_back(reco_sliceMCTruthFlux_weight_piontotxsec_vector);
-        reco_sliceMCTruthFlux_weight_nucleoninexsec.push_back(reco_sliceMCTruthFlux_weight_nucleoninexsec_vector);
-        reco_sliceMCTruthFlux_weight_nucleonqexsec.push_back(reco_sliceMCTruthFlux_weight_nucleonqexsec_vector);
-        reco_sliceMCTruthFlux_weight_nucleontotxsec.push_back(reco_sliceMCTruthFlux_weight_nucleontotxsec_vector);
-        reco_sliceMCTruthFlux_weight_kplus.push_back(reco_sliceMCTruthFlux_weight_kplus_vector);
-        reco_sliceMCTruthFlux_weight_kmin.push_back(reco_sliceMCTruthFlux_weight_kmin_vector);
-        reco_sliceMCTruthFlux_weight_kzero.push_back(reco_sliceMCTruthFlux_weight_kzero_vector);
-        reco_sliceMCTruthFlux_weight_piplus.push_back(reco_sliceMCTruthFlux_weight_piplus_vector);
-        reco_sliceMCTruthFlux_weight_piminus.push_back(reco_sliceMCTruthFlux_weight_piminus_vector);
-  
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector;
-        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector;
-  
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector.push_back(-999999);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector.push_back(-999999);
-
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector);
-        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector);
-        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector);
-        reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement.push_back(reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector);
-        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector);
-        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector);
-
-    }
-
-    //std::cout << "_________________________" << std::endl;
-}
-
-void sbnd::NuERecoWeights::trueSignal(art::Event const& e){
-    art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
-    std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
-    if(e.getByLabel(TruthLabel, MCTruthHandle))
-        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
-
-    int numNuEScatters = 0;
-
-    double nuEScatterVX = -999999;
-    double nuEScatterVY = -999999;
-    double nuEScatterVZ = -999999;
-
-    if(!MCTruthVec.empty()){
-        for(auto &MCTruth : MCTruthVec){
-            if(MCTruth->Origin() == simb::kBeamNeutrino){
-                simb::MCNeutrino neutrino = MCTruth->GetNeutrino();
-                simb::MCParticle neutrinoParticle = neutrino.Nu();
-                if(neutrino.InteractionType() == 1098){
-                    // This is a nu+e elastic scattering event
-                    numNuEScatters++;
-
-                    nuEScatterVX = neutrinoParticle.Vx();
-                    nuEScatterVY = neutrinoParticle.Vy();
-                    nuEScatterVZ = neutrinoParticle.Vz();
-
-                }
-            }
-        }
-    }
-
-    if(numNuEScatters > 1) std::cout << "MORE THAN 1 NU+E ELASTIC SCATTER!!!!!!!!!" << std::endl;
-    std::cout << "Number of nu+e elastic scatters in the event = " << numNuEScatters << std::endl;
-    std::cout << "True neutrino vertex of nu+e elastic scatter = (" << nuEScatterVX << ", " << nuEScatterVY << ", " << nuEScatterVZ << ")" << std::endl;
-
-    if(numNuEScatters != 0){
-        nuEScatter = 1;
-        nuEScatterTrueVX = nuEScatterVX; 
-        nuEScatterTrueVY = nuEScatterVY; 
-        nuEScatterTrueVZ = nuEScatterVZ; 
-    } else{
-        nuEScatter = 0;
-        nuEScatterTrueVX = nuEScatterVX; 
-        nuEScatterTrueVY = nuEScatterVY; 
-        nuEScatterTrueVZ = nuEScatterVZ; 
+        nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(-999999); 
     }
 }
 
@@ -3487,6 +2392,315 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
                 const simb::MCNeutrino sliceMCNeutrino = sliceMCTruth->GetNeutrino();
                 const simb::MCParticle sliceMCNeutrinoParticle = sliceMCNeutrino.Nu();
 
+                // Looking at flux systematics associated with MCTruth of slice
+                art::FindManyP<std::map<std::string,std::vector<float>>> mcTruthFluxWeightMapAssns(mcTruthVec, e, fluxWeightLabel);
+                const std::vector<art::Ptr<std::map<std::string,std::vector<float>>>> mcTruthFluxWeightMaps(mcTruthFluxWeightMapAssns.at(sliceMCTruth.key()));
+        
+                std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_expskin_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_pioninexsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_pionqexsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_piontotxsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_nucleoninexsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_nucleonqexsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_nucleontotxsec_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_kplus_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_kmin_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_kzero_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_piplus_vector;
+                std::vector<float> reco_sliceMCTruthFlux_weight_piminus_vector;
+
+                //std::cout << "============================" << std::endl;
+                //std::cout << "Size of mcTruthFluxWeightMaps vector = " << mcTruthFluxWeightMaps.size() << std::endl;
+                const art::Ptr<std::map<std::string, std::vector<float>>> &weightFluxMapPtr = mcTruthFluxWeightMaps.at(0);
+                const std::map<std::string, std::vector<float>> &weightFluxMap = *weightFluxMapPtr;
+
+                //std::cout << "Number of map entries = " << weightFluxMap.size() << std::endl;
+
+                std::unordered_map<std::string, std::vector<float>*> targetMap = {
+                    {"horncurrent_Flux",      &reco_sliceMCTruthFlux_weight_horncurrent_vector},
+                    {"expskin_Flux",          &reco_sliceMCTruthFlux_weight_expskin_vector},
+                    {"pioninexsec_Flux",      &reco_sliceMCTruthFlux_weight_pioninexsec_vector},
+                    {"pionqexsec_Flux",       &reco_sliceMCTruthFlux_weight_pionqexsec_vector},
+                    {"piontotxsec_Flux",      &reco_sliceMCTruthFlux_weight_piontotxsec_vector},
+                    {"nucleoninexsec_Flux",   &reco_sliceMCTruthFlux_weight_nucleoninexsec_vector},
+                    {"nucleonqexsec_Flux",    &reco_sliceMCTruthFlux_weight_nucleonqexsec_vector},
+                    {"nucleontotxsec_Flux",   &reco_sliceMCTruthFlux_weight_nucleontotxsec_vector},
+                    {"kplus_Flux",            &reco_sliceMCTruthFlux_weight_kplus_vector},
+                    {"kminus_Flux",           &reco_sliceMCTruthFlux_weight_kmin_vector},
+                    {"kzero_Flux",            &reco_sliceMCTruthFlux_weight_kzero_vector},
+                    {"piplus_Flux",           &reco_sliceMCTruthFlux_weight_piplus_vector},
+                    {"piminus_Flux",          &reco_sliceMCTruthFlux_weight_piminus_vector} 
+                };
+
+                for(const auto &[name, values] : weightFluxMap){
+                    //std::cout << "Map key = " << name << std::endl;
+                    //std::cout << "Number of universes? = " << values.size() << std::endl;
+
+                    //for(float v : values){
+                        //std::cout << "  Weight = " << v << std::endl;
+                    //}
+
+                    auto mapFill = targetMap.find(name);
+                    if(mapFill == targetMap.end()) continue;
+
+                    auto &target = *(mapFill->second);
+
+                    target.assign(values.begin(), values.end());
+                
+                }
+                
+                //std::cout << "============================" << std::endl;
+
+                // Looking at GENIE systematics associated with MCTruth of slice
+                
+                art::FindManyP<std::map<std::string, std::vector<float>>> mcTruthGENIEWeightMapAssns(mcTruthVec, e, genieWeightLabel);
+                const std::vector<art::Ptr<std::map<std::string, std::vector<float>>>> mcTruthGENIEWeightMaps(mcTruthGENIEWeightMapAssns.at(sliceMCTruth.key()));
+  
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector;
+                std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector;
+                
+                std::unordered_map<std::string, std::vector<float>*> targetGENIEMap = {
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector},
+                    {"NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector},
+                    {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector},
+                    {"MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector},
+                    {"MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector},
+                    {"MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector},
+                    {"MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector},
+                    {"MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector},
+                    {"MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector},
+                    {"MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector},
+                    {"MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector},
+                    {"MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_AhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_BhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_CV1uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_CV2uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrInel_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MFP_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MFP_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MaCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MaNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MvCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_MvNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector},
+                    {"GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector},
+                };
+
+                for(const auto &weightGENIEMapPtr : mcTruthGENIEWeightMaps){
+                    const std::map<std::string, std::vector<float>> &weightGENIEMap = *weightGENIEMapPtr;
+                    for(const auto &[name, values] : weightGENIEMap){
+                        auto mapFill = targetGENIEMap.find(name);
+                        if(mapFill == targetGENIEMap.end()) continue;
+                        auto &target = *(mapFill->second);
+                        target.assign(values.begin(), values.end());
+                    }
+                }
+
                 int numTrueParticlesSlice = sliceMCTruth->NParticles();
                 std::cout << "Number of particles in the MC Truth matched to the slice = " << numTrueParticlesSlice << std::endl;
                 std::cout << "True Neutrino Track ID = " << sliceMCNeutrinoParticle.TrackId() << std::endl;
@@ -3616,6 +2830,267 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
                 reco_sliceNumHitsTruthMatched.push_back(numTruthMatchedHitsSlice);
                 reco_sliceNumTruthHits.push_back(numTruthMatchedHits);
 
+                reco_sliceID_weightTree.push_back(sliceID);
+                reco_sliceMCTruthFlux_weight_horncurrent.push_back(reco_sliceMCTruthFlux_weight_horncurrent_vector);
+                reco_sliceMCTruthFlux_weight_expskin.push_back(reco_sliceMCTruthFlux_weight_expskin_vector);
+                reco_sliceMCTruthFlux_weight_pioninexsec.push_back(reco_sliceMCTruthFlux_weight_pioninexsec_vector);
+                reco_sliceMCTruthFlux_weight_pionqexsec.push_back(reco_sliceMCTruthFlux_weight_pionqexsec_vector);
+                reco_sliceMCTruthFlux_weight_piontotxsec.push_back(reco_sliceMCTruthFlux_weight_piontotxsec_vector);
+                reco_sliceMCTruthFlux_weight_nucleoninexsec.push_back(reco_sliceMCTruthFlux_weight_nucleoninexsec_vector);
+                reco_sliceMCTruthFlux_weight_nucleonqexsec.push_back(reco_sliceMCTruthFlux_weight_nucleonqexsec_vector);
+                reco_sliceMCTruthFlux_weight_nucleontotxsec.push_back(reco_sliceMCTruthFlux_weight_nucleontotxsec_vector);
+                reco_sliceMCTruthFlux_weight_kplus.push_back(reco_sliceMCTruthFlux_weight_kplus_vector);
+                reco_sliceMCTruthFlux_weight_kmin.push_back(reco_sliceMCTruthFlux_weight_kmin_vector);
+                reco_sliceMCTruthFlux_weight_kzero.push_back(reco_sliceMCTruthFlux_weight_kzero_vector);
+                reco_sliceMCTruthFlux_weight_piplus.push_back(reco_sliceMCTruthFlux_weight_piplus_vector);
+                reco_sliceMCTruthFlux_weight_piminus.push_back(reco_sliceMCTruthFlux_weight_piminus_vector);
+
+                reco_sliceMCTruthFlux_weight_horncurrent_vector.clear();
+                reco_sliceMCTruthFlux_weight_expskin_vector.clear();
+                reco_sliceMCTruthFlux_weight_pioninexsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_pionqexsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_piontotxsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_nucleoninexsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_nucleonqexsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_nucleontotxsec_vector.clear();
+                reco_sliceMCTruthFlux_weight_kplus_vector.clear();
+                reco_sliceMCTruthFlux_weight_kmin_vector.clear();
+                reco_sliceMCTruthFlux_weight_kzero_vector.clear();
+                reco_sliceMCTruthFlux_weight_piplus_vector.clear();
+                reco_sliceMCTruthFlux_weight_piminus_vector.clear();
+
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector);
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector);
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector);
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector);
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector);
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector);
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector);
+                reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement.push_back(reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector);
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector);
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector);
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector);
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector);
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector);
+
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector.clear();
+                reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector.clear();
+                reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector.clear();
+
                 if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
                     reco_sliceInteraction.push_back(sliceMCNeutrino.InteractionType());
                     reco_sliceTrueVX.push_back(sliceMCNeutrinoParticle.Vx());        
@@ -3667,6 +3142,398 @@ void sbnd::NuERecoWeights::Slices(art::Event const& e){
         reco_sliceOrigin.push_back(-999999);
         reco_sliceTrueCCNC.push_back(-999999);
         reco_sliceTrueNeutrinoType.push_back(-999999);
+
+        reco_sliceID_weightTree.push_back(-999999);        
+       
+        std::vector<float> reco_sliceMCTruthFlux_weight_horncurrent_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_expskin_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_pioninexsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_pionqexsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_piontotxsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_nucleoninexsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_nucleonqexsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_nucleontotxsec_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_kplus_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_kmin_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_kzero_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_piplus_vector;
+        std::vector<float> reco_sliceMCTruthFlux_weight_piminus_vector;
+
+        reco_sliceMCTruthFlux_weight_horncurrent_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_expskin_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_pioninexsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_pionqexsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_piontotxsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_nucleoninexsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_nucleonqexsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_nucleontotxsec_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_kplus_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_kmin_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_kzero_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_piplus_vector.push_back(-999999);
+        reco_sliceMCTruthFlux_weight_piminus_vector.push_back(-999999);
+
+        reco_sliceMCTruthFlux_weight_horncurrent.push_back(reco_sliceMCTruthFlux_weight_horncurrent_vector);
+        reco_sliceMCTruthFlux_weight_expskin.push_back(reco_sliceMCTruthFlux_weight_expskin_vector);
+        reco_sliceMCTruthFlux_weight_pioninexsec.push_back(reco_sliceMCTruthFlux_weight_pioninexsec_vector);
+        reco_sliceMCTruthFlux_weight_pionqexsec.push_back(reco_sliceMCTruthFlux_weight_pionqexsec_vector);
+        reco_sliceMCTruthFlux_weight_piontotxsec.push_back(reco_sliceMCTruthFlux_weight_piontotxsec_vector);
+        reco_sliceMCTruthFlux_weight_nucleoninexsec.push_back(reco_sliceMCTruthFlux_weight_nucleoninexsec_vector);
+        reco_sliceMCTruthFlux_weight_nucleonqexsec.push_back(reco_sliceMCTruthFlux_weight_nucleonqexsec_vector);
+        reco_sliceMCTruthFlux_weight_nucleontotxsec.push_back(reco_sliceMCTruthFlux_weight_nucleontotxsec_vector);
+        reco_sliceMCTruthFlux_weight_kplus.push_back(reco_sliceMCTruthFlux_weight_kplus_vector);
+        reco_sliceMCTruthFlux_weight_kmin.push_back(reco_sliceMCTruthFlux_weight_kmin_vector);
+        reco_sliceMCTruthFlux_weight_kzero.push_back(reco_sliceMCTruthFlux_weight_kzero_vector);
+        reco_sliceMCTruthFlux_weight_piplus.push_back(reco_sliceMCTruthFlux_weight_piplus_vector);
+        reco_sliceMCTruthFlux_weight_piminus.push_back(reco_sliceMCTruthFlux_weight_piminus_vector);
+  
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector;
+        std::vector<float> reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector;
+  
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector.push_back(-999999);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector.push_back(-999999);
+
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi_vector);
+        reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi.push_back(reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi_vector);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu_vector);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar_vector);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression_vector);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio_vector);
+        reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio.push_back(reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio_vector);
+        reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement.push_back(reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement_vector);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu_vector);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar_vector);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu_vector);
+        reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar.push_back(reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE_vector);
+        reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE.push_back(reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE_vector);
     }
    
     if(counter_trueParticles == 0){
