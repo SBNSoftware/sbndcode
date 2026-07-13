@@ -269,7 +269,7 @@ namespace blip {
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
     fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
-    ElifetimeTool       = new calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
+    ElifetimeTool       = new sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
@@ -1164,7 +1164,7 @@ namespace blip {
       }
       else tau = detProp.ElectronLifetime();
       if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/tau);
-
+      std::cout << "Obtained this lifetime " << tau << " us " << std::endl; 
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
