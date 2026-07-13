@@ -7,6 +7,12 @@ BEGIN_PROLOG
 ## r1: SBND Full Run 1 with light trigger, run number 18250-18618
 
 ## First one for 2025 Fall, only with etau tag
+TPC_CalibrationTags_Jan2026: {
+
+  tpc_elifetime_data: "v4r1"
+
+}
+
 TPC_CalibrationTags_Nov2025: {
 
   tpc_elifetime_data: "v2r1"

@@ -1,0 +1,28 @@
+#include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
+#include "crtrateana_sbnd.fcl"
+
+process_name: CRTRateAnalysis
+
+services:
+{
+  @table::sbnd_basic_services
+  @table::crt_services_data_sbnd
+  TFileService: { fileName: "crtrateana_sbnd.root" }
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtrateana: @local::crtrateana_data_sbnd
+  }
+
+  ana:       [ crtrateana ]
+  end_paths: [ ana ]
+}

@@ -11,13 +11,13 @@ driftnorm_sql: {
 
 yznorm_hist_data: {
   tool_type: NormalizeYZ
-  FileName: "YZmaps/yz_correction_map_data1e20.root"
+  FileName: "YZmaps/yz_data2025_v10_14_02.root"
   Verbose: false
 }
 
 yznorm_hist_mc: {
   tool_type: NormalizeYZ
-  FileName: "YZmaps/yz_correction_map_mcp2025b5e18.root"
+  FileName: "YZmaps/yz_mc2025_v10_14_02.root"
   Verbose: false
 }
 
