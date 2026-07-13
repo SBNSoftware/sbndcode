@@ -1164,7 +1164,6 @@ namespace blip {
       }
       else tau = detProp.ElectronLifetime();
       if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/tau);
-      std::cout << "Obtained this lifetime " << tau << " us " << std::endl; 
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
