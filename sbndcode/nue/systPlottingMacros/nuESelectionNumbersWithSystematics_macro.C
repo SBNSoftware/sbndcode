@@ -47,7 +47,7 @@ struct eventKey_struct{
     double firstSliceVX;
 
     bool operator == (const eventKey_struct& other) const {
-        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent && reco_sliceTrueVX_weights->at(0) == other.firstSliceVX;
+        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent && firstSliceVX == other.firstSliceVX;
     }
 };
 
@@ -60,6 +60,7 @@ struct eventKeyHash_struct{
         h ^= std::hash<UInt_t>{}(k.eventID) << 2;
         h ^= std::hash<int>{}(k.signal) << 3;
         h ^= std::hash<int>{}(k.DLCurrent) << 4;
+        h ^= std::hash<double>{}(k.firstSliceVX) << 5;
 
         return h;
     }
@@ -823,7 +824,9 @@ void nuESelectionNumbersWithSystematics_macro(){
         for(Long64_t i = 0; i < nEntriesThisTree; ++i){
             wt->GetEntry(i);
 
-            eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights)};
+            double firstSliceVX_weights = (reco_sliceTrueVX_weights && !reco_sliceTrueVX_weights->empty()) ? reco_sliceTrueVX_weights->at(0) : -999999;
+
+            eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights), firstSliceVX_weights};
 
             if(weightEntryMap.find(key) != weightEntryMap.end()){
                 std::cerr << "Warning: duplicate event key across weight files (run=" << runID_weights
@@ -975,12 +978,11 @@ void nuESelectionNumbersWithSystematics_macro(){
         // Only look for weights if signal == 1 (nu+e elastic scatter), signal == 2 (BNB), or signal == 4 (nue events)
         // Intime cosmic events (signal == 3) have no weights in the tree, skip these events. weightsFound = false -> weight = 1.0
         if(signal == 1 || signal == 2 || signal == 4){
-            //std::cout << "This is a BNB or signal event -> Look for weights" << std::endl;
+            double firstSliceVX = (reco_sliceTrueVX && !reco_sliceTrueVX->empty()) ? reco_sliceTrueVX->at(0) : -999999;
 
-            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
-            // Look for a matching event in the weights trees
-            auto it = weightEntryMap.find(key);
-            
+            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent), firstSliceVX};
+            auto it = weightEntryMap.find(key);           
+ 
             if(it == weightEntryMap.end()){
                 //std::cout << "No matching weights event found" << std::endl;
             } else {

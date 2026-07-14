@@ -38,6 +38,7 @@
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
+#include <unordered_map>
 
 struct eventKey_struct{
     UInt_t runID;
