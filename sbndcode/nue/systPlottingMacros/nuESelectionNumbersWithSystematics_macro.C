@@ -37,34 +37,9 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 #include <TMatrixDSym.h>
-
-struct eventKey_struct{
-    UInt_t runID;
-    UInt_t subRunID;
-    UInt_t eventID;
-    int signal;
-    int DLCurrent;
-    double firstSliceVX;
-
-    bool operator == (const eventKey_struct& other) const {
-        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent && firstSliceVX == other.firstSliceVX;
-    }
-};
-
-struct eventKeyHash_struct{
-    std::size_t operator()(const eventKey_struct& k) const{
-        std::size_t h = 0;
-
-        h ^= std::hash<UInt_t>{}(k.runID);
-        h ^= std::hash<UInt_t>{}(k.subRunID) << 1;
-        h ^= std::hash<UInt_t>{}(k.eventID) << 2;
-        h ^= std::hash<int>{}(k.signal) << 3;
-        h ^= std::hash<int>{}(k.DLCurrent) << 4;
-        h ^= std::hash<double>{}(k.firstSliceVX) << 5;
-
-        return h;
-    }
-};
+#include <TChain.h>
+#include <TSystemDirectory.h>
+#include <TSystemFile.h>
 
 struct weights_struct{
     double signalNuE = 0;
@@ -202,6 +177,24 @@ struct eventCounting_struct{
     eventCounter_struct showerEnergyIntSplit;    
 };
 
+std::vector<std::string> listRootFiles(const std::string& dirPath){
+    std::vector<std::string> fileList;
+    TSystemDirectory dir("inputDir", dirPath.c_str());
+    TList *files = dir.GetListOfFiles();
+    if(files){
+        TSystemFile *file;
+        TIter next(files);
+        while((file = (TSystemFile*)next())){
+            std::string fname = file->GetName();
+            if(!file->IsDirectory() && fname.size() > 5 && fname.compare(fname.size()-5, 5, ".root") == 0){
+                fileList.push_back(dirPath + "/" + fname);
+            }
+        }
+    }
+    std::sort(fileList.begin(), fileList.end()); // deterministic order
+    return fileList;
+}
+
 void nuESelectionNumbersWithSystematics_macro(){
 
     std::string cutsApplied = "allCuts";
@@ -264,74 +257,32 @@ void nuESelectionNumbersWithSystematics_macro(){
     }
     clearTableFile.close();
 
-    // Load in the NuE and SubRun TTrees
-    // NuE file contains the reco information and subrun information (for POT weighting)
-    //TFile *fNuE = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/merged_noWeights.root");
-    TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_7Jul_noWeights.root");
-
-    if(!fNuE){
-        std::cerr << "Error opening the NuE TTree file" << std::endl;
+    std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
+    std::vector<std::string> inputFiles = listRootFiles(inputDir);
+    std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
+    if(inputFiles.empty()){
+        std::cerr << "No input files found in " << inputDir << std::endl;
         return;
     }
 
-    TDirectory *dirNuE = (TDirectory*)fNuE->Get("ana");
-    if(!dirNuE){
-        std::cerr << "Directory 'ana' not found in NuE file" << std::endl;
+    TChain *tree = new TChain("ana/NuE");
+    TChain *subRunTree = new TChain("ana/SubRun");
+    TChain *weightsTree = new TChain("ana/NuEWeights");
+
+    // Add the SAME file list, in the SAME order, to tree and weightsTree
+    // so that global entry i in one corresponds to global entry i in the other.
+    for(const auto& f : inputFiles){
+        tree->Add(f.c_str());
+        weightsTree->Add(f.c_str());
+        subRunTree->Add(f.c_str());
+    }
+
+    if(tree->GetEntries() != weightsTree->GetEntries()){
+        std::cerr << "FATAL: NuE has " << tree->GetEntries() << " entries but NuEWeights has " << weightsTree->GetEntries() << " entries — they must be 1:1" << std::endl;
         return;
     }
 
-    // tree contains reco info
-    TTree *tree = (TTree*)dirNuE->Get("NuE");
-    if(!tree){
-        std::cerr << "NuE TTree not found" << std::endl;
-        return;
-    }
-
-    // subRunTree contains the subrun/POT weighting info
-    TTree *subRunTree = (TTree*)dirNuE->Get("SubRun");
-    if(!subRunTree){
-        std::cerr << "SubRun TTree not found" << std::endl;
-        return;
-    }
-
-    // Load in the NuEWeights TTrees (contains the systematic weights) - now split across 9 files
-    std::vector<std::string> weightFilePaths = {
-        "/exp/sbnd/data/users/coackley/merged_nu+eAllJobs_weights_3Jul.root",
-        "/exp/sbnd/data/users/coackley/nue_withWeights_5Jul.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_000.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_001.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_002.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_003.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_004.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_005.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_006.root"
-    };
-    
-    const int NWEIGHTFILES = (int)weightFilePaths.size();
-
-    std::vector<TFile*> fNuEWeightsVec(NWEIGHTFILES, nullptr);
-    std::vector<TTree*> weightsTreeVec(NWEIGHTFILES, nullptr);
-
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        fNuEWeightsVec[f] = TFile::Open(weightFilePaths[f].c_str());
-        if(!fNuEWeightsVec[f] || fNuEWeightsVec[f]->IsZombie()){
-            std::cerr << "Error opening weights file: " << weightFilePaths[f] << std::endl;
-            return;
-        }
-
-        TDirectory *dirNuEWeights = (TDirectory*)fNuEWeightsVec[f]->Get("ana");
-        if(!dirNuEWeights){
-            std::cerr << "Directory 'ana' not found in " << weightFilePaths[f] << std::endl;
-            return;
-        }
-
-        weightsTreeVec[f] = (TTree*)dirNuEWeights->Get("NuEWeights");
-        if(!weightsTreeVec[f]){
-            std::cerr << "NuEWeights TTree not found in " << weightFilePaths[f] << std::endl;
-            return;
-        }
-    }
-
+    std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
     TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_9July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
@@ -716,10 +667,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     Long64_t numEntries = tree->GetEntries();    
     
     // NuEWeights Tree branch variable
-    UInt_t eventID_weights, runID_weights, subRunID_weights;
-    int nuEScatter_weights;
     double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
-    double DLCurrent_weights, signal_weights;
 
     std::vector<double> *nuEScatter_MCTruthFlux_weight_horncurrent = nullptr;
     std::vector<double> *nuEScatter_MCTruthFlux_weight_expskin = nullptr;
@@ -736,13 +684,6 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<double> *nuEScatter_MCTruthFlux_weight_piminus = nullptr;
 
     std::vector<double> *reco_sliceID_weights = nullptr;  
-    std::vector<double> *reco_sliceInteraction_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVX_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVY_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVZ_weights = nullptr;  
-    std::vector<double> *reco_sliceOrigin_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueCCNC_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueNeutrinoType_weights = nullptr;  
     
     std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_horncurrent = nullptr;  
     std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_expskin = nullptr;  
@@ -758,87 +699,39 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_piplus = nullptr;  
     std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_piminus = nullptr;  
 
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        TTree* wt = weightsTreeVec[f];
+    weightTree->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX_weights);
+    weightTree->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY_weights);
+    weightTree->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ_weights);
 
-        wt->SetBranchAddress("eventID", &eventID_weights);
-        wt->SetBranchAddress("runID", &runID_weights);
-        wt->SetBranchAddress("subRunID", &subRunID_weights);
-        wt->SetBranchAddress("DLCurrent", &DLCurrent_weights);
-        wt->SetBranchAddress("signal", &signal_weights);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_horncurrent", &nuEScatter_MCTruthFlux_weight_horncurrent);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_expskin", &nuEScatter_MCTruthFlux_weight_expskin);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pioninexsec", &nuEScatter_MCTruthFlux_weight_pioninexsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pionqexsec", &nuEScatter_MCTruthFlux_weight_pionqexsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piontotxsec", &nuEScatter_MCTruthFlux_weight_piontotxsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleoninexsec", &nuEScatter_MCTruthFlux_weight_nucleoninexsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleonqexsec", &nuEScatter_MCTruthFlux_weight_nucleonqexsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleontotxsec", &nuEScatter_MCTruthFlux_weight_nucleontotxsec);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kplus", &nuEScatter_MCTruthFlux_weight_kplus);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kmin", &nuEScatter_MCTruthFlux_weight_kmin);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kzero", &nuEScatter_MCTruthFlux_weight_kzero);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piplus", &nuEScatter_MCTruthFlux_weight_piplus);
+    weightTree->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piminus", &nuEScatter_MCTruthFlux_weight_piminus);
 
-        wt->SetBranchAddress("nuEScatter", &nuEScatter_weights);
-        wt->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX_weights);
-        wt->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY_weights);
-        wt->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ_weights);
+    weightTree->SetBranchAddress("reco_sliceID", &reco_sliceID_weights);
 
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_horncurrent", &nuEScatter_MCTruthFlux_weight_horncurrent);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_expskin", &nuEScatter_MCTruthFlux_weight_expskin);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pioninexsec", &nuEScatter_MCTruthFlux_weight_pioninexsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_pionqexsec", &nuEScatter_MCTruthFlux_weight_pionqexsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piontotxsec", &nuEScatter_MCTruthFlux_weight_piontotxsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleoninexsec", &nuEScatter_MCTruthFlux_weight_nucleoninexsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleonqexsec", &nuEScatter_MCTruthFlux_weight_nucleonqexsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_nucleontotxsec", &nuEScatter_MCTruthFlux_weight_nucleontotxsec);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kplus", &nuEScatter_MCTruthFlux_weight_kplus);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kmin", &nuEScatter_MCTruthFlux_weight_kmin);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_kzero", &nuEScatter_MCTruthFlux_weight_kzero);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piplus", &nuEScatter_MCTruthFlux_weight_piplus);
-        wt->SetBranchAddress("nuEScatter_MCTruthFlux_weight_piminus", &nuEScatter_MCTruthFlux_weight_piminus);
-
-        wt->SetBranchAddress("reco_sliceID", &reco_sliceID_weights);
-        wt->SetBranchAddress("reco_sliceInteraction", &reco_sliceInteraction_weights);
-        wt->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX_weights);
-        wt->SetBranchAddress("reco_sliceTrueVY", &reco_sliceTrueVY_weights);
-        wt->SetBranchAddress("reco_sliceTrueVZ", &reco_sliceTrueVZ_weights);
-        wt->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin_weights);
-        wt->SetBranchAddress("reco_sliceTrueCCNC", &reco_sliceTrueCCNC_weights);
-        wt->SetBranchAddress("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType_weights);
-
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_horncurrent", &reco_sliceMCTruthFlux_weight_horncurrent);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_expskin", &reco_sliceMCTruthFlux_weight_expskin);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_pioninexsec", &reco_sliceMCTruthFlux_weight_pioninexsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_pionqexsec", &reco_sliceMCTruthFlux_weight_pionqexsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_piontotxsec", &reco_sliceMCTruthFlux_weight_piontotxsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleoninexsec", &reco_sliceMCTruthFlux_weight_nucleoninexsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleonqexsec", &reco_sliceMCTruthFlux_weight_nucleonqexsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleontotxsec", &reco_sliceMCTruthFlux_weight_nucleontotxsec);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_kplus", &reco_sliceMCTruthFlux_weight_kplus);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_kmin", &reco_sliceMCTruthFlux_weight_kmin);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_kzero", &reco_sliceMCTruthFlux_weight_kzero);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_piplus", &reco_sliceMCTruthFlux_weight_piplus);
-        wt->SetBranchAddress("reco_sliceMCTruthFlux_weight_piminus", &reco_sliceMCTruthFlux_weight_piminus);
-    }
-
-    struct weightLocation_struct{
-        int fileIdx;
-        Long64_t entry;
-    };
-
-    std::unordered_map<eventKey_struct, weightLocation_struct, eventKeyHash_struct> weightEntryMap;
-
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        TTree* wt = weightsTreeVec[f];
-        Long64_t nEntriesThisTree = wt->GetEntries();
-
-        for(Long64_t i = 0; i < nEntriesThisTree; ++i){
-            wt->GetEntry(i);
-
-            double firstSliceVX_weights = (reco_sliceTrueVX_weights && !reco_sliceTrueVX_weights->empty()) ? reco_sliceTrueVX_weights->at(0) : -999999;
-
-            eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights), firstSliceVX_weights};
-
-            if(weightEntryMap.find(key) != weightEntryMap.end()){
-                std::cerr << "Warning: duplicate event key across weight files (run=" << runID_weights
-                           << ", subRun=" << subRunID_weights << ", event=" << eventID_weights
-                           << ", signal=" << signal_weights << ", DLCurrent=" << DLCurrent_weights
-                           << ") - keeping first occurrence" << std::endl;
-                continue;
-            }
-
-            weightEntryMap[key] = {f, i};
-        }
-    }
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_horncurrent", &reco_sliceMCTruthFlux_weight_horncurrent);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_expskin", &reco_sliceMCTruthFlux_weight_expskin);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_pioninexsec", &reco_sliceMCTruthFlux_weight_pioninexsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_pionqexsec", &reco_sliceMCTruthFlux_weight_pionqexsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_piontotxsec", &reco_sliceMCTruthFlux_weight_piontotxsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleoninexsec", &reco_sliceMCTruthFlux_weight_nucleoninexsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleonqexsec", &reco_sliceMCTruthFlux_weight_nucleonqexsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_nucleontotxsec", &reco_sliceMCTruthFlux_weight_nucleontotxsec);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_kplus", &reco_sliceMCTruthFlux_weight_kplus);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_kmin", &reco_sliceMCTruthFlux_weight_kmin);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_kzero", &reco_sliceMCTruthFlux_weight_kzero);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_piplus", &reco_sliceMCTruthFlux_weight_piplus);
+    weightTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_piminus", &reco_sliceMCTruthFlux_weight_piminus);
 
     const int NUNIV = 1000; // number of universes
     long long nuEWeightFallbacks = 0, nuEWeightCalls = 0;
@@ -966,34 +859,20 @@ void nuESelectionNumbersWithSystematics_macro(){
     for(Long64_t e = 0; e < numEntries; ++e){
         //std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
+        weightsTree->GetEntry(e);   // index-aligned: same physical event as tree entry e
 
-        //std::cout << "DLCurrent = " << DLCurrent << ", signal = " << signal << ", eventID = " << eventID << ", subRunID = " << subRunID << ", runID = " << runID << std::endl;
-        //std::cout << "True nu+e elastic scatter in event = " << nuEScatter << ", True vertex = (" << nuEScatterTrueVX << ", " << nuEScatterTrueVY << ", " << nuEScatterTrueVZ << ")" << std::endl;
-
-        // Gets set to 1 if there is a true nu+e elastic scatter in any slice in the event
-        int trueSignal = 0;
-
-        bool weightsFound = false;
-        
-        // Only look for weights if signal == 1 (nu+e elastic scatter), signal == 2 (BNB), or signal == 4 (nue events)
-        // Intime cosmic events (signal == 3) have no weights in the tree, skip these events. weightsFound = false -> weight = 1.0
-        if(signal == 1 || signal == 2 || signal == 4){
-            double firstSliceVX = (reco_sliceTrueVX && !reco_sliceTrueVX->empty()) ? reco_sliceTrueVX->at(0) : -999999;
-
-            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent), firstSliceVX};
-            auto it = weightEntryMap.find(key);           
- 
-            if(it == weightEntryMap.end()){
-                //std::cout << "No matching weights event found" << std::endl;
-            } else {
-                weightsTreeVec[it->second.fileIdx]->GetEntry(it->second.entry);
-                weightsFound = true;
-            }
-        
-        } else {
-            //std::cout << "Signal = " << signal << " -> cosmic slice, no weights" << std::endl;
+        // Sanity check only — with the same file list added in the same order to
+        // both chains, this should never fire. If it does, something upstream is wrong
+        // (e.g. a file with mismatched NuE/NuEWeights entry counts got into the chain).
+        if(runID_weights != runID || subRunID_weights != subRunID || eventID_weights != eventID ||
+            static_cast<int>(signal_weights) != static_cast<int>(signal) ||
+            static_cast<int>(DLCurrent_weights) != static_cast<int>(DLCurrent)){
+            std::cerr << "ERROR: NuE/NuEWeights entry " << e << " mismatch! " << "run " << runID << "/" << runID_weights << ", subrun " << subRunID << "/" << subRunID_weight << ", event " << eventID << "/" << eventID_weights << ", signal " << signal << "/" << signal_weights << ", DLCurrent " << DLCurrent << "/" << DLCurrent_weights << std::endl;
+            continue;
         }
-        
+
+        int trueSignal = 0;       
+ 
         // Looking at the true recoil electron in the event (if there is one)
         recoilElectron_struct recoilElectron;
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
@@ -1028,7 +907,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                     // Check whether there is a weight associated with the true nu+e elastic scatter
                     // if weightsFound == 0 then no event was found to match between the 2 trees
                     // nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV checks whether there are the same number of entries as universes
-                    bool nuEWeightsValid = weightsFound && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
+                    bool nuEWeightsValid = nuEScatter_MCTruthFlux_weight_horncurrent && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
 
                     if(nuEWeightsValid){
                         // Loop through the universes
@@ -1322,7 +1201,7 @@ void nuESelectionNumbersWithSystematics_macro(){
             bool sliceWeightValid_cached = false;
             // Creates a 2D array which will store the systematic weights associated with the slice: sliceUnivWeights[parameter][universe]
             std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0));
-            if(DLCurrent == 5 && weightsFound && signal != 3){
+            if(DLCurrent == 5 && signal != 3){
                 for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
                     // Finds the matching slice in the weights tree by comparing sliceID numbers
                     if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
