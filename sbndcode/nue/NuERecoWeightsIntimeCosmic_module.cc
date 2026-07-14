@@ -1071,6 +1071,7 @@ void sbnd::NuERecoWeightsIntimeCosmic::analyze(art::Event const& e)
     trueSignal(e);
 
     NuETree->Fill();
+    NuEWeightsTree->Fill();
 }
 
 void sbnd::NuERecoWeightsIntimeCosmic::trueSignal(art::Event const& e){
