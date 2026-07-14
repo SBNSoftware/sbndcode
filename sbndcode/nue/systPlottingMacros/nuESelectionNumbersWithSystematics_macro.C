@@ -372,6 +372,7 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     double targetGates = ((1333568/6.293443e+18)*targetPOT);
     double cosmicsWeights_NuE = (((1-0.0754) * targetGates)/cosmicSpillsSumNuE);
+    std::cout << "cosmicSpillsSumNuE = " << cosmicSpillsSumNuE << std::endl;
 
     double totalPOTNuENuE_notMissing = (POTNuENuE_notMissing + POTBNBNuE_notMissing);
 
@@ -669,35 +670,35 @@ void nuESelectionNumbersWithSystematics_macro(){
     // NuEWeights Tree branch variable
     double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
 
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_horncurrent = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_expskin = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_pioninexsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_pionqexsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_piontotxsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleoninexsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleonqexsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_nucleontotxsec = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_kplus = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_kmin = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_kzero = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_piplus = nullptr;
-    std::vector<double> *nuEScatter_MCTruthFlux_weight_piminus = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_horncurrent = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_expskin = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_pioninexsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_pionqexsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_piontotxsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_nucleoninexsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_nucleonqexsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_nucleontotxsec = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_kplus = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_kmin = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_kzero = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_piplus = nullptr;
+    std::vector<float> *nuEScatter_MCTruthFlux_weight_piminus = nullptr;
 
     std::vector<double> *reco_sliceID_weights = nullptr;  
     
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_horncurrent = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_expskin = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_pioninexsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_pionqexsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_piontotxsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_nucleoninexsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_nucleonqexsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_nucleontotxsec = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_kplus = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_kmin = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_kzero = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_piplus = nullptr;  
-    std::vector<std::vector<double>> *reco_sliceMCTruthFlux_weight_piminus = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_horncurrent = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_expskin = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_pioninexsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_pionqexsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_piontotxsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_nucleoninexsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_nucleonqexsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_nucleontotxsec = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_kplus = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_kmin = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_kzero = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_piplus = nullptr;  
+    std::vector<std::vector<float>> *reco_sliceMCTruthFlux_weight_piminus = nullptr;  
 
     weightsTree->SetBranchAddress("nuEScatterTrueVX_weightTree", &nuEScatterTrueVX_weights);
     weightsTree->SetBranchAddress("nuEScatterTrueVY_weightTree", &nuEScatterTrueVY_weights);
@@ -737,13 +738,13 @@ void nuESelectionNumbersWithSystematics_macro(){
     long long nuEWeightFallbacks = 0, nuEWeightCalls = 0;
     long long sliceWeightFallbacks = 0, sliceWeightCalls = 0;
 
-    auto getNuEWeight = [&](std::vector<double>* vec, int u) -> double {
+    auto getNuEWeight = [&](std::vector<float>* vec, int u) -> double {
         nuEWeightCalls++;
         if(!vec || (int)vec->size() != NUNIV){ nuEWeightFallbacks++; return 1.0; }
         return vec->at(u);
     };
 
-    auto getSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
+    auto getSliceWeight = [&](std::vector<std::vector<float>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
         sliceWeightCalls++;
         if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV){ sliceWeightFallbacks++; return 1.0; }
         return vec->at(sliceIdx).at(u);
@@ -860,6 +861,12 @@ void nuESelectionNumbersWithSystematics_macro(){
         //std::cout << "============= New Event =============" << std::endl;
         tree->GetEntry(e);
         weightsTree->GetEntry(e);   // index-aligned: same physical event as tree entry e
+
+        const double epsCheck = 1e-6;
+        if(std::abs(nuEScatterTrueVX - nuEScatterTrueVX_weights) > epsCheck || std::abs(nuEScatterTrueVY - nuEScatterTrueVY_weights) > epsCheck || std::abs(nuEScatterTrueVZ - nuEScatterTrueVZ_weights) > epsCheck){
+            std::cerr << "ERROR: entry " << e << " misaligned between NuE and NuEWeights trees! " << "VX: " << nuEScatterTrueVX << " vs " << nuEScatterTrueVX_weights << ", VY: " << nuEScatterTrueVY << " vs " << nuEScatterTrueVY_weights << ", VZ: " << nuEScatterTrueVZ << " vs " << nuEScatterTrueVZ_weights << std::endl;
+            continue;
+        }
 
         int trueSignal = 0;       
  
@@ -1189,15 +1196,28 @@ void nuESelectionNumbersWithSystematics_macro(){
 
             size_t wSliceIdx_cached = 999999;
             bool sliceWeightValid_cached = false;
-            // Creates a 2D array which will store the systematic weights associated with the slice: sliceUnivWeights[parameter][universe]
             std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0));
+
             if(DLCurrent == 5 && signal != 3){
-                for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
-                    // Finds the matching slice in the weights tree by comparing sliceID numbers
-                    if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
-                        wSliceIdx_cached = ws; // ID of the slice being looked at
-                        sliceWeightValid_cached = true;
-                        break;
+                if(reco_sliceID_weights->size() != reco_sliceID->size()){
+                    std::cerr << "WARNING: entry " << e << " has " << reco_sliceID->size() << " slices in NuE but " << reco_sliceID_weights->size() << " in NuEWeights!" << std::endl;
+                }
+
+                if(slice < reco_sliceID_weights->size() && reco_sliceID_weights->at(slice) == reco_sliceID->at(slice)){
+                    wSliceIdx_cached = slice;
+                    sliceWeightValid_cached = true;
+                } else {
+                    for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
+                        if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
+                            wSliceIdx_cached = ws;
+                            sliceWeightValid_cached = true;
+                            break;
+                        }
+                    }
+                    if(sliceWeightValid_cached){
+                        std::cerr << "WARNING: entry " << e << " slice " << slice << " (ID=" << reco_sliceID->at(slice) << ") found at mismatched index " << wSliceIdx_cached << " in NuEWeights — order mismatch!" << std::endl;
+                    } else {
+                        std::cerr << "WARNING: entry " << e << " slice " << slice << " (ID=" << reco_sliceID->at(slice) << ") has no match in NuEWeights — using weight=1.0" << std::endl;
                     }
                 }
             
@@ -2522,10 +2542,6 @@ void nuESelectionNumbersWithSystematics_macro(){
     fOut->Write();
     fOut->Close();
     delete fOut;
-
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        if(fNuEWeightsVec[f]) fNuEWeightsVec[f]->Close();
-    }
 
 }
 
