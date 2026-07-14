@@ -100,7 +100,6 @@ struct highestEnergyPFP_struct{
     double clearCosmic = -999999;
 };
 
-
 struct eventCounter_struct{
     double nuE = 0;
     double NCNPi0 = 0;
@@ -177,6 +176,7 @@ struct eventCounting_struct{
     eventCounter_struct showerEnergyIntSplit;    
 };
 
+// Function used to scan a directory for root files and builds them into a std::vector<std::string> of full paths, alphabetically sorted
 std::vector<std::string> listRootFiles(const std::string& dirPath){
     std::vector<std::string> fileList;
     TSystemDirectory dir("inputDir", dirPath.c_str());
@@ -191,7 +191,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
             }
         }
     }
-    std::sort(fileList.begin(), fileList.end()); // deterministic order
+    std::sort(fileList.begin(), fileList.end());
     return fileList;
 }
 
@@ -255,8 +255,10 @@ void nuESelectionNumbersWithSystematics_macro(){
         std::cerr << "Error: could not open or create " << tableFileName << std::endl;
         return;
     }
+
     clearTableFile.close();
 
+    // Directory where the input root files are located
     std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
     std::vector<std::string> inputFiles = listRootFiles(inputDir);
     std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
@@ -265,18 +267,19 @@ void nuESelectionNumbersWithSystematics_macro(){
         return;
     }
 
+    // Creates 3 TChains: tree = NuE TTree, subRunTree = SubRun TTree, weightsTree = NuEWeights TTree
     TChain *tree = new TChain("ana/NuE");
     TChain *subRunTree = new TChain("ana/SubRun");
     TChain *weightsTree = new TChain("ana/NuEWeights");
 
-    // Add the SAME file list, in the SAME order, to tree and weightsTree
-    // so that global entry i in one corresponds to global entry i in the other.
+    // Adds all files in inputFiles directory to the 3 TChains
     for(const auto& f : inputFiles){
         tree->Add(f.c_str());
         weightsTree->Add(f.c_str());
         subRunTree->Add(f.c_str());
     }
 
+    // Checks whether the size of the NuE TTree is the same size as the NuEWeights TTree
     if(tree->GetEntries() != weightsTree->GetEntries()){
         std::cerr << "FATAL: NuE has " << tree->GetEntries() << " entries but NuEWeights has " << weightsTree->GetEntries() << " entries — they must be 1:1" << std::endl;
         return;
@@ -284,6 +287,7 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
+    // Creates a root file where the final histograms will be saved to
     TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_9July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
@@ -343,7 +347,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                 totalPOTSignalNuE += subRunPOT;
                 seenSubRunsSignalNuE.insert(key);
             }
-            
+           
+            // Counts all events (event if the run, subrun, event IDs have already been seen) 
             if(subRunDLCurrent == 5) POTSignalNuE_notMissing += subRunPOT;
                 
         } else if(subRunSignal == 2){
@@ -352,6 +357,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 seenSubRunsBNBNuE.insert(key);
             }
             
+            // Counts all events (event if the run, subrun, event IDs have already been seen) 
             if(subRunDLCurrent == 5) POTBNBNuE_notMissing += subRunPOT;
 
         } else if(subRunSignal == 4){
@@ -360,6 +366,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                 seenSubRunsNuENuE.insert(key);
             }
 
+            // Counts all events (event if the run, subrun, event IDs have already been seen) 
             if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
         }
     }
@@ -376,7 +383,8 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     double totalPOTNuENuE_notMissing = (POTNuENuE_notMissing + POTBNBNuE_notMissing);
 
-    std::cout << "POT from nue sample = " << POTNuENuE_notMissing << ", POT from BNB sample = " << POTBNBNuE_notMissing << ", total nue POT = " << totalPOTNuENuE_notMissing << std::endl;
+    std::cout << "nue only sample POT: unique event POT = " << totalPOTNuENuE << ", counting all subruns = " << POTNuENuE_notMissing << std::endl;
+    std::cout << "POT from nue sample (not missing) = " << POTNuENuE_notMissing << ", POT from BNB sample = " << POTBNBNuE_notMissing << ", total nue POT = " << totalPOTNuENuE_notMissing << std::endl;
 
     // Weights used to scale everything to 1e21 POT
     weights_struct weights;
@@ -734,19 +742,32 @@ void nuESelectionNumbersWithSystematics_macro(){
     weightsTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_piplus", &reco_sliceMCTruthFlux_weight_piplus);
     weightsTree->SetBranchAddress("reco_sliceMCTruthFlux_weight_piminus", &reco_sliceMCTruthFlux_weight_piminus);
 
-    const int NUNIV = 1000; // number of universes
+    const int NUNIV = 1000; // number of universes (for flux parameters)
     long long nuEWeightFallbacks = 0, nuEWeightCalls = 0;
     long long sliceWeightFallbacks = 0, sliceWeightCalls = 0;
 
+    // Lambda which returns the weight in universe u from a std::vector<float>
+    // If vector doesn't have 1000 entries -> return weight of 1.0
     auto getNuEWeight = [&](std::vector<float>* vec, int u) -> double {
         nuEWeightCalls++;
-        if(!vec || (int)vec->size() != NUNIV){ nuEWeightFallbacks++; return 1.0; }
+        
+        if(!vec || (int)vec->size() != NUNIV){
+            nuEWeightFallbacks++;
+            return 1.0;
+        }
+
         return vec->at(u);
     };
 
+    // Lambad which returns the weight in universe u given the ID of the slice (sliceIdx) from an std::vector<std::vector<float>>
+    // If vector for the given sliceID doesn't have 1000 entries/any other problems with the vectors -> return weight of 1.0
     auto getSliceWeight = [&](std::vector<std::vector<float>>* vec, size_t sliceIdx, int u, bool wFound) -> double {
         sliceWeightCalls++;
-        if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV){ sliceWeightFallbacks++; return 1.0; }
+        if(!wFound || !vec || sliceIdx >= vec->size() || (int)vec->at(sliceIdx).size() != NUNIV){
+            sliceWeightFallbacks++;
+            return 1.0;
+        }
+
         return vec->at(sliceIdx).at(u);
     };
 
@@ -767,18 +788,20 @@ void nuESelectionNumbersWithSystematics_macro(){
     TH1D* h_piplus       = new TH1D("h_piplus",       "Pi+;Total nu+e count;Universes",              60, 0, 600);
     TH1D* h_combined = new TH1D("h_combined", "All Parameters Combined", 60, 0, 600); 
 
-    // Covariance matrix setup: reconstructed recoil angle, post-cuts
+    // Covariance matrix setup: reconstructed recoil angle (0 degrees to 90 degrees in 18 bins), after all cuts
     const int NANGLEBINS = 18;
     double angleBinLow  = 0.0;
-    double angleBinHigh = 90.0;   // <-- adjust to match your actual angle range/units
+    double angleBinHigh = 90.0;
 
     TH1D* h_angle_CV = new TH1D("h_angle_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
     TH1D* h_angle_signal_CV = new TH1D("h_angle_signal_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
     TH1D* h_angle_back_CV = new TH1D("h_angle_back_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Background Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
 
+    // Vectors of TH1Ds with size 1000 
     std::vector<TH1D*> h_angle_univ(NUNIV, nullptr);
     std::vector<TH1D*> h_angle_signal_univ(NUNIV, nullptr);
     std::vector<TH1D*> h_angle_back_univ(NUNIV, nullptr);
+
     for(int u = 0; u < NUNIV; u++){
         h_angle_univ[u] = new TH1D(Form("h_angle_univ_%d", u), "", NANGLEBINS, angleBinLow, angleBinHigh);
         h_angle_signal_univ[u] = new TH1D(Form("h_angle_signal_univ_%d", u), "", NANGLEBINS, angleBinLow, angleBinHigh);
@@ -791,7 +814,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     
     // Names of the 5 slice categories
     std::vector<std::string> catNames = {"cosmic", "signal", "signal_fuzzy", "BNB", "BNB_fuzzy"};
-    int nCats   = catNames.size();
+    int nCats = catNames.size();
 
     // Creates vectors to store nominal histograms (2D array of histogram pointers): nominal[category][parameter]
     std::vector<std::vector<TH1D*>> nominal(nCats, std::vector<TH1D*>(nParams, nullptr));
@@ -859,16 +882,18 @@ void nuESelectionNumbersWithSystematics_macro(){
     // Start looping through the events
     for(Long64_t e = 0; e < numEntries; ++e){
         //std::cout << "============= New Event =============" << std::endl;
+        // Index e in tree and weightsTree should be the same event
         tree->GetEntry(e);
-        weightsTree->GetEntry(e);   // index-aligned: same physical event as tree entry e
+        weightsTree->GetEntry(e);
 
+        // Checks that the nuEScatterTrueVX == nuEScatterTrueVX_weights (same value from both NuE and NuEWeights TTrees)
         const double epsCheck = 1e-6;
         if(std::abs(nuEScatterTrueVX - nuEScatterTrueVX_weights) > epsCheck || std::abs(nuEScatterTrueVY - nuEScatterTrueVY_weights) > epsCheck || std::abs(nuEScatterTrueVZ - nuEScatterTrueVZ_weights) > epsCheck){
-            std::cerr << "ERROR: entry " << e << " misaligned between NuE and NuEWeights trees! " << "VX: " << nuEScatterTrueVX << " vs " << nuEScatterTrueVX_weights << ", VY: " << nuEScatterTrueVY << " vs " << nuEScatterTrueVY_weights << ", VZ: " << nuEScatterTrueVZ << " vs " << nuEScatterTrueVZ_weights << std::endl;
+            std::cerr << "ERROR: entry " << e << " misaligned between NuE and NuEWeights trees! " << "VX: " << nuEScatterTrueVX << " vs " << nuEScatterTrueVX_weights << ", VY: " << nuEScatterTrueVY << " vs " << nuEScatterTrueVY_weights << ", VZ: " << nuEScatterTrueVZ << " vs " << nuEScatterTrueVZ_weights << ", signal = " << signal << std::endl;
             continue;
         }
 
-        int trueSignal = 0;       
+        int trueSignal = 0; 
  
         // Looking at the true recoil electron in the event (if there is one)
         recoilElectron_struct recoilElectron;
@@ -891,7 +916,6 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
         }
 
-
         if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
             // This is an event with a nu+e elastic scatter in it (from the signal files)
             if(recoilElectron.energy > 150){
@@ -901,9 +925,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                     actualSignalCount += weights.signalNuE; // nominal value
                     trueSignal = 1;
 
-                    // Check whether there is a weight associated with the true nu+e elastic scatter
-                    // if weightsFound == 0 then no event was found to match between the 2 trees
-                    // nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV checks whether there are the same number of entries as universes
+                    // Check whether there is a weight associated with the true nu+e elastic scatter and it has 1000 entries (number of univs)
                     bool nuEWeightsValid = nuEScatter_MCTruthFlux_weight_horncurrent && (nuEScatter_MCTruthFlux_weight_horncurrent->size() == NUNIV);
 
                     if(nuEWeightsValid){
@@ -915,19 +937,19 @@ void nuESelectionNumbersWithSystematics_macro(){
                             // Add to the count (number of true nu+e elastic scattering events) for that universe the POT weight * universe weight for that flux parameter
                             // After looping through all events count_horncurrent[u] will be the number of true nu+e elastic scatters in universe u under a shift of the horn current parameter, etc, etc
                             count_horncurrent[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_horncurrent, u);
-                            count_expskin[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
-                            count_kplus[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
-                            count_kmin[u]        += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
-                            count_kzero[u]       += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
+                            count_expskin[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_expskin, u);
+                            count_kplus[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kplus, u);
+                            count_kmin[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kmin, u);
+                            count_kzero[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_kzero, u);
                             count_nucleoninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleoninexsec, u);
-                            count_nucleonqex[u]  += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
+                            count_nucleonqex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleonqexsec, u);
                             count_nucleontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_nucleontotxsec, u);
-                            count_piminus[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
-                            count_pioninex[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
-                            count_pionqex[u]     += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
-                            count_piontotx[u]    += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
-                            count_piplus[u]      += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
-                            count_combined[u]    += weights.signalNuE * combinedWeight;
+                            count_piminus[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piminus, u);
+                            count_pioninex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pioninexsec, u);
+                            count_pionqex[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_pionqexsec, u);
+                            count_piontotx[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piontotxsec, u);
+                            count_piplus[u] += weights.signalNuE * getNuEWeight(nuEScatter_MCTruthFlux_weight_piplus, u);
+                            count_combined[u] += weights.signalNuE * combinedWeight;
                         }
                     }
                 }
@@ -1067,10 +1089,18 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
             
             double weight = 0;
-            if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
-            if(signal == 2 && DLCurrent == 5 && sliceCategoryPlottingMacro != 5 && sliceCategoryPlottingMacro != 6) weight = weights.BNBNuE;
-            if((signal == 2 || signal == 4) && DLCurrent == 5 && (sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6)) weight = weights.NuENuE;
-            if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
+            if(signal == 1 && DLCurrent == 5){
+                weight = weights.signalNuE;
+            } else if(signal == 2 && DLCurrent == 5 && sliceCategoryPlottingMacro != 5 && sliceCategoryPlottingMacro != 6){
+                weight = weights.BNBNuE;
+            } else if((signal == 2 || signal == 4) && DLCurrent == 5 && (sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6)){
+                weight = weights.NuENuE;
+            } else if(signal == 3 && DLCurrent == 5){
+                weight = weights.cosmicsNuE;
+            } else{
+                // This event is skipped (given weight = 0)
+                //std::cout << "Event has weight = 0!!!!: signal = " << signal << ", DLCurrent = " << DLCurrent << ", slice category = " << sliceCategoryPlottingMacro << std::endl;
+            }
 
             double summedEnergy = 0;
             double numPFPsSlice = 0;
@@ -1199,10 +1229,12 @@ void nuESelectionNumbersWithSystematics_macro(){
             std::vector<std::vector<double>> sliceUnivWeights(NPARAMS_SYST, std::vector<double>(NUNIV, 1.0));
 
             if(DLCurrent == 5 && signal != 3){
+                // Number of slices in NuEWeights TTree should be same as number of slices in NuE TTree
                 if(reco_sliceID_weights->size() != reco_sliceID->size()){
                     std::cerr << "WARNING: entry " << e << " has " << reco_sliceID->size() << " slices in NuE but " << reco_sliceID_weights->size() << " in NuEWeights!" << std::endl;
                 }
 
+                // Check that the slice ID of the slice in NuE TTree is same as the slice ID of the slice in NuEWeights TTree
                 if(slice < reco_sliceID_weights->size() && reco_sliceID_weights->at(slice) == reco_sliceID->at(slice)){
                     wSliceIdx_cached = slice;
                     sliceWeightValid_cached = true;
@@ -1214,6 +1246,7 @@ void nuESelectionNumbersWithSystematics_macro(){
                             break;
                         }
                     }
+
                     if(sliceWeightValid_cached){
                         std::cerr << "WARNING: entry " << e << " slice " << slice << " (ID=" << reco_sliceID->at(slice) << ") found at mismatched index " << wSliceIdx_cached << " in NuEWeights — order mismatch!" << std::endl;
                     } else {
@@ -1223,32 +1256,32 @@ void nuESelectionNumbersWithSystematics_macro(){
             
                 for(int u = 0; u < NUNIV; u++){
                     // Gets the systematic weights correspinding to the slice for the parameter in the universe
-                    double wHorn    = getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent,    wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wExp     = getSliceWeight(reco_sliceMCTruthFlux_weight_expskin,        wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wKplus   = getSliceWeight(reco_sliceMCTruthFlux_weight_kplus,          wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wKmin    = getSliceWeight(reco_sliceMCTruthFlux_weight_kmin,           wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wKzero   = getSliceWeight(reco_sliceMCTruthFlux_weight_kzero,          wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wNinex   = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wNqex    = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec,  wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wNtotx   = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wPiminus = getSliceWeight(reco_sliceMCTruthFlux_weight_piminus,        wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wPinex   = getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec,    wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wPiqex   = getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec,     wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wPitotx  = getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec,    wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wPiplus  = getSliceWeight(reco_sliceMCTruthFlux_weight_piplus,         wSliceIdx_cached, u, sliceWeightValid_cached);
-                    double wComb    = wHorn*wExp*wKplus*wKmin*wKzero*wNinex*wNqex*wNtotx*wPiminus*wPinex*wPiqex*wPitotx*wPiplus;
+                    double wHorn = getSliceWeight(reco_sliceMCTruthFlux_weight_horncurrent, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wExp = getSliceWeight(reco_sliceMCTruthFlux_weight_expskin, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKplus = getSliceWeight(reco_sliceMCTruthFlux_weight_kplus, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKmin = getSliceWeight(reco_sliceMCTruthFlux_weight_kmin, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wKzero = getSliceWeight(reco_sliceMCTruthFlux_weight_kzero, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNinex = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleoninexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNqex = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleonqexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wNtotx = getSliceWeight(reco_sliceMCTruthFlux_weight_nucleontotxsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiminus = getSliceWeight(reco_sliceMCTruthFlux_weight_piminus, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPinex = getSliceWeight(reco_sliceMCTruthFlux_weight_pioninexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiqex = getSliceWeight(reco_sliceMCTruthFlux_weight_pionqexsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPitotx = getSliceWeight(reco_sliceMCTruthFlux_weight_piontotxsec, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wPiplus = getSliceWeight(reco_sliceMCTruthFlux_weight_piplus, wSliceIdx_cached, u, sliceWeightValid_cached);
+                    double wComb = wHorn*wExp*wKplus*wKmin*wKzero*wNinex*wNqex*wNtotx*wPiminus*wPinex*wPiqex*wPitotx*wPiplus;
                 
                     // Puts all the systematic weights corresponding to the slice for the parameter in the universe into the 2D array
-                    sliceUnivWeights[0][u]  = wHorn;
-                    sliceUnivWeights[1][u]  = wExp;
-                    sliceUnivWeights[2][u]  = wKplus;
-                    sliceUnivWeights[3][u]  = wKmin;
-                    sliceUnivWeights[4][u]  = wKzero;
-                    sliceUnivWeights[5][u]  = wNinex;
-                    sliceUnivWeights[6][u]  = wNqex;
-                    sliceUnivWeights[7][u]  = wNtotx;
-                    sliceUnivWeights[8][u]  = wPiminus;
-                    sliceUnivWeights[9][u]  = wPinex;
+                    sliceUnivWeights[0][u] = wHorn;
+                    sliceUnivWeights[1][u] = wExp;
+                    sliceUnivWeights[2][u] = wKplus;
+                    sliceUnivWeights[3][u] = wKmin;
+                    sliceUnivWeights[4][u] = wKzero;
+                    sliceUnivWeights[5][u] = wNinex;
+                    sliceUnivWeights[6][u] = wNqex;
+                    sliceUnivWeights[7][u] = wNtotx;
+                    sliceUnivWeights[8][u] = wPiminus;
+                    sliceUnivWeights[9][u] = wPinex;
                     sliceUnivWeights[10][u] = wPiqex;
                     sliceUnivWeights[11][u] = wPitotx;
                     sliceUnivWeights[12][u] = wPiplus;
@@ -1270,14 +1303,21 @@ void nuESelectionNumbersWithSystematics_macro(){
                 nomSig_perCut[cutIdx] += isSigSlice ? weight : 0.0;
 
                 // If it isn't a signal slice then add the POT weight to the nominal background slice counter, if it is a signal slice then add 0
-                nomBack_perCut[cutIdx] += isSigSlice ? 0.0    : weight;
+                nomBack_perCut[cutIdx] += isSigSlice ? 0.0 : weight;
 
                 // Loop through the parameters
                 for(int p = 0; p < NPARAMS_SYST; p++){
                     // Loop through the universes
                     for(int u = 0; u < NUNIV; u++){
-                        // Weight = POT weight * universe parameter systematic weight
-                        double w = weight * sliceUnivWeights[p][u];
+                        double w;
+                        if(sliceCategoryPlottingMacro != 0){
+                            // This isn't a cosmic slice -> has a weight and POT weight
+                            // Weight = POT weight * universe parameter systematic weight
+                            w = weight * sliceUnivWeights[p][u];
+                        } else{
+                            // This is a cosmic slice -> only has a POT weight
+                            w = weight;
+                        }
                         // If it is a signal slice then add the (POT weight * systematic weight) to the universe signal slice counter, if it isn't signal slice then add 0
                         if(isSigSlice) univSig_perCutParam[p][cutIdx][u] += w;
                         
@@ -1639,7 +1679,8 @@ void nuESelectionNumbersWithSystematics_macro(){
                     double wComb = sliceUnivWeights[13][u]; // index 13 = combined flux weight
                     h_angle_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
                     if(sliceCategoryPlottingMacro == 1 && signal == 1) h_angle_signal_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
-                    else if((sliceCategoryPlottingMacro == 2 && signal == 1) || (sliceCategoryPlottingMacro == 0 && signal != 4) || sliceCategoryPlottingMacro == 3 || sliceCategoryPlottingMacro == 4 || sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6) h_angle_back_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
+                    else if((sliceCategoryPlottingMacro == 2 && signal == 1) || sliceCategoryPlottingMacro == 3 || sliceCategoryPlottingMacro == 4 || sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6) h_angle_back_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
+                    else if(sliceCategoryPlottingMacro == 0 && signal != 4) h_angle_back_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
                 }
             }
 
@@ -1787,20 +1828,19 @@ void nuESelectionNumbersWithSystematics_macro(){
     };
 
     plotUniverseDist("horncurrent", h_horncurrent, actualSignalCount);
-    plotUniverseDist("expskin",     h_expskin,     actualSignalCount);
-    plotUniverseDist("kplus",       h_kplus,       actualSignalCount);
-    plotUniverseDist("kmin",        h_kmin,        actualSignalCount);
-    plotUniverseDist("kzero",       h_kzero,       actualSignalCount);
+    plotUniverseDist("expskin", h_expskin, actualSignalCount);
+    plotUniverseDist("kplus", h_kplus, actualSignalCount);
+    plotUniverseDist("kmin", h_kmin, actualSignalCount);
+    plotUniverseDist("kzero", h_kzero, actualSignalCount);
     plotUniverseDist("nucleoninex", h_nucleoninex, actualSignalCount);
-    plotUniverseDist("nucleonqex",  h_nucleonqex,  actualSignalCount);
+    plotUniverseDist("nucleonqex", h_nucleonqex, actualSignalCount);
     plotUniverseDist("nucleontotx", h_nucleontotx, actualSignalCount);
-    plotUniverseDist("piminus",     h_piminus,     actualSignalCount);
-    plotUniverseDist("pioninex",    h_pioninex,    actualSignalCount);
-    plotUniverseDist("pionqex",     h_pionqex,     actualSignalCount);
-    plotUniverseDist("piontotx",    h_piontotx,    actualSignalCount);
-    plotUniverseDist("piplus",      h_piplus,      actualSignalCount);
+    plotUniverseDist("piminus", h_piminus, actualSignalCount);
+    plotUniverseDist("pioninex", h_pioninex, actualSignalCount);
+    plotUniverseDist("pionqex", h_pionqex, actualSignalCount);
+    plotUniverseDist("piontotx", h_piontotx, actualSignalCount);
+    plotUniverseDist("piplus", h_piplus, actualSignalCount);
     plotUniverseDist("combined_allParams", h_combined, actualSignalCount);
-
 
     // The number of signal and background slices (nominal) before any cuts have been applied
     double initialSig  = nomSig_perCut[0];
@@ -2003,12 +2043,17 @@ void nuESelectionNumbersWithSystematics_macro(){
             TH1D *h = new TH1D(histName.c_str(), "", 50, lo, hi);
             for(double v : vals) h->Fill(v);
 
-            h->SetLineColor(color); h->SetLineWidth(2); h->SetStats(0);
+            h->SetLineColor(color); 
+            h->SetLineWidth(2); 
+            h->SetStats(0);
             h->GetXaxis()->SetTitle(xAxisTitle.c_str());
             h->GetYaxis()->SetTitle("Universes");
-            h->GetXaxis()->SetTitleSize(0.05); h->GetYaxis()->SetTitleSize(0.05);
-            h->GetXaxis()->SetLabelSize(0.04); h->GetYaxis()->SetLabelSize(0.04);
-            h->GetXaxis()->SetTitleOffset(1.1); h->GetYaxis()->SetTitleOffset(1.1);
+            h->GetXaxis()->SetTitleSize(0.05); 
+            h->GetYaxis()->SetTitleSize(0.05);
+            h->GetXaxis()->SetLabelSize(0.04); 
+            h->GetYaxis()->SetLabelSize(0.04);
+            h->GetXaxis()->SetTitleOffset(1.1); 
+            h->GetYaxis()->SetTitleOffset(1.1);
             h->Draw("HIST E");
 
             // Nominal value line
@@ -2101,8 +2146,8 @@ void nuESelectionNumbersWithSystematics_macro(){
     auto getCombinedSyst = [&](int cutIdx) -> std::array<double,7> {
         const int p = 13; // combined parameter index
 
-        std::vector<double>& svec  = univSig_perCutParam[p][cutIdx];
-        std::vector<double>& bvec  = univBack_perCutParam[p][cutIdx];
+        std::vector<double>& svec = univSig_perCutParam[p][cutIdx];
+        std::vector<double>& bvec = univBack_perCutParam[p][cutIdx];
       
         // Nominal signal and background slices left after cut 
         double s_nom = nomSig_perCut[cutIdx];
@@ -2110,16 +2155,16 @@ void nuESelectionNumbersWithSystematics_macro(){
 
         std::vector<double> effVec(NUNIV), selEffVec(NUNIV), purVec(NUNIV), epsRhoVec(NUNIV), selEpsRhoVec(NUNIV);
         for(int u = 0; u < NUNIV; u++){
-            double s       = svec[u];
-            double b       = bvec[u];
-            double tot     = s + b;
+            double s = svec[u];
+            double b = bvec[u];
+            double tot = s + b;
             double trueSig = count_combined[u];
             double s_beforeCuts = univSig_perCutParam[p][0][u];
 
-            effVec[u]       = (trueSig > 0) ? s / trueSig : 0.0;
-            selEffVec[u]    = (s_beforeCuts > 0) ? s / s_beforeCuts : 0.0;
-            purVec[u]       = (tot > 0) ? s / tot : 0.0;
-            epsRhoVec[u]    = effVec[u] * purVec[u];
+            effVec[u] = (trueSig > 0) ? s / trueSig : 0.0;
+            selEffVec[u] = (s_beforeCuts > 0) ? s / s_beforeCuts : 0.0;
+            purVec[u] = (tot > 0) ? s / tot : 0.0;
+            epsRhoVec[u] = effVec[u] * purVec[u];
             selEpsRhoVec[u] = selEffVec[u] * purVec[u];
         } 
         
@@ -2150,22 +2195,22 @@ void nuESelectionNumbersWithSystematics_macro(){
     if(out_tablefile.is_open()){
 
         // Pre-compute systematics for every cut stage
-        auto s_before     = getCombinedSyst(0);
-        auto s_clearCosmic= getCombinedSyst(1);
-        auto s_numPFPs0   = getCombinedSyst(2);
-        auto s_numRecoNeut= getCombinedSyst(3);
-        auto s_crumbs     = getCombinedSyst(4);
-        auto s_FV         = getCombinedSyst(5);
+        auto s_before = getCombinedSyst(0);
+        auto s_clearCosmic = getCombinedSyst(1);
+        auto s_numPFPs0 = getCombinedSyst(2);
+        auto s_numRecoNeut = getCombinedSyst(3);
+        auto s_crumbs = getCombinedSyst(4);
+        auto s_FV = getCombinedSyst(5);
         auto s_primaryPFP = getCombinedSyst(6);
-        auto s_razzled11  = getCombinedSyst(7);
+        auto s_razzled11 = getCombinedSyst(7);
         auto s_razzled211 = getCombinedSyst(8);
-        auto s_ETheta2    = getCombinedSyst(9);
-        auto s_dEdx       = getCombinedSyst(10);
+        auto s_ETheta2 = getCombinedSyst(9);
+        auto s_dEdx = getCombinedSyst(10);
 
         // Indices into the array returned by getCombinedSyst:
         // 0=sigSyst, 1=backSyst, 2=effSyst, 3=selEffSyst, 4=purSyst, 5=epsRhoSyst, 6=selEpsRhoSyst
 
-        // Convenience macro-lambda: formats "value $\pm$ syst" with chosen precisions
+        // Formats "value $\pm$ syst" with chosen precisions
         // valPrec = decimal places for value, systPrec = decimal places for syst
         auto fmtPM = [](double val, double syst, int valPrec, int systPrec) -> std::string {
             std::ostringstream oss;
@@ -2402,6 +2447,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::vector<double> CV_binContent(NANGLEBINS);
     std::vector<double> CV_signal_binContent(NANGLEBINS);
     std::vector<double> CV_back_binContent(NANGLEBINS);
+
     for(int i = 0; i < NANGLEBINS; i++){
         CV_binContent[i] = h_angle_CV->GetBinContent(i+1);
         CV_signal_binContent[i] = h_angle_signal_CV->GetBinContent(i+1);
