@@ -18,13 +18,8 @@
 #
 
 #include "standard_detsim_sbnd.fcl"
-###include "geometry_sbnd_cathodefilt.fcl"
-
-# ---- WireCell: use the no-cathode jsonnet -----------------------------
-# The cathode-less geometry needs the matching WireCell config; the
-# inputTag stays "ionandscint:" because that's the default SBND label.
-physics.producers.simtpc2d.wcls_main.configs:["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp_nocathode.jsonnet"]
 
 # ---- Drift-velocity calibration for the cathode-less geometry ---------
-services.DetectorPropertiesService.DriftVelFudgeFactor: 1.00767754319 #1.575/1.563
-physics.producers.simtpc2d.wcls_main.structs.driftSpeed: 1.575
+### Updates the drift velocity to the data measured value of 0.15532 cm/us
+services.DetectorPropertiesService.DriftVelFudgeFactor: 0.99373000639 #1.5532/1.563
+physics.producers.simtpc2d.wcls_main.structs.driftSpeed: 1.5532
