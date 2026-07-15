@@ -1344,16 +1344,21 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     double actualSignalCount = 0.0;
 
+    long long genieNuEWeightFallbacks = 0, genieNuEWeightCalls = 0;
+    long long genieSliceWeightFallbacks = 0, genieSliceWeightCalls = 0;
+
     auto getGenieNuEWeight = [&](std::vector<float>* vec, int u, int expectedN) -> double {
-        if(!vec || (int)vec->size() != expectedN) return 1.0;
-        if(u < 0 || u >= expectedN) return 1.0;
+        genieNuEWeightCalls++;
+        if(!vec || (int)vec->size() != expectedN){ genieNuEWeightFallbacks++; return 1.0; }
+        if(u < 0 || u >= expectedN){ genieNuEWeightFallbacks++; return 1.0; }
         return vec->at(u);
     };
 
     auto getGenieSliceWeight = [&](std::vector<std::vector<float>>* vec, size_t sliceIdx, int u, bool wFound, int expectedN) -> double {
-        if(!wFound || !vec || sliceIdx >= vec->size()) return 1.0;
-        if((int)vec->at(sliceIdx).size() != expectedN) return 1.0;
-        if(u < 0 || u >= expectedN) return 1.0;
+        genieSliceWeightCalls++;
+        if(!wFound || !vec || sliceIdx >= vec->size()){ genieSliceWeightFallbacks++; return 1.0; }
+        if((int)vec->at(sliceIdx).size() != expectedN){ genieSliceWeightFallbacks++; return 1.0; }
+        if(u < 0 || u >= expectedN){ genieSliceWeightFallbacks++; return 1.0; }
         return vec->at(sliceIdx).at(u);
     };
 
@@ -1374,13 +1379,20 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return maxDev;
     };
 
-    // Multisigma with the standard 6-point layout [-1sig, +1sig, -2sig, +2sig, -3sig, +3sig].
-    // Uses only the +-1sigma points, symmetrized, as is standard practice.
+    // Multisigma/unisim knobs are always stored as [-1sig, +1sig, -2sig, +2sig, -3sig, +3sig, (CV if odd count)],
+    // regardless of how many sigma-levels were saved (2, 4, 6, 7, 10 universes all follow this pattern).
+    // Per the technote, we reduce every such knob to just the +-1sigma pair (indices 0 and 1) and treat it
+    // as a symmetric/linear systematic. Only the 1-universe "morph unisim" knobs (DecayAngMEC, ThetaDelta2NRad,
+    // Theta_Delta2Npi, VecFFCCQEshape) don't have a +-1sigma pair; for those we fall back to the plain
+    // envelope estimator, which for a single value is just |value - nominal| -- i.e. the raw shift of that
+    // one alternate-model universe, exactly as the technote's "morph unisim" treatment intends.
     auto calcSystMultisigma1Sigma = [&](const std::vector<double>& values, double nominal) -> double {
-        if(values.size() != 6) return calcSystMultisigma(values, nominal); // fallback for non-standard knobs (e.g. the 1-point unisim knobs)
-        double down1sigma = values[0];
-        double up1sigma    = values[1];
-        return std::fabs(up1sigma - down1sigma) / 2.0;
+        if(values.size() >= 2){
+            double down1sigma = values[0];
+            double up1sigma    = values[1];
+            return std::fabs(up1sigma - down1sigma) / 2.0;
+        }
+        return calcSystMultisigma(values, nominal); // 1-universe morph unisim knobs
     };
 
     auto calcSystGeneric = [&](const std::vector<double>& values, double nominal, bool isMultisim) -> double {
@@ -1392,6 +1404,16 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         double sum = 0.0;
         for(double x : values) sum += x;
         return sum / values.size();
+    };
+
+    // Mean computed over the same subset of universes actually used for the systematic:
+    // the full ensemble for genuine multisim knobs, but just the +-1sigma pair (or the
+    // single morph-unisim value) for everything else -- so the printed "shift" lines up
+    // with the printed "syst" for the same knob.
+    auto calcMeanForSyst = [&](const std::vector<double>& values, bool isMultisim) -> double {
+        if(isMultisim) return calcMeanFromValues(values);
+        if(values.size() >= 2) return (values[0] + values[1]) / 2.0;
+        return calcMeanFromValues(values);
     };
 
     // Loop through events
@@ -1592,7 +1614,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
             size_t wSliceIdx_cached = 999999;
             bool sliceWeightValid_cached = false;
-            std::vector<std::vector<float>> sliceUnivWeights_genie(NPARAMS_GENIE);
+            std::vector<std::vector<double>> sliceUnivWeights_genie(NPARAMS_GENIE);
             for(int p = 0; p < NPARAMS_GENIE; p++) sliceUnivWeights_genie[p].assign(genieParams[p].nUniv, 1.0);
 
             if(DLCurrent == 5 && signal != 3){
@@ -1925,6 +1947,9 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         }
     }
 
+    std::cout << "GENIE nuE weight fallback: " << genieNuEWeightFallbacks << "/" << genieNuEWeightCalls << " (" << (genieNuEWeightCalls ? 100.0*genieNuEWeightFallbacks/genieNuEWeightCalls : 0.) << "%)" << std::endl;
+    std::cout << "GENIE slice weight fallback: " << genieSliceWeightFallbacks << "/" << genieSliceWeightCalls << " (" << (genieSliceWeightCalls ? 100.0*genieSliceWeightFallbacks/genieSliceWeightCalls : 0.) << "%)" << std::endl;
+    
     std::cout << "\n=== GENIE Systematic Uncertainties on nu+e Signal Count (before cuts) ===" << std::endl;
     std::cout << Form("Nominal: %.2f", actualSignalCount) << std::endl;
 
@@ -1932,7 +1957,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     for(int p = 0; p < NPARAMS_GENIE; p++){
         double stddev = calcSystGeneric(count_genie[p], actualSignalCount, genieParams[p].isMultisim);
-        double mean   = calcMeanFromValues(count_genie[p]);
+        double mean   = calcMeanForSyst(count_genie[p], genieParams[p].isMultisim);
         double shift  = mean - actualSignalCount;
         systValues_beforeCuts[p] = stddev;
 
@@ -2003,7 +2028,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         for(int p = 0; p < NPARAMS_GENIE; p++){
             std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
             double stddev = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
-            double mean   = calcMeanFromValues(vals);
+            double mean   = calcMeanForSyst(vals, genieParams[p].isMultisim);
             double shift  = mean - nomVal;
             systValues[p] = stddev;
             std::cout << Form("%-45s (N=%3d, %-10s)  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f%s (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", mean * scale, unitSuffix.c_str(), shift * scale, (nomVal != 0 ? 100.*shift/nomVal : 0.), stddev * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
