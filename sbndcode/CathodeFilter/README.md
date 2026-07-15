@@ -14,8 +14,8 @@ drop `sim::SimEnergyDeposit`s that lie inside the cathode volume.
 - `fcl/cathode_simenergydeposit_filter.fcl` — default PROLOG.
 - `fcl/run_cathode_filter.fcl` — drop-in job that wires the producer
   around any SBND simulation input file.
-- `data/sbnd_cathode_v6.txt` — 160 × 200 grid of (x_neg, x_pos) in cm,
-  installed to `$FW_SEARCH_PATH/sbndcode/CathodeFilter/sbnd_cathode_v6.txt`.
+- `data/sbnd_cathode_v8.txt` — 160 × 200 grid of (x_neg, x_pos) in cm,
+  installed to `$FW_SEARCH_PATH/sbndcode/CathodeFilter/sbnd_cathode_v8.txt`.
 
 ## Build
 Append `add_subdirectory(CathodeFilter)` to `sbndcode/sbndcode/CMakeLists.txt`.

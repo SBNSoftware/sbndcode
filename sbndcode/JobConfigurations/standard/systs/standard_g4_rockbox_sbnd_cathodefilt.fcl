@@ -10,7 +10,7 @@
 #   2. Inserts the CathodeSimEnergyDepositFilter *between* largeant
 #      (the raw LArG4 SimEnergyDeposit producer) and ionandscint
 #      (which applies SCE and computes ionisation/scintillation).
-#      The data-driven cathode volume (sbnd_cathode_v6.txt) is now
+#      The data-driven cathode volume (sbnd_cathode_v8.txt) is now
 #      applied to the un-shifted LArG4 deposits, and SCE is applied
 #      to the surviving deposits afterwards -- which is what you
 #      want, because the cathode is a physical surface at the
@@ -58,7 +58,7 @@ physics.producers.cathodefiltered: {
   module_type:            "CathodeFilterSBND"
   SimEnergyDepositLabels: [ "largeant:LArG4DetectorServicevolTPCActive" ]
   OutputInstances:        [ "LArG4DetectorServicevolTPCActive" ]
-  CathodeVolumeFile:      "sbnd_cathode_v6.txt"
+  CathodeVolumeFile:      "sbnd_cathode_v8.txt"
   UseStepEndpoints:       false
   NanPolicy:              "outside"
   Interp:                 "bilinear"
