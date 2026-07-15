@@ -7,7 +7,7 @@ BEGIN_PROLOG
 cathode_simenergydeposit_filter_default: {
   module_type:            "CathodeFilterSBND"
   SimEnergyDepositLabel:  "ionandscint"
-  CathodeVolumeFile:      "sbnd_cathode_v6.txt"
+  CathodeVolumeFile:      "sbnd_cathode_v8.txt"
   UseStepEndpoints:       false
   NanPolicy:              "outside"
   Interp:                 "bilinear"

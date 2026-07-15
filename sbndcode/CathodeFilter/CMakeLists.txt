@@ -74,5 +74,4 @@ install_source()
 install_fhicl(SUBDIRS fcl)
 cet_enable_asserts()
 
-# install sbnd_pds_mapping.json with mapping of the photon detectors                                                                                    
-install_fw(LIST sbnd_cathode_v6.txt)
+install_fw(LIST sbnd_cathode_v8.txt)
