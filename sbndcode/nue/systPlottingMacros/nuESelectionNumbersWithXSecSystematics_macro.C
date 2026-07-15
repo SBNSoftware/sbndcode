@@ -38,31 +38,9 @@
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
-#include <unordered_map>
-
-struct eventKey_struct{
-    UInt_t runID;
-    UInt_t subRunID;
-    UInt_t eventID;
-    int signal;
-    int DLCurrent;
-
-    bool operator == (const eventKey_struct& other) const {
-        return runID == other.runID && subRunID == other.subRunID && eventID == other.eventID && signal == other.signal && DLCurrent == other.DLCurrent;
-    }
-};
-
-struct eventKeyHash_struct{
-    std::size_t operator()(const eventKey_struct& k) const{
-        std::size_t h = 0;
-        h ^= std::hash<UInt_t>{}(k.runID);
-        h ^= std::hash<UInt_t>{}(k.subRunID) << 1;
-        h ^= std::hash<UInt_t>{}(k.eventID) << 2;
-        h ^= std::hash<int>{}(k.signal) << 3;
-        h ^= std::hash<int>{}(k.DLCurrent) << 4;
-        return h;
-    }
-};
+#include <TChain.h>
+#include <TSystemDirectory.h>
+#include <TSystemFile.h>
 
 struct weights_struct{
     double signalNuE = 0;
@@ -156,6 +134,24 @@ struct GenieParam_struct{
     bool isMultisim;
 };
 
+std::vector<std::string> listRootFiles(const std::string& dirPath){
+    std::vector<std::string> fileList;
+    TSystemDirectory dir("inputDir", dirPath.c_str());
+    TList *files = dir.GetListOfFiles();
+    if(files){
+        TSystemFile *file;
+        TIter next(files);
+        while((file = (TSystemFile*)next())){
+            std::string fname = file->GetName();
+            if(!file->IsDirectory() && fname.size() > 5 && fname.compare(fname.size()-5, 5, ".root") == 0){
+                fileList.push_back(dirPath + "/" + fname);
+            }
+        }
+    }
+    std::sort(fileList.begin(), fileList.end());
+    return fileList;
+}
+
 void nuESelectionNumbersWithXSecSystematics_macro(){
 
     // Set true to make all plots after each cut has been applied
@@ -218,54 +214,30 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     }
     clearTableFile.close();
 
-    TFile *fNuE = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_7Jul_noWeights.root");
-    if(!fNuE){ std::cerr << "Error opening the NuE TTree file" << std::endl; return; }
-
-    TDirectory *dirNuE = (TDirectory*)fNuE->Get("ana");
-    if(!dirNuE){ std::cerr << "Directory 'ana' not found in NuE file" << std::endl; return; }
-
-    TTree *tree = (TTree*)dirNuE->Get("NuE");
-    if(!tree){ std::cerr << "NuE TTree not found" << std::endl; return; }
-
-    TTree *subRunTree = (TTree*)dirNuE->Get("SubRun");
-    if(!subRunTree){ std::cerr << "SubRun TTree not found" << std::endl; return; }
-
-    std::vector<std::string> weightFilePaths = {
-        "/exp/sbnd/data/users/coackley/merged_nu+eAllJobs_weights_3Jul.root",
-        "/exp/sbnd/data/users/coackley/nue_withWeights_5Jul.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_000.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_001.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_002.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_003.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_004.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_005.root",
-        "/exp/sbnd/data/users/coackley/hadd_level3/level3_006.root"
-    };
-    
-    const int NWEIGHTFILES = (int)weightFilePaths.size();
-
-    std::vector<TFile*> fNuEWeightsVec(NWEIGHTFILES, nullptr);
-    std::vector<TTree*> weightsTreeVec(NWEIGHTFILES, nullptr);
-
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        fNuEWeightsVec[f] = TFile::Open(weightFilePaths[f].c_str());
-        if(!fNuEWeightsVec[f] || fNuEWeightsVec[f]->IsZombie()){
-            std::cerr << "Error opening weights file: " << weightFilePaths[f] << std::endl;
-            return;
-        }
-
-        TDirectory *dirNuEWeights = (TDirectory*)fNuEWeightsVec[f]->Get("ana");
-        if(!dirNuEWeights){
-            std::cerr << "Directory 'ana' not found in " << weightFilePaths[f] << std::endl;
-            return;
-        }
-
-        weightsTreeVec[f] = (TTree*)dirNuEWeights->Get("NuEWeights");
-        if(!weightsTreeVec[f]){
-            std::cerr << "NuEWeights TTree not found in " << weightFilePaths[f] << std::endl;
-            return;
-        }
+    std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
+    std::vector<std::string> inputFiles = listRootFiles(inputDir);
+    std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
+    if(inputFiles.empty()){
+        std::cerr << "No input files found in " << inputDir << std::endl;
+        return;
     }
+
+    TChain *tree = new TChain("ana/NuE");
+    TChain *subRunTree = new TChain("ana/SubRun");
+    TChain *weightsTree = new TChain("ana/NuEWeights");
+
+    for(const auto& f : inputFiles){
+        tree->Add(f.c_str());
+        weightsTree->Add(f.c_str());
+        subRunTree->Add(f.c_str());
+    }
+
+    if(tree->GetEntries() != weightsTree->GetEntries()){
+        std::cerr << "FATAL: NuE has " << tree->GetEntries() << " entries but NuEWeights has " << weightsTree->GetEntries() << " entries — they must be 1:1" << std::endl;
+        return;
+    }
+
+    std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
     TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_9July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){ std::cerr << "Error creating output ROOT file" << std::endl; return; }
@@ -506,533 +478,479 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     Long64_t numEntries = tree->GetEntries();
 
     // NuEWeights Tree branch variable
-    UInt_t eventID_weights, runID_weights, subRunID_weights;
-    int nuEScatter_weights;
     double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
-    double DLCurrent_weights, signal_weights;
 
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
-    std::vector<double> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
+    std::vector<float> *nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
 
     std::vector<double> *reco_sliceID_weights = nullptr;  
-    std::vector<double> *reco_sliceInteraction_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVX_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVY_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueVZ_weights = nullptr;  
-    std::vector<double> *reco_sliceOrigin_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueCCNC_weights = nullptr;  
-    std::vector<double> *reco_sliceTrueNeutrinoType_weights = nullptr;
 
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
-    std::vector<std::vector<double>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE = nullptr;
+    std::vector<std::vector<float>> *reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE = nullptr;
 
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        TTree* wt = weightsTreeVec[f];
-        wt->SetBranchAddress("eventID", &eventID_weights);
-        wt->SetBranchAddress("runID", &runID_weights);
-        wt->SetBranchAddress("subRunID", &subRunID_weights);
-        wt->SetBranchAddress("DLCurrent", &DLCurrent_weights);
-        wt->SetBranchAddress("signal", &signal_weights);
-        
-        wt->SetBranchAddress("nuEScatter", &nuEScatter_weights);
-        wt->SetBranchAddress("nuEScatterTrueVX", &nuEScatterTrueVX_weights);
-        wt->SetBranchAddress("nuEScatterTrueVY", &nuEScatterTrueVY_weights);
-        wt->SetBranchAddress("nuEScatterTrueVZ", &nuEScatterTrueVZ_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVX_weightTree", &nuEScatterTrueVX_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVY_weightTree", &nuEScatterTrueVY_weights);
+    weightsTree->SetBranchAddress("nuEScatterTrueVZ_weightTree", &nuEScatterTrueVZ_weights);
 
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
-        wt->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
-        
-        wt->SetBranchAddress("reco_sliceID", &reco_sliceID_weights);
-        wt->SetBranchAddress("reco_sliceInteraction", &reco_sliceInteraction_weights);
-        wt->SetBranchAddress("reco_sliceTrueVX", &reco_sliceTrueVX_weights);
-        wt->SetBranchAddress("reco_sliceTrueVY", &reco_sliceTrueVY_weights);
-        wt->SetBranchAddress("reco_sliceTrueVZ", &reco_sliceTrueVZ_weights);
-        wt->SetBranchAddress("reco_sliceOrigin", &reco_sliceOrigin_weights);
-        wt->SetBranchAddress("reco_sliceTrueCCNC", &reco_sliceTrueCCNC_weights);
-        wt->SetBranchAddress("reco_sliceTrueNeutrinoType", &reco_sliceTrueNeutrinoType_weights);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &nuEScatter_MCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &nuEScatter_MCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &nuEScatter_MCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
+    weightsTree->SetBranchAddress("nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
+    
+    weightsTree->SetBranchAddress("reco_sliceID_weightTree", &reco_sliceID_weights);
 
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
-        wt->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
-    }
-
-    struct weightLocation_struct{
-        int fileIdx;
-        Long64_t entry;
-    };
-
-    std::unordered_map<eventKey_struct, weightLocation_struct, eventKeyHash_struct> weightEntryMap;
-
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        TTree* wt = weightsTreeVec[f];
-        Long64_t nEntriesThisTree = wt->GetEntries();
-
-        for(Long64_t i = 0; i < nEntriesThisTree; ++i){
-            wt->GetEntry(i);
-            eventKey_struct key{runID_weights, subRunID_weights, eventID_weights, static_cast<int>(signal_weights), static_cast<int>(DLCurrent_weights)};
-
-            if(weightEntryMap.find(key) != weightEntryMap.end()){
-                std::cerr << "Warning: duplicate event key across weight files (run=" << runID_weights
-                           << ", subRun=" << subRunID_weights << ", event=" << eventID_weights
-                           << ", signal=" << signal_weights << ", DLCurrent=" << DLCurrent_weights
-                           << ") - keeping first occurrence" << std::endl;
-                continue;
-            }
-
-            weightEntryMap[key] = {f, i};
-        }
-    }
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_np_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_p_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_n_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_CC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_1Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_2Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi", &reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nubar_p_NC_3Pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_C12ToAr40_2p2hScaling_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_SPPLowQ2Suppression);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenuebar_xsec_ratio);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio", &reco_sliceMCTruthGENIE_weight_MiscInteractionSysts_SBN_v1_nuenumu_xsec_ratio);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement", &reco_sliceMCTruthGENIE_weight_MINERvAq0q3Weighting_SBN_v1_Mnv2p2hGaussEnhancement);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_A_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nu);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar", &reco_sliceMCTruthGENIE_weight_MINERvAE2p2h_SBN_v1_E2p2h_B_nubar);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_COHVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_CoulombCCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCELVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormCCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_NormNCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1eta);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RDecBR1gamma);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_RPA_CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_AhtBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_BhtBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV1uBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CV2uBY);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_CoulombCCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_DecayAngMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_EtaNCEL);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrAbs_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrCEx_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrInel_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_FrPiProd_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_N);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MFP_pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaCCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCEL);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MaNCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvCCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_MvNCRES);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCCOH);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCCOH);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormNCMEC);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1eta);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_RPA_CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ThetaDelta2NRad);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_Theta_Delta2Npi);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_VecFFCCQEshape);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA1CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA2CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
+    weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
 
     std::vector<GenieParam_struct> genieParams = {
         // NOvA-style non-resonant pion normalization (23 params)
@@ -1167,7 +1085,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << " out of 115" << std::endl;
 
     // Order must exactly match genieParams above, index-for-index
-    std::vector<std::vector<double>*> nuEScatter_GENIEWeightVecs = {
+    std::vector<std::vector<float>*> nuEScatter_GENIEWeightVecs = {
         nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi,
         nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi,
         nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi,
@@ -1285,7 +1203,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE
     };
 
-    std::vector<std::vector<std::vector<double>>*> reco_slice_GENIEWeightVecs = {
+    std::vector<std::vector<std::vector<float>>*> reco_slice_GENIEWeightVecs = {
         reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi,
         reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_3Pi,
         reco_sliceMCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_NC_1Pi,
@@ -1426,13 +1344,13 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     double actualSignalCount = 0.0;
 
-    auto getGenieNuEWeight = [&](std::vector<double>* vec, int u, int expectedN) -> double {
+    auto getGenieNuEWeight = [&](std::vector<float>* vec, int u, int expectedN) -> double {
         if(!vec || (int)vec->size() != expectedN) return 1.0;
         if(u < 0 || u >= expectedN) return 1.0;
         return vec->at(u);
     };
 
-    auto getGenieSliceWeight = [&](std::vector<std::vector<double>>* vec, size_t sliceIdx, int u, bool wFound, int expectedN) -> double {
+    auto getGenieSliceWeight = [&](std::vector<std::vector<float>>* vec, size_t sliceIdx, int u, bool wFound, int expectedN) -> double {
         if(!wFound || !vec || sliceIdx >= vec->size()) return 1.0;
         if((int)vec->at(sliceIdx).size() != expectedN) return 1.0;
         if(u < 0 || u >= expectedN) return 1.0;
@@ -1479,18 +1397,12 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     // Loop through events
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
+        weightsTree->GetEntry(e);
 
-        bool weightsFound = false;
-        Long64_t weightsEntryIdx = -1;
-
-        if(signal == 1 || signal == 2 || signal == 4){
-            eventKey_struct key{runID, subRunID, eventID, static_cast<int>(signal), static_cast<int>(DLCurrent)};
-            auto it = weightEntryMap.find(key);
-            if(it != weightEntryMap.end()){
-                weightsTreeVec[it->second.fileIdx]->GetEntry(it->second.entry);
-                weightsFound = true;
-                weightsEntryIdx = it->second.entry;
-            }
+        const double epsCheck = 1e-6;
+        if(std::abs(nuEScatterTrueVX - nuEScatterTrueVX_weights) > epsCheck || std::abs(nuEScatterTrueVY - nuEScatterTrueVY_weights) > epsCheck || std::abs(nuEScatterTrueVZ - nuEScatterTrueVZ_weights) > epsCheck){
+            std::cerr << "ERROR: entry " << e << " misaligned between NuE and NuEWeights trees! " << "VX: " << nuEScatterTrueVX << " vs " << nuEScatterTrueVX_weights << ", VY: " << nuEScatterTrueVY << " vs " << nuEScatterTrueVY_weights << ", VZ: " << nuEScatterTrueVZ << " vs " << nuEScatterTrueVZ_weights << ", signal = " << signal << std::endl;
+            continue;
         }
 
         recoilElectron_struct recoilElectron;
@@ -1511,14 +1423,18 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                 if(passesFV){
                     actualSignalCount += weights.signalNuE;
 
-                    if(weightsFound){
-                        for(int p = 0; p < NPARAMS_GENIE; p++){
-                            int N = genieParams[p].nUniv;
+                    for(int p = 0; p < NPARAMS_GENIE; p++){
+                        int N = genieParams[p].nUniv;
+                        auto* vec = nuEScatter_GENIEWeightVecs[p];
+                        bool nuEWeightsValid = vec && ((int)vec->size() == N);
+
+                        if(nuEWeightsValid){
                             for(int u = 0; u < N; u++){
-                                double w = getGenieNuEWeight(nuEScatter_GENIEWeightVecs[p], u, N);
-                                count_genie[p][u] += weights.signalNuE * w;
+                                count_genie[p][u] += weights.signalNuE * vec->at(u);
                             }
                         }
+                        // else: this event contributes nothing to count_genie[p] for any universe,
+                        // matching the flux macro's behaviour of skipping rather than falling back to weight=1
                     }
                 }
             }
@@ -1676,16 +1592,30 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
             size_t wSliceIdx_cached = 999999;
             bool sliceWeightValid_cached = false;
-            std::vector<std::vector<double>> sliceUnivWeights_genie(NPARAMS_GENIE);
+            std::vector<std::vector<float>> sliceUnivWeights_genie(NPARAMS_GENIE);
             for(int p = 0; p < NPARAMS_GENIE; p++) sliceUnivWeights_genie[p].assign(genieParams[p].nUniv, 1.0);
 
-            if(DLCurrent == 5 && weightsFound && signal != 3){
-                // Match this slice to its entry in the weights tree by sliceID
-                for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
-                    if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
-                        wSliceIdx_cached = ws;
-                        sliceWeightValid_cached = true;
-                        break;
+            if(DLCurrent == 5 && signal != 3){
+                if(reco_sliceID_weights->size() != reco_sliceID->size()){
+                    std::cerr << "WARNING: entry " << e << " has " << reco_sliceID->size() << " slices in NuE but " << reco_sliceID_weights->size() << " in NuEWeights!" << std::endl;
+                }
+
+                if(slice < reco_sliceID_weights->size() && reco_sliceID_weights->at(slice) == reco_sliceID->at(slice)){
+                    wSliceIdx_cached = slice;
+                    sliceWeightValid_cached = true;
+                } else {
+                    for(size_t ws = 0; ws < reco_sliceID_weights->size(); ++ws){
+                        if(reco_sliceID_weights->at(ws) == reco_sliceID->at(slice)){
+                            wSliceIdx_cached = ws;
+                            sliceWeightValid_cached = true;
+                            break;
+                        }
+                    }
+
+                    if(sliceWeightValid_cached){
+                        std::cerr << "WARNING: entry " << e << " slice " << slice << " (ID=" << reco_sliceID->at(slice) << ") found at mismatched index " << wSliceIdx_cached << " in NuEWeights — order mismatch!" << std::endl;
+                    } else {
+                        std::cerr << "WARNING: entry " << e << " slice " << slice << " (ID=" << reco_sliceID->at(slice) << ") has no match in NuEWeights — using weight=1.0" << std::endl;
                     }
                 }
 
@@ -1708,7 +1638,12 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                 for(int p = 0; p < NPARAMS_GENIE; p++){
                     int N = genieParams[p].nUniv;
                     for(int u = 0; u < N; u++){
-                        double w = weight * sliceUnivWeights_genie[p][u];
+                        double w;
+                        if(sliceCategoryPlottingMacro != 0){
+                            w = weight * sliceUnivWeights_genie[p][u];
+                        } else {
+                            w = weight; // cosmic slice -> POT weight only, no GENIE systematic weight
+                        }
                         if(isSigSlice) univSig_perCutParam_genie[p][cutIdx][u] += w;
                         else univBack_perCutParam_genie[p][cutIdx][u] += w;
                     }
@@ -2359,7 +2294,4 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     fOut->Close();
     delete fOut;
 
-    for(int f = 0; f < NWEIGHTFILES; ++f){
-        if(fNuEWeightsVec[f]) fNuEWeightsVec[f]->Close();
-    }
 }
