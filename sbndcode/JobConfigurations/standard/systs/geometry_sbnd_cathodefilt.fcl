@@ -17,23 +17,14 @@
 # included for completeness so both variants stay consistent.
 #
 
+### Created a GDML without a cathode since we model it with the cathode filter
 services.Geometry.GDML:       "sbnd_v02_04_nocathode.gdml"
 services.Geometry.ROOT:       "sbnd_v02_04_nocathode.gdml"
 services.AuxDetGeometry.GDML: "sbnd_v02_04_nocathode.gdml"
 services.AuxDetGeometry.ROOT: "sbnd_v02_04_nocathode.gdml"
 services.LArG4Detector.gdmlFileName_:  "sbnd_v02_04_nocathode_nowires.gdml"
-services.DetectorPropertiesService.DriftVelFudgeFactor: 1.00767754319 #1.575/1.563
+### Updates the drift velocity to the data measured value of 0.15532 cm/us
+services.DetectorPropertiesService.DriftVelFudgeFactor: 0.99373000639 #1.5532/1.563
 
-####Old Det Geom   services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_FCfault_v4b.root"
-
-###Updated Det Geom, uses rough non-planar cathode, v05 
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R00.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R01.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R02.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R03.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R04.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R05.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R06.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R07.root"
-#services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R08.root"
-services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_FCfault_WT2_R30_short.root"
+### Updated Det Geom, uses non-planar cathode v8 and emperical displacement maps v4 
+services.SpaceCharge.InputFilename: "SCEoffsets/SBND_DataMap_v4.root"
