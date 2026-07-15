@@ -1,3 +1,10 @@
+include(CetTest)
+cet_transitive_paths(FHICL_DIR BINARY IN_TREE)
+cet_test_env_prepend(FHICL_FILE_PATH "." ${TRANSITIVE_PATHS_WITH_FHICL_DIR} ${CMAKE_CURRENT_LIST_DIR})
+cet_transitive_paths(LIBRARY_DIR BINARY IN_TREE)
+cet_test_env_prepend(CET_PLUGIN_PATH ${TRANSITIVE_PATHS_WITH_LIBRARY_DIR})
+cet_transitive_paths(GDML_DIR BINARY IN_TREE)
+
 # for PREBUILT tests, the test name is the executable name, and no argument is allowed
 cet_test(fast_simulation_reconstruction_test_electrons.sh PREBUILT)
 cet_test(fast_simulation_reconstruction_test_muons.sh PREBUILT)
