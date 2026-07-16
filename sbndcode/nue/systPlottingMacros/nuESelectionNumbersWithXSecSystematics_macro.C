@@ -132,8 +132,12 @@ struct GenieParam_struct{
     std::string shortName;
     int nUniv;
     bool isMultisim;
+    int origNUniv;   // Raw universe count before any expansion (6, 1, 100, or 2/4/7/10)
+    bool skipForNow; // True for the 5 knobs not understood yet
 };
 
+// Collects every entry whose name isn't a directory and ends in .root into a vector of strings
+// Then alphabetically sorted with std::sort
 std::vector<std::string> listRootFiles(const std::string& dirPath){
     std::vector<std::string> fileList;
     TSystemDirectory dir("inputDir", dirPath.c_str());
@@ -153,12 +157,11 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 }
 
 void nuESelectionNumbersWithXSecSystematics_macro(){
-
     // Set true to make all plots after each cut has been applied
     bool makePerCutPlots_GENIE = false;
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers9July_GENIE_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers16July_GENIE_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table_GENIE.txt";
 
     int clearCosmicCut = 1;
@@ -214,7 +217,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     }
     clearTableFile.close();
 
-    std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
+    std::string inputDir = "/exp/sbnd/data/users/coackley/analysisFiles_14Jul/";
     std::vector<std::string> inputFiles = listRootFiles(inputDir);
     std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
     if(inputFiles.empty()){
@@ -222,6 +225,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return;
     }
 
+    // TChain files together
     TChain *tree = new TChain("ana/NuE");
     TChain *subRunTree = new TChain("ana/SubRun");
     TChain *weightsTree = new TChain("ana/NuEWeights");
@@ -232,6 +236,8 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         subRunTree->Add(f.c_str());
     }
 
+    // If the number of entries in NuE tree != number of entries in NuEWeights tree then abort code
+    // The 2 TTrees should have identical number of entries as there should be 1:1 mapping
     if(tree->GetEntries() != weightsTree->GetEntries()){
         std::cerr << "FATAL: NuE has " << tree->GetEntries() << " entries but NuEWeights has " << weightsTree->GetEntries() << " entries — they must be 1:1" << std::endl;
         return;
@@ -239,6 +245,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
+    // Creates an output root file to store the histograms created
     TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_9July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){ std::cerr << "Error creating output ROOT file" << std::endl; return; }
 
@@ -326,6 +333,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     std::cout << "Weights DLNu+E: BNB = " << weights.BNBNuE << ", Signal = " << weights.signalNuE << ", Intime Cosmics = " << weights.cosmicsNuE << ", nue = " << weights.NuENuE << std::endl;
 
+    // NuE TTree (contains reco info)
     UInt_t eventID, runID, subRunID;
     int nuEScatter;
     double nuEScatterTrueVX, nuEScatterTrueVY, nuEScatterTrueVZ;
@@ -477,7 +485,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     Long64_t numEntries = tree->GetEntries();
 
-    // NuEWeights Tree branch variable
+    // NuEWeights TTree (contains syst weights)
     double nuEScatterTrueVX_weights, nuEScatterTrueVY_weights, nuEScatterTrueVZ_weights;
 
     std::vector<float> *nuEScatter_MCTruthGENIE_weight_NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi = nullptr;
@@ -952,6 +960,8 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA3CCQE);
     weightsTree->SetBranchAddress("reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE", &reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE);
 
+    // Creates a vector of all the GENIE xsec parameters
+    // Consists of branch name, short printable name, number of universes and whether it is multisim
     std::vector<GenieParam_struct> genieParams = {
         // NOvA-style non-resonant pion normalization (23 params)
         {"NOvAStyleNonResPionNorm_SBN_v1_NR_nu_n_CC_2Pi","NonResPionNorm_NR_nu_n_CC_2Pi",6,false},
@@ -994,7 +1004,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         {"MINERvAE2p2h_SBN_v1_E2p2h_B_nu","MINERvAE2p2h_E2p2h_B_nu",6,false},
         {"MINERvAE2p2h_SBN_v1_E2p2h_B_nubar","MINERvAE2p2h_E2p2h_B_nubar",6,false},
 
-        // GENIEReWeight multisim (30 params, N=100 -> genuine multisim / RMS treatment)
+        // GENIEReWeight multisim (30 params, nUniv=100)
         {"GENIEReWeight_SBN_v1_multisim_CCRESVariationResponse","multisim_CCRESVariationResponse",100,true},
         {"GENIEReWeight_SBN_v1_multisim_COHVariationResponse","multisim_COHVariationResponse",100,true},
         {"GENIEReWeight_SBN_v1_multisim_CoulombCCQE","multisim_CoulombCCQE",100,true},
@@ -1026,7 +1036,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         {"GENIEReWeight_SBN_v1_multisim_RPA_CCQE","multisim_RPA_CCQE",100,true},
         {"GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse","multisim_ZExpAVariationResponse",100,true},
 
-        // GENIEReWeight multisigma (52 params -> envelope treatment)
+        // GENIEReWeight multisigma (52 parameters)
         {"GENIEReWeight_SBN_v1_multisigma_AhtBY","multisigma_AhtBY",6,false},
         {"GENIEReWeight_SBN_v1_multisigma_BhtBY","multisigma_BhtBY",6,false},
         {"GENIEReWeight_SBN_v1_multisigma_CV1uBY","multisigma_CV1uBY",6,false},
@@ -1081,8 +1091,75 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         {"GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE","multisigma_ZExpA4CCQE",6,false},
     };
 
-    const int NPARAMS_GENIE = (int)genieParams.size(); // should be 115
+    const int NPARAMS_GENIE = (int)genieParams.size();
     std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << " out of 115" << std::endl;
+
+    for(auto& gp : genieParams){
+        gp.origNUniv = gp.nUniv;
+        gp.skipForNow = false;
+
+        if(gp.isMultisim) continue; // Genuine multisim, leave untouched
+
+        if(gp.nUniv == 6 || gp.nUniv == 1){
+            gp.nUniv = 100;
+            gp.isMultisim = true; // Uses the same RMS treatment as genuine multisim
+        } else {
+            gp.skipForNow = true; // 2, 4, 7, 10-universe knobs, ignore for now
+        }
+    }
+
+    int nActiveGenieParams = 0;
+    for(const auto& gp : genieParams) if(!gp.skipForNow) nActiveGenieParams++;
+    std::cout << "Active GENIE parameters after skipping not-yet-understood knobs: " << nActiveGenieParams << " / " << NPARAMS_GENIE << std::endl;
+
+    std::map<std::string, std::vector<float>> sigmaUMap;
+    {
+        TFile* sigmaUFile = TFile::Open("/exp/sbnd/data/users/coackley/sigma_u_universes.root", "READ");
+        if(!sigmaUFile || sigmaUFile->IsZombie()){
+            std::cerr << "FATAL: could not open sigma_u_universes.root" << std::endl;
+            return;
+        }
+        TTree* sigmaUTree = (TTree*)sigmaUFile->Get("sigma_u_tree");
+        if(!sigmaUTree){
+            std::cerr << "FATAL: sigma_u_tree not found in sigma_u_universes.root" << std::endl;
+            return;
+        }
+
+        std::vector<std::string> knobsNeedingSigmaU;
+        for(const auto& gp : genieParams){
+            if(!gp.skipForNow && (gp.origNUniv == 6 || gp.origNUniv == 1)){
+                knobsNeedingSigmaU.push_back(gp.mapKey);
+            }
+        }
+
+        // sigma_u_tree has one row per universe and one plain float branch per knob
+        // (named "<knobname>_sigmau")
+        std::map<std::string, float> sigmaUBranchVal;
+        for(const auto& key : knobsNeedingSigmaU){
+            sigmaUBranchVal[key] = 0.0f;
+            sigmaUTree->SetBranchAddress((key + "_sigmau").c_str(), &sigmaUBranchVal[key]);
+            sigmaUMap[key].assign(100, 0.0f);
+        }
+
+        Long64_t nSigmaURows = sigmaUTree->GetEntries();
+        for(Long64_t row = 0; row < nSigmaURows && row < 100; ++row){
+            sigmaUTree->GetEntry(row);
+            for(const auto& key : knobsNeedingSigmaU){
+                sigmaUMap[key][row] = sigmaUBranchVal[key];
+            }
+        }
+
+        sigmaUFile->Close();
+        std::cout << "Loaded sigma_u draws for " << knobsNeedingSigmaU.size() << " knobs from sigma_u_universes.root" << std::endl;
+    }
+
+    // wRaw = the +1sigma weight (multisigma, rawN==6) or morph weight (unisim, rawN==1)
+    auto expandToPseudoMultisim = [&](double wRaw, int rawN, double sigmaU) -> double {
+        double wu;
+        if(rawN == 6) wu = 1.0 + (wRaw - 1.0) * sigmaU;                  // multisigma
+        else wu = 1.0 + (wRaw - 1.0) * 2.0 * std::fabs(sigmaU); // unisim/morph
+        return std::clamp(wu, 0.0, 10.0);
+    };
 
     // Order must exactly match genieParams above, index-for-index
     std::vector<std::vector<float>*> nuEScatter_GENIEWeightVecs = {
@@ -1321,50 +1398,96 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         reco_sliceMCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_ZExpA4CCQE
     };
 
+    // Both nuEScatter and reco_slice branches should have 115 GENIE xsec parameters
     if((int)nuEScatter_GENIEWeightVecs.size() != NPARAMS_GENIE || (int)reco_slice_GENIEWeightVecs.size() != NPARAMS_GENIE){
         std::cerr << "ERROR: GENIE weight-vector array size doesn't match genieParams (" << NPARAMS_GENIE << ")" << std::endl;
         return;
     }
 
+    // Number of cuts and the cut order
     const int NCUTS = 11;
     std::vector<std::string> cutNames_syst = {"beforeCuts", "clearCosmic", "numPFPs0", "numRecoNeut", "crumbs", "FV", "primaryPFP", "razzled11", "razzled211", "ETheta2", "dEdx"};
 
+    // Vectors of doubles corresponding to the number of signal and background slices remaining after each cut in nominal univ
     std::vector<double> nomSig_perCut(NCUTS, 0.0);
     std::vector<double> nomBack_perCut(NCUTS, 0.0);
 
+    // Vector containing count of true nu+e elastic scattering events from genie xsec parameter p per universe
     std::vector<std::vector<double>> count_genie(NPARAMS_GENIE); // count_genie[p][u]: true nu+e count (before cuts) per universe
+
+    // Vectors containing counts of number of signal and background slices after each cut from each genie xsec parameter p per universe
     std::vector<std::vector<std::vector<double>>> univSig_perCutParam_genie(NPARAMS_GENIE);
     std::vector<std::vector<std::vector<double>>> univBack_perCutParam_genie(NPARAMS_GENIE);
 
+    // Loop to fill all entries with 0
     for(int p = 0; p < NPARAMS_GENIE; p++){
         count_genie[p].assign(genieParams[p].nUniv, 0.0);
         univSig_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
         univBack_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
     }
 
+    // True nu+e count before cuts in nominal
     double actualSignalCount = 0.0;
 
+    // Counters for bug catching (tracks how often a GENIE weight lookup falls back to 1 due to missing info)
     long long genieNuEWeightFallbacks = 0, genieNuEWeightCalls = 0;
     long long genieSliceWeightFallbacks = 0, genieSliceWeightCalls = 0;
 
+    // Helper function to get the weight from nuEScatter given a vector and a universe
     auto getGenieNuEWeight = [&](std::vector<float>* vec, int u, int expectedN) -> double {
         genieNuEWeightCalls++;
-        if(!vec || (int)vec->size() != expectedN){ genieNuEWeightFallbacks++; return 1.0; }
-        if(u < 0 || u >= expectedN){ genieNuEWeightFallbacks++; return 1.0; }
+        // Checks that the vector is valid and expected length (had correct number of universes)
+        // If vector isn't valid then add to fallback counter and return weight of 1
+        if(!vec || (int)vec->size() != expectedN){
+            genieNuEWeightFallbacks++;
+            return 1.0;
+        }
+       
+        // Checks whether the vector has the same number of entries as the parameter has universes 
+        // If vector doesn't have num entries == nUniv then add to fallback counter and return weight of 1
+        if(u < 0 || u >= expectedN){
+            genieNuEWeightFallbacks++;
+            return 1.0;
+        }
+
+        // If it passes check then return weight in universe u
         return vec->at(u);
     };
 
+    // Does the same as above but for a slice instead of a nuEScatter
     auto getGenieSliceWeight = [&](std::vector<std::vector<float>>* vec, size_t sliceIdx, int u, bool wFound, int expectedN) -> double {
         genieSliceWeightCalls++;
-        if(!wFound || !vec || sliceIdx >= vec->size()){ genieSliceWeightFallbacks++; return 1.0; }
-        if((int)vec->at(sliceIdx).size() != expectedN){ genieSliceWeightFallbacks++; return 1.0; }
-        if(u < 0 || u >= expectedN){ genieSliceWeightFallbacks++; return 1.0; }
+        // Checks that the vector is valid and the sliceID we're asking for is within the size of the vector
+        // Returns a weight of 1 if it isn't
+        if(!wFound || !vec || sliceIdx >= vec->size()){
+            genieSliceWeightFallbacks++;
+            return 1.0;
+        }
+       
+        // Checks that the number of universes for this parameter for this slice is the same as expected (nUniv) 
+        // If it isn't then return a weight of 1
+        if((int)vec->at(sliceIdx).size() != expectedN){
+            genieSliceWeightFallbacks++;
+            return 1.0;
+        }
+
+        // Checks that the universe we're asking for is within the size of the vector
+        // If it isn't then return a weight of 1
+        if(u < 0 || u >= expectedN){
+            genieSliceWeightFallbacks++;
+            return 1.0;
+        }
+
+        // Return the weight for slice in universe u
         return vec->at(sliceIdx).at(u);
     };
 
-    // Multisim: RMS about nominal, 1/N 
+    // Calculates the RMS about the nominal value for multisim parameters
+    // Uses 1/N, not 1/(N-1)
+    // Takes a vector of values (one value for each universe), and the nominal value as input
     auto calcSystMultisim = [&](const std::vector<double>& values, double nominal) -> double {
         int N = (int)values.size();
+        // Must have at least 2 values for an RMS to be calculated
         if(N < 2) return 0.0;
         double sumSq = 0.0;
         for(double x : values) sumSq += (x - nominal)*(x - nominal);
@@ -1416,6 +1539,22 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         return calcMeanFromValues(values);
     };
 
+    // TEMPORARY: check +-1sigma ordering convention (delete once confirmed)
+    {
+        double sumU0 = 0, sumU1 = 0; int nEv = 0;
+        for(Long64_t e = 0; e < std::min(numEntries, (Long64_t)5000); ++e){
+            tree->GetEntry(e); weightsTree->GetEntry(e);
+            if(nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC &&
+               nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC->size() == 6){
+                sumU0 += nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC->at(0);
+                sumU1 += nuEScatter_MCTruthGENIE_weight_GENIEReWeight_SBN_v1_multisigma_NormCCMEC->at(1);
+                nEv++;
+            }
+        }
+        std::cout << "[SIGMA ORDERING CHECK] avg vec[0] = " << sumU0/nEv
+                  << ", avg vec[1] = " << sumU1/nEv << " (n=" << nEv << ")" << std::endl;
+    }
+
     // Loop through events
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
@@ -1438,7 +1577,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
             }
         }
 
-        // True nu+e elastic scatter: fill count_genie[p][u]
+        // True nu+e elastic scatter, fill count_genie[p][u]
         if(nuEScatter == 1 && signal == 1 && DLCurrent == 5){
             if(recoilElectron.energy > 150){
                 bool passesFV = (FVCut == 0 && (((nuEScatterTrueVX > xMin) && (nuEScatterTrueVX < xMax)) && ((nuEScatterTrueVY > yMin) && (nuEScatterTrueVY < yMax)) && ((nuEScatterTrueVZ > zMin) && (nuEScatterTrueVZ < zMax)))) || (FVCut == 1 && (((nuEScatterTrueVX > FVCut_xLow) && (nuEScatterTrueVX < FVCut_xHigh) && (std::abs(nuEScatterTrueVX) > FVCut_xCentre)) && ((nuEScatterTrueVY > FVCut_yLow) && (nuEScatterTrueVY < FVCut_yHigh)) && ((nuEScatterTrueVZ > FVCut_zLow) && (nuEScatterTrueVZ < FVCut_zHigh))));
@@ -1446,17 +1585,31 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                     actualSignalCount += weights.signalNuE;
 
                     for(int p = 0; p < NPARAMS_GENIE; p++){
-                        int N = genieParams[p].nUniv;
-                        auto* vec = nuEScatter_GENIEWeightVecs[p];
-                        bool nuEWeightsValid = vec && ((int)vec->size() == N);
+                        if(genieParams[p].skipForNow) continue;
 
-                        if(nuEWeightsValid){
+                        auto* vec = nuEScatter_GENIEWeightVecs[p];
+
+                        if(genieParams[p].origNUniv == 6 || genieParams[p].origNUniv == 1){
+                            // Multisigma / unisim, expand raw weight into 100 pseudo-universes
+                            int rawN = genieParams[p].origNUniv;
+                            genieNuEWeightCalls++;
+                            bool nuEWeightsValid = vec && ((int)vec->size() == rawN);
+                            if(!nuEWeightsValid){ genieNuEWeightFallbacks++; continue; }
+
+                            double wRaw = vec->at(0);
+                            const std::vector<float>& sigmaU = sigmaUMap[genieParams[p].mapKey];
+
+                            for(int u = 0; u < 100; u++){
+                                double wu = expandToPseudoMultisim(wRaw, rawN, sigmaU[u]);
+                                count_genie[p][u] += weights.signalNuE * wu;
+                            }
+                        } else {
+                            // Genuine multisim knob (100 raw universes), unchanged logic
+                            int N = genieParams[p].nUniv;
                             for(int u = 0; u < N; u++){
-                                count_genie[p][u] += weights.signalNuE * vec->at(u);
+                                count_genie[p][u] += weights.signalNuE * getGenieNuEWeight(vec, u, N);
                             }
                         }
-                        // else: this event contributes nothing to count_genie[p] for any universe,
-                        // matching the flux macro's behaviour of skipping rather than falling back to weight=1
                     }
                 }
             }
@@ -1642,11 +1795,34 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                 }
 
                 for(int p = 0; p < NPARAMS_GENIE; p++){
-                    int N = genieParams[p].nUniv;
-                    for(int u = 0; u < N; u++){
-                        sliceUnivWeights_genie[p][u] = getGenieSliceWeight(reco_slice_GENIEWeightVecs[p], wSliceIdx_cached, u, sliceWeightValid_cached, N);
+                    if(genieParams[p].skipForNow) continue;
+
+                    auto* vec2D = reco_slice_GENIEWeightVecs[p];
+
+                    if(genieParams[p].origNUniv == 6 || genieParams[p].origNUniv == 1){
+                        // Multisigma / unisim, expand raw slice weight into 100 pseudo-universes
+                        int rawN = genieParams[p].origNUniv;
+                        genieSliceWeightCalls++;
+                        bool valid = sliceWeightValid_cached && vec2D
+                                     && wSliceIdx_cached < vec2D->size()
+                                     && (int)vec2D->at(wSliceIdx_cached).size() == rawN;
+                        if(!valid){ genieSliceWeightFallbacks++; continue; } // leaves weights at default 1.0
+
+                        double wRaw = vec2D->at(wSliceIdx_cached).at(0);
+                        const std::vector<float>& sigmaU = sigmaUMap[genieParams[p].mapKey];
+
+                        for(int u = 0; u < 100; u++){
+                            sliceUnivWeights_genie[p][u] = expandToPseudoMultisim(wRaw, rawN, sigmaU[u]);
+                        }
+                    } else {
+                        // Genuine multisim knob, unchanged
+                        int N = genieParams[p].nUniv;
+                        for(int u = 0; u < N; u++){
+                            sliceUnivWeights_genie[p][u] = getGenieSliceWeight(vec2D, wSliceIdx_cached, u, sliceWeightValid_cached, N);
+                        }
                     }
                 }
+
             }
 
             auto fillSliceSystCounters_genie = [&](int cutIdx){
@@ -1956,6 +2132,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::vector<double> systValues_beforeCuts(NPARAMS_GENIE, 0.0);
 
     for(int p = 0; p < NPARAMS_GENIE; p++){
+        if(genieParams[p].skipForNow) continue;
         double stddev = calcSystGeneric(count_genie[p], actualSignalCount, genieParams[p].isMultisim);
         double mean   = calcMeanForSyst(count_genie[p], genieParams[p].isMultisim);
         double shift  = mean - actualSignalCount;
@@ -1999,7 +2176,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     double totalSyst_beforeCuts = std::sqrt(totalSystSq_beforeCuts);
 
     std::cout << "--------------------------------------------" << std::endl;
-    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", "TOTAL GENIE (quadrature, 115 params)", totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
+    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
     std::cout << Form("%-45s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst_beforeCuts) << std::endl;
 
     double initialSig = nomSig_perCut[0];
@@ -2026,6 +2203,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
         std::vector<double> systValues(NPARAMS_GENIE, 0.0);
         for(int p = 0; p < NPARAMS_GENIE; p++){
+            if(genieParams[p].skipForNow) continue;
             std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
             double stddev = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
             double mean   = calcMeanForSyst(vals, genieParams[p].isMultisim);
@@ -2038,13 +2216,14 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         double totalSyst = std::sqrt(totalSystSq);
 
         std::cout << "--------------------------------------------" << std::endl;
-        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", "TOTAL GENIE (quadrature, 115 params)", totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
         std::cout << Form("%-45s  %.4f%s +/- %.4f%s (syst)", blockName.c_str(), nomVal*scale, unitSuffix.c_str(), totalSyst*scale, unitSuffix.c_str()) << std::endl;
     };
 
     auto getQuadratureSystAllGenie = [&](int cutIdx, std::function<double(double s, double b, double ts, double ss)> fn, double nomVal) -> double {
         double totalSq = 0.0;
         for(int p = 0; p < NPARAMS_GENIE; p++){
+            if(genieParams[p].skipForNow) continue;
             std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
             double s = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
             totalSq += s*s;
@@ -2146,13 +2325,17 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
     if(makePerCutPlots_GENIE){
         // ON: all 11 cuts -> 115 * 7 * 11 = 8855 plots
-        for(int p = 0; p < NPARAMS_GENIE; p++)
-            for(int cut = 0; cut < NCUTS; cut++)
+        for(int p = 0; p < NPARAMS_GENIE; p++){
+            if(genieParams[p].skipForNow) continue;
+            for(int cut = 0; cut < NCUTS; cut++)i{
                 plotSevenQuantities_genie(p, cut);
+            }
+        }
     } else {
         // OFF: before cuts + after all cuts -> 115 * 7 * 2 = 1610 plots
         int finalCut = NCUTS - 1; // index 10 = "dEdx"
         for(int p = 0; p < NPARAMS_GENIE; p++){
+            if(genieParams[p].skipForNow) continue;
             plotSevenQuantities_genie(p, 0);        // before cuts
             plotSevenQuantities_genie(p, finalCut); // all cuts applied
         }
@@ -2172,7 +2355,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
             return oss.str();
         };
 
-        out_tablefile << "=========== DL Nu+E Vertexing: GENIE Systematics (quadrature over 115 params) ===========" << std::endl;
+        out_tablefile << "=========== DL Nu+E Vertexing: GENIE Systematics (quadrature over " << nActiveGenieParams << " params) ===========" << std::endl;
         out_tablefile << "\\begin{table}[h!]" << std::endl;
         out_tablefile << "\\centering" << std::endl;
         out_tablefile << "\\resizebox{\\textwidth}{!}{%" << std::endl;
