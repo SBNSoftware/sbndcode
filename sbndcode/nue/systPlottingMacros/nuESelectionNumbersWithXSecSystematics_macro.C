@@ -2327,7 +2327,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         // ON: all 11 cuts -> 115 * 7 * 11 = 8855 plots
         for(int p = 0; p < NPARAMS_GENIE; p++){
             if(genieParams[p].skipForNow) continue;
-            for(int cut = 0; cut < NCUTS; cut++)i{
+            for(int cut = 0; cut < NCUTS; cut++){
                 plotSevenQuantities_genie(p, cut);
             }
         }
