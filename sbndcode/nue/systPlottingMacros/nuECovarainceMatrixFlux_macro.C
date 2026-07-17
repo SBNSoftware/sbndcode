@@ -1,4 +1,4 @@
-include <vector>
+#include <vector>
 #include <map>
 #include <tuple>
 #include <utility>
@@ -116,7 +116,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 void nuECovarainceMatrixFlux_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers9July_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsFluxCov16July_" + cutsApplied + "/";
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
@@ -159,7 +159,7 @@ void nuECovarainceMatrixFlux_macro(){
         gSystem->mkdir(base_path.c_str(), kTRUE);
     }
 
-    std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
+    std::string inputDir = "/exp/sbnd/data/users/coackley/analysisFiles_14Jul/";
     std::vector<std::string> inputFiles = listRootFiles(inputDir);
     std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
     if(inputFiles.empty()){
@@ -184,7 +184,7 @@ void nuECovarainceMatrixFlux_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrix_9July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixFlux_16July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
