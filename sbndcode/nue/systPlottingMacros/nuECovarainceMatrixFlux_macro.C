@@ -116,7 +116,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 void nuECovarainceMatrixFlux_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsFluxCov16July_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsFluxCov18July_" + cutsApplied + "/";
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
@@ -184,7 +184,7 @@ void nuECovarainceMatrixFlux_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixFlux_16July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixFlux_18July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
@@ -426,9 +426,61 @@ void nuECovarainceMatrixFlux_macro(){
         return vec->at(sliceIdx).at(u);
     };
 
-    const int NANGLEBINS = 18;
+// ================= ADDITIONAL: cut-stage x parameter covariance study =================
+
+    const int NSTAGES = 10; // 0 = no cuts, 1..9 = cumulative cuts applied in order below
+    const std::vector<std::string> stageNames = {
+        "s0_noCuts","s1_numPFPs0","s2_numRecoNeutrinos","s3_CRUMBS","s4_FV",
+        "s5_primaryPFP","s6_razzledPDG11","s7_razzledPDG211","s8_ETheta2","s9_dEdx"
+    };
+
+    const int NPARAMS = 14; // 0 = all 13 combined, 1-13 = individual flux params
+    const std::vector<std::string> paramNames = {
+        "combined","horncurrent","expskin","pioninexsec","pionqexsec","piontotxsec",
+        "nucleoninexsec","nucleonqexsec","nucleontotxsec","kplus","kmin","kzero",
+        "piplus","piminus"
+    };
+    // order must match paramNames[1..13] above
+    std::vector<std::vector<std::vector<float>>*> paramPtrs = {
+        reco_sliceMCTruthFlux_weight_horncurrent, reco_sliceMCTruthFlux_weight_expskin,
+        reco_sliceMCTruthFlux_weight_pioninexsec, reco_sliceMCTruthFlux_weight_pionqexsec,
+        reco_sliceMCTruthFlux_weight_piontotxsec, reco_sliceMCTruthFlux_weight_nucleoninexsec,
+        reco_sliceMCTruthFlux_weight_nucleonqexsec, reco_sliceMCTruthFlux_weight_nucleontotxsec,
+        reco_sliceMCTruthFlux_weight_kplus, reco_sliceMCTruthFlux_weight_kmin,
+        reco_sliceMCTruthFlux_weight_kzero, reco_sliceMCTruthFlux_weight_piplus,
+        reco_sliceMCTruthFlux_weight_piminus
+    };
+
+    const int NCATS = 3; // 0 = all, 1 = signal, 2 = background
+    const std::vector<std::string> catNames = {"all","signal","background"};
+
+    const int NUNIV_STUDY  = 1000;
+    const int NBINS_STUDY  = 15;
+    double angleLow_study  = 0.0;
+    double angleHigh_study = 20.0;
+
+    std::vector<double> CVsum((size_t)NSTAGES*NCATS*NPARAMS*NBINS_STUDY, 0.0);
+    std::vector<double> UNIVsum((size_t)NSTAGES*NCATS*NPARAMS*NUNIV_STUDY*NBINS_STUDY, 0.0);
+
+    auto CVidx = [&](int stage,int cat,int param,int bin)->size_t{
+        return (size_t)(((stage*NCATS + cat)*NPARAMS + param)*NBINS_STUDY + bin);
+    };
+    auto UNIVidx = [&](int stage,int cat,int param,int u,int bin)->size_t{
+        return ((((size_t)stage*NCATS + cat)*NPARAMS + param)*NUNIV_STUDY + u)*NBINS_STUDY + bin;
+    };
+    auto angleToBin_study = [&](double angleDeg)->int{
+        if(angleDeg < angleLow_study || angleDeg >= angleHigh_study) return -1;
+        int b = (int)((angleDeg - angleLow_study)/(angleHigh_study - angleLow_study)*NBINS_STUDY);
+        if(b < 0) b = 0;
+        if(b >= NBINS_STUDY) b = NBINS_STUDY - 1;
+        return b;
+    };
+
+    double paramUnivWeight_study[13][1000];
+
+    const int NANGLEBINS = 60;
     double angleBinLow  = 0.0;
-    double angleBinHigh = 90.0;
+    double angleBinHigh = 30.0;
 
     TH1D* h_angle_CV = new TH1D("h_angle_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
     TH1D* h_angle_signal_CV = new TH1D("h_angle_signal_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
@@ -595,6 +647,64 @@ void nuECovarainceMatrixFlux_macro(){
                 }
             }
 
+            if(DLCurrent == 5 && pfp10cm_PCAAngle != -999999){
+
+                int binStudy = angleToBin_study(pfp10cm_PCAAngle*TMath::RadToDeg());
+
+                if(binStudy != -1){
+
+                    bool cutPass[9];
+                    cutPass[0] = !(numPFPs0Cut == 1 && numPFPsSlice == 0);
+                    cutPass[1] = !(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0);
+                    cutPass[2] = !(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low || reco_sliceScore->at(slice) > crumbsScoreCut_high));
+                    cutPass[3] = !(FVCut == 1 && !(recoVX < FVCut_xHigh && recoVX > FVCut_xLow && std::abs(recoVX) > FVCut_xCentre && recoVY < FVCut_yHigh && recoVY > FVCut_yLow && recoVZ > FVCut_zLow && recoVZ < FVCut_zHigh));
+                    cutPass[4] = !(primaryPFPCut == 1 && numPrimaryPFPs10Slice != primaryPFPCutValue);
+                    cutPass[5] = !(razzledPDG11Cut == 1 && ((highestEnergyPFP.razzledPDG11 > razzled11High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG11 < razzled11Low_highestEnergyPFP)));
+                    cutPass[6] = !(razzledPDG211Cut == 1 && ((highestEnergyPFP.razzledPDG211 > razzled211High_highestEnergyPFP) || (highestEnergyPFP.razzledPDG211 < razzled211Low_highestEnergyPFP)));
+                    cutPass[7] = !(ETheta2Cut == 1 && ((highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) > ETheta2High_highestEnergyPFP || (highestEnergyPFP.energy * pfp10cm_PCAAngle * pfp10cm_PCAAngle) < ETheta2Low_highestEnergyPFP));
+                    cutPass[8] = !(dEdxCut == 1 && (highestEnergyPFP.bestPlanedEdx > dEdxHigh_highestEnergyPFP || highestEnergyPFP.bestPlanedEdx < dEdxLow_highestEnergyPFP));
+
+                    int stageReached = 0;
+                    for(int c = 0; c < 9; c++){
+                        if(cutPass[c]) stageReached = c+1;
+                        else break;
+                    }
+
+                    bool isSignal = (sliceCategoryPlottingMacro == 1 && signal == 1);
+                    bool isBackground = ((sliceCategoryPlottingMacro == 2 && signal == 1) ||
+                                          (sliceCategoryPlottingMacro == 0 && signal != 4) ||
+                                          sliceCategoryPlottingMacro == 3 || sliceCategoryPlottingMacro == 4 ||
+                                          sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6);
+
+                    for(int pi = 0; pi < 13; pi++){
+                        for(int u = 0; u < NUNIV_STUDY; u++){
+                            paramUnivWeight_study[pi][u] = getSliceWeight(paramPtrs[pi], wSliceIdx_cached, u, sliceWeightValid_cached);
+                        }
+                    }
+
+                    for(int s = 0; s <= stageReached; s++){
+                        for(int catIdx = 0; catIdx < NCATS; catIdx++){
+                            if(catIdx == 1 && !isSignal) continue;
+                            if(catIdx == 2 && !isBackground) continue;
+
+                            CVsum[CVidx(s,catIdx,0,binStudy)] += weight;
+                            for(int u = 0; u < NUNIV_STUDY; u++){
+                                UNIVsum[UNIVidx(s,catIdx,0,u,binStudy)] += weight * sliceUnivWeight_combined[u];
+                            }
+
+                            for(int pi = 0; pi < 13; pi++){
+                                CVsum[CVidx(s,catIdx,pi+1,binStudy)] += weight;
+                                for(int u = 0; u < NUNIV_STUDY; u++){
+                                    UNIVsum[UNIVidx(s,catIdx,pi+1,u,binStudy)] += weight * paramUnivWeight_study[pi][u];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(numPFPs0Cut == 1 && numPFPsSlice == 0) continue;
+
             if(numPFPs0Cut == 1 && numPFPsSlice == 0) continue;
             if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0) continue;
             if(CRUMBSCut == 1 && (reco_sliceScore->at(slice) < crumbsScoreCut_low || reco_sliceScore->at(slice) > crumbsScoreCut_high)) continue;
@@ -624,6 +734,69 @@ void nuECovarainceMatrixFlux_macro(){
     }
 
     std::cout << "slice weight fallback: " << sliceWeightFallbacks << "/" << sliceWeightCalls << " (" << (sliceWeightCalls? 100.0*sliceWeightFallbacks/sliceWeightCalls : 0.) << "%)" << std::endl;
+
+    std::cout << "Building " << NSTAGES*NCATS*NPARAMS << " cut-stage/parameter covariance matrices..." << std::endl;
+
+    fOut->cd();
+    TDirectory *dirStage = fOut->mkdir("covariance_angle_byCutStage");
+
+    for(int s = 0; s < NSTAGES; s++){
+        TDirectory *dS = dirStage->mkdir(stageNames[s].c_str());
+        for(int catIdx = 0; catIdx < NCATS; catIdx++){
+            TDirectory *dC = dS->mkdir(catNames[catIdx].c_str());
+            for(int p = 0; p < NPARAMS; p++){
+                TDirectory *dP = dC->mkdir(paramNames[p].c_str());
+                dP->cd();
+
+                std::vector<double> cv(NBINS_STUDY);
+                for(int b = 0; b < NBINS_STUDY; b++) cv[b] = CVsum[CVidx(s,catIdx,p,b)];
+
+                TMatrixDSym cov(NBINS_STUDY), corr(NBINS_STUDY);
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        double sum = 0.0;
+                        for(int u = 0; u < NUNIV_STUDY; u++){
+                            double di = UNIVsum[UNIVidx(s,catIdx,p,u,i)] - cv[i];
+                            double dj = UNIVsum[UNIVidx(s,catIdx,p,u,j)] - cv[j];
+                            sum += di*dj;
+                        }
+                        cov(i,j) = sum / NUNIV_STUDY;
+                    }
+                }
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        double denom = std::sqrt(cov(i,i)*cov(j,j));
+                        corr(i,j) = (denom > 0) ? cov(i,j)/denom : 0.0;
+                    }
+                }
+
+                std::string tag = stageNames[s] + "_" + catNames[catIdx] + "_" + paramNames[p];
+                TH1D *hCV   = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCov  = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCorr = new TH2D(("h_corr_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+
+                for(int b = 0; b < NBINS_STUDY; b++) hCV->SetBinContent(b+1, cv[b]);
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        hCov->SetBinContent(i+1, j+1, cov(i,j));
+                        hCorr->SetBinContent(i+1, j+1, corr(i,j));
+                    }
+                }
+
+                hCV->Write();
+                hCov->Write();
+                hCorr->Write();
+
+                delete hCV;
+                delete hCov;
+                delete hCorr;
+            }
+        }
+    }
+    fOut->cd();
+    std::cout << "Done building cut-stage/parameter matrices." << std::endl;
+
+    TMatrixDSym covMatrix_angle(NANGLEBINS), corrMatrix_angle(NANGLEBINS);
 
     TMatrixDSym covMatrix_angle(NANGLEBINS), corrMatrix_angle(NANGLEBINS);
     TMatrixDSym covMatrix_angle_signal(NANGLEBINS), corrMatrix_angle_signal(NANGLEBINS);
