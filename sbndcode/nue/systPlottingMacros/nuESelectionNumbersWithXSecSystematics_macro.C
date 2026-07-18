@@ -246,7 +246,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
     // Creates an output root file to store the histograms created
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_9July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_16July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){ std::cerr << "Error creating output ROOT file" << std::endl; return; }
 
     beforeEventCount_struct eventsBeforeCuts_DLNuE;
@@ -2176,7 +2176,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     double totalSyst_beforeCuts = std::sqrt(totalSystSq_beforeCuts);
 
     std::cout << "--------------------------------------------" << std::endl;
-    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
+    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", "TOTAL GENIE (quadrature, 115)", totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
     std::cout << Form("%-45s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst_beforeCuts) << std::endl;
 
     double initialSig = nomSig_perCut[0];
@@ -2216,7 +2216,8 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         double totalSyst = std::sqrt(totalSystSq);
 
         std::cout << "--------------------------------------------" << std::endl;
-        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        //std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
+        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", "TOTAL GENIE (quadrature, 115)", totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
         std::cout << Form("%-45s  %.4f%s +/- %.4f%s (syst)", blockName.c_str(), nomVal*scale, unitSuffix.c_str(), totalSyst*scale, unitSuffix.c_str()) << std::endl;
     };
 
