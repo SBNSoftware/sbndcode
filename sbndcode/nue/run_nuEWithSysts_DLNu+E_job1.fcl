@@ -1,0 +1,30 @@
+#include "nuEWithSystsAnalysisConfigDLNu+E_job1.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: NuEWithSysts
+
+source:
+{
+    module_type:    RootInput
+    maxEvents:      -1
+} 
+
+services:
+{
+    TFileService:   { fileName: "NuEWithSystsAnalyserOutput.root" }
+    @table::sbnd_services
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+physics:
+{ 
+    analyzers:
+    {
+        ana:@local::nuEWithSysts
+    }
+    path0:          [ ana ]
+    end_paths:      [ path0 ]
+}
+
+services.DetectorClocksService.InheritClockConfig: false

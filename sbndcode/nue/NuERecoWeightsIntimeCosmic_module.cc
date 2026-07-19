@@ -1112,7 +1112,11 @@ void sbnd::NuERecoWeightsIntimeCosmic::trueSignal(art::Event const& e){
         nuEScatterTrueVX = nuEScatterVX; 
         nuEScatterTrueVY = nuEScatterVY; 
         nuEScatterTrueVZ = nuEScatterVZ; 
-        
+       
+        nuEScatterTrueVX_weightTree = nuEScatterVX;
+        nuEScatterTrueVY_weightTree = nuEScatterVY;
+        nuEScatterTrueVZ_weightTree = nuEScatterVZ;
+
         nuEScatter_MCTruthFlux_weight_horncurrent.push_back(-999999);
         nuEScatter_MCTruthFlux_weight_expskin.push_back(-999999);
         nuEScatter_MCTruthFlux_weight_pioninexsec.push_back(-999999);
@@ -1247,6 +1251,10 @@ void sbnd::NuERecoWeightsIntimeCosmic::trueSignal(art::Event const& e){
         nuEScatterTrueVX = nuEScatterVX; 
         nuEScatterTrueVY = nuEScatterVY; 
         nuEScatterTrueVZ = nuEScatterVZ; 
+        
+        nuEScatterTrueVX_weightTree = nuEScatterVX; 
+        nuEScatterTrueVY_weightTree = nuEScatterVY; 
+        nuEScatterTrueVZ_weightTree = nuEScatterVZ; 
         
         nuEScatter_MCTruthFlux_weight_horncurrent.push_back(-999999);
         nuEScatter_MCTruthFlux_weight_expskin.push_back(-999999);
