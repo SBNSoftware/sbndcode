@@ -4,6 +4,7 @@
 #include <utility>
 #include <TFile.h>
 #include <TTree.h>
+#include <TChain.h>
 #include <TCanvas.h>
 #include <TFrame.h>
 #include <TH1F.h>
@@ -1962,32 +1963,18 @@ void drawCumulativeRetainedAndFOM(TH1D* matchedHist, TH1D* totalHist, const std:
 
 void nuEBackgroundSignalWithNuE_macro(){
     //std::string txtFileName = "/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/plottingMacros/purity_max_values_withCuts_newSignalDef4May_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm.txt";
-    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/purity_max_values_withCuts_7Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
-    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/eventsSurvivingAllCuts_7Jul_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    std::string txtFileName = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro19July/purity_max_values_withCuts_19Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    std::string txtFileNameKeptEventsAfterAllCuts = "/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro19July/eventsSurvivingAllCuts_19Jul_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx.txt";
+    
+    TChain *subRunTree = new TChain("ana/SubRun");
+    subRunTree->Add("/exp/sbnd/data/users/coackley/analysisFiles_14Jul/*.root");
 
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeBNB_DLNuE_22April.root"); 
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_nu+eIntimeCosmicBNBnue_7Jul_noWeights.root"); 
-    //std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsWithCutsFixNewSignalDef4May5D_ETheta2BeforeRazzled_smallerRazzledBins_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP10Hits_ETheta2PFP10cm/";
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots7Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx/";
+    TChain *tree = new TChain("ana/NuE");
+    tree->Add("/exp/sbnd/data/users/coackley/analysisFiles_14Jul/*.root");
 
-    gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro7July/", kTRUE);
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlots19Jul_smallerRazzledBins_oldCutValues_clearCosmic_numPFPs0_recoNeut_crumbs_fv_primaryPFP_razzled11_razzled211_ETheta2_dEdx/";
 
-    /*
-    // Creating skimmed file
-    TFile *outFile = new TFile("skim.root", "RECREATE");
-    TTree *skimTree = new TTree("skimTree", "skimmed tree");
-
-    // branch variables
-    float skim_bdt[5];
-    bool skim_isSignal;
-    float skim_weight;
-
-    // create branches
-    skimTree->Branch("bdt", skim_bdt, "bdt[5]/F");
-    skimTree->Branch("isSignal", &skim_isSignal, "isSignal/O");
-    skimTree->Branch("weight", &skim_weight, "weight/F");    
-    // stop here
-    */
+    gSystem->mkdir("/exp/sbnd/data/users/coackley/txtFilesForSelectionMacro19July/", kTRUE);
 
     gROOT->SetBatch(true);
 
@@ -2122,26 +2109,13 @@ void nuEBackgroundSignalWithNuE_macro(){
     }
     clearTableFile.close();
 
-    if(!file){
-        std::cerr << "Error opening the file" << std::endl;
+    if(subRunTree->GetEntries() == 0){
+        std::cerr << "SubRun chain has 0 entries - check the file path/pattern" << std::endl;
         return;
     }
 
-    TDirectory *dir = (TDirectory*)file->Get("ana");
-    if(!dir){
-        std::cerr << "Directory 'ana' not found" << std::endl;
-        return;
-    }
-
-    TTree *subRunTree = (TTree*)dir->Get("SubRun");
-    if(!subRunTree){
-        std::cerr << "SubRun not found" << std::endl;
-        return;
-    }
- 
-    TTree *tree = (TTree*)dir->Get("NuE");
-    if(!tree){
-        std::cerr << "NuE not found" << std::endl;
+    if(tree->GetEntries() == 0){
+        std::cerr << "NuE chain has 0 entries - check the file path/pattern" << std::endl;
         return;
     }
 
@@ -2215,7 +2189,7 @@ void nuEBackgroundSignalWithNuE_macro(){
                 totalPOTNuENuE += subRunPOT;
                 seenSubRunsNuENuE.insert(key);
             } else{
-                // Put stuff here - this is a matching event
+                //std::cout << "matching run/subrun with signal = 4, key = (" << key.first << ", " << key.second << ")" << std::endl;
             }
 
             if(subRunDLCurrent == 5) POTNuENuE_notMissing += subRunPOT;
@@ -6548,6 +6522,30 @@ void nuEBackgroundSignalWithNuE_macro(){
     std::cout << "From NuE File = " << numCosmicSlicesNuEFileAfterCuts_notWeighted << std::endl;
     std::cout << "From BNB File = " << numCosmicSlicesBNBFileAfterCuts_notWeighted << std::endl;
     std::cout << "From Intime Cosmic File = " << numCosmicSlicesIntimeCosmicFileAfterCuts_notWeighted << std::endl;
+
+    // Print out for bug checking again systematic plotting macros
+    /*
+    std::cout << "" << std::endl;
+    std::cout << "Number of true nu+e events = " << actualSignalCount << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "Before cuts:" << std::endl;
+    std::cout << "Number of signal slices = " << eventsBeforeCuts_DLNuE.signal << std::endl;
+    std::cout << "Number of background slices = " << eventsBeforeCuts_DLNuE.background << std::endl;
+    std::cout << "Efficiency = " << 100*eventsBeforeCuts_DLNuE.signal/actualSignalCount << std::endl;
+    std::cout << "Selection Efficiency = " << 100*eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal << std::endl;
+    std::cout << "Purity = " << 100*eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background)  << std::endl;
+    std::cout << "Eff x Pur = " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/actualSignalCount) << std::endl;
+    std::cout << "Sel Eff x Pur = " << (eventsBeforeCuts_DLNuE.signal/(eventsBeforeCuts_DLNuE.signal+eventsBeforeCuts_DLNuE.background))*(eventsBeforeCuts_DLNuE.signal/eventsBeforeCuts_DLNuE.signal) << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "After cuts:" << std::endl;
+    std::cout << "Number of signal slices = " << eventsAfterCuts_DLNuE.dEdxSig << std::endl;
+    std::cout << "Number of background slices = " << eventsAfterCuts_DLNuE.dEdxBack << std::endl;
+    std::cout << "Efficiency = " << 100*eventsAfterCuts_DLNuE.dEdxSig/actualSignalCount << std::endl;
+    std::cout << "Selection Efficiency = " << 100*eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal << std::endl;
+    std::cout << "Purity = " << 100*eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack) << std::endl;
+    std::cout << "Eff x Pur = " << (eventsAfterCuts_DLNuE.dEdxSig/actualSignalCount)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << std::endl;
+    std::cout << "Sel Eff x Pur = " << (eventsAfterCuts_DLNuE.dEdxSig/eventsBeforeCuts_DLNuE.signal)*(eventsAfterCuts_DLNuE.dEdxSig/(eventsAfterCuts_DLNuE.dEdxSig+eventsAfterCuts_DLNuE.dEdxBack)) << std::endl;
+    */
 
     /*
     outFile->cd();
