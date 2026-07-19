@@ -440,15 +440,16 @@ void nuECovarainceMatrixFlux_macro(){
         "nucleoninexsec","nucleonqexsec","nucleontotxsec","kplus","kmin","kzero",
         "piplus","piminus"
     };
+    
     // order must match paramNames[1..13] above
-    std::vector<std::vector<std::vector<float>>*> paramPtrs = {
-        reco_sliceMCTruthFlux_weight_horncurrent, reco_sliceMCTruthFlux_weight_expskin,
-        reco_sliceMCTruthFlux_weight_pioninexsec, reco_sliceMCTruthFlux_weight_pionqexsec,
-        reco_sliceMCTruthFlux_weight_piontotxsec, reco_sliceMCTruthFlux_weight_nucleoninexsec,
-        reco_sliceMCTruthFlux_weight_nucleonqexsec, reco_sliceMCTruthFlux_weight_nucleontotxsec,
-        reco_sliceMCTruthFlux_weight_kplus, reco_sliceMCTruthFlux_weight_kmin,
-        reco_sliceMCTruthFlux_weight_kzero, reco_sliceMCTruthFlux_weight_piplus,
-        reco_sliceMCTruthFlux_weight_piminus
+    std::vector<std::vector<std::vector<float>>**> paramPtrs = {
+        &reco_sliceMCTruthFlux_weight_horncurrent, &reco_sliceMCTruthFlux_weight_expskin,
+        &reco_sliceMCTruthFlux_weight_pioninexsec, &reco_sliceMCTruthFlux_weight_pionqexsec,
+        &reco_sliceMCTruthFlux_weight_piontotxsec, &reco_sliceMCTruthFlux_weight_nucleoninexsec,
+        &reco_sliceMCTruthFlux_weight_nucleonqexsec, &reco_sliceMCTruthFlux_weight_nucleontotxsec,
+        &reco_sliceMCTruthFlux_weight_kplus, &reco_sliceMCTruthFlux_weight_kmin,
+        &reco_sliceMCTruthFlux_weight_kzero, &reco_sliceMCTruthFlux_weight_piplus,
+        &reco_sliceMCTruthFlux_weight_piminus
     };
 
     const int NCATS = 3; // 0 = all, 1 = signal, 2 = background
@@ -678,7 +679,7 @@ void nuECovarainceMatrixFlux_macro(){
 
                     for(int pi = 0; pi < 13; pi++){
                         for(int u = 0; u < NUNIV_STUDY; u++){
-                            paramUnivWeight_study[pi][u] = getSliceWeight(paramPtrs[pi], wSliceIdx_cached, u, sliceWeightValid_cached);
+                            paramUnivWeight_study[pi][u] = getSliceWeight(*paramPtrs[pi], wSliceIdx_cached, u, sliceWeightValid_cached);
                         }
                     }
 
@@ -702,8 +703,6 @@ void nuECovarainceMatrixFlux_macro(){
                     }
                 }
             }
-
-            if(numPFPs0Cut == 1 && numPFPsSlice == 0) continue;
 
             if(numPFPs0Cut == 1 && numPFPsSlice == 0) continue;
             if(numRecoNeutrinosCut == 1 && numRecoNeutrinos == 0) continue;
@@ -744,6 +743,10 @@ void nuECovarainceMatrixFlux_macro(){
         TDirectory *dS = dirStage->mkdir(stageNames[s].c_str());
         for(int catIdx = 0; catIdx < NCATS; catIdx++){
             TDirectory *dC = dS->mkdir(catNames[catIdx].c_str());
+
+            TMatrixDSym cov_sumIndividual(NBINS_STUDY);
+            cov_sumIndividual.Zero();
+
             for(int p = 0; p < NPARAMS; p++){
                 TDirectory *dP = dC->mkdir(paramNames[p].c_str());
                 dP->cd();
@@ -770,6 +773,14 @@ void nuECovarainceMatrixFlux_macro(){
                     }
                 }
 
+                // param 0 = "combined" (product of all weights) — not part of the sum.
+                // params 1-13 = individual flux parameters — accumulate these.
+                if(p >= 1){
+                    for(int i = 0; i < NBINS_STUDY; i++)
+                        for(int j = 0; j < NBINS_STUDY; j++)
+                            cov_sumIndividual(i,j) += cov(i,j);
+                }
+
                 std::string tag = stageNames[s] + "_" + catNames[catIdx] + "_" + paramNames[p];
                 TH1D *hCV   = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
                 TH2D *hCov  = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
@@ -791,12 +802,34 @@ void nuECovarainceMatrixFlux_macro(){
                 delete hCov;
                 delete hCorr;
             }
+
+            // --- sum of the 13 individual-parameter covariance matrices ---
+            TMatrixDSym corr_sumIndividual(NBINS_STUDY);
+            for(int i = 0; i < NBINS_STUDY; i++){
+                for(int j = 0; j < NBINS_STUDY; j++){
+                    double denom = std::sqrt(cov_sumIndividual(i,i) * cov_sumIndividual(j,j));
+                    corr_sumIndividual(i,j) = (denom > 0) ? cov_sumIndividual(i,j) / denom : 0.0;
+                }
+            }
+
+            dC->cd();
+            std::string tagSum = stageNames[s] + "_" + catNames[catIdx] + "_sumOfIndividualParams";
+            TH2D *hCovSum  = new TH2D(("h_cov_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            TH2D *hCorrSum = new TH2D(("h_corr_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            for(int i = 0; i < NBINS_STUDY; i++){
+                for(int j = 0; j < NBINS_STUDY; j++){
+                    hCovSum->SetBinContent(i+1, j+1, cov_sumIndividual(i,j));
+                    hCorrSum->SetBinContent(i+1, j+1, corr_sumIndividual(i,j));
+                }
+            }
+            hCovSum->Write();
+            hCorrSum->Write();
+            delete hCovSum;
+            delete hCorrSum;
         }
     }
     fOut->cd();
     std::cout << "Done building cut-stage/parameter matrices." << std::endl;
-
-    TMatrixDSym covMatrix_angle(NANGLEBINS), corrMatrix_angle(NANGLEBINS);
 
     TMatrixDSym covMatrix_angle(NANGLEBINS), corrMatrix_angle(NANGLEBINS);
     TMatrixDSym covMatrix_angle_signal(NANGLEBINS), corrMatrix_angle_signal(NANGLEBINS);
