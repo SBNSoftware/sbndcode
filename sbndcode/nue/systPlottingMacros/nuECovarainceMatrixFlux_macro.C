@@ -116,7 +116,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 void nuECovarainceMatrixFlux_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsFluxCov18July_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsFluxCov19July_" + cutsApplied + "/";
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
@@ -184,7 +184,7 @@ void nuECovarainceMatrixFlux_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixFlux_18July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixFlux_19July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;

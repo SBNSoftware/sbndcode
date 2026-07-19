@@ -198,7 +198,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 void nuESelectionNumbersWithSystematics_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers9July_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers16July_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table.txt";
 
     int clearCosmicCut = 1;
@@ -259,7 +259,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     clearTableFile.close();
 
     // Directory where the input root files are located
-    std::string inputDir = "/exp/sbnd/data/users/coackley/testFiles/analysed";
+    std::string inputDir = "/exp/sbnd/data/users/coackley/analysisFiles_14Jul/";
     std::vector<std::string> inputFiles = listRootFiles(inputDir);
     std::cout << "Found " << inputFiles.size() << " input files in " << inputDir << std::endl;
     if(inputFiles.empty()){
@@ -288,7 +288,7 @@ void nuESelectionNumbersWithSystematics_macro(){
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
     // Creates a root file where the final histograms will be saved to
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_9July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_16July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
@@ -787,26 +787,6 @@ void nuESelectionNumbersWithSystematics_macro(){
     TH1D* h_piontotx     = new TH1D("h_piontotx",     "Pion TotXsec;Total nu+e count;Universes",     60, 0, 600);
     TH1D* h_piplus       = new TH1D("h_piplus",       "Pi+;Total nu+e count;Universes",              60, 0, 600);
     TH1D* h_combined = new TH1D("h_combined", "All Parameters Combined", 60, 0, 600); 
-
-    // Covariance matrix setup: reconstructed recoil angle (0 degrees to 90 degrees in 18 bins), after all cuts
-    const int NANGLEBINS = 18;
-    double angleBinLow  = 0.0;
-    double angleBinHigh = 90.0;
-
-    TH1D* h_angle_CV = new TH1D("h_angle_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
-    TH1D* h_angle_signal_CV = new TH1D("h_angle_signal_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
-    TH1D* h_angle_back_CV = new TH1D("h_angle_back_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Background Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
-
-    // Vectors of TH1Ds with size 1000 
-    std::vector<TH1D*> h_angle_univ(NUNIV, nullptr);
-    std::vector<TH1D*> h_angle_signal_univ(NUNIV, nullptr);
-    std::vector<TH1D*> h_angle_back_univ(NUNIV, nullptr);
-
-    for(int u = 0; u < NUNIV; u++){
-        h_angle_univ[u] = new TH1D(Form("h_angle_univ_%d", u), "", NANGLEBINS, angleBinLow, angleBinHigh);
-        h_angle_signal_univ[u] = new TH1D(Form("h_angle_signal_univ_%d", u), "", NANGLEBINS, angleBinLow, angleBinHigh);
-        h_angle_back_univ[u] = new TH1D(Form("h_angle_back_univ_%d", u), "", NANGLEBINS, angleBinLow, angleBinHigh);
-    }
 
     // Names of the 13 flux parameters + combined
     std::vector<std::string> paramNames = {"horncurrent", "expskin", "kplus", "kmin", "kzero", "nucleoninex", "nucleonqex", "nucleontotx", "piminus", "pioninex", "pionqex", "piontotx", "piplus", "combined_allParams"};
@@ -1668,22 +1648,6 @@ void nuESelectionNumbersWithSystematics_macro(){
             }
 
             // This slice passes all of the cuts applied
-            
-            // Fill reconstructed-angle histograms (nominal + all 1000 universes)
-            if(DLCurrent == 5 && pfp10cm_PCAAngle != -999999){
-                h_angle_CV->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
-                if(sliceCategoryPlottingMacro == 1 && signal == 1) h_angle_signal_CV->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
-                else if((sliceCategoryPlottingMacro == 2 && signal == 1) || (sliceCategoryPlottingMacro == 0 && signal != 4) || sliceCategoryPlottingMacro == 3 || sliceCategoryPlottingMacro == 4 || sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6) h_angle_back_CV->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
-                
-                for(int u = 0; u < NUNIV; u++){
-                    double wComb = sliceUnivWeights[13][u]; // index 13 = combined flux weight
-                    h_angle_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
-                    if(sliceCategoryPlottingMacro == 1 && signal == 1) h_angle_signal_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
-                    else if((sliceCategoryPlottingMacro == 2 && signal == 1) || sliceCategoryPlottingMacro == 3 || sliceCategoryPlottingMacro == 4 || sliceCategoryPlottingMacro == 5 || sliceCategoryPlottingMacro == 6) h_angle_back_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight * wComb);
-                    else if(sliceCategoryPlottingMacro == 0 && signal != 4) h_angle_back_univ[u]->Fill(pfp10cm_PCAAngle*TMath::RadToDeg(), weight);
-                }
-            }
-
         }
 
         //std::cout << "-------------------------------------------" << std::endl;
@@ -2433,157 +2397,6 @@ void nuESelectionNumbersWithSystematics_macro(){
 
     std::cout << "nuE weight fallback: " << nuEWeightFallbacks << "/" << nuEWeightCalls << " (" << (nuEWeightCalls? 100.0*nuEWeightFallbacks/nuEWeightCalls : 0.) << "%)" << std::endl;
     std::cout << "slice weight fallback: " << sliceWeightFallbacks << "/" << sliceWeightCalls << " (" << (sliceWeightCalls? 100.0*sliceWeightFallbacks/sliceWeightCalls : 0.) << "%)" << std::endl;
-
-    // Build flux covariance & correlation matrix: reconstructed angle
-    TMatrixDSym covMatrix_angle(NANGLEBINS);
-    TMatrixDSym corrMatrix_angle(NANGLEBINS);
-    
-    TMatrixDSym covMatrix_angle_signal(NANGLEBINS);
-    TMatrixDSym corrMatrix_angle_signal(NANGLEBINS);
-    
-    TMatrixDSym covMatrix_angle_back(NANGLEBINS);
-    TMatrixDSym corrMatrix_angle_back(NANGLEBINS);
-
-    std::vector<double> CV_binContent(NANGLEBINS);
-    std::vector<double> CV_signal_binContent(NANGLEBINS);
-    std::vector<double> CV_back_binContent(NANGLEBINS);
-
-    for(int i = 0; i < NANGLEBINS; i++){
-        CV_binContent[i] = h_angle_CV->GetBinContent(i+1);
-        CV_signal_binContent[i] = h_angle_signal_CV->GetBinContent(i+1);
-        CV_back_binContent[i] = h_angle_back_CV->GetBinContent(i+1);
-    }
-
-    for(int i = 0; i < NANGLEBINS; i++){
-        for(int j = 0; j < NANGLEBINS; j++){
-            double sum = 0.0;
-            double sum_signal = 0.0;
-            double sum_back = 0.0;
-            for(int u = 0; u < NUNIV; u++){
-                double di = h_angle_univ[u]->GetBinContent(i+1) - CV_binContent[i];
-                double dj = h_angle_univ[u]->GetBinContent(j+1) - CV_binContent[j];
-                sum += di * dj;
-
-                double di_signal = h_angle_signal_univ[u]->GetBinContent(i+1) - CV_signal_binContent[i];
-                double dj_signal = h_angle_signal_univ[u]->GetBinContent(j+1) - CV_signal_binContent[j];
-                sum_signal += di_signal * dj_signal;
-                
-                double di_back = h_angle_back_univ[u]->GetBinContent(i+1) - CV_back_binContent[i];
-                double dj_back = h_angle_back_univ[u]->GetBinContent(j+1) - CV_back_binContent[j];
-                sum_back += di_back * dj_back;
-            }
-            covMatrix_angle(i,j) = sum / NUNIV;
-            covMatrix_angle_signal(i,j) = sum_signal / NUNIV;
-            covMatrix_angle_back(i,j) = sum_back / NUNIV;
-        }
-    }
-
-    for(int i = 0; i < NANGLEBINS; i++){
-        for(int j = 0; j < NANGLEBINS; j++){
-            double denom = std::sqrt(covMatrix_angle(i,i) * covMatrix_angle(j,j));
-            corrMatrix_angle(i,j) = (denom > 0) ? covMatrix_angle(i,j) / denom : 0.0;
-            
-            double denom_signal = std::sqrt(covMatrix_angle_signal(i,i) * covMatrix_angle_signal(j,j));
-            corrMatrix_angle_signal(i,j) = (denom_signal > 0) ? covMatrix_angle_signal(i,j) / denom_signal : 0.0;
-            
-            double denom_back = std::sqrt(covMatrix_angle_back(i,i) * covMatrix_angle_back(j,j));
-            corrMatrix_angle_back(i,j) = (denom_back > 0) ? covMatrix_angle_back(i,j) / denom_back : 0.0;
-        }
-    }
-
-    TH2D* h_cov_angle = new TH2D("h_covMatrix_angle_flux", "Flux Systematic Covariance Matrix (Recoil Angle);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-    TH2D* h_corr_angle = new TH2D("h_corrMatrix_angle_flux", "Flux Systematic Correlation Matrix (Recoil Angle);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-
-    TH2D* h_cov_angle_signal = new TH2D("h_covMatrix_angle_signal_flux", "Flux Systematic Covariance Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-    TH2D* h_corr_angle_signal = new TH2D("h_corrMatrix_angle_signal_flux", "Flux Systematic Correlation Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-
-    TH2D* h_cov_angle_back = new TH2D("h_covMatrix_angle_back_flux", "Flux Systematic Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-    TH2D* h_corr_angle_back = new TH2D("h_corrMatrix_angle_back_flux", "Flux Systematic Correlation Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
-
-    for(int i = 0; i < NANGLEBINS; i++){
-        for(int j = 0; j < NANGLEBINS; j++){
-            h_cov_angle->SetBinContent(i+1, j+1, covMatrix_angle(i,j));
-            h_corr_angle->SetBinContent(i+1, j+1, corrMatrix_angle(i,j));
-            
-            h_cov_angle_signal->SetBinContent(i+1, j+1, covMatrix_angle_signal(i,j));
-            h_corr_angle_signal->SetBinContent(i+1, j+1, corrMatrix_angle_signal(i,j));
-            
-            h_cov_angle_back->SetBinContent(i+1, j+1, covMatrix_angle_back(i,j));
-            h_corr_angle_back->SetBinContent(i+1, j+1, corrMatrix_angle_back(i,j));
-        }
-    }
-
-    TCanvas *c_cov = new TCanvas("c_cov_angle_flux", "", 800, 700);
-    c_cov->SetRightMargin(0.15);
-    h_cov_angle->Draw("COLZ");
-    c_cov->SaveAs((base_path + "covMatrix_angle_flux.pdf").c_str());
-
-    TCanvas *c_corr = new TCanvas("c_corr_angle_flux", "", 800, 700);
-    c_corr->SetRightMargin(0.15);
-    h_corr_angle->SetMinimum(-1.0);
-    h_corr_angle->SetMaximum(1.0);
-    h_corr_angle->Draw("COLZ");
-    c_corr->SaveAs((base_path + "corrMatrix_angle_flux.pdf").c_str());
-
-    TCanvas *c_cov_signal = new TCanvas("c_cov_angle_signal_flux", "", 800, 700);
-    c_cov_signal->SetRightMargin(0.15);
-    h_cov_angle_signal->Draw("COLZ");
-    c_cov_signal->SaveAs((base_path + "covMatrix_angle_signal_flux.pdf").c_str());
-
-    TCanvas *c_corr_signal = new TCanvas("c_corr_angle_signal_flux", "", 800, 700);
-    c_corr_signal->SetRightMargin(0.15);
-    h_corr_angle_signal->SetMinimum(-1.0);
-    h_corr_angle_signal->SetMaximum(1.0);
-    h_corr_angle_signal->Draw("COLZ");
-    c_corr_signal->SaveAs((base_path + "corrMatrix_angle_signal_flux.pdf").c_str());
-
-    TCanvas *c_cov_back = new TCanvas("c_cov_angle_back_flux", "", 800, 700);
-    c_cov_back->SetRightMargin(0.15);
-    h_cov_angle_back->Draw("COLZ");
-    c_cov_back->SaveAs((base_path + "covMatrix_angle_back_flux.pdf").c_str());
-
-    TCanvas *c_corr_back = new TCanvas("c_corr_angle_back_flux", "", 800, 700);
-    c_corr_back->SetRightMargin(0.15);
-    h_corr_angle_back->SetMinimum(-1.0);
-    h_corr_angle_back->SetMaximum(1.0);
-    h_corr_angle_back->Draw("COLZ");
-    c_corr_back->SaveAs((base_path + "corrMatrix_angle_back_flux.pdf").c_str());
-
-    fOut->cd();
-    TDirectory *dirCov = fOut->GetDirectory("covariance_angle");
-    if(!dirCov) dirCov = fOut->mkdir("covariance_angle");
-    dirCov->cd();
-    h_angle_CV->Write();
-    h_cov_angle->Write();
-    h_corr_angle->Write();
-    h_angle_signal_CV->Write();
-    h_cov_angle_signal->Write();
-    h_corr_angle_signal->Write();
-    h_angle_back_CV->Write();
-    h_cov_angle_back->Write();
-    h_corr_angle_back->Write();
-    fOut->cd();
-
-    delete h_angle_CV;
-    delete h_cov_angle;
-    delete h_corr_angle;
-    delete c_cov;
-    delete c_corr;
-    for(int u = 0; u < NUNIV; u++) delete h_angle_univ[u]; // free the 1000 per-universe histograms
-
-    delete h_angle_signal_CV;
-    delete h_cov_angle_signal;
-    delete h_corr_angle_signal;
-    delete c_cov_signal;
-    delete c_corr_signal;
-    for(int u = 0; u < NUNIV; u++) delete h_angle_signal_univ[u]; // free the 1000 per-universe histograms
-
-    delete h_angle_back_CV;
-    delete h_cov_angle_back;
-    delete h_corr_angle_back;
-    delete c_cov_back;
-    delete c_corr_back;
-    for(int u = 0; u < NUNIV; u++) delete h_angle_back_univ[u]; // free the 1000 per-universe histograms
 
     fOut->Write();
     fOut->Close();
