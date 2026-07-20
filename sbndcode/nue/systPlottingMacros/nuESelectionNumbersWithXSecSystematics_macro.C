@@ -1094,17 +1094,47 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     const int NPARAMS_GENIE = (int)genieParams.size();
     std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << " out of 115" << std::endl;
 
+    static const std::set<std::string> duplicateMultisigmaKeysToSkip = {
+        "GENIEReWeight_SBN_v1_multisigma_CoulombCCQE",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NormCCMEC",
+        "GENIEReWeight_SBN_v1_multisigma_NormNCMEC",
+        "GENIEReWeight_SBN_v1_multisigma_RDecBR1eta",
+        "GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma",
+        "GENIEReWeight_SBN_v1_multisigma_RPA_CCQE"
+    };
+
     for(auto& gp : genieParams){
         gp.origNUniv = gp.nUniv;
         gp.skipForNow = false;
 
-        if(gp.isMultisim) continue; // Genuine multisim, leave untouched
+        if(duplicateMultisigmaKeysToSkip.count(gp.mapKey)){
+            gp.skipForNow = true;
+            continue;
+        }
+
+        if(gp.isMultisim) continue;
 
         if(gp.nUniv == 6 || gp.nUniv == 1){
             gp.nUniv = 100;
-            gp.isMultisim = true; // Uses the same RMS treatment as genuine multisim
+            gp.isMultisim = true;
         } else {
-            gp.skipForNow = true; // 2, 4, 7, 10-universe knobs, ignore for now
+            gp.isMultisim = true;
         }
     }
 
