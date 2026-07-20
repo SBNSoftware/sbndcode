@@ -749,9 +749,39 @@ void nuECovarainceMatrixXSec_macro(){
     const int NPARAMS_GENIE = (int)genieParams.size();
     std::cout << "Number of GENIE parameters loaded: " << NPARAMS_GENIE << " out of 115" << std::endl;
 
+    static const std::set<std::string> duplicateMultisigmaKeysToSkip = {
+        "GENIEReWeight_SBN_v1_multisigma_CoulombCCQE",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarnNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvbarpNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvnNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpCC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC1pi",
+        "GENIEReWeight_SBN_v1_multisigma_NonRESBGvpNC2pi",
+        "GENIEReWeight_SBN_v1_multisigma_NormCCMEC",
+        "GENIEReWeight_SBN_v1_multisigma_NormNCMEC",
+        "GENIEReWeight_SBN_v1_multisigma_RDecBR1eta",
+        "GENIEReWeight_SBN_v1_multisigma_RDecBR1gamma",
+        "GENIEReWeight_SBN_v1_multisigma_RPA_CCQE"
+    };
+
     for(auto& gp : genieParams){
         gp.origNUniv = gp.nUniv;
         gp.skipForNow = false;
+
+        if(duplicateMultisigmaKeysToSkip.count(gp.mapKey)){
+            gp.skipForNow = true;
+            continue;
+        }
 
         if(gp.isMultisim) continue;
 
@@ -759,15 +789,42 @@ void nuECovarainceMatrixXSec_macro(){
             gp.nUniv = 100;
             gp.isMultisim = true;
         } else {
-            gp.skipForNow = true;
+            // 2, 4, 7 or 10 universe knobs: no longer skipped.
+            // Treat like a genuine multisim knob but with its own raw universe count.
+            gp.isMultisim = true;
         }
     }
 
     int nActiveGenieParams = 0;
     for(const auto& gp : genieParams) if(!gp.skipForNow) nActiveGenieParams++;
-    std::cout << "Active GENIE parameters after skipping not-yet-understood knobs: " << nActiveGenieParams << " / " << NPARAMS_GENIE << std::endl;
+    std::cout << "Active GENIE parameters after skipping duplicates: " << nActiveGenieParams << " / " << NPARAMS_GENIE << std::endl;
+
+    std::vector<int> trueMultisimIndices;
+    for(int p = 0; p < NPARAMS_GENIE; p++){
+        if(!genieParams[p].skipForNow && genieParams[p].origNUniv == 100){
+            trueMultisimIndices.push_back(p);
+        }
+    }
+    std::cout << "Number of genuine multisim (100-universe) knobs going into combined weight: " << trueMultisimIndices.size() << std::endl;
+
+    const int combinedIdx = (int)genieParams.size();
+    {
+        GenieParam_struct combinedParam;
+        combinedParam.mapKey = "TrueMultisimCombined_SBN_v1";
+        combinedParam.shortName = "multisim_TrueCombined";
+        combinedParam.nUniv = 100;
+        combinedParam.isMultisim = true;
+        combinedParam.origNUniv = 100;
+        combinedParam.skipForNow = false;
+        genieParams.push_back(combinedParam);
+    }
+    const int NPARAMS_GENIE_TOTAL = (int)genieParams.size();
+
+    std::vector<bool> excludeFromTotalCov(NPARAMS_GENIE_TOTAL, false);
+    for(int idx : trueMultisimIndices) excludeFromTotalCov[idx] = true;
 
     std::map<std::string, std::vector<float>> sigmaUMap;
+
     {
         TFile* sigmaUFile = TFile::Open("/exp/sbnd/data/users/coackley/sigma_u_universes.root", "READ");
         if(!sigmaUFile || sigmaUFile->IsZombie()){
@@ -956,16 +1013,16 @@ void nuECovarainceMatrixXSec_macro(){
     };
 
 
-    const int NSTAGES = 10; // 0 = no cuts, 1..9 = cumulative cuts applied in order below
+    const int NSTAGES = 10;
     const std::vector<std::string> stageNames = {
         "s0_noCuts","s1_numPFPs0","s2_numRecoNeutrinos","s3_CRUMBS","s4_FV",
         "s5_primaryPFP","s6_razzledPDG11","s7_razzledPDG211","s8_ETheta2","s9_dEdx"
     };
 
-    const int NCATS = 3; // 0 = all, 1 = signal, 2 = background
+    const int NCATS = 3;
     const std::vector<std::string> catNames = {"all","signal","background"};
 
-    const int NUNIV_GENIE = 100; // every ACTIVE genie param has been expanded/validated to 100 universes
+    const int NUNIV_GENIE = 100;
 
     const int NBINS_STUDY  = 15;
     double angleLow_study  = 0.0;
@@ -973,14 +1030,15 @@ void nuECovarainceMatrixXSec_macro(){
 
     std::vector<double> CVnominal((size_t)NSTAGES*NCATS*NBINS_STUDY, 0.0);
 
-    std::vector<double> UNIVsum((size_t)NSTAGES*NCATS*NPARAMS_GENIE*NUNIV_GENIE*NBINS_STUDY, 0.0);
+    std::vector<double> UNIVsum((size_t)NSTAGES*NCATS*NPARAMS_GENIE_TOTAL*NUNIV_GENIE*NBINS_STUDY, 0.0);
 
     auto CVidx = [&](int stage,int cat,int bin)->size_t{
         return (size_t)((stage*NCATS + cat)*NBINS_STUDY + bin);
     };
     auto UNIVidx = [&](int stage,int cat,int param,int u,int bin)->size_t{
-        return ((((size_t)stage*NCATS + cat)*NPARAMS_GENIE + param)*NUNIV_GENIE + u)*NBINS_STUDY + bin;
+        return ((((size_t)stage*NCATS + cat)*NPARAMS_GENIE_TOTAL + param)*NUNIV_GENIE + u)*NBINS_STUDY + bin;
     };
+
     auto angleToBin_study = [&](double angleDeg)->int{
         if(angleDeg < angleLow_study || angleDeg >= angleHigh_study) return -1;
         int b = (int)((angleDeg - angleLow_study)/(angleHigh_study - angleLow_study)*NBINS_STUDY);
@@ -989,7 +1047,7 @@ void nuECovarainceMatrixXSec_macro(){
         return b;
     };
 
-    std::vector<std::vector<double>> sliceUnivWeight_genie(NPARAMS_GENIE, std::vector<double>(NUNIV_GENIE, 1.0));
+    std::vector<std::vector<double>> sliceUnivWeight_genie(NPARAMS_GENIE_TOTAL, std::vector<double>(NUNIV_GENIE, 1.0));
 
     Long64_t numEntries2 = numEntries;
 
@@ -1149,6 +1207,7 @@ void nuECovarainceMatrixXSec_macro(){
                         for(int u = 0; u < NUNIV_GENIE; u++){
                             sliceUnivWeight_genie[p][u] = expandToPseudoMultisim(wRaw, rawN, sigmaU[u]);
                         }
+
                     } else {
                         int N = genieParams[p].nUniv;
                         for(int u = 0; u < N; u++){
@@ -1161,6 +1220,14 @@ void nuECovarainceMatrixXSec_macro(){
                     if(genieParams[p].skipForNow) continue;
                     std::fill(sliceUnivWeight_genie[p].begin(), sliceUnivWeight_genie[p].end(), 1.0);
                 }
+            }
+
+            for(int u = 0; u < 100; u++){
+                double wCombined = 1.0;
+                for(int idx : trueMultisimIndices){
+                    wCombined *= sliceUnivWeight_genie[idx][u];
+                }
+                sliceUnivWeight_genie[combinedIdx][u] = wCombined;
             }
 
             if(DLCurrent == 5 && pfp10cm_PCAAngle != -999999){
@@ -1199,7 +1266,7 @@ void nuECovarainceMatrixXSec_macro(){
 
                             CVnominal[CVidx(s,catIdx,binStudy)] += weight;
 
-                            for(int p = 0; p < NPARAMS_GENIE; p++){
+                            for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
                                 if(genieParams[p].skipForNow) continue;
                                 for(int u = 0; u < NUNIV_GENIE; u++){
                                     UNIVsum[UNIVidx(s,catIdx,p,u,binStudy)] += weight * sliceUnivWeight_genie[p][u];
@@ -1233,8 +1300,10 @@ void nuECovarainceMatrixXSec_macro(){
             TMatrixDSym cov_sumIndividual(NBINS_STUDY);
             cov_sumIndividual.Zero();
 
-            for(int p = 0; p < NPARAMS_GENIE; p++){
+            for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
                 if(genieParams[p].skipForNow) continue;
+
+                int nUnivThisParam = genieParams[p].nUniv;
 
                 TDirectory *dP = dC->mkdir(genieParams[p].shortName.c_str());
                 dP->cd();
@@ -1243,12 +1312,12 @@ void nuECovarainceMatrixXSec_macro(){
                 for(int i = 0; i < NBINS_STUDY; i++){
                     for(int j = 0; j < NBINS_STUDY; j++){
                         double sum = 0.0;
-                        for(int u = 0; u < NUNIV_GENIE; u++){
+                        for(int u = 0; u < nUnivThisParam; u++){
                             double di = UNIVsum[UNIVidx(s,catIdx,p,u,i)] - cv[i];
                             double dj = UNIVsum[UNIVidx(s,catIdx,p,u,j)] - cv[j];
                             sum += di*dj;
                         }
-                        cov(i,j) = sum / NUNIV_GENIE;
+                        cov(i,j) = sum / nUnivThisParam;
                     }
                 }
                 for(int i = 0; i < NBINS_STUDY; i++){
@@ -1258,11 +1327,14 @@ void nuECovarainceMatrixXSec_macro(){
                     }
                 }
 
-                for(int i = 0; i < NBINS_STUDY; i++)
-                    for(int j = 0; j < NBINS_STUDY; j++)
-                        cov_sumIndividual(i,j) += cov(i,j);
+                if(!excludeFromTotalCov[p]){
+                    for(int i = 0; i < NBINS_STUDY; i++)
+                        for(int j = 0; j < NBINS_STUDY; j++)
+                            cov_sumIndividual(i,j) += cov(i,j);
+                }
 
                 std::string tag = stageNames[s] + "_" + catNames[catIdx] + "_" + genieParams[p].shortName;
+
                 TH1D *hCV   = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
                 TH2D *hCov  = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
                 TH2D *hCorr = new TH2D(("h_corr_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
@@ -1326,6 +1398,28 @@ void nuECovarainceMatrixXSec_macro(){
         cvFinal_signal[b] = CVnominal[CVidx(NSTAGES-1, 1, b)];
         cvFinal_back[b]   = CVnominal[CVidx(NSTAGES-1, 2, b)];
     }
+
+    auto totalCountAndSyst = [&](const std::vector<double>& cvFinalVec, const TMatrixDSym& covMat, double& totalOut, double& systOut){
+        totalOut = 0.0;
+        for(double v : cvFinalVec) totalOut += v;
+        double varSum = 0.0;
+        for(int i = 0; i < NBINS_STUDY; i++)
+            for(int j = 0; j < NBINS_STUDY; j++)
+                varSum += covMat(i,j);
+        systOut = std::sqrt(std::max(0.0, varSum));
+    };
+
+    double totalAll = 0, systAll = 0, totalSignal = 0, systSignal = 0, totalBack = 0, systBack = 0;
+    totalCountAndSyst(cvFinal_all,    finalCovSum[0], totalAll,    systAll);
+    totalCountAndSyst(cvFinal_signal, finalCovSum[1], totalSignal, systSignal);
+    totalCountAndSyst(cvFinal_back,   finalCovSum[2], totalBack,   systBack);
+
+    std::cout << "\n=== Total GENIE xsec systematic uncertainty (after all cuts) ===" << std::endl;
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "All slices:        " << totalAll    << " +/- " << systAll    << " (" << (totalAll!=0    ? 100.*systAll/totalAll       : 0.) << "%)" << std::endl;
+    std::cout << "Signal slices:     " << totalSignal << " +/- " << systSignal << " (" << (totalSignal!=0 ? 100.*systSignal/totalSignal : 0.) << "%)" << std::endl;
+    std::cout << "Background slices: " << totalBack   << " +/- " << systBack   << " (" << (totalBack!=0   ? 100.*systBack/totalBack     : 0.) << "%)" << std::endl;
+    std::cout << std::defaultfloat;
 
     TH1D* h_angle_CV_genie        = new TH1D("h_angle_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
     TH1D* h_angle_signal_CV_genie = new TH1D("h_angle_signal_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
