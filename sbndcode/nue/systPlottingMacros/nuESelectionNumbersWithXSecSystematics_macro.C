@@ -161,7 +161,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     bool makePerCutPlots_GENIE = false;
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsNumbers16July_GENIE_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsNumbers20July_GENIE_" + cutsApplied + "/";
     std::string tableFileName = base_path + "table_GENIE.txt";
 
     int clearCosmicCut = 1;
@@ -246,7 +246,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
     // Creates an output root file to store the histograms created
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionNumberSystematicPlots_GENIE_16July.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/syst20July/selectionNumberSystematicPlots_GENIE_20July.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){ std::cerr << "Error creating output ROOT file" << std::endl; return; }
 
     beforeEventCount_struct eventsBeforeCuts_DLNuE;
@@ -1142,6 +1142,27 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     for(const auto& gp : genieParams) if(!gp.skipForNow) nActiveGenieParams++;
     std::cout << "Active GENIE parameters after skipping not-yet-understood knobs: " << nActiveGenieParams << " / " << NPARAMS_GENIE << std::endl;
 
+    std::vector<int> trueMultisimIndices;
+    for(int p = 0; p < NPARAMS_GENIE; p++){
+        if(!genieParams[p].skipForNow && genieParams[p].origNUniv == 100){
+            trueMultisimIndices.push_back(p);
+        }
+    }
+    std::cout << "Number of genuine multisim (100-universe) knobs going into combined weight: " << trueMultisimIndices.size() << std::endl;
+
+    const int combinedIdx = (int)genieParams.size(); // index of the new combined parameter
+    {
+        GenieParam_struct combinedParam;
+        combinedParam.mapKey = "TrueMultisimCombined_SBN_v1";
+        combinedParam.shortName = "multisim_TrueCombined";
+        combinedParam.nUniv = 100;
+        combinedParam.isMultisim = true;
+        combinedParam.origNUniv = 100;
+        combinedParam.skipForNow = false;
+        genieParams.push_back(combinedParam);
+    }
+    const int NPARAMS_GENIE_TOTAL = (int)genieParams.size();
+
     std::map<std::string, std::vector<float>> sigmaUMap;
     {
         TFile* sigmaUFile = TFile::Open("/exp/sbnd/data/users/coackley/sigma_u_universes.root", "READ");
@@ -1443,14 +1464,14 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::vector<double> nomBack_perCut(NCUTS, 0.0);
 
     // Vector containing count of true nu+e elastic scattering events from genie xsec parameter p per universe
-    std::vector<std::vector<double>> count_genie(NPARAMS_GENIE); // count_genie[p][u]: true nu+e count (before cuts) per universe
+    std::vector<std::vector<double>> count_genie(NPARAMS_GENIE_TOTAL); // count_genie[p][u]: true nu+e count (before cuts) per universe
 
     // Vectors containing counts of number of signal and background slices after each cut from each genie xsec parameter p per universe
-    std::vector<std::vector<std::vector<double>>> univSig_perCutParam_genie(NPARAMS_GENIE);
-    std::vector<std::vector<std::vector<double>>> univBack_perCutParam_genie(NPARAMS_GENIE);
+    std::vector<std::vector<std::vector<double>>> univSig_perCutParam_genie(NPARAMS_GENIE_TOTAL);
+    std::vector<std::vector<std::vector<double>>> univBack_perCutParam_genie(NPARAMS_GENIE_TOTAL);
 
     // Loop to fill all entries with 0
-    for(int p = 0; p < NPARAMS_GENIE; p++){
+    for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
         count_genie[p].assign(genieParams[p].nUniv, 0.0);
         univSig_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
         univBack_perCutParam_genie[p].assign(NCUTS, std::vector<double>(genieParams[p].nUniv, 0.0));
@@ -1641,6 +1662,15 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                             }
                         }
                     }
+
+                    // --- Combined "true multisim" weight: product of the 30 genuine multisim knobs ---
+                    for(int u = 0; u < 100; u++){
+                        double wCombined = 1.0;
+                        for(int idx : trueMultisimIndices){
+                            wCombined *= getGenieNuEWeight(nuEScatter_GENIEWeightVecs[idx], u, genieParams[idx].nUniv);
+                        }
+                        count_genie[combinedIdx][u] += weights.signalNuE * wCombined;
+                    }
                 }
             }
         }
@@ -1797,9 +1827,8 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
 
             size_t wSliceIdx_cached = 999999;
             bool sliceWeightValid_cached = false;
-            std::vector<std::vector<double>> sliceUnivWeights_genie(NPARAMS_GENIE);
-            for(int p = 0; p < NPARAMS_GENIE; p++) sliceUnivWeights_genie[p].assign(genieParams[p].nUniv, 1.0);
-
+            std::vector<std::vector<double>> sliceUnivWeights_genie(NPARAMS_GENIE_TOTAL);
+            for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++) sliceUnivWeights_genie[p].assign(genieParams[p].nUniv, 1.0);
             if(DLCurrent == 5 && signal != 3){
                 if(reco_sliceID_weights->size() != reco_sliceID->size()){
                     std::cerr << "WARNING: entry " << e << " has " << reco_sliceID->size() << " slices in NuE but " << reco_sliceID_weights->size() << " in NuEWeights!" << std::endl;
@@ -1853,6 +1882,15 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                     }
                 }
 
+                // --- Combined "true multisim" weight: product of the 30 genuine multisim knobs ---
+                for(int u = 0; u < 100; u++){
+                    double wCombined = 1.0;
+                    for(int idx : trueMultisimIndices){
+                        wCombined *= sliceUnivWeights_genie[idx][u];
+                    }
+                    sliceUnivWeights_genie[combinedIdx][u] = wCombined;
+                }
+
             }
 
             auto fillSliceSystCounters_genie = [&](int cutIdx){
@@ -1863,7 +1901,7 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
                 nomSig_perCut[cutIdx] += isSigSlice ? weight : 0.0;
                 nomBack_perCut[cutIdx] += isSigSlice ? 0.0 : weight;
 
-                for(int p = 0; p < NPARAMS_GENIE; p++){
+                for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
                     int N = genieParams[p].nUniv;
                     for(int u = 0; u < N; u++){
                         double w;
@@ -2159,9 +2197,9 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     std::cout << "\n=== GENIE Systematic Uncertainties on nu+e Signal Count (before cuts) ===" << std::endl;
     std::cout << Form("Nominal: %.2f", actualSignalCount) << std::endl;
 
-    std::vector<double> systValues_beforeCuts(NPARAMS_GENIE, 0.0);
+    std::vector<double> systValues_beforeCuts(NPARAMS_GENIE_TOTAL, 0.0);
 
-    for(int p = 0; p < NPARAMS_GENIE; p++){
+    for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
         if(genieParams[p].skipForNow) continue;
         double stddev = calcSystGeneric(count_genie[p], actualSignalCount, genieParams[p].isMultisim);
         double mean   = calcMeanForSyst(count_genie[p], genieParams[p].isMultisim);
@@ -2202,11 +2240,13 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     }
 
     double totalSystSq_beforeCuts = 0.0;
-    for(double s : systValues_beforeCuts) totalSystSq_beforeCuts += s*s;
+    for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
+        if(p == combinedIdx) continue; // combined knob is a derived diagnostic, not an independent uncertainty source
+        totalSystSq_beforeCuts += systValues_beforeCuts[p]*systValues_beforeCuts[p];
+    }
     double totalSyst_beforeCuts = std::sqrt(totalSystSq_beforeCuts);
 
     std::cout << "--------------------------------------------" << std::endl;
-    std::cout << Form("%-45s  syst=%.2f (%.1f%%)", "TOTAL GENIE (quadrature, 115)", totalSyst_beforeCuts, (actualSignalCount != 0 ? 100.*totalSyst_beforeCuts/actualSignalCount : 0.)) << std::endl;
     std::cout << Form("%-45s  %.2f +/- %.2f (syst)", "Signal count", actualSignalCount, totalSyst_beforeCuts) << std::endl;
 
     double initialSig = nomSig_perCut[0];
@@ -2231,8 +2271,8 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
         std::cout << "\n--- " << blockName << " ---" << std::endl;
         std::cout << Form("Nominal: %.4f%s", nomVal * scale, unitSuffix.c_str()) << std::endl;
 
-        std::vector<double> systValues(NPARAMS_GENIE, 0.0);
-        for(int p = 0; p < NPARAMS_GENIE; p++){
+        std::vector<double> systValues(NPARAMS_GENIE_TOTAL, 0.0);
+        for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
             if(genieParams[p].skipForNow) continue;
             std::vector<double> vals = buildUnivVecGenie(p, cutIdx, fn);
             double stddev = calcSystGeneric(vals, nomVal, genieParams[p].isMultisim);
@@ -2242,12 +2282,13 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
             std::cout << Form("%-45s (N=%3d, %-10s)  mean=%.4f%s  shift=%.4f (%+.1f%%)  syst=%.4f%s (%.1f%%)", genieParams[p].shortName.c_str(), genieParams[p].nUniv, genieParams[p].isMultisim ? "multisim" : "multisigma", mean * scale, unitSuffix.c_str(), shift * scale, (nomVal != 0 ? 100.*shift/nomVal : 0.), stddev * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*stddev/nomVal : 0.)) << std::endl;
         }
         double totalSystSq = 0.0;
-        for(double s : systValues) totalSystSq += s*s;
+        for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
+            if(p == combinedIdx) continue; // combined knob is a derived diagnostic, not an independent uncertainty source
+            totalSystSq += systValues[p]*systValues[p];
+        }
         double totalSyst = std::sqrt(totalSystSq);
 
         std::cout << "--------------------------------------------" << std::endl;
-        //std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", Form("TOTAL GENIE (quadrature, %d params)", nActiveGenieParams).c_str(), totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
-        std::cout << Form("%-45s  syst=%.4f%s (%.1f%%)", "TOTAL GENIE (quadrature, 115)", totalSyst * scale, unitSuffix.c_str(), (nomVal != 0 ? 100.*totalSyst/nomVal : 0.)) << std::endl;
         std::cout << Form("%-45s  %.4f%s +/- %.4f%s (syst)", blockName.c_str(), nomVal*scale, unitSuffix.c_str(), totalSyst*scale, unitSuffix.c_str()) << std::endl;
     };
 
@@ -2355,17 +2396,15 @@ void nuESelectionNumbersWithXSecSystematics_macro(){
     };
 
     if(makePerCutPlots_GENIE){
-        // ON: all 11 cuts -> 115 * 7 * 11 = 8855 plots
-        for(int p = 0; p < NPARAMS_GENIE; p++){
+        for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
             if(genieParams[p].skipForNow) continue;
             for(int cut = 0; cut < NCUTS; cut++){
                 plotSevenQuantities_genie(p, cut);
             }
         }
     } else {
-        // OFF: before cuts + after all cuts -> 115 * 7 * 2 = 1610 plots
         int finalCut = NCUTS - 1; // index 10 = "dEdx"
-        for(int p = 0; p < NPARAMS_GENIE; p++){
+        for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
             if(genieParams[p].skipForNow) continue;
             plotSevenQuantities_genie(p, 0);        // before cuts
             plotSevenQuantities_genie(p, finalCut); // all cuts applied
