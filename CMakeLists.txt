@@ -39,7 +39,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
-              -Wno-uninitialized
+              -Wno-uninitialized -Wno-error=array-bounds
               $<$<CXX_COMPILER_ID:Clang>:-Wno-return-stack-address>
 )
 ##add_definitions(-DGENIE_PRE_R3)
@@ -57,7 +57,6 @@ message(STATUS "${PROJECT_NAME} repository tag: ${GIT_REPOSITORY_TAG}")
 install_source(LIST RepositoryTag)
 
 # these are minimum required versions, not the actual product versions
-find_package( protobuf REQUIRED )
 find_package( art REQUIRED )
 find_package( art_root_io REQUIRED )
 find_package( artdaq_core REQUIRED )
