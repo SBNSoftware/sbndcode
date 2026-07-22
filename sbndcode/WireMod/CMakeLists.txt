@@ -1,19 +1,13 @@
-find_package(sbnobj)
-
-include_directories( $ENV{SBNCODE_INC}/sbncode/CAFMaker )
-link_directories( $ENV{SBNCODE_LIB} )
-
 cet_build_plugin(WireModifier art::EDProducer
     SOURCE
-      WireModifier_module.cc
+        WireModifier_module.cc
     LIBRARIES PRIVATE
-    sbncode_CAFMaker
-    sbncode_WireMod_Utility
-    sbnobj::Common_SBNEventWeight
-    larsim::MCCheater_BackTrackerService_service
-    sbnanaobj::StandardRecord
+        sbncode::CAFMaker
+        sbncode::WireMod_Utility
+        sbnobj::Common_SBNEventWeight
+        larsim::MCCheater_BackTrackerService_service
+        sbnanaobj::StandardRecord
 )
-
 
 install_headers()
 install_fhicl()
