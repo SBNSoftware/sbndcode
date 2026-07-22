@@ -1,0 +1,25 @@
+#
+# Detsim stage for the cathode-filter chain.
+#
+# The CathodeSimEnergyDepositFilter now runs *inside* the g4 stage,
+# before ionandscint.  That means by the time we get here:
+#
+#   * ionandscint            already contains only the surviving
+#                            (post-cathode) deposits, with the SCE
+#                            shift applied;
+#   * ionandscint:priorSCE   ditto, with the un-shifted positions.
+#
+# So the standard SBND detsim labels (which read "ionandscint" /
+# "ionandscint:priorSCE") work as-is -- we no longer need to remap
+# every drift/photon producer onto a "cathodefiltered" label.
+#
+# The only cathode-specific bits left here are the WireCell config
+# and the drift-velocity tweaks for the cathode-less geometry.
+#
+
+#include "standard_detsim_sbnd.fcl"
+
+# ---- Drift-velocity calibration for the cathode-less geometry ---------
+### Updates the drift velocity to the data measured value of 0.15532 cm/us
+services.DetectorPropertiesService.DriftVelFudgeFactor: 0.99373000639 #1.5532/1.563
+physics.producers.simtpc2d.wcls_main.structs.driftSpeed: 1.5532

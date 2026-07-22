@@ -1,0 +1,99 @@
+#
+# g4 stage for the cathode-filter chain.
+#
+# Wraps standard_g4_rockbox_sbnd.fcl and does two things:
+#
+#   1. Swaps the stock SBND GDML for the cathode-less counterpart.
+#      With the CPA removed from the geometry, Geant4 propagates
+#      particles through LAr where the cathode used to be.
+#
+#   2. Inserts the CathodeSimEnergyDepositFilter *between* largeant
+#      (the raw LArG4 SimEnergyDeposit producer) and ionandscint
+#      (which applies SCE and computes ionisation/scintillation).
+#      The data-driven cathode volume (sbnd_cathode_v8.txt) is now
+#      applied to the un-shifted LArG4 deposits, and SCE is applied
+#      to the surviving deposits afterwards -- which is what you
+#      want, because the cathode is a physical surface at the
+#      *real* (un-shifted) deposit position.
+#
+# Produces sbnd_v02_00_noCPA.gdml first (see
+# sbndcode/CathodeFilter/gdml/README.md).
+#
+# Data flow inside this stage:
+#
+#       largeant : LArG4DetectorServicevolTPCActive    (from gen)
+#            |
+#            v
+#       cathodefiltered : LArG4DetectorServicevolTPCActive
+#            |
+#            v
+#       ionandscint                                    (post-SCE)
+#       ionandscint : priorSCE                         (pre-SCE)
+#
+# Chain:
+#   gen                  -> prodgenie_corsika_proton_rockbox_sbnd_cathodefilt.fcl
+#   g4                   -> THIS FILE                                   <--
+#   filter               -> standard_cathodefilter_sbnd.fcl  (no-op)
+#   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
+#
+
+#include "standard_g4_rockbox_sbnd.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"
+
+# ---- CathodeSimEnergyDepositFilter -------------------------------------
+# Read the raw LArG4 SED for the TPC-active volume, drop deposits inside
+# the data-driven cathode, and re-publish them under this module's label
+# with the *same* instance name so the rest of the LArSoft chain still
+# discovers the deposits via Instances = "LArG4DetectorServicevolTPCActive".
+#
+# NOTE: the producer is defined *inline* here (instead of via
+#   #include "cathode_simenergydeposit_filter.fcl"
+# + @local::cathode_simenergydeposit_filter_default) because that
+# include carries a BEGIN_PROLOG block, and FHiCL forbids any PROLOG
+# block after the first top-level definition.  By the time we reach
+# this line, standard_g4_rockbox_sbnd.fcl has already emitted top-level
+# services/physics/outputs blocks, so an inline definition is the
+# only way to stay valid.
+physics.producers.cathodefiltered: {
+  module_type:            "CathodeFilterSBND"
+  SimEnergyDepositLabels: [ "largeant:LArG4DetectorServicevolTPCActive" ]
+  OutputInstances:        [ "LArG4DetectorServicevolTPCActive" ]
+  CathodeVolumeFile:      "sbnd_cathode_v8.txt"
+  UseStepEndpoints:       false
+  NanPolicy:              "outside"
+  Interp:                 "bilinear"
+  Verbose:                false
+}
+
+# ---- Point ionandscint at the filtered LArG4 SED -----------------------
+# IonAndScint defaults to scanning every module for SEDs matching
+# Instances; restricting InputModuleLabels makes sure it picks up the
+# filtered collection (and only the filtered collection) for the
+# TPC-active volume.
+physics.producers.ionandscint.InputModuleLabels: [ "cathodefiltered" ]
+
+# ---- Insert the filter between largeant (gen) and ionandscint ----------
+# Same path as standard_g4_rockbox_sbnd.fcl, with cathodefiltered added
+# immediately before ionandscint.  sedlite/mcreco still read the raw
+# largeant collection (so MCTrack/MCShower truth includes everything
+# Geant4 produced), matching the previous behaviour.
+physics.simulate: [ rns
+                  , sedlite
+                  , cathodefiltered
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  # , simdrift ## 1D TPC simulation no longer run
+                  , mcreco
+                  , genericcrt
+                  ]
+
+# Keep everything by default but drop the pre-filter LArG4 TPC-active
+# SED so downstream stages never see the unfiltered collection by
+# accident.  Other largeant collections (out-of-TPC, AuxDetHits, etc.)
+# are untouched.
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             , "drop sim::OpDetBacktrackerRecords_*_*_*"
+                             , "drop sim::SimEnergyDeposits_largeant_LArG4DetectorServicevolTPCActive_*"
+                             ]
