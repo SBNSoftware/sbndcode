@@ -1299,6 +1299,10 @@ void nuECovarainceMatrixXSec_macro(){
             std::vector<double> cv(NBINS_STUDY);
             for(int b = 0; b < NBINS_STUDY; b++) cv[b] = CVnominal[CVidx(s,catIdx,b)];
 
+            double nominalTotal = 0.0;
+            for(int b = 0; b < NBINS_STUDY; b++) nominalTotal += cv[b];
+            std::cout << "\n[" << stageNames[s] << "][" << catNames[catIdx] << "] nominal total (sum over bins) = " << nominalTotal << std::endl;
+
             TMatrixDSym cov_sumIndividual(NBINS_STUDY);
             cov_sumIndividual.Zero();
 

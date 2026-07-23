@@ -750,6 +750,12 @@ void nuECovarainceMatrixFlux_macro(){
             TMatrixDSym covFrac_sumIndividual(NBINS_STUDY);
             covFrac_sumIndividual.Zero();
 
+            std::vector<double> cvNominal(NBINS_STUDY);
+            for(int b = 0; b < NBINS_STUDY; b++) cvNominal[b] = CVsum[CVidx(s,catIdx,0,b)];
+            double nominalTotal = 0.0;
+            for(int b = 0; b < NBINS_STUDY; b++) nominalTotal += cvNominal[b];
+            std::cout << "\n[" << stageNames[s] << "][" << catNames[catIdx] << "] nominal total (sum over bins) = " << nominalTotal << std::endl;
+
             for(int p = 0; p < NPARAMS; p++){
                 TDirectory *dP = dC->mkdir(paramNames[p].c_str());
                 dP->cd();
