@@ -426,7 +426,7 @@ void nuECovarainceMatrixFlux_macro(){
         return vec->at(sliceIdx).at(u);
     };
 
-// ================= ADDITIONAL: cut-stage x parameter covariance study =================
+    // ================= ADDITIONAL: cut-stage x parameter covariance study =================
 
     const int NSTAGES = 10; // 0 = no cuts, 1..9 = cumulative cuts applied in order below
     const std::vector<std::string> stageNames = {
@@ -456,9 +456,9 @@ void nuECovarainceMatrixFlux_macro(){
     const std::vector<std::string> catNames = {"all","signal","background"};
 
     const int NUNIV_STUDY  = 1000;
-    const int NBINS_STUDY  = 15;
+    const int NBINS_STUDY  = 10;
     double angleLow_study  = 0.0;
-    double angleHigh_study = 20.0;
+    double angleHigh_study = 5.0;
 
     std::vector<double> CVsum((size_t)NSTAGES*NCATS*NPARAMS*NBINS_STUDY, 0.0);
     std::vector<double> UNIVsum((size_t)NSTAGES*NCATS*NPARAMS*NUNIV_STUDY*NBINS_STUDY, 0.0);
@@ -479,9 +479,9 @@ void nuECovarainceMatrixFlux_macro(){
 
     double paramUnivWeight_study[13][1000];
 
-    const int NANGLEBINS = 60;
+    const int NANGLEBINS = 10;
     double angleBinLow  = 0.0;
-    double angleBinHigh = 30.0;
+    double angleBinHigh = 5.0;
 
     TH1D* h_angle_CV = new TH1D("h_angle_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
     TH1D* h_angle_signal_CV = new TH1D("h_angle_signal_CV", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NANGLEBINS, angleBinLow, angleBinHigh);
@@ -747,6 +747,9 @@ void nuECovarainceMatrixFlux_macro(){
             TMatrixDSym cov_sumIndividual(NBINS_STUDY);
             cov_sumIndividual.Zero();
 
+            TMatrixDSym covFrac_sumIndividual(NBINS_STUDY);
+            covFrac_sumIndividual.Zero();
+
             for(int p = 0; p < NPARAMS; p++){
                 TDirectory *dP = dC->mkdir(paramNames[p].c_str());
                 dP->cd();
@@ -766,6 +769,20 @@ void nuECovarainceMatrixFlux_macro(){
                         cov(i,j) = sum / NUNIV_STUDY;
                     }
                 }
+
+                TMatrixDSym covFrac(NBINS_STUDY);
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        double sum = 0.0;
+                        for(int u = 0; u < NUNIV_STUDY; u++){
+                            double di = (cv[i] != 0) ? (UNIVsum[UNIVidx(s,catIdx,p,u,i)] - cv[i]) / cv[i] : 0.0;
+                            double dj = (cv[j] != 0) ? (UNIVsum[UNIVidx(s,catIdx,p,u,j)] - cv[j]) / cv[j] : 0.0;
+                            sum += di*dj;
+                        }
+                        covFrac(i,j) = sum / NUNIV_STUDY;
+                    }
+                }
+
                 for(int i = 0; i < NBINS_STUDY; i++){
                     for(int j = 0; j < NBINS_STUDY; j++){
                         double denom = std::sqrt(cov(i,i)*cov(j,j));
@@ -776,30 +793,48 @@ void nuECovarainceMatrixFlux_macro(){
                 // param 0 = "combined" (product of all weights) — not part of the sum.
                 // params 1-13 = individual flux parameters — accumulate these.
                 if(p >= 1){
-                    for(int i = 0; i < NBINS_STUDY; i++)
-                        for(int j = 0; j < NBINS_STUDY; j++)
+                    for(int i = 0; i < NBINS_STUDY; i++){
+                        for(int j = 0; j < NBINS_STUDY; j++){
                             cov_sumIndividual(i,j) += cov(i,j);
+                            covFrac_sumIndividual(i,j) += covFrac(i,j);
+                        }
+                    }
                 }
 
+                double totalVarAbs = 0.0, totalVarFrac = 0.0;
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        totalVarAbs  += cov(i,j);
+                        totalVarFrac += covFrac(i,j);
+                    }
+                }
+                double totalStdAbs  = std::sqrt(std::abs(totalVarAbs));
+                double totalStdFrac = std::sqrt(std::abs(totalVarFrac));
+                std::cout << "[" << stageNames[s] << "][" << catNames[catIdx] << "][" << paramNames[p] << "] total abs std dev = " << totalStdAbs << ", total frac std dev = " << totalStdFrac << std::endl;
+
                 std::string tag = stageNames[s] + "_" + catNames[catIdx] + "_" + paramNames[p];
-                TH1D *hCV   = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
-                TH2D *hCov  = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
-                TH2D *hCorr = new TH2D(("h_corr_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH1D *hCV      = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCov     = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCovFrac = new TH2D(("h_covFrac_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCorr    = new TH2D(("h_corr_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
 
                 for(int b = 0; b < NBINS_STUDY; b++) hCV->SetBinContent(b+1, cv[b]);
                 for(int i = 0; i < NBINS_STUDY; i++){
                     for(int j = 0; j < NBINS_STUDY; j++){
                         hCov->SetBinContent(i+1, j+1, cov(i,j));
+                        hCovFrac->SetBinContent(i+1, j+1, covFrac(i,j));
                         hCorr->SetBinContent(i+1, j+1, corr(i,j));
                     }
                 }
 
                 hCV->Write();
                 hCov->Write();
+                hCovFrac->Write();
                 hCorr->Write();
 
                 delete hCV;
                 delete hCov;
+                delete hCovFrac;
                 delete hCorr;
             }
 
@@ -812,28 +847,47 @@ void nuECovarainceMatrixFlux_macro(){
                 }
             }
 
+            double totalVarAbsSum = 0.0, totalVarFracSum = 0.0;
+            for(int i = 0; i < NBINS_STUDY; i++){
+                for(int j = 0; j < NBINS_STUDY; j++){
+                    totalVarAbsSum  += cov_sumIndividual(i,j);
+                    totalVarFracSum += covFrac_sumIndividual(i,j);
+                }
+            }
+            std::cout << "[" << stageNames[s] << "][" << catNames[catIdx] << "][sumOfIndividualParams]" << " total abs std dev = " << std::sqrt(std::abs(totalVarAbsSum)) << ", total frac std dev = " << std::sqrt(std::abs(totalVarFracSum)) << std::endl;
+
             dC->cd();
             std::string tagSum = stageNames[s] + "_" + catNames[catIdx] + "_sumOfIndividualParams";
-            TH2D *hCovSum  = new TH2D(("h_cov_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            TH2D *hCovSum = new TH2D(("h_cov_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            TH2D *hCovFracSum = new TH2D(("h_covFrac_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
             TH2D *hCorrSum = new TH2D(("h_corr_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
             for(int i = 0; i < NBINS_STUDY; i++){
                 for(int j = 0; j < NBINS_STUDY; j++){
                     hCovSum->SetBinContent(i+1, j+1, cov_sumIndividual(i,j));
+                    hCovFracSum->SetBinContent(i+1, j+1, covFrac_sumIndividual(i,j));
                     hCorrSum->SetBinContent(i+1, j+1, corr_sumIndividual(i,j));
                 }
             }
+
             hCovSum->Write();
+            hCovFracSum->Write();
             hCorrSum->Write();
             delete hCovSum;
+            delete hCovFracSum;
             delete hCorrSum;
         }
     }
+
     fOut->cd();
     std::cout << "Done building cut-stage/parameter matrices." << std::endl;
 
     TMatrixDSym covMatrix_angle(NANGLEBINS), corrMatrix_angle(NANGLEBINS);
     TMatrixDSym covMatrix_angle_signal(NANGLEBINS), corrMatrix_angle_signal(NANGLEBINS);
     TMatrixDSym covMatrix_angle_back(NANGLEBINS), corrMatrix_angle_back(NANGLEBINS);
+
+    TMatrixDSym covMatrix_angle_frac(NANGLEBINS);
+    TMatrixDSym covMatrix_angle_signal_frac(NANGLEBINS);
+    TMatrixDSym covMatrix_angle_back_frac(NANGLEBINS);
 
     std::vector<double> CV_binContent(NANGLEBINS), CV_signal_binContent(NANGLEBINS), CV_back_binContent(NANGLEBINS);
     for(int i = 0; i < NANGLEBINS; i++){
@@ -845,24 +899,56 @@ void nuECovarainceMatrixFlux_macro(){
     for(int i = 0; i < NANGLEBINS; i++){
         for(int j = 0; j < NANGLEBINS; j++){
             double sum = 0.0, sum_signal = 0.0, sum_back = 0.0;
+            double sumFrac = 0.0, sumFrac_signal = 0.0, sumFrac_back = 0.0;
             for(int u = 0; u < NUNIV; u++){
                 double di = h_angle_univ[u]->GetBinContent(i+1) - CV_binContent[i];
                 double dj = h_angle_univ[u]->GetBinContent(j+1) - CV_binContent[j];
                 sum += di * dj;
+                double diFrac = (CV_binContent[i] != 0) ? di / CV_binContent[i] : 0.0;
+                double djFrac = (CV_binContent[j] != 0) ? dj / CV_binContent[j] : 0.0;
+                sumFrac += diFrac * djFrac;
 
                 double di_signal = h_angle_signal_univ[u]->GetBinContent(i+1) - CV_signal_binContent[i];
                 double dj_signal = h_angle_signal_univ[u]->GetBinContent(j+1) - CV_signal_binContent[j];
                 sum_signal += di_signal * dj_signal;
+                double diFrac_signal = (CV_signal_binContent[i] != 0) ? di_signal / CV_signal_binContent[i] : 0.0;
+                double djFrac_signal = (CV_signal_binContent[j] != 0) ? dj_signal / CV_signal_binContent[j] : 0.0;
+                sumFrac_signal += diFrac_signal * djFrac_signal;
 
                 double di_back = h_angle_back_univ[u]->GetBinContent(i+1) - CV_back_binContent[i];
                 double dj_back = h_angle_back_univ[u]->GetBinContent(j+1) - CV_back_binContent[j];
                 sum_back += di_back * dj_back;
+                double diFrac_back = (CV_back_binContent[i] != 0) ? di_back / CV_back_binContent[i] : 0.0;
+                double djFrac_back = (CV_back_binContent[j] != 0) ? dj_back / CV_back_binContent[j] : 0.0;
+                sumFrac_back += diFrac_back * djFrac_back;
             }
+
             covMatrix_angle(i,j) = sum / NUNIV;
             covMatrix_angle_signal(i,j) = sum_signal / NUNIV;
             covMatrix_angle_back(i,j) = sum_back / NUNIV;
+
+            covMatrix_angle_frac(i,j) = sumFrac / NUNIV;
+            covMatrix_angle_signal_frac(i,j) = sumFrac_signal / NUNIV;
+            covMatrix_angle_back_frac(i,j) = sumFrac_back / NUNIV;
         }
     }
+
+    // --- total standard deviation (nominal, after all cuts) ---
+    double totalVarAbs_all = 0.0, totalVarAbs_sig = 0.0, totalVarAbs_bkg = 0.0;
+    double totalVarFrac_all = 0.0, totalVarFrac_sig = 0.0, totalVarFrac_bkg = 0.0;
+    for(int i = 0; i < NANGLEBINS; i++){
+        for(int j = 0; j < NANGLEBINS; j++){
+            totalVarAbs_all += covMatrix_angle(i,j);
+            totalVarAbs_sig += covMatrix_angle_signal(i,j);
+            totalVarAbs_bkg += covMatrix_angle_back(i,j);
+            totalVarFrac_all += covMatrix_angle_frac(i,j);
+            totalVarFrac_sig += covMatrix_angle_signal_frac(i,j);
+            totalVarFrac_bkg += covMatrix_angle_back_frac(i,j);
+        }
+    }
+    std::cout << "[FINAL][all]        total abs std dev = " << std::sqrt(std::abs(totalVarAbs_all)) << ", total frac std dev = " << std::sqrt(std::abs(totalVarFrac_all)) << std::endl;
+    std::cout << "[FINAL][signal]     total abs std dev = " << std::sqrt(std::abs(totalVarAbs_sig)) << ", total frac std dev = " << std::sqrt(std::abs(totalVarFrac_sig)) << std::endl;
+    std::cout << "[FINAL][background] total abs std dev = " << std::sqrt(std::abs(totalVarAbs_bkg)) << ", total frac std dev = " << std::sqrt(std::abs(totalVarFrac_bkg)) << std::endl;
 
     for(int i = 0; i < NANGLEBINS; i++){
         for(int j = 0; j < NANGLEBINS; j++){
@@ -882,14 +968,21 @@ void nuECovarainceMatrixFlux_macro(){
     TH2D* h_cov_angle_back = new TH2D("h_covMatrix_angle_back_flux", "Flux Systematic Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
     TH2D* h_corr_angle_back = new TH2D("h_corrMatrix_angle_back_flux", "Flux Systematic Correlation Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
 
+    TH2D* h_covFrac_angle = new TH2D("h_covFracMatrix_angle_flux", "Flux Systematic Fractional Covariance Matrix (Recoil Angle);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
+    TH2D* h_covFrac_angle_signal = new TH2D("h_covFracMatrix_angle_signal_flux", "Flux Systematic Fractional Covariance Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
+    TH2D* h_covFrac_angle_back = new TH2D("h_covFracMatrix_angle_back_flux", "Flux Systematic Fractional Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NANGLEBINS, angleBinLow, angleBinHigh, NANGLEBINS, angleBinLow, angleBinHigh);
+
     for(int i = 0; i < NANGLEBINS; i++){
         for(int j = 0; j < NANGLEBINS; j++){
             h_cov_angle->SetBinContent(i+1, j+1, covMatrix_angle(i,j));
             h_corr_angle->SetBinContent(i+1, j+1, corrMatrix_angle(i,j));
+            h_covFrac_angle->SetBinContent(i+1, j+1, covMatrix_angle_frac(i,j));
             h_cov_angle_signal->SetBinContent(i+1, j+1, covMatrix_angle_signal(i,j));
             h_corr_angle_signal->SetBinContent(i+1, j+1, corrMatrix_angle_signal(i,j));
+            h_covFrac_angle_signal->SetBinContent(i+1, j+1, covMatrix_angle_signal_frac(i,j));
             h_cov_angle_back->SetBinContent(i+1, j+1, covMatrix_angle_back(i,j));
             h_corr_angle_back->SetBinContent(i+1, j+1, corrMatrix_angle_back(i,j));
+            h_covFrac_angle_back->SetBinContent(i+1, j+1, covMatrix_angle_back_frac(i,j));
         }
     }
 
@@ -933,19 +1026,24 @@ void nuECovarainceMatrixFlux_macro(){
     TDirectory *dirCov = fOut->GetDirectory("covariance_angle");
     if(!dirCov) dirCov = fOut->mkdir("covariance_angle");
     dirCov->cd();
+
     h_angle_CV->Write();
     h_cov_angle->Write();
+    h_covFrac_angle->Write();
     h_corr_angle->Write();
     h_angle_signal_CV->Write();
     h_cov_angle_signal->Write();
+    h_covFrac_angle_signal->Write();
     h_corr_angle_signal->Write();
     h_angle_back_CV->Write();
     h_cov_angle_back->Write();
+    h_covFrac_angle_back->Write();
     h_corr_angle_back->Write();
     fOut->cd();
 
     delete h_angle_CV;
     delete h_cov_angle;
+    delete h_covFrac_angle;
     delete h_corr_angle;
     delete c_cov;
     delete c_corr;
@@ -953,6 +1051,7 @@ void nuECovarainceMatrixFlux_macro(){
 
     delete h_angle_signal_CV;
     delete h_cov_angle_signal;
+    delete h_covFrac_angle_signal;
     delete h_corr_angle_signal;
     delete c_cov_signal;
     delete c_corr_signal;
@@ -960,6 +1059,7 @@ void nuECovarainceMatrixFlux_macro(){
 
     delete h_angle_back_CV;
     delete h_cov_angle_back;
+    delete h_covFrac_angle_back;
     delete h_corr_angle_back;
     delete c_cov_back;
     delete c_corr_back;

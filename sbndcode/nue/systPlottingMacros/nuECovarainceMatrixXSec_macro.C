@@ -96,8 +96,8 @@ struct GenieParam_struct{
     std::string shortName;
     int nUniv;
     bool isMultisim;
-    int origNUniv;   // Raw universe count before any expansion (6, 1, 100, or 2/4/7/10)
-    bool skipForNow; // True for the 5 knobs not understood yet
+    int origNUniv;
+    bool skipForNow;
 };
 
 std::vector<std::string> listRootFiles(const std::string& dirPath){
@@ -121,7 +121,7 @@ std::vector<std::string> listRootFiles(const std::string& dirPath){
 void nuECovarainceMatrixXSec_macro(){
 
     std::string cutsApplied = "allCuts";
-    std::string base_path = "/nashome/c/coackley/systPlotsGenieXSecCov_" + cutsApplied + "/";
+    std::string base_path = "/nashome/c/coackley/systPlotsGenieXSecCov20July_" + cutsApplied + "/";
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
@@ -189,7 +189,7 @@ void nuECovarainceMatrixXSec_macro(){
 
     std::cout << "Chained " << tree->GetEntries() << " events across " << inputFiles.size() << " files (" << subRunTree->GetEntries() << " subrun entries)" << std::endl;
 
-    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/selectionCovarianceMatrixGenieXSec.root", "RECREATE");
+    TFile *fOut = new TFile("/exp/sbnd/data/users/coackley/syst20July/selectionCovarianceMatrixGenieXSec.root", "RECREATE");
     if(!fOut || fOut->IsZombie()){
         std::cerr << "Error creating output ROOT file" << std::endl;
         return;
@@ -1024,9 +1024,9 @@ void nuECovarainceMatrixXSec_macro(){
 
     const int NUNIV_GENIE = 100;
 
-    const int NBINS_STUDY  = 15;
+    const int NBINS_STUDY  = 10;
     double angleLow_study  = 0.0;
-    double angleHigh_study = 20.0;
+    double angleHigh_study = 5.0;
 
     std::vector<double> CVnominal((size_t)NSTAGES*NCATS*NBINS_STUDY, 0.0);
 
@@ -1289,6 +1289,8 @@ void nuECovarainceMatrixXSec_macro(){
     std::vector<TMatrixDSym> finalCovSum(NCATS, TMatrixDSym(NBINS_STUDY));
     std::vector<TMatrixDSym> finalCorrSum(NCATS, TMatrixDSym(NBINS_STUDY));
 
+    std::vector<TMatrixDSym> finalCovFracSum(NCATS, TMatrixDSym(NBINS_STUDY));
+
     for(int s = 0; s < NSTAGES; s++){
         TDirectory *dS = dirStage->mkdir(stageNames[s].c_str());
         for(int catIdx = 0; catIdx < NCATS; catIdx++){
@@ -1299,6 +1301,9 @@ void nuECovarainceMatrixXSec_macro(){
 
             TMatrixDSym cov_sumIndividual(NBINS_STUDY);
             cov_sumIndividual.Zero();
+
+            TMatrixDSym covFrac_sumIndividual(NBINS_STUDY);
+            covFrac_sumIndividual.Zero();
 
             for(int p = 0; p < NPARAMS_GENIE_TOTAL; p++){
                 if(genieParams[p].skipForNow) continue;
@@ -1320,6 +1325,20 @@ void nuECovarainceMatrixXSec_macro(){
                         cov(i,j) = sum / nUnivThisParam;
                     }
                 }
+
+                TMatrixDSym covFrac(NBINS_STUDY);
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        double sum = 0.0;
+                        for(int u = 0; u < nUnivThisParam; u++){
+                            double di = (cv[i] != 0) ? (UNIVsum[UNIVidx(s,catIdx,p,u,i)] - cv[i]) / cv[i] : 0.0;
+                            double dj = (cv[j] != 0) ? (UNIVsum[UNIVidx(s,catIdx,p,u,j)] - cv[j]) / cv[j] : 0.0;
+                            sum += di*dj;
+                        }
+                        covFrac(i,j) = sum / nUnivThisParam;
+                    }
+                }
+
                 for(int i = 0; i < NBINS_STUDY; i++){
                     for(int j = 0; j < NBINS_STUDY; j++){
                         double denom = std::sqrt(cov(i,i)*cov(j,j));
@@ -1328,31 +1347,49 @@ void nuECovarainceMatrixXSec_macro(){
                 }
 
                 if(!excludeFromTotalCov[p]){
-                    for(int i = 0; i < NBINS_STUDY; i++)
-                        for(int j = 0; j < NBINS_STUDY; j++)
+                    for(int i = 0; i < NBINS_STUDY; i++){
+                        for(int j = 0; j < NBINS_STUDY; j++){
                             cov_sumIndividual(i,j) += cov(i,j);
+                            covFrac_sumIndividual(i,j) += covFrac(i,j);
+                        }
+                    }
                 }
+
+                // --- total standard deviation for this stage/category/parameter ---
+                double totalVarAbs_p = 0.0, totalVarFrac_p = 0.0;
+                for(int i = 0; i < NBINS_STUDY; i++){
+                    for(int j = 0; j < NBINS_STUDY; j++){
+                        totalVarAbs_p  += cov(i,j);
+                        totalVarFrac_p += covFrac(i,j);
+                    }
+                }
+
+                std::cout << "[" << stageNames[s] << "][" << catNames[catIdx] << "][" << genieParams[p].shortName << "] total abs std dev = " << std::sqrt(std::max(0.0, totalVarAbs_p)) << ", total frac std dev = " << std::sqrt(std::max(0.0, totalVarFrac_p)) << std::endl;
 
                 std::string tag = stageNames[s] + "_" + catNames[catIdx] + "_" + genieParams[p].shortName;
 
-                TH1D *hCV   = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
-                TH2D *hCov  = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH1D *hCV = new TH1D(("h_CV_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCov = new TH2D(("h_cov_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+                TH2D *hCovFrac = new TH2D(("h_covFrac_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
                 TH2D *hCorr = new TH2D(("h_corr_"+tag).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
 
                 for(int b = 0; b < NBINS_STUDY; b++) hCV->SetBinContent(b+1, cv[b]);
                 for(int i = 0; i < NBINS_STUDY; i++){
                     for(int j = 0; j < NBINS_STUDY; j++){
                         hCov->SetBinContent(i+1, j+1, cov(i,j));
+                        hCovFrac->SetBinContent(i+1, j+1, covFrac(i,j));
                         hCorr->SetBinContent(i+1, j+1, corr(i,j));
                     }
                 }
 
                 hCV->Write();
                 hCov->Write();
+                hCovFrac->Write();
                 hCorr->Write();
 
                 delete hCV;
                 delete hCov;
+                delete hCovFrac;
                 delete hCorr;
             }
 
@@ -1364,31 +1401,47 @@ void nuECovarainceMatrixXSec_macro(){
                 }
             }
 
+            double totalVarAbs_sum = 0.0, totalVarFrac_sum = 0.0;
+            for(int i = 0; i < NBINS_STUDY; i++){
+                for(int j = 0; j < NBINS_STUDY; j++){
+                    totalVarAbs_sum  += cov_sumIndividual(i,j);
+                    totalVarFrac_sum += covFrac_sumIndividual(i,j);
+                }
+            }
+            std::cout << "[" << stageNames[s] << "][" << catNames[catIdx] << "][sumOfIndividualParams_GENIE, i.e. the 64-matrix total]" << " total abs std dev = " << std::sqrt(std::max(0.0, totalVarAbs_sum)) << ", total frac std dev = " << std::sqrt(std::max(0.0, totalVarFrac_sum)) << std::endl;
+
             dC->cd();
             std::string tagSum = stageNames[s] + "_" + catNames[catIdx] + "_sumOfIndividualParams_GENIE";
             TH1D *hCVsum = new TH1D(("h_CV_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study);
-            TH2D *hCovSum  = new TH2D(("h_cov_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            TH2D *hCovSum = new TH2D(("h_cov_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+            TH2D *hCovFracSum = new TH2D(("h_covFrac_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
             TH2D *hCorrSum = new TH2D(("h_corr_"+tagSum).c_str(), "", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
             for(int b = 0; b < NBINS_STUDY; b++) hCVsum->SetBinContent(b+1, cv[b]);
             for(int i = 0; i < NBINS_STUDY; i++){
                 for(int j = 0; j < NBINS_STUDY; j++){
                     hCovSum->SetBinContent(i+1, j+1, cov_sumIndividual(i,j));
+                    hCovFracSum->SetBinContent(i+1, j+1, covFrac_sumIndividual(i,j));
                     hCorrSum->SetBinContent(i+1, j+1, corr_sumIndividual(i,j));
                 }
             }
+
             hCVsum->Write();
             hCovSum->Write();
+            hCovFracSum->Write();
             hCorrSum->Write();
             delete hCVsum;
             delete hCovSum;
+            delete hCovFracSum;
             delete hCorrSum;
 
             if(s == NSTAGES-1){
-                finalCovSum[catIdx]  = cov_sumIndividual;
+                finalCovSum[catIdx] = cov_sumIndividual;
                 finalCorrSum[catIdx] = corr_sumIndividual;
+                finalCovFracSum[catIdx] = covFrac_sumIndividual;
             }
         }
     }
+
     fOut->cd();
     std::cout << "Done building cut-stage/GENIE-parameter matrices." << std::endl;
 
@@ -1409,42 +1462,61 @@ void nuECovarainceMatrixXSec_macro(){
         systOut = std::sqrt(std::max(0.0, varSum));
     };
 
-    double totalAll = 0, systAll = 0, totalSignal = 0, systSignal = 0, totalBack = 0, systBack = 0;
-    totalCountAndSyst(cvFinal_all,    finalCovSum[0], totalAll,    systAll);
-    totalCountAndSyst(cvFinal_signal, finalCovSum[1], totalSignal, systSignal);
-    totalCountAndSyst(cvFinal_back,   finalCovSum[2], totalBack,   systBack);
+    auto totalFracSyst = [&](const TMatrixDSym& covFracMat) -> double{
+        double varSum = 0.0;
+        for(int i = 0; i < NBINS_STUDY; i++)
+            for(int j = 0; j < NBINS_STUDY; j++)
+                varSum += covFracMat(i,j);
+        return std::sqrt(std::max(0.0, varSum));
+    };
 
-    std::cout << "\n=== Total GENIE xsec systematic uncertainty (after all cuts) ===" << std::endl;
+    double totalAll = 0, systAll = 0, totalSignal = 0, systSignal = 0, totalBack = 0, systBack = 0;
+    totalCountAndSyst(cvFinal_all, finalCovSum[0], totalAll, systAll);
+    totalCountAndSyst(cvFinal_signal, finalCovSum[1], totalSignal, systSignal);
+    totalCountAndSyst(cvFinal_back, finalCovSum[2], totalBack, systBack);
+
+    double systFracAll = totalFracSyst(finalCovFracSum[0]);
+    double systFracSignal = totalFracSyst(finalCovFracSum[1]);
+    double systFracBack = totalFracSyst(finalCovFracSum[2]);
+
+    std::cout << "\n=== Total GENIE xsec systematic uncertainty (after all cuts, 64-matrix total) ===" << std::endl;
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "All slices:        " << totalAll    << " +/- " << systAll    << " (" << (totalAll!=0    ? 100.*systAll/totalAll       : 0.) << "%)" << std::endl;
-    std::cout << "Signal slices:     " << totalSignal << " +/- " << systSignal << " (" << (totalSignal!=0 ? 100.*systSignal/totalSignal : 0.) << "%)" << std::endl;
-    std::cout << "Background slices: " << totalBack   << " +/- " << systBack   << " (" << (totalBack!=0   ? 100.*systBack/totalBack     : 0.) << "%)" << std::endl;
+    std::cout << "All slices:        " << totalAll << " +/- " << systAll << " (" << (totalAll!=0 ? 100.*systAll/totalAll : 0.) << "%), frac std dev = " << systFracAll << std::endl;
+    std::cout << "Signal slices:     " << totalSignal << " +/- " << systSignal << " (" << (totalSignal!=0 ? 100.*systSignal/totalSignal : 0.) << "%), frac std dev = " << systFracSignal << std::endl;
+    std::cout << "Background slices: " << totalBack << " +/- " << systBack << " (" << (totalBack!=0 ? 100.*systBack/totalBack : 0.) << "%), frac std dev = " << systFracBack << std::endl;
     std::cout << std::defaultfloat;
 
-    TH1D* h_angle_CV_genie        = new TH1D("h_angle_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH1D* h_angle_CV_genie = new TH1D("h_angle_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
     TH1D* h_angle_signal_CV_genie = new TH1D("h_angle_signal_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts, Signal Only);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
-    TH1D* h_angle_back_CV_genie   = new TH1D("h_angle_back_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts, Background Only);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH1D* h_angle_back_CV_genie = new TH1D("h_angle_back_CV_genie", "Reconstructed Recoil Angle (Nominal, After All Cuts, Background Only);Angle [deg];Weighted Events", NBINS_STUDY, angleLow_study, angleHigh_study);
     for(int b = 0; b < NBINS_STUDY; b++){
         h_angle_CV_genie->SetBinContent(b+1, cvFinal_all[b]);
         h_angle_signal_CV_genie->SetBinContent(b+1, cvFinal_signal[b]);
         h_angle_back_CV_genie->SetBinContent(b+1, cvFinal_back[b]);
     }
 
-    TH2D* h_cov_angle_genie        = new TH2D("h_covMatrix_angle_genie", "Total GENIE Systematic Covariance Matrix (Recoil Angle);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
-    TH2D* h_corr_angle_genie       = new TH2D("h_corrMatrix_angle_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_cov_angle_genie = new TH2D("h_covMatrix_angle_genie", "Total GENIE Systematic Covariance Matrix (Recoil Angle);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_corr_angle_genie = new TH2D("h_corrMatrix_angle_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
     TH2D* h_cov_angle_signal_genie = new TH2D("h_covMatrix_angle_signal_genie", "Total GENIE Systematic Covariance Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
-    TH2D* h_corr_angle_signal_genie= new TH2D("h_corrMatrix_angle_signal_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
-    TH2D* h_cov_angle_back_genie   = new TH2D("h_covMatrix_angle_back_genie", "Total GENIE Systematic Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
-    TH2D* h_corr_angle_back_genie  = new TH2D("h_corrMatrix_angle_back_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_corr_angle_signal_genie = new TH2D("h_corrMatrix_angle_signal_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_cov_angle_back_genie = new TH2D("h_covMatrix_angle_back_genie", "Total GENIE Systematic Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_corr_angle_back_genie = new TH2D("h_corrMatrix_angle_back_genie", "Total GENIE Systematic Correlation Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+
+    TH2D* h_covFrac_angle_genie = new TH2D("h_covFracMatrix_angle_genie", "Total GENIE Systematic Fractional Covariance Matrix (Recoil Angle);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_covFrac_angle_signal_genie = new TH2D("h_covFracMatrix_angle_signal_genie", "Total GENIE Systematic Fractional Covariance Matrix (Recoil Angle, Signal Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
+    TH2D* h_covFrac_angle_back_genie = new TH2D("h_covFracMatrix_angle_back_genie", "Total GENIE Systematic Fractional Covariance Matrix (Recoil Angle, Background Only);Angle bin;Angle bin", NBINS_STUDY, angleLow_study, angleHigh_study, NBINS_STUDY, angleLow_study, angleHigh_study);
 
     for(int i = 0; i < NBINS_STUDY; i++){
         for(int j = 0; j < NBINS_STUDY; j++){
             h_cov_angle_genie->SetBinContent(i+1, j+1, finalCovSum[0](i,j));
             h_corr_angle_genie->SetBinContent(i+1, j+1, finalCorrSum[0](i,j));
+            h_covFrac_angle_genie->SetBinContent(i+1, j+1, finalCovFracSum[0](i,j));
             h_cov_angle_signal_genie->SetBinContent(i+1, j+1, finalCovSum[1](i,j));
             h_corr_angle_signal_genie->SetBinContent(i+1, j+1, finalCorrSum[1](i,j));
+            h_covFrac_angle_signal_genie->SetBinContent(i+1, j+1, finalCovFracSum[1](i,j));
             h_cov_angle_back_genie->SetBinContent(i+1, j+1, finalCovSum[2](i,j));
             h_corr_angle_back_genie->SetBinContent(i+1, j+1, finalCorrSum[2](i,j));
+            h_covFrac_angle_back_genie->SetBinContent(i+1, j+1, finalCovFracSum[2](i,j));
         }
     }
 
@@ -1488,31 +1560,38 @@ void nuECovarainceMatrixXSec_macro(){
     TDirectory *dirCov = fOut->GetDirectory("covariance_angle_GENIE");
     if(!dirCov) dirCov = fOut->mkdir("covariance_angle_GENIE");
     dirCov->cd();
+
     h_angle_CV_genie->Write();
     h_cov_angle_genie->Write();
+    h_covFrac_angle_genie->Write();
     h_corr_angle_genie->Write();
     h_angle_signal_CV_genie->Write();
     h_cov_angle_signal_genie->Write();
+    h_covFrac_angle_signal_genie->Write();
     h_corr_angle_signal_genie->Write();
     h_angle_back_CV_genie->Write();
     h_cov_angle_back_genie->Write();
+    h_covFrac_angle_back_genie->Write();
     h_corr_angle_back_genie->Write();
     fOut->cd();
 
     delete h_angle_CV_genie;
     delete h_cov_angle_genie;
+    delete h_covFrac_angle_genie;
     delete h_corr_angle_genie;
     delete c_cov;
     delete c_corr;
 
     delete h_angle_signal_CV_genie;
     delete h_cov_angle_signal_genie;
+    delete h_covFrac_angle_signal_genie;
     delete h_corr_angle_signal_genie;
     delete c_cov_signal;
     delete c_corr_signal;
 
     delete h_angle_back_CV_genie;
     delete h_cov_angle_back_genie;
+    delete h_covFrac_angle_back_genie;
     delete h_corr_angle_back_genie;
     delete c_cov_back;
     delete c_corr_back;
