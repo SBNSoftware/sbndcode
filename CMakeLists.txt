@@ -15,7 +15,7 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.06.00.10)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.06.00.10.01)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
@@ -59,6 +59,7 @@ install_source(LIST RepositoryTag)
 # these are minimum required versions, not the actual product versions
 find_package( art REQUIRED )
 find_package( art_root_io REQUIRED )
+find_package(ifdh_art REQUIRED)
 find_package( artdaq_core REQUIRED )
 find_package( nugen REQUIRED )
 find_package( nuevdb REQUIRED )
@@ -69,6 +70,7 @@ find_package( nug4 REQUIRED )
 find_package( sbndaq_artdaq_core REQUIRED )
 find_package( sbnanaobj REQUIRED )
 find_package( sbnobj REQUIRED )
+find_package(systematicstools REQUIRED)
 find_package( sbncode REQUIRED )
 find_package( larpandora REQUIRED )
 find_package( larsim REQUIRED )
