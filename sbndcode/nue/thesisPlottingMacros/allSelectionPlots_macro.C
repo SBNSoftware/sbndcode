@@ -1935,9 +1935,92 @@ void allSelectionPlots_macro(){
             }
 
             // Add to before cuts plots
+            fillHistogram(&sliceCompletenessBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
+            fillHistogram(&slicePurityBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
             fillHistogram(&sliceCRUMBSBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
-            fillSplitIntHistogram(&sliceCRUMBSBeforeCuts_splitDLNuE, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
+            fillHistogram(&sliceNumRecoNeutBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
+            fillHistogram(&sliceNumPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_beforeCuts, &weights);
+            fillHistogram(&sliceNumPrimaryPFPsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_beforeCuts, &weights);
+            fillHistogram(&sliceNumPrimaryPFPsMinHitBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsMinHitSlice_beforeCuts, &weights);
+            fillHistogram(&ERecoSumThetaRecoBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+            fillHistogram(&ERecoHighestThetaRecoBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+            fillHistogram(&ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
+            fillHistogram(&dEdxBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
+            fillHistogram(&razzledPDG11BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
+            fillHistogram(&razzledPDG13BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
+            fillHistogram(&razzledPDG22BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
+            fillHistogram(&razzledPDG211BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
+            fillHistogram(&razzledPDG2212BeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
+            fillHistogram(&pfpCompletenessBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.completeness, &weights);
+            fillHistogram(&pfpPurityBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_beforeCuts.purity, &weights); 
+            fillHistogram(&recoVXBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXSmallerBinsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYSmallerBinsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZSmallerBinsBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXLowBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYLowBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZLowBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZHighBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+           
+            fillSplitIntHistogram(&sliceCompletenessBeforeCuts, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
+            fillSplitIntHistogram(&slicePurityBeforeCuts, DLCurrent, signal, sliceInteractionType, reco_slicePurity->at(slice), &weights);
+            fillSplitIntHistogram(&sliceCRUMBSBeforeCuts, DLCurrent, signal, sliceInteractionType, reco_sliceScore->at(slice), &weights);
+            fillSplitIntHistogram(&sliceNumRecoNeutBeforeCuts, DLCurrent, signal, sliceInteractionType, numRecoNeutrinos, &weights);
+            fillSplitIntHistogram(&sliceNumPFPsBeforeCuts, DLCurrent, signal, sliceInteractionType, numPFPsSlice_beforeCuts, &weights);
+            fillSplitIntHistogram(&sliceNumPrimaryPFPsBeforeCuts, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_beforeCuts, &weights);
+            fillSplitIntHistogram(&sliceNumPrimaryPFPsMinHitBeforeCuts, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsMinHitSlice_beforeCuts, &weights);
+            fillSplitIntHistogram(&ERecoSumThetaRecoBeforeCuts, DLCurrent, signal, sliceInteractionType, (summedEnergy_beforeCuts * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+            fillSplitIntHistogram(&ERecoHighestThetaRecoBeforeCuts, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * highestEnergyPFP_beforeCuts.theta * highestEnergyPFP_beforeCuts.theta), &weights);
+            fillSplitIntHistogram(&ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_beforeCuts.energy * pfp10cm_PCAAngle_beforeCuts * pfp10cm_PCAAngle_beforeCuts), &weights);
+            fillSplitIntHistogram(&dEdxBeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.bestPlanedEdx, &weights);
+            fillSplitIntHistogram(&razzledPDG11BeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG11, &weights);
+            fillSplitIntHistogram(&razzledPDG13BeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG13, &weights);
+            fillSplitIntHistogram(&razzledPDG22BeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG22, &weights);
+            fillSplitIntHistogram(&razzledPDG211BeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG211, &weights);
+            fillSplitIntHistogram(&razzledPDG2212BeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.razzledPDG2212, &weights);
+            fillSplitIntHistogram(&pfpCompletenessBeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.completeness, &weights);
+            fillSplitIntHistogram(&pfpPurityBeforeCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_beforeCuts.purity, &weights); 
+            fillSplitIntHistogram(&recoVXBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXSmallerBinsBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYSmallerBinsBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZSmallerBinsBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXLowBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYLowBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZLowBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXHighBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYHighBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZHighBeforeCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
 
+            if(signal == 1 && sliceCategoryPlottingMacro == 1 && recoilElectron.angle != -999999){
+                fillHistogram(&angleDifferenceSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifference_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFPSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP5cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP5cm_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP10cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP10cm_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP15cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP15cm_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCASliceSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice5cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice5cm_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice10cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice10cm_beforeCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice15cmSignalBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice15cm_beforeCuts, &weights);
+                fillHistogram(&energyAsymmetryBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy)/recoilElectron.energy), &weights);
+
+                fillSplitIntHistogram(&angleDifferenceSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifference_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFPSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP5cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP5cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP10cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP10cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP15cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP15cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASliceSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice5cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice5cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice10cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice10cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice15cmSignalBeforeCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice15cm_beforeCuts, &weights);
+                fillSplitIntHistogram(&energyAsymmetryBeforeCuts, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy)/recoilElectron.energy), &weights);                
+            }           
+ 
             // Start applying cuts here, this macro has no option to turn off the removal of clear cosmic PFPs
             double summedEnergy_afterCuts = 0;
             double numPFPsSlice_afterCuts = 0;
@@ -2381,8 +2464,91 @@ void allSelectionPlots_macro(){
             }
 
             // Fill histograms after cuts here
+            fillHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceCompleteness->at(slice), &weights);
+            fillHistogram(&slicePurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_slicePurity->at(slice), &weights);
             fillHistogram(&sliceCRUMBSAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, reco_sliceScore->at(slice), &weights);
-            fillSplitIntHistogram(&sliceCRUMBSAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, reco_sliceScore->at(slice), &weights);
+            fillHistogram(&sliceNumRecoNeutAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numRecoNeutrinos, &weights);
+            fillHistogram(&sliceNumPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPFPsSlice_afterCuts, &weights);
+            fillHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_afterCuts, &weights);
+            fillHistogram(&sliceNumPrimaryPFPsMinHitAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsMinHitSlice_afterCuts, &weights);
+            fillHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+            fillHistogram(&ERecoHighestThetaRecoAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+            fillHistogram(&ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, DLCurrent, signal, sliceCategoryPlottingMacro, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
+            fillHistogram(&dEdxAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
+            fillHistogram(&razzledPDG11AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
+            fillHistogram(&razzledPDG13AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
+            fillHistogram(&razzledPDG22AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
+            fillHistogram(&razzledPDG211AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
+            fillHistogram(&razzledPDG2212AfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
+            fillHistogram(&pfpCompletenessAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.completeness, &weights);
+            fillHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, highestEnergyPFP_afterCuts.purity, &weights); 
+            fillHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZSmallerBinsAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZLowAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+            fillHistogram(&recoVXHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVX, &weights);
+            fillHistogram(&recoVYHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVY, &weights);
+            fillHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, recoVZ, &weights);
+           
+            fillSplitIntHistogram(&sliceCompletenessAfterCuts, DLCurrent, signal, sliceInteractionType, reco_sliceCompleteness->at(slice), &weights);
+            fillSplitIntHistogram(&slicePurityAfterCuts, DLCurrent, signal, sliceInteractionType, reco_slicePurity->at(slice), &weights);
+            fillSplitIntHistogram(&sliceCRUMBSAfterCuts, DLCurrent, signal, sliceInteractionType, reco_sliceScore->at(slice), &weights);
+            fillSplitIntHistogram(&sliceNumRecoNeutAfterCuts, DLCurrent, signal, sliceInteractionType, numRecoNeutrinos, &weights);
+            fillSplitIntHistogram(&sliceNumPFPsAfterCuts, DLCurrent, signal, sliceInteractionType, numPFPsSlice_afterCuts, &weights);
+            fillSplitIntHistogram(&sliceNumPrimaryPFPsAfterCuts, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsSlice_afterCuts, &weights);
+            fillSplitIntHistogram(&sliceNumPrimaryPFPsMinHitAfterCuts, DLCurrent, signal, sliceInteractionType, numPrimaryPFPsMinHitSlice_afterCuts, &weights);
+            fillSplitIntHistogram(&ERecoSumThetaRecoAfterCuts, DLCurrent, signal, sliceInteractionType, (summedEnergy_afterCuts * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+            fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * highestEnergyPFP_afterCuts.theta * highestEnergyPFP_afterCuts.theta), &weights);
+            fillSplitIntHistogram(&ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, DLCurrent, signal, sliceInteractionType, (highestEnergyPFP_afterCuts.energy * pfp10cm_PCAAngle_afterCuts * pfp10cm_PCAAngle_afterCuts), &weights);
+            fillSplitIntHistogram(&dEdxAfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.bestPlanedEdx, &weights);
+            fillSplitIntHistogram(&razzledPDG11AfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG11, &weights);
+            fillSplitIntHistogram(&razzledPDG13AfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG13, &weights);
+            fillSplitIntHistogram(&razzledPDG22AfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG22, &weights);
+            fillSplitIntHistogram(&razzledPDG211AfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG211, &weights);
+            fillSplitIntHistogram(&razzledPDG2212AfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.razzledPDG2212, &weights);
+            fillSplitIntHistogram(&pfpCompletenessAfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.completeness, &weights);
+            fillSplitIntHistogram(&pfpPurityAfterCuts, DLCurrent, signal, sliceInteractionType, highestEnergyPFP_afterCuts.purity, &weights); 
+            fillSplitIntHistogram(&recoVXAfterCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYAfterCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZAfterCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXSmallerBinsAfterCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYSmallerBinsAfterCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZSmallerBinsAfterCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXLowAfterCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYLowAfterCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZLowAfterCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+            fillSplitIntHistogram(&recoVXHighAfterCuts, DLCurrent, signal, sliceInteractionType, recoVX, &weights);
+            fillSplitIntHistogram(&recoVYHighAfterCuts, DLCurrent, signal, sliceInteractionType, recoVY, &weights);
+            fillSplitIntHistogram(&recoVZHighAfterCuts, DLCurrent, signal, sliceInteractionType, recoVZ, &weights);
+
+            if(signal == 1 && sliceCategoryPlottingMacro == 1 && recoilElectron.angle != -999999){
+                fillHistogram(&angleDifferenceSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifference_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFPSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP5cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP5cm_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP10cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP10cm_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCAPFP15cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP15cm_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCASliceSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice5cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice5cm_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice10cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice10cm_afterCuts, &weights);
+                fillHistogram(&angleDifferencePCASlice15cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCASlice15cm_afterCuts, &weights);
+                fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy)/recoilElectron.energy), &weights);
+
+                fillSplitIntHistogram(&angleDifferenceSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifference_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFPSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP5cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP5cm_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP10cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP10cm_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCAPFP15cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCAPFP15cm_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASliceSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice5cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice5cm_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice10cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice10cm_afterCuts, &weights);
+                fillSplitIntHistogram(&angleDifferencePCASlice15cmSignalAfterCuts, DLCurrent, signal, sliceInteractionType, angleDifferencePCASlice15cm_afterCuts, &weights);
+                fillSplitIntHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceInteractionType, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy)/recoilElectron.energy), &weights);                
+            }           
 
         } // End of looping through slices
 
