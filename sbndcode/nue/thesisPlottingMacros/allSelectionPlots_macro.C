@@ -1174,7 +1174,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
 
 void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* effPur,
                                double optimalCut, const std::string& filename,
-                               const std::string& legendLocation, const std::string& plotLabel,
+                               const std::string& legendLocation,
                                double xmin, double xmax){
     if(!eff || !pur || !effPur){
         std::cerr << "drawEffPurEffPurCombined: null TEfficiency pointer\n";
@@ -1279,11 +1279,6 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
     text->DrawLatex(xText, yText - 2*yStep, Form("Efficiency: %.2f %%", effAtOptimal));
     text->DrawLatex(xText, yText - 3*yStep, Form("Purity: %.2f %%", purAtOptimal));
 
-    if(!plotLabel.empty()){
-        text->SetTextSize(0.035);
-        text->DrawLatex(xText, yText - 5*yStep, plotLabel.c_str());
-    }
-
     gPad->RedrawAxis();
     c->SaveAs(filename.c_str());
 
@@ -1296,7 +1291,7 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
     delete c;
 }
 
-void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, double optimalCut, const std::string& plotLabel = "", int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
+void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, double optimalCut, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
     bool keepRight = (efficiencyWay == -1);
 
     // Total signal before cuts
@@ -1421,7 +1416,7 @@ void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_s
     drawEfficiencyErrors(effPur_newDef, filenameEffPur_newDef, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
 
     std::string filenameCombined = std::string(filename) + "_effPurCombined.pdf";
-    drawEffPurEffPurCombined(eff_newDef, pur, effPur_newDef, optimalCut, filenameCombined, legendLocation, plotLabel, xmin, xmax);
+    drawEffPurEffPurCombined(eff_newDef, pur, effPur_newDef, optimalCut, filenameCombined, legendLocation, xmin, xmax);
 }
 
 void allSelectionPlots_macro(){
