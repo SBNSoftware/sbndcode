@@ -1172,7 +1172,131 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
     delete eff;
 }
 
-void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
+void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* effPur,
+                               double optimalCut, const std::string& filename,
+                               const std::string& legendLocation, const std::string& plotLabel,
+                               double xmin, double xmax){
+    if(!eff || !pur || !effPur){
+        std::cerr << "drawEffPurEffPurCombined: null TEfficiency pointer\n";
+        return;
+    }
+
+    TCanvas* c = new TCanvas("c_effPurCombined", "Efficiency, Purity, Efficiency x Purity", 800, 600);
+    c->SetTicks();
+    c->SetLeftMargin(0.15);
+
+    const TH1* hTotal = eff->GetTotalHistogram();
+    int nBins = hTotal->GetNbinsX();
+
+    auto buildScaledGraph = [&](TEfficiency* effObj) -> TGraphAsymmErrors* {
+        TGraphAsymmErrors* g = new TGraphAsymmErrors(nBins);
+        for(int i = 1; i <= nBins; ++i){
+            double xCenter = hTotal->GetXaxis()->GetBinCenter(i);
+            double xErr = (hTotal->GetXaxis()->GetBinUpEdge(i) - hTotal->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+
+            double y = effObj->GetEfficiency(i) * 100.0;
+            double yErrLow = effObj->GetEfficiencyErrorLow(i) * 100.0;
+            double yErrUp = effObj->GetEfficiencyErrorUp(i) * 100.0;
+
+            g->SetPoint(i-1, xCenter, y);
+            g->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+        }
+        return g;
+    };
+
+    TGraphAsymmErrors* gEff = buildScaledGraph(eff);
+    TGraphAsymmErrors* gPur = buildScaledGraph(pur);
+    TGraphAsymmErrors* gEffPur = buildScaledGraph(effPur);
+
+    gEff->SetMarkerColor(kRed+1);      gEff->SetLineColor(kRed+1);
+    gEff->SetMarkerStyle(20);          gEff->SetMarkerSize(0.7);      gEff->SetLineWidth(1);
+
+    gPur->SetMarkerColor(kBlue+1);     gPur->SetLineColor(kBlue+1);
+    gPur->SetMarkerStyle(20);          gPur->SetMarkerSize(0.7);      gPur->SetLineWidth(1);
+
+    gEffPur->SetMarkerColor(kMagenta+2); gEffPur->SetLineColor(kMagenta+2);
+    gEffPur->SetMarkerStyle(20);         gEffPur->SetMarkerSize(0.7);   gEffPur->SetLineWidth(1);
+
+    if(xmin != 999 && xmax != 999){
+        gEff->GetXaxis()->SetLimits(xmin, xmax);
+    }
+
+    gEff->SetTitle(hTotal->GetTitle());
+    gEff->GetXaxis()->SetTitle(hTotal->GetXaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle("Fraction");
+    gEff->GetYaxis()->SetRangeUser(0, 130);
+    gEff->GetYaxis()->SetTitleOffset(1.4);
+
+    gEff->Draw("AP");
+    gPur->Draw("P SAME");
+    gEffPur->Draw("P SAME");
+
+    // Find the bin for the optimal cut and read off eff/pur/effPur there
+    int optimalBin = hTotal->FindBin(optimalCut);
+    if(optimalBin < 1) optimalBin = 1;
+    if(optimalBin > nBins) optimalBin = nBins;
+
+    double effAtOptimal    = eff->GetEfficiency(optimalBin) * 100.0;
+    double purAtOptimal    = pur->GetEfficiency(optimalBin) * 100.0;
+    double effPurAtOptimal = effPur->GetEfficiency(optimalBin) * 100.0;
+
+    gPad->Update();
+    double yAxisMin = gEff->GetYaxis()->GetXmin();
+    double yAxisMax = gEff->GetYaxis()->GetXmax();
+
+    TLine* line = new TLine(optimalCut, yAxisMin, optimalCut, yAxisMax);
+    line->SetLineColor(kBlack);
+    line->SetLineStyle(2);
+    line->SetLineWidth(2);
+    line->Draw("same");
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.40; Lymax=0.88; Lxmax=0.87; Lymin=0.80; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.15; Lymax=0.88; Lxmax=0.62; Lymin=0.80; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.40; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.15; Lymax=0.26; Lxmax=0.62; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymin, Lxmax, Lymax);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->SetNColumns(3);
+    leg->AddEntry(gEff, "Efficiency", "PE");
+    leg->AddEntry(gPur, "Purity", "PE");
+    leg->AddEntry(gEffPur, "Efficiency x Purity", "PE");
+    leg->Draw();
+
+    TLatex* text = new TLatex();
+    text->SetNDC();
+    text->SetTextSize(0.03);
+    text->SetTextAlign(11);
+
+    double xText = 0.16;
+    double yText = 0.72;
+    double yStep = 0.045;
+
+    text->DrawLatex(xText, yText,           Form("Optimal Cut: %.4f", optimalCut));
+    text->DrawLatex(xText, yText - yStep,   Form("Efficiency x Purity: %.2f", effPurAtOptimal));
+    text->DrawLatex(xText, yText - 2*yStep, Form("Efficiency: %.2f %%", effAtOptimal));
+    text->DrawLatex(xText, yText - 3*yStep, Form("Purity: %.2f %%", purAtOptimal));
+
+    if(!plotLabel.empty()){
+        text->SetTextSize(0.035);
+        text->DrawLatex(xText, yText - 5*yStep, plotLabel.c_str());
+    }
+
+    gPad->RedrawAxis();
+    c->SaveAs(filename.c_str());
+
+    delete gEff;
+    delete gPur;
+    delete gEffPur;
+    delete line;
+    delete leg;
+    delete text;
+    delete c;
+}
+
+void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, double optimalCut, const std::string& plotLabel = "", int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
     bool keepRight = (efficiencyWay == -1);
 
     // Total signal before cuts
@@ -1287,13 +1411,17 @@ void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_s
     rej->SetUseWeightedEvents(false);
     effPur->SetUseWeightedEvents(false);
     effPur_newDef->SetUseWeightedEvents(false);
-    
+   
+    // Comment out if not wanting individual plots 
     drawEfficiencyErrors(eff, filenameEff, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
     drawEfficiencyErrors(eff_newDef, filenameEff_newDef, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
     drawEfficiencyErrors(pur, filenamePur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
     drawEfficiencyErrors(rej, filenameRej, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
     drawEfficiencyErrors(effPur, filenameEffPur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
     drawEfficiencyErrors(effPur_newDef, filenameEffPur_newDef, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+
+    std::string filenameCombined = std::string(filename) + "_effPurCombined.pdf";
+    drawEffPurEffPurCombined(eff_newDef, pur, effPur_newDef, optimalCut, filenameCombined, legendLocation, plotLabel, xmin, xmax);
 }
 
 void allSelectionPlots_macro(){
@@ -2464,6 +2592,17 @@ void allSelectionPlots_macro(){
                 fillHistogram(&energyAsymmetryBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_beforeCuts.energy)/recoilElectron.energy), &weights);
             }           
  
+            // Check whether reco neutrino is in FV
+            if(!(sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow  && std::abs(sliceRecoVX) > FVCut_xCentre && sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow && sliceRecoVZ > FVCut_zLow && sliceRecoVZ < FVCut_zHigh)){
+                // Reco neutrino isn't in FV
+                fillHistogram(&sliceRecoNeutInFVBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, 0.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVBeforeCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, 0.5, &weights);
+            } else{
+                // Reco neutrino is in FV
+                fillHistogram(&sliceRecoNeutInFVBeforeCuts, DLCurrent, signal, sliceCategoryPlottingMacro, 1.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVBeforeCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, 1.5, &weights);
+            }
+
             // Start applying cuts here, this macro has no option to turn off the removal of clear cosmic PFPs
             double summedEnergy_afterCuts = 0;
             double numPFPsSlice_afterCuts = 0;
@@ -2705,6 +2844,17 @@ void allSelectionPlots_macro(){
             fillSplitIntHistogram(&sliceRecoVXHighAfterCRUMBSCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVX, &weights);
             fillSplitIntHistogram(&sliceRecoVYHighAfterCRUMBSCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVY, &weights);
             fillSplitIntHistogram(&sliceRecoVZHighAfterCRUMBSCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVZ, &weights);
+            
+            // Check whether reco neutrino is in FV
+            if(!(sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow  && std::abs(sliceRecoVX) > FVCut_xCentre && sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow && sliceRecoVZ > FVCut_zLow && sliceRecoVZ < FVCut_zHigh)){
+                // Reco neutrino isn't in FV
+                fillHistogram(&sliceRecoNeutInFVAfterCRUMBSCut, DLCurrent, signal, sliceCategoryPlottingMacro, 0.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterCRUMBSCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, 0.5, &weights);
+            } else{
+                // Reco neutrino is in FV
+                fillHistogram(&sliceRecoNeutInFVAfterCRUMBSCut, DLCurrent, signal, sliceCategoryPlottingMacro, 1.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterCRUMBSCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, 1.5, &weights);
+            }
 
             if(FVCut == 1){
                 if(!(sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow  && std::abs(sliceRecoVX) > FVCut_xCentre && sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow && sliceRecoVZ > FVCut_zLow && sliceRecoVZ < FVCut_zHigh)){
@@ -2760,6 +2910,17 @@ void allSelectionPlots_macro(){
             fillSplitIntHistogram(&sliceRecoVXHighAfterFVCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVX, &weights);
             fillSplitIntHistogram(&sliceRecoVYHighAfterFVCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVY, &weights);
             fillSplitIntHistogram(&sliceRecoVZHighAfterFVCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, sliceRecoVZ, &weights);
+            
+            // Check whether reco neutrino is in FV
+            if(!(sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow  && std::abs(sliceRecoVX) > FVCut_xCentre && sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow && sliceRecoVZ > FVCut_zLow && sliceRecoVZ < FVCut_zHigh)){
+                // Reco neutrino isn't in FV
+                fillHistogram(&sliceRecoNeutInFVAfterFVCut, DLCurrent, signal, sliceCategoryPlottingMacro, 0.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterFVCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, 0.5, &weights);
+            } else{
+                // Reco neutrino is in FV
+                fillHistogram(&sliceRecoNeutInFVAfterFVCut, DLCurrent, signal, sliceCategoryPlottingMacro, 1.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterFVCut_splitDLNuE, DLCurrent, signal, sliceInteractionType, 1.5, &weights);
+            }
 
             fillHistogram(&sliceNumPrimaryPFPsAfterFVCut, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsSlice_afterCuts, &weights);
             fillHistogram(&sliceNumPrimaryPFPsMinHitAfterFVCut, DLCurrent, signal, sliceCategoryPlottingMacro, numPrimaryPFPsMinHitSlice_afterCuts, &weights);
@@ -3001,6 +3162,17 @@ void allSelectionPlots_macro(){
                 fillHistogram(&angleDifferencePCAPFP10cmSignalAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, angleDifferencePCAPFP10cm_afterCuts, &weights);
                 fillHistogram(&energyAsymmetryAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, ((recoilElectron.energy - highestEnergyPFP_afterCuts.energy)/recoilElectron.energy), &weights);
             }           
+            
+            // Check whether reco neutrino is in FV
+            if(!(sliceRecoVX < FVCut_xHigh && sliceRecoVX > FVCut_xLow  && std::abs(sliceRecoVX) > FVCut_xCentre && sliceRecoVY < FVCut_yHigh && sliceRecoVY > FVCut_yLow && sliceRecoVZ > FVCut_zLow && sliceRecoVZ < FVCut_zHigh)){
+                // Reco neutrino isn't in FV
+                fillHistogram(&sliceRecoNeutInFVAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, 0.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, 0.5, &weights);
+            } else{
+                // Reco neutrino is in FV
+                fillHistogram(&sliceRecoNeutInFVAfterCuts, DLCurrent, signal, sliceCategoryPlottingMacro, 1.5, &weights);
+                fillSplitIntHistogram(&sliceRecoNeutInFVAfterCuts_splitDLNuE, DLCurrent, signal, sliceInteractionType, 1.5, &weights);
+            }
 
         } // End of looping through slices
 
@@ -3240,6 +3412,13 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+
+    styleDrawAll(sliceRecoNeutInFVBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
+    styleDrawBackSig(sliceRecoNeutInFVBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true, false, true);
+    styleDrawSplit(sliceRecoNeutInFVBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true, false, true);
+    styleDrawAll(sliceRecoNeutInFVAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
+    styleDrawBackSig(sliceRecoNeutInFVAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true, false, true);
+    styleDrawSplit(sliceRecoNeutInFVAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true, false, true);
 
     styleDrawAll(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
     styleDrawBackSig(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
