@@ -276,7 +276,7 @@ void styleDrawAll(histGroup_struct hists,
                   bool includeCosmic = true,
                   bool includeDLUboone = true, bool includeDLNuE = true,
                   bool includeBDT = true,
-                  bool useLogScale = false, bool bestPDGPlot = false)
+                  bool useLogScale = false, bool bestPDGPlot = false, bool fvPlot = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -309,6 +309,15 @@ void styleDrawAll(histGroup_struct hists,
             hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
             hist->GetXaxis()->SetBinLabel(5, "p");
             hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
+        }
+    }
+
+    if(fvPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "No");
+            hist->GetXaxis()->SetBinLabel(2, "Yes");
             hist->LabelsOption("h");
         }
     }
@@ -448,7 +457,7 @@ void styleDrawBackSig(histGroup_struct hists,
                       double ymin, double ymax, double xmin, double xmax,
                       const char* filename, const std::string& legendLocation,
                       bool includeCurrent = true, bool includeUboone = true, bool includeNuE = true,
-                      bool useLogScale = false, bool bestPDGPlot = false)
+                      bool useLogScale = false, bool bestPDGPlot = false, bool fvPlot = false)
 {
     hists.canvas->cd();
     hists.canvas->SetTickx();
@@ -492,6 +501,15 @@ void styleDrawBackSig(histGroup_struct hists,
             hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
             hist->GetXaxis()->SetBinLabel(5, "p");
             hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
+        }
+    }
+    
+    if(fvPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "No");
+            hist->GetXaxis()->SetBinLabel(2, "Yes");
             hist->LabelsOption("h");
         }
     }
@@ -561,7 +579,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
                     double ymin, double ymax, double xmin, double xmax,
                     const char* filename, const std::string& legendLocation,
                     int* drawLine = nullptr, int* linePos = nullptr,
-                    bool useLogScale = false, bool bestPDGPlot = false){
+                    bool useLogScale = false, bool bestPDGPlot = false, bool fvPlot = false){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -593,6 +611,15 @@ void styleDrawSplit(splitHistGroup_struct hists,
             hist->GetXaxis()->SetBinLabel(4, "#pi^{#pm}");
             hist->GetXaxis()->SetBinLabel(5, "p");
             hist->GetXaxis()->SetBinLabel(6, "Other");
+            hist->LabelsOption("h");
+        }
+    }
+
+    if(fvPlot){
+        for(auto* hist : allHists){
+            if(!hist) continue;
+            hist->GetXaxis()->SetBinLabel(1, "No");
+            hist->GetXaxis()->SetBinLabel(2, "Yes");
             hist->LabelsOption("h");
         }
     }
@@ -671,10 +698,10 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->AddEntry(hists.CCnumu, "CC#nu_{#mu}", "f");
     legend->AddEntry(hists.CCnue, "CC#nu_{e}", "f");
     legend->AddEntry(hists.dirt, "Dirt", "f");
-    legend->AddEntry(hists.nu_eDirt, "#nu+e Dirt", "f");
+    legend->AddEntry(hists.nu_eDirt, "Dirt #nu+e Elastic Scatter", "f");
     legend->AddEntry(hists.cosmic, "Cosmic", "f");
     legend->AddEntry(hists.other, "Other", "f");
-    legend->AddEntry(hists.nu_eFuzzy, "#nu+e Fuzzy", "f");
+    legend->AddEntry(hists.nu_eFuzzy, "Mis-Reco #nu+e Elastic Scatter", "f");
     legend->SetTextSize(0.0225);
 
     legend->SetMargin(0.13);
@@ -1893,6 +1920,11 @@ void allSelectionPlots_macro(){
     auto sliceRecoVZHighBeforeCuts_splitDLNuE = createSplitHistGroup("sliceRecoVZHighBeforeCuts_splitDLNuE", "Z Coordinate of Reco Neutrino (Before Cuts)", "z_{Reco} (cm) ", 40, 480, 510);
     auto sliceRecoVZHighAfterCuts = createHistGroup("sliceRecoVZHighAfterCuts", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
     auto sliceRecoVZHighAfterCuts_splitDLNuE = createSplitHistGroup("sliceRecoVZHighAfterCuts_splitDLNuE", "Z Coordinate of Reco Neutrino (After Cuts)", "z_{Reco} (cm) ", 40, 480, 510);
+    
+    auto sliceRecoNeutInFVBeforeCuts = createHistGroup("sliceRecoNeutInFVBeforeCuts", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVBeforeCuts_splitDLNuE = createSplitHistGroup("sliceRecoNeutInFVBeforeCuts_splitDLNuE", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVAfterCuts = createHistGroup("sliceRecoNeutInFVAfterCuts", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVAfterCuts_splitDLNuE = createSplitHistGroup("sliceRecoNeutInFVAfterCuts_splitDLNuE", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
    
     auto energyAsymmetryBeforeCuts = createHistGroup("energyAsymmetryBeforeCuts", "Energy Asymmetry of the PFP in the Slice with the Highest Energy (Before Cuts)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
     auto energyAsymmetryBeforeCuts_splitDLNuE = createSplitHistGroup("energyAsymmetryBeforeCut_splitDLNuE", "Energy Asymmetry of the PFP in the Slice with the Highest Energy (Before Cuts)", "(E_{true} - E_{reco})/E_{true}", 20, -1, 1);
@@ -1975,6 +2007,11 @@ void allSelectionPlots_macro(){
     auto sliceRecoVZHighAfterCRUMBSCut_splitDLNuE = createSplitHistGroup("sliceRecoVZHighAfterCRUMBSCut_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
     auto sliceRecoVZHighAfterFVCut = createHistGroup("sliceRecoVZHighAfterFVCut", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
     auto sliceRecoVZHighAfterFVCut_splitDLNuE = createSplitHistGroup("sliceRecoVZHighAfterFVCut_splitDLNuE", "Z Coordinate of Reco Neutrino", "z_{Reco} (cm) ", 40, 480, 510);
+    
+    auto sliceRecoNeutInFVAfterCRUMBSCut = createHistGroup("sliceRecoNeutInFVAfterCRUMBSCut", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVAfterCRUMBSCut_splitDLNuE = createSplitHistGroup("sliceRecoNeutInFVAfterCRUMBSCut_splitDLNuE", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVAfterFVCut = createHistGroup("sliceRecoNeutInFVAfterFVCut", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
+    auto sliceRecoNeutInFVAfterFVCut_splitDLNuE = createSplitHistGroup("sliceRecoNeutInFVAfterFVCut_splitDLNuE", "Reco Neutrino Within FV", "In FV?", 2, 0, 2);
  
     auto sliceNumPrimaryPFPsAfterFVCut = createHistGroup("sliceNumPrimaryPFPsAfterFVCut", "Number of Primary PFPs in Slice", "Number of Primary PFPs", 20, 0, 20);
     auto sliceNumPrimaryPFPsAfterFVCut_splitDLNuE = createSplitHistGroup("sliceNumPrimaryPFPsAfterFVCut_splitDLNuE", "Number of Primary PFPs in Slice", "Number of Primary PFPs", 20, 0, 20);
