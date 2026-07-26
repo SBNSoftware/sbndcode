@@ -760,6 +760,515 @@ void styleDrawSplit(splitHistGroup_struct hists,
 
 }
 
+TH1D* makeTotalHist(const TH1D* h){
+    TH1D* hc = (TH1D*)h->Clone(Form("%s_totalSum", h->GetName()));
+    hc->Reset();
+
+    double totalSum = h->Integral(0, h->GetNbinsX() + 1);
+    //std::cout << "total sum = " << totalSum << std::endl; 
+    
+    for(int i = 0; i <= hc->GetNbinsX() + 1; ++i){
+        hc->SetBinContent(i, totalSum);
+    }
+
+    return hc;
+}
+
+TH1D* makeCumulative(const TH1D* h, bool keepRight){
+    TH1D* hc = (TH1D*)h->Clone(Form("%s_cumulative", h->GetName()));
+    hc->Reset();
+
+    int n = h->GetNbinsX();
+
+    if (keepRight) {
+        double sum = 0.0;
+        for (int i = n; i >= 1; --i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+        }
+    } else {
+        double sum = 0.0;
+        for (int i = 1; i <= n; ++i) {
+            sum += h->GetBinContent(i);
+            hc->SetBinContent(i, sum);
+        }
+    }
+
+    return hc;
+}
+
+double getMinValueEfficiency(const TEfficiency* eff, double xmin, double xmax, bool includeErrors = false){
+    if (!eff) return 0.0;
+
+    const TH1* hTotConst = eff->GetTotalHistogram();
+    if (!hTotConst) return 0.0;
+
+    TH1* hTot = const_cast<TH1*>(hTotConst);
+
+    int binMin = hTot->FindBin(xmin);
+    int binMax = hTot->FindBin(xmax);
+
+    binMin = std::max(binMin, 1);
+    binMax = std::min(binMax, hTot->GetNbinsX());
+
+    double minVal = std::numeric_limits<double>::max();
+
+    for (int i = binMin; i <= binMax; ++i) {
+        if (!hTot->GetBinContent(i)) continue;
+
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val -= eff->GetEfficiencyErrorLow(i);
+
+        if (val < minVal)
+            minVal = val;
+    }
+
+    if (minVal == std::numeric_limits<double>::max())
+        return 0.0;
+
+    return minVal;
+}
+
+double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false){
+    double maxVal = 0.0;
+
+    int nBins = eff->GetTotalHistogram()->GetNbinsX();
+    for (int i = 1; i <= nBins; ++i) {
+        if (!eff->GetTotalHistogram()->GetBinContent(i)) continue;
+
+        double val = eff->GetEfficiency(i);
+        if (includeErrors)
+            val += eff->GetEfficiencyErrorUp(i);
+
+        if (val > maxVal)
+            maxVal = val;
+    }
+    return maxVal;
+}
+
+void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, double xmin, double xmax, double efficiencyWay = 0.0){
+    if (!plot) {
+        std::cerr << "drawEfficiency: null TEfficiency pointer\n";
+        return;
+    }
+
+    double maxVal = getMaxValueEfficiency(plot, false);
+    double minVal = getMinValueEfficiency(plot, xmin, xmax, false);
+
+    TCanvas* c = new TCanvas("c_eff", "Efficiency comparison", 800, 600);
+    c->SetTicks();
+    c->SetLeftMargin(0.15);
+
+    plot->SetMarkerColor(kBlack);
+    plot->SetMarkerSize(0.7); 
+    plot->SetLineWidth(1);
+    plot->SetLineColor(kBlack);
+    plot->SetMarkerStyle(20);
+
+    const TH1* hTotal = plot->GetTotalHistogram();
+    int nBins = hTotal->GetNbinsX();
+    TGraphAsymmErrors* gEff = new TGraphAsymmErrors(nBins);    
+
+    double maxEff = 0;
+    double maxEffBin = 0;
+
+    for(int i = 1; i <= nBins; ++i){
+        double xCenter = hTotal->GetXaxis()->GetBinCenter(i);
+        double xErr = (hTotal->GetXaxis()->GetBinUpEdge(i) - hTotal->GetXaxis()->GetBinLowEdge(i)) / 2.0;
+        
+        double yEff = plot->GetEfficiency(i);
+        double yErrLow  = plot->GetEfficiencyErrorLow(i);
+        double yErrUp   = plot->GetEfficiencyErrorUp(i);
+
+        if(yEff == maxEff){
+            // The eff x pur value is the same as the max value
+            if(efficiencyWay == -1) maxEffBin = (xCenter - xErr); 
+        } else if(yEff > maxEff){
+            maxEff = yEff;
+            if(efficiencyWay == 1) maxEffBin = (xCenter + xErr);
+            if(efficiencyWay == -1) maxEffBin = (xCenter - xErr);
+        }
+
+        gEff->SetPoint(i-1, xCenter, yEff);
+        gEff->SetPointError(i-1, xErr, xErr, yErrLow, yErrUp);
+    }
+
+    gEff->SetLineColor(kBlack);
+    gEff->SetMarkerColor(kBlack);
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.7);
+    gEff->SetLineWidth(1);
+    if(xmin != 999){
+        gEff->GetXaxis()->SetLimits(xmin, xmax);
+    }
+    gEff->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
+
+    const TH1* hAxis = plot->GetTotalHistogram();
+    gEff->SetTitle(plot->GetTitle());
+    gEff->GetXaxis()->SetTitle(hAxis->GetXaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitle(hAxis->GetYaxis()->GetTitle());
+    gEff->GetYaxis()->SetTitleOffset(1.6);
+    gEff->Draw("AP");
+
+    plot->Draw("SAME");
+    gPad->Update();
+
+    auto* gBDT = plot->GetPaintedGraph();
+    gBDT->SetMarkerSize(0.8);
+    gBDT->Draw("PE SAME");
+
+    auto* g = plot->GetPaintedGraph();
+    
+    if(lowY == -999999 && highY == -999999){
+        g->GetYaxis()->SetRangeUser(minVal*0.9, maxVal*1.1);
+    } else{
+        g->GetYaxis()->SetRangeUser(lowY, highY);
+    }
+
+    double Lxmin=0, Lxmax=0, Lymin=0, Lymax=0;
+    if(legendLocation == "topRight"){ Lxmin=0.69; Lymax=0.863; Lxmax=0.87; Lymin=0.74; }
+    else if(legendLocation == "topLeft"){ Lxmin=0.13; Lymax=0.863; Lxmax=0.31; Lymin=0.74; }
+    else if(legendLocation == "bottomRight"){ Lxmin=0.69; Lymax=0.26; Lxmax=0.87; Lymin=0.137; }
+    else if(legendLocation == "bottomLeft"){ Lxmin=0.13; Lymax=0.26; Lxmax=0.31; Lymin=0.137; }
+
+    TLegend* leg = new TLegend(Lxmin, Lymax, Lxmax, Lymin);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(plot, "DL Nu+E", "LEP");
+
+    //leg->Draw();
+
+    c->SaveAs(filename.c_str());
+    delete c;
+}
+
+void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& filename) {
+    if (!numerator || !denominator) return;
+
+    TEfficiency* eff = new TEfficiency(*numerator, *denominator);
+    eff->SetStatisticOption(TEfficiency::kFCP);
+    eff->SetUseWeightedEvents(false);
+
+    TGraphAsymmErrors* gEff = eff->CreateGraph();
+    gEff->SetMarkerStyle(20);
+    gEff->SetMarkerSize(0.8);
+    gEff->SetLineWidth(2);
+    gEff->SetLineColor(kBlack);
+
+    {
+        TCanvas* c = new TCanvas("c1", "Denominator + Efficiency", 800, 600);
+        c->SetLeftMargin(0.15);
+        c->SetRightMargin(0.12);
+        gPad->SetTicks(1, 0);
+
+        TH1D* denomCopy = (TH1D*)denominator->Clone("denom_copy1");
+        denomCopy->SetFillColor(kAzure-4);
+        denomCopy->SetLineColor(kAzure-5);
+        denomCopy->SetStats(0);
+
+        denomCopy->SetTitle(Form("%s;%s;# of Events", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
+
+        double maxVal = 0;
+        for(int i = 1; i <= denomCopy->GetNbinsX(); ++i){
+            double val = denomCopy->GetBinContent(i);
+            if(val > maxVal) maxVal = val;
+        }
+
+        denomCopy->SetMaximum(maxVal * 1.3);
+
+        denomCopy->Draw("HIST");
+
+        gPad->Update();
+        double ymin = gPad->GetUymin();
+        double ymax = gPad->GetUymax();
+
+        TGraphAsymmErrors* gScaled = (TGraphAsymmErrors*)gEff->Clone("gScaled1");
+        for (int i = 0; i < gScaled->GetN(); ++i) {
+            double x, y;
+            gScaled->GetPoint(i, x, y);
+
+            double yScaled = ymin + y * (ymax - ymin);
+            double eyl = gScaled->GetErrorYlow(i) * (ymax - ymin);
+            double eyh = gScaled->GetErrorYhigh(i) * (ymax - ymin);
+
+            gScaled->SetPoint(i, x, yScaled);
+            gScaled->SetPointError(i, gScaled->GetErrorXlow(i), gScaled->GetErrorXhigh(i), eyl, eyh);
+        }
+
+        gScaled->Draw("PE SAME");
+
+        TGaxis* axis = new TGaxis(gPad->GetUxmax(), ymin, gPad->GetUxmax(), ymax, 0.0, 1.0, 510, "+L");
+
+        axis->SetTitle("Efficiency");
+        axis->SetTitleOffset(1.2);
+        axis->SetLabelFont(42);
+        axis->SetTitleFont(42);
+        axis->SetLabelSize(0.035);
+        axis->SetTitleSize(0.04);
+        axis->Draw();
+
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.75, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(denomCopy, "Before Cuts", "F");
+        leg->AddEntry(gScaled, "Efficiency", "PE");
+        leg->Draw();
+        gPad->RedrawAxis();
+
+        c->SaveAs((filename + "Denominator.pdf").c_str());
+
+        delete gScaled;
+        delete denomCopy;
+        delete leg;
+        delete c;
+    }
+
+    {
+        TCanvas* c = new TCanvas("c2", "Efficiency Only", 800, 600);
+        c->SetLeftMargin(0.15);
+
+        TH1D* frame = (TH1D*)numerator->Clone("frame");
+        frame->Reset();
+        frame->SetStats(0);
+        frame->SetTitle(Form("%s;%s;Efficiency", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
+        frame->SetMinimum(0.0);
+        frame->SetMaximum(1.0);
+        frame->Draw();
+
+        gEff->Draw("PE SAME");
+
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.75, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(gEff, "Efficiency", "PE");
+        leg->Draw();
+        gPad->RedrawAxis();
+
+        c->SaveAs((filename + ".pdf").c_str());
+
+        delete frame;
+        delete leg;
+        delete c;
+    }
+
+    {
+        TCanvas* c = new TCanvas("c3", "Num + Denom + Efficiency", 800, 600);
+        c->SetLeftMargin(0.15);
+        c->SetRightMargin(0.12);
+        gPad->SetTicks(1, 0);
+
+        TH1D* denomCopy = (TH1D*)denominator->Clone("denom_copy3");
+        TH1D* numCopy   = (TH1D*)numerator->Clone("num_copy3");
+
+        denomCopy->SetFillColor(kAzure-4);
+        denomCopy->SetLineColor(kAzure-5);
+        numCopy->SetFillColor(kOrange+6);
+        numCopy->SetLineColor(kOrange+7);
+
+        denomCopy->SetStats(0);
+        numCopy->SetStats(0);
+
+        denomCopy->SetTitle(Form("%s;%s;# of Events", numerator->GetTitle(), numerator->GetXaxis()->GetTitle()));
+
+        double maxVal = 0;
+        for(int i = 1; i <= denomCopy->GetNbinsX(); ++i){
+            double val = denomCopy->GetBinContent(i);
+            if(val > maxVal) maxVal = val;
+        }
+
+        denomCopy->SetMaximum(maxVal * 1.3);
+
+        denomCopy->Draw("HIST");
+        numCopy->Draw("HIST SAME");
+
+        gPad->Update();
+        double ymin = gPad->GetUymin();
+        double ymax = gPad->GetUymax();
+
+        // Scale efficiency
+        TGraphAsymmErrors* gScaled = (TGraphAsymmErrors*)gEff->Clone("gScaled3");
+        for (int i = 0; i < gScaled->GetN(); ++i) {
+            double x, y;
+            gScaled->GetPoint(i, x, y);
+
+            double yScaled = ymin + y * (ymax - ymin);
+            double eyl = gScaled->GetErrorYlow(i) * (ymax - ymin);
+            double eyh = gScaled->GetErrorYhigh(i) * (ymax - ymin);
+
+            gScaled->SetPoint(i, x, yScaled);
+            gScaled->SetPointError(i,
+                gScaled->GetErrorXlow(i),
+                gScaled->GetErrorXhigh(i),
+                eyl, eyh);
+        }
+
+        gScaled->Draw("PE SAME");
+
+        TGaxis* axis = new TGaxis(
+            gPad->GetUxmax(), ymin,
+            gPad->GetUxmax(), ymax,
+            0.0, 1.0,
+            510, "+L"
+        );
+
+        axis->SetTitle("Efficiency");
+        axis->SetTitleOffset(1.2);
+        axis->SetLabelFont(42);
+        axis->SetTitleFont(42);
+        axis->SetLabelSize(0.035);
+        axis->SetTitleSize(0.04);
+        axis->Draw();
+
+        // Legend
+        TLegend* leg = new TLegend(0.65, 0.70, 0.88, 0.88);
+        leg->SetBorderSize(0);
+        leg->SetFillStyle(0);
+        leg->AddEntry(denomCopy, "Before Cuts", "F");
+        leg->AddEntry(numCopy, "After Cuts", "F");
+        leg->AddEntry(gScaled, "Efficiency", "PE");
+        leg->Draw();
+        gPad->RedrawAxis();
+
+        c->SaveAs((filename + "DenominatorNumerator.pdf").c_str());
+
+        delete gScaled;
+        delete denomCopy;
+        delete numCopy;
+        delete leg;
+        delete c;
+    }
+
+    delete gEff;
+    delete eff;
+}
+
+void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
+    bool keepRight = (efficiencyWay == -1);
+
+    // Total signal before cuts
+    //std::cout << "============================ total signal before cuts ============================" << std::endl;
+    TH1D* hTotalSignalBeforeCuts = makeTotalHist(histBeforeCuts->nuESignal);
+    //std::cout << "======================================================================================" << std::endl;
+
+    TH1D* hTotalSignalNewDefinition = (TH1D*)histBeforeCuts->nuESignal->Clone("hTotalSignalNewDefinition");
+    hTotalSignalNewDefinition->Reset();
+
+    for(int i = 1; i <= hTotalSignalNewDefinition->GetNbinsX(); i++){
+        hTotalSignalNewDefinition->SetBinContent(i, trueSignal);
+    }
+
+    // Total signal kept after cuts (cumulative)
+    //std::cout << "============================ total signal kept after cuts ============================" << std::endl;
+    TH1D* hPassedSignalAfterCuts = makeCumulative(histAfterCuts->nuESignal, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background before cuts
+    //std::cout << "============================ total background before cuts ============================" << std::endl;
+    TH1D* hTotalBackgroundBeforeCutsAdded = (TH1D*) histBeforeCuts->nuECosmic->Clone("hTotalBackgroundBeforeCutsAdded");
+    hTotalBackgroundBeforeCutsAdded->Reset();
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuECosmic);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuEBNB);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuEBNBFuzzy);
+    hTotalBackgroundBeforeCutsAdded->Add(histBeforeCuts->nuESignalFuzzy);
+    //std::cout << "Number of entries = " << hTotalBackgroundBeforeCutsAdded->GetEntries() << std::endl;
+    TH1D* hTotalBackgroundBeforeCuts = makeTotalHist(hTotalBackgroundBeforeCutsAdded);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background kept after cuts (cumulative)
+    //std::cout << "============================ total background kept after cuts ============================" << std::endl;
+    TH1D* hPassedBackgroundAfterCutsAdded = (TH1D*) histAfterCuts->nuECosmic->Clone("hPassedBackgroundAfterCutsAdded");
+    hPassedBackgroundAfterCutsAdded->Reset();
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuECosmic);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuEBNB);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuEBNBFuzzy);
+    hPassedBackgroundAfterCutsAdded->Add(histAfterCuts->nuESignalFuzzy);
+    TH1D* hPassedBackgroundAfterCuts = makeCumulative(hPassedBackgroundAfterCutsAdded, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background rejected after cuts (cumulative)
+    //std::cout << "============================ total background rejected after cuts ============================" << std::endl;
+    TH1D* hRejectedBackgroundAfterCuts = (TH1D*) hTotalBackgroundBeforeCuts->Clone("hRejectedBackgroundAfterCuts");
+    hRejectedBackgroundAfterCuts->Add(hPassedBackgroundAfterCuts, -1.0);
+    //std::cout << "======================================================================================" << std::endl;
+
+    // Total background + signal kept after cuts (cumulative)
+    //std::cout << "============================ total background + signal after cuts ============================" << std::endl;
+    TH1D* hPassedBackgroundSignalAfterCutsAdded = (TH1D*) histAfterCuts->nuECosmic->Clone("hPassedBackgroundSignalAfterCutsAdded");
+    hPassedBackgroundSignalAfterCutsAdded->Reset();
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuECosmic);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuEBNB);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuEBNBFuzzy);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuESignalFuzzy);
+    hPassedBackgroundSignalAfterCutsAdded->Add(histAfterCuts->nuESignal);
+    TH1D* hPassedBackgroundSignalAfterCuts = makeCumulative(hPassedBackgroundSignalAfterCutsAdded, keepRight);
+    //std::cout << "======================================================================================" << std::endl;
+
+    TH1D* hEffPurNumerator = (TH1D*) histAfterCuts->nuESignal->Clone("hEffPurNumerator");
+    hEffPurNumerator->Reset();
+    hEffPurNumerator->Add(hPassedSignalAfterCuts);
+    hEffPurNumerator->Multiply(hPassedSignalAfterCuts);
+
+    TH1D* hEffPurDenominator = (TH1D*) histAfterCuts->nuESignal->Clone("hEffPurDenominator");
+    hEffPurDenominator->Reset();
+    hEffPurDenominator->Add(hTotalSignalBeforeCuts);
+    hEffPurDenominator->Multiply(hPassedBackgroundSignalAfterCuts);
+
+    TH1D* hEffPurDenominator_newDef = (TH1D*) histAfterCuts->nuESignal->Clone("hEffPurDenominator_newDef");
+    hEffPurDenominator_newDef->Reset();
+    hEffPurDenominator_newDef->Add(hTotalSignalNewDefinition);
+    hEffPurDenominator_newDef->Multiply(hPassedBackgroundSignalAfterCuts);
+
+    // Efficiency plot
+    TEfficiency* eff = new TEfficiency(*hPassedSignalAfterCuts, *hTotalSignalBeforeCuts);
+    TEfficiency* eff_newDef = new TEfficiency(*hPassedSignalAfterCuts, *hTotalSignalNewDefinition);
+    TEfficiency* rej = new TEfficiency(*hRejectedBackgroundAfterCuts, *hTotalBackgroundBeforeCuts);
+    TEfficiency* pur = new TEfficiency(*hPassedSignalAfterCuts, *hPassedBackgroundSignalAfterCuts);
+    TEfficiency* effPur = new TEfficiency(*hEffPurNumerator, *hEffPurDenominator);
+    TEfficiency* effPur_newDef = new TEfficiency(*hEffPurNumerator, *hEffPurDenominator_newDef);
+
+    eff->SetTitle(Form("%s;%s;Efficiency", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    eff->SetStatisticOption(TEfficiency::kFNormal);
+    
+    eff_newDef->SetTitle(Form("%s;%s;Efficiency", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    eff_newDef->SetStatisticOption(TEfficiency::kFNormal);
+    
+    pur->SetTitle(Form("%s;%s;Purity", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    pur->SetStatisticOption(TEfficiency::kFNormal);
+    
+    rej->SetTitle(Form("%s;%s;Background Rejection", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    rej->SetStatisticOption(TEfficiency::kFNormal);
+    
+    effPur->SetTitle(Form("%s;%s;Efficiency x Purity", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    effPur->SetStatisticOption(TEfficiency::kFNormal);
+    
+    effPur_newDef->SetTitle(Form("%s;%s;Efficiency x Purity", histAfterCuts->nuESignal->GetTitle(), histAfterCuts->nuESignal->GetXaxis()->GetTitle()));
+    effPur_newDef->SetStatisticOption(TEfficiency::kFNormal);
+
+    std::string filenameEff = std::string(filename) + "_eff.pdf";
+    std::string filenameEff_newDef = std::string(filename) + "_effNewDef.pdf";
+    std::string filenamePur = std::string(filename) + "_pur.pdf";
+    std::string filenameRej = std::string(filename) + "_rej.pdf";
+    std::string filenameEffPur = std::string(filename) + "_effPur.pdf";
+    std::string filenameEffPur_newDef = std::string(filename) + "_effPurNewDef.pdf";
+
+    eff->SetUseWeightedEvents(false);
+    eff_newDef->SetUseWeightedEvents(false);
+    pur->SetUseWeightedEvents(false);
+    rej->SetUseWeightedEvents(false);
+    effPur->SetUseWeightedEvents(false);
+    effPur_newDef->SetUseWeightedEvents(false);
+    
+    drawEfficiencyErrors(eff, filenameEff, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+    drawEfficiencyErrors(eff_newDef, filenameEff_newDef, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+    drawEfficiencyErrors(pur, filenamePur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+    drawEfficiencyErrors(rej, filenameRej, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+    drawEfficiencyErrors(effPur, filenameEffPur, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+    drawEfficiencyErrors(effPur_newDef, filenameEffPur_newDef, -999999, -999999, legendLocation, xmin, xmax, efficiencyWay);
+}
+
 void allSelectionPlots_macro(){
 
     TChain *subRunTree = new TChain("ana/SubRun");
