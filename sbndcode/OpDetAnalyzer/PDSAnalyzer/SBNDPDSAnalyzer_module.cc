@@ -549,7 +549,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _endTimeDeco.push_back(endtime);
         _opChDeco.push_back(fChNumber);
         for(unsigned int i=0;i<wvf.size();i++){
-          _signalsDeco[fChNumber].push_back(wvf[i]);
+          _signalsDeco[DecoVectorIndex].push_back(wvf[i]);
         }
       }
     }
