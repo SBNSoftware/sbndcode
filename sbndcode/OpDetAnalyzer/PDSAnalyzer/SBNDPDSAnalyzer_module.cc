@@ -530,9 +530,9 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     int NPMT=120;
     int NArapuca=192;
     int NFlash = int((*wvfHandle).size()/NPMT);
-    for(int iChannel; iChannel<(NPMT+NArapuca); iChannel++)
+    for(int iChannel=0; iChannel<(NPMT+NArapuca); iChannel++)
     {
-      for(int iFlash; iFlash<NFlash; iFlash++)
+      for(int iFlash=0; iFlash<NFlash; iFlash++)
       {
         _signalsDeco.push_back({});
       }
