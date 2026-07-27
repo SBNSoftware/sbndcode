@@ -22,11 +22,13 @@
 #include <string>
 #include <vector>
 
+
+
 //--------------------------------------------------------------------------------
 
 sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDatabaseProvider(
   const fhicl::ParameterSet& pset)
-  : fVerbose{pset.get<bool>("Verbose", false)}
+  : fVerbose{pset.get<bool>("Verbose", false)}, fApplyScales{pset.get<bool>("ApplyScales", false)}
   , fLogCategory{pset.get<std::string>("LogCategory", "PMTTimingCorrection")}
 {
   fhicl::ParameterSet const tags{pset.get<fhicl::ParameterSet>("CorrectionTags")};
@@ -37,6 +39,49 @@ sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDatabaseProvider(
   if (fVerbose)
     mf::LogInfo(fLogCategory) << "Database tags for timing corrections:\n"
                               << "Cables corrections  " << fPMTCalibrationDatabaseTag << "\n";
+
+  auto const scales_pset_vec = pset.get<std::vector<fhicl::ParameterSet>>("Scales", {});
+  for (auto const& scale_pset : scales_pset_vec) {
+    PMTCalibrationDBScales scale;
+    int channel = scale_pset.get<int>("Channel");
+    if (channel < 0 && channel != -1) {
+        // TODO throw an error
+    }
+    
+    // a bit verbose but makes sure optional values aren't set unless
+    // explicitly written in the fhicl
+    bool onpmt = true;
+    if (scale_pset.get_if_present<bool>("OnPMT", onpmt)) scale.onPMT = onpmt;
+
+    bool reconstructch = true;
+    if (scale_pset.get_if_present<bool>("ReconstructChannel", reconstructch)) scale.reconstructChannel = reconstructch;
+
+    float totaltransittime;
+    if (scale_pset.get_if_present<float>("TotalTransitTime", totaltransittime)) scale.totalTransitTime = totaltransittime;
+
+    float cosmictimecorrection;
+    if (scale_pset.get_if_present<float>("CosmicTimeCorrection", cosmictimecorrection)) scale.cosmicTimeCorrection = cosmictimecorrection;
+
+    float speamplitude;
+    if (scale_pset.get_if_present<float>("SPEAmplitude", speamplitude)) scale.spe_amplitude = speamplitude;
+
+    float speamplitudestd;
+    if (scale_pset.get_if_present<float>("SPEAmplitudeStd", speamplitudestd)) scale.spe_amplitude_std = speamplitudestd;
+
+    float gausswcpower;
+    if (scale_pset.get_if_present<float>("GaussWCPower", gausswcpower)) scale.gauss_wc_power = gausswcpower;
+
+    float gausswc;
+    if (scale_pset.get_if_present<float>("GaussWC", gausswc)) scale.gauss_wc = gausswc;
+
+    float nonlinearitypesat;
+    if (scale_pset.get_if_present<float>("NonlinearityPESat", nonlinearitypesat)) scale.nonlinearity_pesat = nonlinearitypesat;
+
+    float nonlinearityalpha;
+    if (scale_pset.get_if_present<float>("NonlinearityAlpha", nonlinearityalpha)) scale.nonlinearity_alpha = nonlinearityalpha;
+
+    fPMTCalibrationScales[channel] = scale;
+  }
 }
 
 // -------------------------------------------------------------------------------
@@ -216,6 +261,35 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
       _ser.push_back(_ser_component);
     }
     fPMTCalibrationData[channel].ser = _ser;
+
+    if (fApplyScales) {
+        // modify the default scale from user settings
+        PMTCalibrationDBScales final_scale;
+
+        // first overwrite with global scale values
+        if (auto it = fPMTCalibrationScales.find(-1); it != fPMTCalibrationScales.end()) {
+            if (fVerbose) {
+                mf::LogInfo(fLogCategory) << "Applying global scaling...\n";
+            }
+            modifyScale(final_scale, it->second);
+        }
+
+        // then overwrite with per-channel values
+        if (auto it = fPMTCalibrationScales.find(channel); it != fPMTCalibrationScales.end()) {
+            if (fVerbose) {
+                mf::LogInfo(fLogCategory) << "Applying channel scaling...\n";
+            }
+            modifyScale(final_scale, it->second);
+        }
+
+        fPMTCalibrationData[channel] = scalePMTCalibrationData(
+                fPMTCalibrationData[channel], final_scale
+        );
+    }
+    if (fVerbose) {
+        mf::LogInfo(fLogCategory) << " --- Calibration information for channel "
+            << channel << " ---\n" << calibDataStr(fPMTCalibrationData[channel]) << "\n";
+    }
   }
 }
 
@@ -240,4 +314,85 @@ void sbndDB::PMTCalibrationDatabaseProvider::readPMTCalibrationDatabase(const ar
       mf::LogVerbatim(fLogCategory) << key << " " << value.breakoutBox << "," << std::endl;
     }
   }
+}
+
+
+// -----------------------------------------------------------------------------
+
+/// Apply scaling factors to the PMT calibrations
+sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDB sbndDB::PMTCalibrationDatabaseProvider::scalePMTCalibrationData(
+        const PMTCalibrationDB& db, const PMTCalibrationDBScales& scales) const
+{
+    PMTCalibrationDB result;
+
+    // copy IDs, no modification
+    result.breakoutBox = db.breakoutBox;
+    result.caenDigitizer = db.caenDigitizer;
+    result.caenDigitizerChannel = db.caenDigitizerChannel;
+
+    // copy and scale calibrations
+    // bools: change value if set
+    if (scales.onPMT) result.onPMT = scales.onPMT.value();
+    if (scales.reconstructChannel) result.reconstructChannel = scales.reconstructChannel.value();
+
+    // otherwise multiply
+    result.totalTransitTime = db.totalTransitTime * scales.totalTransitTime.value_or(1.0);
+    result.cosmicTimeCorrection = db.cosmicTimeCorrection * scales.cosmicTimeCorrection.value_or(1.0);
+    result.spe_amplitude = db.spe_amplitude * scales.spe_amplitude.value_or(1.0);
+    result.spe_amplitude_std = db.spe_amplitude_std * scales.spe_amplitude_std.value_or(1.0);
+    result.gauss_wc_power = db.gauss_wc_power * scales.gauss_wc_power.value_or(1.0);
+    result.gauss_wc = db.gauss_wc * scales.gauss_wc.value_or(1.0);
+    result.nonlinearity_pesat = db.nonlinearity_pesat * scales.nonlinearity_pesat.value_or(1.0);
+    result.nonlinearity_alpha = db.nonlinearity_alpha * scales.nonlinearity_alpha.value_or(1.0);
+
+    // TODO not implemented
+    result.ser = db.ser;
+
+    return result;
+}
+
+
+/// overwrite fields of target with those from update
+void sbndDB::PMTCalibrationDatabaseProvider::modifyScale(
+        PMTCalibrationDBScales& target, const PMTCalibrationDBScales& update) const
+{
+    if (update.onPMT) target.onPMT = update.onPMT;
+    if (update.reconstructChannel) target.reconstructChannel = update.reconstructChannel;
+
+    if (update.totalTransitTime) target.totalTransitTime = update.totalTransitTime;
+    if (update.cosmicTimeCorrection) target.cosmicTimeCorrection = update.cosmicTimeCorrection;
+    if (update.spe_amplitude) target.spe_amplitude = update.spe_amplitude;
+    if (update.spe_amplitude_std) target.spe_amplitude_std = update.spe_amplitude_std;
+    if (update.gauss_wc_power) target.gauss_wc_power = update.gauss_wc_power;
+    if (update.gauss_wc) target.gauss_wc = update.gauss_wc;
+    if (update.nonlinearity_pesat) target.nonlinearity_pesat = update.nonlinearity_pesat;
+    if (update.nonlinearity_alpha) target.nonlinearity_alpha = update.nonlinearity_alpha;
+
+    // TODO SER not implemented
+}
+
+/// overwrite fields of target with those from update
+std::string sbndDB::PMTCalibrationDatabaseProvider::calibDataStr(const PMTCalibrationDB& data) const
+{
+    static const std::string sep(": ");
+    static const std::string prefix(" - ");
+    std::stringstream ss;
+
+    ss << prefix << "breakoutBox" << sep << data.breakoutBox << "\n";
+    ss << prefix << "caenDigitizer" << sep << data.caenDigitizer << "\n";
+    ss << prefix << "caenDigitizerChannel" << sep << data.caenDigitizerChannel << "\n";
+    ss << prefix << "onPMT" << sep << (data.onPMT ? "True" : "False") << "\n";
+    ss << prefix << "reconstructChannel" << sep << (data.reconstructChannel ? "True" : "False") << "\n";
+    ss << prefix << "totalTransitTime" << sep << data.totalTransitTime << "\n";
+    ss << prefix << "cosmicTimeCorrection" << sep << data.cosmicTimeCorrection << "\n";
+    ss << prefix << "spe_amplitude" << sep << data.spe_amplitude << "\n";
+    ss << prefix << "spe_amplitude_std" << sep << data.spe_amplitude_std << "\n";
+    ss << prefix << "gauss_wc_power" << sep << data.gauss_wc_power << "\n";
+    ss << prefix << "gauss_wc" << sep << data.gauss_wc << "\n";
+    ss << prefix << "nonlinearity_pesat" << sep << data.nonlinearity_pesat << "\n";
+    ss << prefix << "nonlinearity_alpha" << sep << data.nonlinearity_alpha << "\n";
+
+    // TODO SER not implemented
+    
+    return ss.str();
 }

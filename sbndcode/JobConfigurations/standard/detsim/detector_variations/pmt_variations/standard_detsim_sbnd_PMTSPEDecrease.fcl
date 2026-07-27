@@ -1,0 +1,9 @@
+#include "detsim_detvar_PDSonly_sbnd.fcl"
+
+services.IPMTCalibrationDatabaseService.ApplyScales: true
+services.IPMTCalibrationDatabaseService.Scales: [
+    {
+        Channel: -1
+        SPEAmplitude: 0.94
+    }
+]
