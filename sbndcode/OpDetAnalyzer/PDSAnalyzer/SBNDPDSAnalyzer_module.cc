@@ -529,20 +529,25 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _opChDeco.clear();
     int NPMT=120;
     int NArapuca=192;
-    int NFlash = int((*wvfHandle).size());
+    int NFlash = int((*wvfHandle).size()/NPMT);
     for(int iChannel; iChannel<(NPMT+NArapuca); iChannel++)
     {
-      _signalsDeco.push_back({});
+      for(int iFlash; iFlash<NFlash; iFlash++)
+      {
+        _signalsDeco.push_back({});
+      }
     }
+    int FlashIndexTracker=0;
     for(auto const& wvf : (*wvfHandle)) {
       int fChNumber = wvf.ChannelNumber();
+      int DecoVectorIndex = fChNumber + int(FlashIndexTracker/(NPMT));
+      FlashIndexTracker++;
       if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(fChNumber) ) != fPDTypes.end() ){
         double t0_Deco = wvf.TimeStamp();
         _stampTimeDeco.push_back(t0_Deco);//time stamp in us
         double endtime = wvf.size()*2.0/1000. + t0_Deco; //should tie the tick to a clock
         _endTimeDeco.push_back(endtime);
         _opChDeco.push_back(fChNumber);
-        _signalsDeco.push_back({});
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDeco[fChNumber].push_back(wvf[i]);
         }
