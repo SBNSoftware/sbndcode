@@ -380,7 +380,7 @@ namespace opdet {
           fTriggerService->ConstructMonPulse(fWaveforms, MonThreshold, MonPulse, 0, &pairThisFlash, fPMT_Channels);
           numPairsOverThreshold.push_back(pairThisFlash);
 
-          double tickPeriod = sampling_rate(clockData);
+          double tickPeriod = 1/sampling_rate(clockData);
 
           std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, fPMT_Channels, MonPulse, PairMultiplicityThreshold, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
           std::vector<std::vector<int>> SlicedMonPulse = sliceMonPulse(MonPulse, PairMultiplicityThreshold, ticksPerSlice, PercentTicksBeforeCross);
@@ -512,7 +512,7 @@ namespace opdet {
 
       for (int i = 0; i < static_cast<int>(pulse->size()); ++i) {
           // find crossing point
-          if ((*pulse)[i] > PairMultiplicityThreshold && !interest) {
+          if ((*pulse)[i] >= PairMultiplicityThreshold && !interest) {
               crossingPoints.push_back(i);
               interest = true;
           }
@@ -520,7 +520,11 @@ namespace opdet {
               interest = false;
           }
       }
-
+      std::cout << "Listing Crossing Points" << std::endl;
+      for(int i=0; i<int(crossingPoints.size()); i++){
+	std::cout << crossingPoints[i] << "   ";
+      }
+      std::cout << std::endl;
       // create 10us (or given) slices around crossingPoints
       for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
           // if near end of full waveform

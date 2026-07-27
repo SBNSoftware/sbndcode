@@ -312,11 +312,11 @@ end_product_list
 #   case it is optional.
 #
 ####################################
-qualifier	sbncode		sbndutil	sbnd_data    fhiclpy	notes
+qualifier	sbncode		sbndutil	sbnd_data    fhiclpy   notes
 c14:debug	c14:debug	c14:debug	-nq-         c14:debug
-c14:prof	c14:prof	c14:prof	-nq-         c14:prof
+c14:prof	c14:prof	c14:prof	-nq-         c14:prof 
 e26:debug	e26:debug	e26:debug	-nq-         e26:debug
-e26:prof	e26:prof	e26:prof	-nq-         e26:prof
+e26:prof	e26:prof	e26:prof	-nq-         e26:prof 
 end_qualifier_list
 ####################################
 
