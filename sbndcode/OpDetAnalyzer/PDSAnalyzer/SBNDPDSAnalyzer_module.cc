@@ -136,6 +136,7 @@ void opdet::SBNDPDSAnalyzer::beginJob()
   if(fSaveDeconvolvedWaveforms){
     fTree->Branch("SignalsDeco", "std::vector<std::vector<double>>",&_signalsDeco);
     fTree->Branch("StampTimeDeco", "std::vector<double>",&_stampTimeDeco);
+    fTree->Branch("EndTimeDeco", "std::vector<double>",&_endTimeDeco);
     fTree->Branch("OpChDeco", "std::vector<int>",&_opChDeco);
   }
 
@@ -524,24 +525,29 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
     _signalsDeco.clear();
     _stampTimeDeco.clear(); 
+    _endTimeDeco.clear(); 
     _opChDeco.clear();
-
+    int NPMT=120;
+    int NArapuca=192;
+    int NFlash = int((*wvfHandle).size());
+    for(int iChannel; iChannel<(NPMT+NArapuca); iChannel++)
+    {
+      _signalsDeco.push_back({});
+    }
     for(auto const& wvf : (*wvfHandle)) {
-      
       int fChNumber = wvf.ChannelNumber();
-      
       if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(fChNumber) ) != fPDTypes.end() ){
         double t0_Deco = wvf.TimeStamp();
         _stampTimeDeco.push_back(t0_Deco);//time stamp in us
+        double endtime = wvf.size()*2.0/1000. + t0_Deco; //should tie the tick to a clock
+        _endTimeDeco.push_back(endtime);
         _opChDeco.push_back(fChNumber);
         _signalsDeco.push_back({});
         for(unsigned int i=0;i<wvf.size();i++){
-          _signalsDeco[_signalsDeco.size()-1].push_back(wvf[i]);
+          _signalsDeco[fChNumber].push_back(wvf[i]);
         }
       }
-
     }
-
   }
 
   // --- Saving all OpHits

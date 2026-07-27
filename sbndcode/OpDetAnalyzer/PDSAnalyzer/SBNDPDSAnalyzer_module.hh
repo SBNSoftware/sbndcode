@@ -224,6 +224,7 @@ private:
   // Saving deconvolved signals
   std::vector < std::vector <double> > _signalsDeco;
   std::vector <double> _stampTimeDeco;
+  std::vector <double> _endTimeDeco;
   std::vector <int> _opChDeco;
 
   // Saving all the OpHits
