@@ -15,9 +15,9 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.20.05)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.21.01)
 find_package(cetmodules REQUIRED)
-project(sbndcode LANGUAGES CXX)
+project(sbndcode VERSION ${${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING} LANGUAGES CXX)
 
 # for CI:
 # project(sbndcode VERSION 10.05.00)
@@ -39,7 +39,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
-              -Wno-uninitialized
+              -Wno-uninitialized -Wno-error=array-bounds
               $<$<CXX_COMPILER_ID:Clang>:-Wno-return-stack-address>
 )
 ##add_definitions(-DGENIE_PRE_R3)

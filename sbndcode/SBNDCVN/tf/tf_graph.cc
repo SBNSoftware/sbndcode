@@ -12,7 +12,6 @@
 #include "tf_graph.h"
 
 #include "tensorflow/cc/saved_model/loader.h"
-#include "tensorflow/cc/saved_model/tag_constants.h"
 #include "tensorflow/core/platform/env.h"
 
 #include "tensorflow/core/public/session_options.h"
@@ -51,7 +50,7 @@ tf::Graph::Graph(const char* graph_file_name,
     status = tensorflow::LoadSavedModel(tensorflow::SessionOptions(),
                                         tensorflow::RunOptions(),
                                         graph_file_name,
-                                        {tensorflow::kSavedModelTagServe},
+                                        {"serve"},
                                         fBundle);
     std::cout << "tf_graph loaded SavedModelBundle with status: " << status.ToString() << std::endl;
     if (!status.ok()) return;
