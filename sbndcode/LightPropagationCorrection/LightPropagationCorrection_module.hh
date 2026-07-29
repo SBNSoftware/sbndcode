@@ -232,6 +232,7 @@ private:
     int fEvent;
     int fRun;
     int fSubrun;
+    size_t fNOpChannels;
     double _fNuScore;
     double _fFMScore;
     double fEventTriggerTime=-999999.;

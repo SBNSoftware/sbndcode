@@ -30,6 +30,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     // 
     // More initializers here.
 {
+    fNOpChannels = fWireReadout.NOpChannels();
     // Initialize the TimeCorrectionVector PerChannel
     fTimeCorrectionPerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
     fParticlePropagationTimePerChannel.resize(fNOpChannels, 0.0); // Initialize with zero or any default value
