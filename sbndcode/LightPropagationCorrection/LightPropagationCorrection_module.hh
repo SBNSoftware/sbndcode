@@ -222,6 +222,8 @@ private:
     double fPostWindow;
     double fPDFraction;
 
+    bool fIsMC; // Flag to indicate if the data is from MC or real data
+
     bool fDebug;
 
     art::ServiceHandle<art::TFileService> tfs;

@@ -25,6 +25,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fPreWindow ( p.get<double>("PreWindow") ),
     fPostWindow ( p.get<double>("PostWindow") ),
     fPDFraction ( p.get<double>("PDFraction") ),
+    fIsMC ( p.get<bool>("IsMC") ),
     fDebug( p.get<bool>("Debug", false) )
     // 
     // More initializers here.
@@ -201,21 +202,24 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         
         // Get the SPECTDC product required to go to the RWM reference frame
 
-        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-        e.getByLabel(fSPECTDCLabel, tdcHandle);
-        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-            std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            ResetSliceInfo();
-            continue;
-        }
-        else{
-            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-            for (size_t i=0; i<tdc_v.size(); i++){
-                auto tdc = tdc_v[i];
-                const uint32_t  ch = tdc.Channel();
-                const uint64_t  ts = tdc.Timestamp();
-                if(ch == 2) fRWMTime = ts%uint64_t(1e9);
-                if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
+        if(!fIsMC)
+        {
+            art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+            e.getByLabel(fSPECTDCLabel, tdcHandle);
+            if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+                std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+                ResetSliceInfo();
+                continue;
+            }
+            else{
+                const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+                for (size_t i=0; i<tdc_v.size(); i++){
+                    auto tdc = tdc_v[i];
+                    const uint32_t  ch = tdc.Channel();
+                    const uint64_t  ts = tdc.Timestamp();
+                    if(ch == 2) fRWMTime = ts%uint64_t(1e9);
+                    if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
+                }
             }
         }
         // Get all the OpT0 objects associated to the slice
@@ -312,8 +316,8 @@ void sbnd::LightPropagationCorrection::ResetEventVars()
         fRun = 0;
         fSubrun = 0;
         _fNuScore = 0.0;
-        fRWMTime=-99999.;
-        fEventTriggerTime=-99999.;
+        fRWMTime=0.;
+        fEventTriggerTime=0.;
         fNuScore.clear();
         fFMScore.clear();
         fOpFlashTimeOld.clear();
@@ -624,10 +628,10 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         newFlashTime = flasht0;
         particlePropTime = GetAverageParticlePropagationTime()/1000;
         photonPropTime = GetAveragePhotonPropagationTime()/1000;
-        correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
+        correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
         correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
-        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
+        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;;
         correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
         correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
     }

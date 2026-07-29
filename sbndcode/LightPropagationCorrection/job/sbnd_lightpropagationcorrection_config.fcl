@@ -41,6 +41,8 @@ LightPropagationCorrection:
     PDFraction: @local::FlashT0SelectedChannels.PDFraction
 
     FlashMatchingTool: "BarycenterFM"
+
+    IsMC: false
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
@@ -52,5 +54,7 @@ LightPropagationCorrectionSCE.SpacePointLabel: "pandoraSCE"
 LightPropagationCorrectionSCE.OpT0FinderModuleLabel: "opt0finderSCE"
 LightPropagationCorrectionSCE.TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatchingSCE"
 
+LightPropagationCorrectionSCEMC: @local::LightPropagationCorrectionSCE
+LightPropagationCorrectionSCEMC.IsMC: true
 
 END_PROLOG

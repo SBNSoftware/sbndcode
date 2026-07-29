@@ -83,7 +83,7 @@ sbnd_reco2_producers:{
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducerMC
     tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCEMC
-    lightpropagationcorrectionSCE: @local::LightPropagationCorrectionSCE
+    lightpropagationcorrectionSCE: @local::LightPropagationCorrectionSCEMC
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
