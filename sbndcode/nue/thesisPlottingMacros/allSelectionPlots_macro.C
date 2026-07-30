@@ -1327,7 +1327,7 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
     delete c;
 }
 
-void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, double optimalCut, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
+void efficiency(double trueSignal, histGroup_struct* histBeforeCuts, histGroup_struct* histAfterCuts, double ymin, double ymax, double xmin, double xmax, const char* filename, const char* rootname, const std::string& legendLocation, double optimalCut, int* drawLine = nullptr, int* linePos = nullptr, double efficiencyWay = 0.0){
     bool keepRight = (efficiencyWay == -1);
 
     // Total signal before cuts
