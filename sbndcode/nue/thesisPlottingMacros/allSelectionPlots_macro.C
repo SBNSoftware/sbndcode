@@ -168,6 +168,18 @@ struct eventCounting_struct{
     eventCounter_struct ETheta2IntSplit;    
 };
 
+TFile* outRootFile = nullptr;
+
+void saveCanvasToRootFile(TCanvas* c, const std::string& filename){
+    if(!outRootFile || !c) return;
+
+    std::string name = gSystem->BaseName(filename.c_str());
+    size_t dotPos = name.find_last_of('.');
+    if(dotPos != std::string::npos) name = name.substr(0, dotPos);
+
+    outRootFile->cd();
+    c->Write(name.c_str());
+}
 
 histGroup_struct createHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
     TCanvas* canvas = new TCanvas((baseName + "_canvas").c_str(), "Graph Draw Options", 200, 10, 600, 400);
@@ -269,7 +281,7 @@ void fillSplitIntHistogram(splitHistGroup_struct* hist, int DLCurrent, int signa
 
 void styleDrawAll(histGroup_struct hists,
                   double ymin, double ymax, double xmin, double xmax,
-                  const char* filename, const std::string& legendLocation,
+                  const char* filename, const char* rootname, const std::string& legendLocation,
                   int* drawLine = nullptr, int* linePos = nullptr,
                   bool includeSignal = true, bool includeSignalFuzzy = true,
                   bool includeBNB = true, bool includeBNBFuzzy = true,
@@ -451,11 +463,12 @@ void styleDrawAll(histGroup_struct hists,
     }
 
     hists.canvas->SaveAs(filename);
+    saveCanvasToRootFile(hists.canvas, rootname);
 }
 
 void styleDrawBackSig(histGroup_struct hists,
                       double ymin, double ymax, double xmin, double xmax,
-                      const char* filename, const std::string& legendLocation,
+                      const char* filename, const char* rootname, const std::string& legendLocation,
                       bool includeCurrent = true, bool includeUboone = true, bool includeNuE = true,
                       bool useLogScale = false, bool bestPDGPlot = false, bool fvPlot = false)
 {
@@ -569,6 +582,7 @@ void styleDrawBackSig(histGroup_struct hists,
     legend->Draw();
 
     hists.canvas->SaveAs(filename);
+    saveCanvasToRootFile(hists.canvas, rootname); 
 
     for (auto* hist : allHists)
         delete hist;
@@ -577,7 +591,7 @@ void styleDrawBackSig(histGroup_struct hists,
 
 void styleDrawSplit(splitHistGroup_struct hists,
                     double ymin, double ymax, double xmin, double xmax,
-                    const char* filename, const std::string& legendLocation,
+                    const char* filename, const char* rootname, const std::string& legendLocation,
                     int* drawLine = nullptr, int* linePos = nullptr,
                     bool useLogScale = false, bool bestPDGPlot = false, bool fvPlot = false){
     hists.canvas->cd();
@@ -708,6 +722,7 @@ void styleDrawSplit(splitHistGroup_struct hists,
     legend->Draw();
 
     hists.canvas->SaveAs(filename);
+    saveCanvasToRootFile(hists.canvas, rootname);
 
     // Drawing the histograms as a stack.
     const char* histsTitle = hists.nu_e->GetTitle();
@@ -874,7 +889,7 @@ double getMaxValueEfficiency(const TEfficiency* eff, bool includeErrors = false)
     return maxVal;
 }
 
-void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double lowY, double highY, const std::string& legendLocation, double xmin, double xmax, double efficiencyWay = 0.0){
+void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, const std::string& rootname, double lowY, double highY, const std::string& legendLocation, double xmin, double xmax, double efficiencyWay = 0.0){
     if (!plot) {
         std::cerr << "drawEfficiency: null TEfficiency pointer\n";
         return;
@@ -967,10 +982,11 @@ void drawEfficiencyErrors(TEfficiency* plot, const std::string& filename, double
     //leg->Draw();
 
     c->SaveAs(filename.c_str());
+    saveCanvasToRootFile(hists.canvas, rootname.c_str());
     delete c;
 }
 
-void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& filename) {
+void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& filename, const std::string& rootname){
     if (!numerator || !denominator) return;
 
     TEfficiency* eff = new TEfficiency(*numerator, *denominator);
@@ -1045,6 +1061,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
         gPad->RedrawAxis();
 
         c->SaveAs((filename + "Denominator.pdf").c_str());
+        saveCanvasToRootFile(hists.canvas, (rootname + "Denominator.pdf").c_str()
 
         delete gScaled;
         delete denomCopy;
@@ -1075,6 +1092,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
         gPad->RedrawAxis();
 
         c->SaveAs((filename + ".pdf").c_str());
+        saveCanvasToRootFile(hists.canvas, (rootname).c_str()
 
         delete frame;
         delete leg;
@@ -1160,6 +1178,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
         gPad->RedrawAxis();
 
         c->SaveAs((filename + "DenominatorNumerator.pdf").c_str());
+        saveCanvasToRootFile(hists.canvas, (rootname).c_str()));
 
         delete gScaled;
         delete denomCopy;
@@ -1173,7 +1192,7 @@ void drawTEfficiency(TH1D* numerator, TH1D* denominator, const std::string& file
 }
 
 void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* effPur,
-                               double optimalCut, const std::string& filename,
+                               double optimalCut, const std::string& filename, const std::string& rootname,
                                const std::string& legendLocation,
                                double xmin, double xmax){
     if(!eff || !pur || !effPur){
@@ -1223,11 +1242,25 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
 
     gEff->SetTitle(hTotal->GetTitle());
     gEff->GetXaxis()->SetTitle(hTotal->GetXaxis()->GetTitle());
-    gEff->GetYaxis()->SetTitle("Fraction");
+    gEff->GetYaxis()->SetTitle("Percentage (%)");
     gEff->GetYaxis()->SetRangeUser(0, 130);
     gEff->GetYaxis()->SetTitleOffset(1.4);
 
     gEff->Draw("AP");
+
+    gPad->Update();
+    double yAxisMinRight = gPad->GetUymin();
+    double yAxisMaxRight = gPad->GetUymax();
+
+    TGaxis* rightAxis = new TGaxis(gPad->GetUxmax(), yAxisMinRight, gPad->GetUxmax(), yAxisMaxRight, yAxisMinRight, yAxisMaxRight, 510, "+L");
+    rightAxis->SetTitle("Percentage (%)");
+    rightAxis->SetTitleOffset(1.4);
+    rightAxis->SetLabelFont(42);
+    rightAxis->SetTitleFont(42);
+    rightAxis->SetLabelSize(0.035);
+    rightAxis->SetTitleSize(0.04);
+    rightAxis->Draw();
+
     gPur->Draw("P SAME");
     gEffPur->Draw("P SAME");
 
@@ -1242,8 +1275,8 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
     double effPurAtOptimal = effPur->GetEfficiency(optimalBin) * 100.0;
 
     gPad->Update();
-    double yAxisMin = gEff->GetYaxis()->GetXmin();
-    double yAxisMax = gEff->GetYaxis()->GetXmax();
+    double yAxisMin = gPad->GetUymin();
+    double yAxisMax = gPad->GetUymax();
 
     TLine* line = new TLine(optimalCut, yAxisMin, optimalCut, yAxisMax);
     line->SetLineColor(kBlack);
@@ -1282,10 +1315,12 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
 
     gPad->RedrawAxis();
     c->SaveAs(filename.c_str());
+    saveCanvasToRootFile(hists.canvas, rootname.c_str());
 
     delete gEff;
     delete gPur;
     delete gEffPur;
+    delete rightAxis;
     delete line;
     delete leg;
     delete text;
@@ -1431,6 +1466,8 @@ void allSelectionPlots_macro(){
     std::string base_path = "/nashome/c/coackley/selectionThesisPlots_26Jul/";
 
     gROOT->SetBatch(true);
+
+    outRootFile = new TFile((base_path + "allPlots.root").c_str(), "RECREATE");
 
     int clearCosmicCut = 1;
     int numPFPs0Cut = 1;
@@ -3179,438 +3216,438 @@ void allSelectionPlots_macro(){
     int right = 1;
 
     // Draw histograms here
-    styleDrawAll(sliceCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_beforeCuts.pdf").c_str(), ("sliceCompleteness_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCompletenessBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts.pdf").c_str(), ("sliceCompleteness_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCompletenessAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCompleteness_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(slicePurityBeforeCuts, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(slicePurityBeforeCuts, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts.pdf").c_str(), ("slicePurity_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(slicePurityBeforeCuts, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(slicePurityBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts.pdf").c_str(), ("slicePurity_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(slicePurityAfterCuts, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(slicePurityAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "slicePurity_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceCRUMBSBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCRUMBSBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_beforeCuts.pdf").c_str(), ("sliceCRUMBS_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSBeforeCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "beforeCRUMBS_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts.pdf").c_str(), ("sliceCRUMBS_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterCuts, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceNumRecoNeutBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumRecoNeutBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts.pdf").c_str(), ("sliceNumRecoNeut_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts.pdf").c_str(), ("sliceNumRecoNeut_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceNumPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts.pdf").c_str(), ("sliceNumPFPs_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts.pdf").c_str(), ("sliceNumPFPs_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
  
-    styleDrawAll(sliceNumPrimaryPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts.pdf").c_str(), ("sliceNumPrimaryPFPs_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts.pdf").c_str(), ("sliceNumPrimaryPFPs_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
  
-    styleDrawAll(sliceNumPrimaryPFPsMinHitBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsMinHitBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_beforeCuts.pdf").c_str(), ("sliceNumPrimaryPFPsMinHit_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitBeforeCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsMinHitBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterCuts.pdf").c_str(), ("sliceNumPrimaryPFPsMinHit_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitAfterCuts, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsMinHitAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts.pdf").c_str(), ("ERecoSumThetaReco_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoSumThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoSumThetaRecoBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts.pdf").c_str(), ("ERecoSumThetaReco_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoSumThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoSumThetaRecoAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(ERecoHighestThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts.pdf").c_str(), ("ERecoHighestThetaReco_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoBeforeCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts.pdf").c_str(), ("ERecoHighestThetaReco_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterCuts, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_beforeCuts.pdf").c_str(), ("ERecoHighestThetaReco_pfp10cmPoints_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoBeforeCuts_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_afterCuts.pdf").c_str(), ("ERecoHighestThetaReco_pfp10cmPoints_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterCuts_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterCuts_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_pfp10cmPoints_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(dEdxBeforeCuts, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(dEdxBeforeCuts, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts.pdf").c_str(), ("dEdx_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxBeforeCuts, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdx_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdx_afterCuts.pdf").c_str(), ("dEdx_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxAfterCuts, 999, 999, 999, 999, (base_path + "dEdx_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(razzledPDG11BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG11BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts.pdf").c_str(), ("razzledPDG11_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11BeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts.pdf").c_str(), ("razzledPDG11_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(razzledPDG13BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG13BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts.pdf").c_str(), ("razzledPDG13_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG13BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG13BeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG13_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts.pdf").c_str(), ("razzledPDG13_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG13AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG13AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG13_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(razzledPDG22BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG22BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts.pdf").c_str(), ("razzledPDG22_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG22BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG22BeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts.pdf").c_str(), ("razzledPDG22_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG22AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG22AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG22_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(razzledPDG211BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG211BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts.pdf").c_str(), ("razzledPDG211_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211BeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts.pdf").c_str(), ("razzledPDG211_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(razzledPDG2212BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG2212BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts.pdf").c_str(), ("razzledPDG2212_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG2212BeforeCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG2212BeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts.pdf").c_str(), ("razzledPDG2212_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG2212AfterCuts, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG2212AfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG2212_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     
-    styleDrawAll(pfpCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(pfpCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts.pdf").c_str(), ("pfpCompleteness_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpCompletenessBeforeCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpCompletenessBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpCompleteness_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts.pdf").c_str(), ("pfpCompleteness_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpCompletenessAfterCuts, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpCompletenessAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpCompleteness_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(pfpPurityBeforeCuts, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(pfpPurityBeforeCuts, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts.pdf").c_str(), ("pfpPurity_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpPurityBeforeCuts, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpPurityBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpPurity_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts.pdf").c_str(), ("pfpPurity_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(pfpPurityAfterCuts, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(pfpPurityAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "pfpPurity_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(angleDifferenceSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferenceSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFPSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFPSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP5cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP5cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP10cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP10cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP15cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP15cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASliceSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASliceSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice5cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice5cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice10cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice10cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice15cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice15cmSignal_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferenceSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferenceSignal_beforeCuts.pdf").c_str(), ("angleDifferenceSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFPSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFPSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCAPFPSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP5cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP5cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCAPFP5cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP10cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP10cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCAPFP10cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP15cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP15cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCAPFP15cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASliceSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASliceSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCASliceSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice5cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice5cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCASlice5cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice10cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice10cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCASlice10cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice15cmSignalBeforeCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice15cmSignal_beforeCuts.pdf").c_str(), ("angleDifferencePCASlice15cmSignal_beforeCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
 
-    styleDrawAll(angleDifferenceSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferenceSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFPSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFPSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP5cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP5cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP10cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP10cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCAPFP15cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP15cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASliceSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASliceSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice5cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice5cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice10cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice10cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
-    styleDrawAll(angleDifferencePCASlice15cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice15cmSignal_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferenceSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferenceSignal_afterCuts.pdf").c_str(), ("angleDifferenceSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFPSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFPSignal_afterCuts.pdf").c_str(), ("angleDifferencePCAPFPSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP5cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP5cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCAPFP5cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP10cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP10cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCAPFP10cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCAPFP15cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCAPFP15cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCAPFP15cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASliceSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASliceSignal_afterCuts.pdf").c_str(), ("angleDifferencePCASliceSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice5cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice5cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCASlice5cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice10cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice10cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCASlice10cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
+    styleDrawAll(angleDifferencePCASlice15cmSignalAfterCuts, 999, 999, 999, 999, (base_path + "angleDifferencePCASlice15cmSignal_afterCuts.pdf").c_str(), ("angleDifferencePCASlice15cmSignal_afterCuts").c_str(), "topRight", nullptr, &right, true, false, false, false, false, false, true, false, false);
     
-    styleDrawAll(sliceRecoVXBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_beforeCuts.pdf").c_str(), ("sliceRecoVX_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVX_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCuts.pdf").c_str(), ("sliceRecoVX_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVYBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_beforeCuts.pdf").c_str(), ("sliceRecoVY_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVY_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCuts.pdf").c_str(), ("sliceRecoVY_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVZBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_beforeCuts.pdf").c_str(), ("sliceRecoVZ_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZ_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCuts.pdf").c_str(), ("sliceRecoVZ_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVXSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_beforeCuts.pdf").c_str(), ("sliceRecoVXSmallerBins_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXSmallerBinsBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCuts.pdf").c_str(), ("sliceRecoVXSmallerBins_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVYSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_beforeCuts.pdf").c_str(), ("sliceRecoVYSmallerBins_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYSmallerBinsBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCuts.pdf").c_str(), ("sliceRecoVYSmallerBins_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVZSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_beforeCuts.pdf").c_str(), ("sliceRecoVZSmallerBins_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZSmallerBinsBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCuts.pdf").c_str(), ("sliceRecoVZSmallerBins_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZSmallerBinsAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVXLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_beforeCuts.pdf").c_str(), ("sliceRecoVXLow_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXLowBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCuts.pdf").c_str(), ("sliceRecoVXLow_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     
-    styleDrawAll(sliceRecoVYLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_beforeCuts.pdf").c_str(), ("sliceRecoVYLow_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYLowBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCuts.pdf").c_str(), ("sliceRecoVYLow_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVZLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_beforeCuts.pdf").c_str(), ("sliceRecoVZLow_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZLowBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCuts.pdf").c_str(), ("sliceRecoVZLow_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZLowAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
  
-    styleDrawAll(sliceRecoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawBackSig(sliceRecoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(sliceRecoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_beforeCuts.pdf").c_str(), ("sliceRecoVXHigh_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceRecoVXHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_beforeCuts_BackSig.pdf").c_str(), ("sliceRecoVXHigh_beforeCuts_BackSig").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXHighBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCuts.pdf").c_str(), ("sliceRecoVXHigh_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVYHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_beforeCuts.pdf").c_str(), ("sliceRecoVYHigh_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYHighBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCuts.pdf").c_str(), ("sliceRecoVYHigh_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawBackSig(sliceRecoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawAll(sliceRecoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_beforeCuts.pdf").c_str(), ("sliceRecoVZHigh_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(sliceRecoVZHighBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_beforeCuts_BackSig.pdf").c_str(), ("sliceRecoVZHigh_beforeCuts_BackSig").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts.pdf").c_str(), ("sliceRecoVZHigh_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
-    styleDrawAll(sliceRecoNeutInFVBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
+    styleDrawAll(sliceRecoNeutInFVBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts.pdf").c_str(), ("sliceRecoNeutInFV_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
     styleDrawBackSig(sliceRecoNeutInFVBeforeCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true, false, true);
     styleDrawSplit(sliceRecoNeutInFVBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true, false, true);
-    styleDrawAll(sliceRecoNeutInFVAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
+    styleDrawAll(sliceRecoNeutInFVAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts.pdf").c_str(), ("sliceRecoNeutInFV_afterCuts").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true, false, true);
     styleDrawBackSig(sliceRecoNeutInFVAfterCuts, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true, false, true);
     styleDrawSplit(sliceRecoNeutInFVAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoNeutInFV_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true, false, true);
 
-    styleDrawAll(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
+    styleDrawAll(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts.pdf").c_str(), ("energyAsymmetry_beforeCuts").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
     styleDrawBackSig(energyAsymmetryBeforeCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(energyAsymmetryBeforeCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "energyAsymmetry_beforeCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(energyAsymmetryAfterCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts.pdf").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
+    styleDrawAll(energyAsymmetryAfterCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts.pdf").c_str(), ("energyAsymmetry_afterCuts").c_str(), "topRight", nullptr, &right, true, true, false, false, false, false, true, false, true);
     styleDrawBackSig(energyAsymmetryAfterCuts, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(energyAsymmetryAfterCuts_splitDLNuE, 999, 999, 999, 999, (base_path + "energyAsymmetry_afterCuts_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
 
     // Before and after individual cut plots
-    styleDrawAll(sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterClearCosmicCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterClearCosmicCut.pdf").c_str(), ("sliceNumPFPs_afterClearCosmicCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterClearCosmicCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsAfterClearCosmicCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterClearCosmicCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPFPsAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPFPsAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut.pdf").c_str(), ("sliceNumPFPs_afterNumPFPCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsAfterNumPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPsAfterClearCosmicCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPsAfterClearCosmicCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
-    styleDrawAll(sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut.pdf").c_str(), ("sliceNumRecoNeut_afterNumPFPCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutAfterNumPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumRecoNeutAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumRecoNeutAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut.pdf").c_str(), ("sliceNumRecoNeut_afterNumNeutrinoCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutAfterNumNeutrinoCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutAfterNumPFPCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutAfterNumPFPCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
-    styleDrawAll(sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut.pdf").c_str(), ("sliceCRUMBS_afterNumNeutrinoCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSAfterNumNeutrinoCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceCRUMBSAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceCRUMBSAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut.pdf").c_str(), ("sliceCRUMBS_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBSAfterNumNeutrinoCut_upperBound").c_str(), "topRight", 0.76, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBSAfterNumNeutrinoCut_lowerBound").c_str(), "topRight", 0.2, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVX_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut.pdf").c_str(), ("sliceRecoVX_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVXBeforeCuts, &sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVXBeforeCuts, &sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVY_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut.pdf").c_str(), ("sliceRecoVY_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVYBeforeCuts, &sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVYBeforeCuts, &sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVZ_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut.pdf").c_str(), ("sliceRecoVZ_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVZBeforeCuts, &sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVZBeforeCuts, &sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVXSmallerBins_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXSmallerBinsAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut.pdf").c_str(), ("sliceRecoVXSmallerBins_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVXSmallerBinsBeforeCuts, &sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVXSmallerBinsBeforeCuts, &sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVYSmallerBins_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYSmallerBinsAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut.pdf").c_str(), ("sliceRecoVYSmallerBins_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVYSmallerBinsBeforeCuts, &sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVYSmallerBinsBeforeCuts, &sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVZSmallerBins_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZSmallerBinsAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut.pdf").c_str(), ("sliceRecoVZSmallerBins_afterFVCut").s_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVZSmallerBinsBeforeCuts, &sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceRecoVZSmallerBinsBeforeCuts, &sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVXLow_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXLowAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut.pdf").c_str(), ("sliceRecoVXLow_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVXLowBeforeCuts, &sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVYLow_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYLowAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut.pdf").c_str(), ("sliceRecoVYLow_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVYLowBeforeCuts, &sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVZLow_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZLowAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut.pdf").c_str(), ("sliceRecoVZLow_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVZLowBeforeCuts, &sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
-    styleDrawAll(sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVXHigh_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXHighAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVXHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVXHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut.pdf").c_str(), ("sliceRecoVXHigh_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVXHighBeforeCuts, &sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
 
-    styleDrawAll(sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVYHigh_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYHighAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVYHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVYHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut.pdf").c_str(), ("sliceRecoVYHigh_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVYHighBeforeCuts, &sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
 
-    styleDrawAll(sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut.pdf").c_str(), ("sliceRecoVZHigh_afterCRUMBSCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceRecoVZHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceRecoVZHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut.pdf").c_str(), ("sliceRecoVZHigh_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceRecoVZHighBeforeCuts, &sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
 
-    styleDrawAll(sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut.pdf").c_str(), ("sliceNumPrimaryPFPs_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPrimaryPFPsAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut.pdf").c_str(), ("sliceNumPrimaryPFPs_afterPrimaryPFPCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsAfterPrimaryPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsAfterFVCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsAfterFVCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
-    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut.pdf").c_str(), ("sliceNumPrimaryPFPsMinHit_afterFVCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsMinHitAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut.pdf").c_str(), ("sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &sliceNumPrimaryPFPsMinHitBeforeCuts, &sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHitAfterFVCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
     efficiency(actualSignalCount, &sliceNumPrimaryPFPsMinHitBeforeCuts, &sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHitAfterFVCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
-    styleDrawAll(razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut.pdf").c_str(), ("razzledPDG11_afterPrimaryPFPCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11AfterPrimaryPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG11AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG11AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut.pdf").c_str(), ("razzledPDG11_afterRazzled11Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11AfterRazzled11Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &razzledPDG11BeforeCuts, &razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11AfterPrimaryPFPCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
     efficiency(actualSignalCount, &razzledPDG11BeforeCuts, &razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11AfterPrimaryPFPCut_lowerBound").c_str(), "topRight", 0.875, nullptr, &right, -1);
 
-    styleDrawAll(razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut.pdf").c_str(), ("razzledPDG211_afterRazzled11Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211AfterRazzled11Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(razzledPDG211AfterRazzled211Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(razzledPDG211AfterRazzled211Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut.pdf").c_str(), ("razzledPDG211_afterRazzled211Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211AfterRazzled211Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211AfterRazzled211Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &razzledPDG211BeforeCuts, &razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211AfterRazzled11Cut_upperBound").c_str(), "topRight", 0.0125, nullptr, &right, 1);
     efficiency(actualSignalCount, &razzledPDG211BeforeCuts, &razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211AfterRazzled11Cut_lowerBound").c_str(), "topRight", 0, nullptr, &right, -1);
 
-    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut.pdf").c_str(), ("ERecoHighestThetaReco_afterRazzled211Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterRazzled211Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut.pdf").c_str(), ("ERecoHighestThetaReco_afterETheta2Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterETheta2Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_upperBound").c_str(), "topRight", 3.066, nullptr, &right, 1);
     efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_lowerBound").c_str(), "topRight", 0, nullptr, &right, -1);
 
-    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_pfp10cmPoints.pdf").c_str(), ("ERecoHighestThetaReco_afterRazzled211Cut_pfp10cmPoints").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_BackSig_pfp10cmPoints.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterRazzled211Cut_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_splitInt_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_pfp10cmPoints.pdf").c_str(), ("ERecoHighestThetaReco_afterETheta2Cut_pfp10cmPoints").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterETheta2Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_BackSig_pfp10cmPoints.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterETheta2Cut_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_splitInt_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, &ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_upperBound_pfp10cmPoints").c_str(), "topRight", 3.066, nullptr, &right, 1);
     efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, &ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_lowerBound_pfp10cmPoints").c_str(), "topRight", 0, nullptr, &right, -1);
 
-    styleDrawAll(dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut.pdf").c_str(), ("dEdx_afterETheta2Cut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxAfterETheta2Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(dEdxAfterdEdxCut, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawAll(dEdxAfterdEdxCut, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut.pdf").c_str(), ("dEdx_afterdEdxCut").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxAfterdEdxCut, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxAfterdEdxCut_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
     efficiency(actualSignalCount, &dEdxBeforeCuts, &dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdxAfterETheta2Cut_upperBound").c_str(), "topRight", 3.25, nullptr, &right, 1);
@@ -3759,4 +3796,8 @@ void allSelectionPlots_macro(){
         out_tablefile << "" << std::endl; 
     }
 
+    if(outRootFile){
+        outRootFile->Write();
+        outRootFile->Close();
+    }
 }
