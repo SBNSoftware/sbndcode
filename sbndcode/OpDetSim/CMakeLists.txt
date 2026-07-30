@@ -9,7 +9,7 @@ cet_build_plugin( sbndPDMapAlg art::tool
                     lardataobj::RawData
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
-                    sbncode::OpDet_PDMapAlg
+                    sbncode::OpDet_PDMapAlgSimple_tool
                     sbndcode_Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Services_Optional_RandomNumberGenerator_service
