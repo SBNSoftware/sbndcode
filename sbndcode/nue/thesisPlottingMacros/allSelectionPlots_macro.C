@@ -1232,7 +1232,8 @@ void drawEffPurEffPurCombined(TEfficiency* eff, TEfficiency* pur, TEfficiency* e
     gEffPur->Draw("P SAME");
 
     // Find the bin for the optimal cut and read off eff/pur/effPur there
-    int optimalBin = hTotal->FindBin(optimalCut);
+    TH1* hTotalNonConst = const_cast<TH1*>(hTotal);
+    int optimalBin = hTotalNonConst->FindBin(optimalCut);
     if(optimalBin < 1) optimalBin = 1;
     if(optimalBin > nBins) optimalBin = nBins;
 
@@ -1427,7 +1428,7 @@ void allSelectionPlots_macro(){
     TChain *tree = new TChain("ana/NuE");
     tree->Add("/exp/sbnd/data/users/coackley/analysisFiles_14Jul/*.root");
 
-    std::string base_path = "/nashome/c/coackley/outputDirectory/";
+    std::string base_path = "/nashome/c/coackley/selectionThesisPlots_26Jul/";
 
     gROOT->SetBatch(true);
 
@@ -3429,6 +3430,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceNumPFPsAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPFPsAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPFPsAfterNumPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPFPs_afterNumPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPsAfterClearCosmicCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceNumPFPsBeforeCuts, &sliceNumPFPsAfterClearCosmicCut, 999, 999, 999, 999, (base_path + "sliceNumPFPsAfterClearCosmicCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
     styleDrawAll(sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3436,6 +3439,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceNumRecoNeutAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumRecoNeutAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumRecoNeutAfterNumNeutrinoCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumRecoNeut_afterNumNeutrinoCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutAfterNumPFPCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceNumRecoNeutBeforeCuts, &sliceNumRecoNeutAfterNumPFPCut, 999, 999, 999, 999, (base_path + "sliceNumRecoNeutAfterNumPFPCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
     styleDrawAll(sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterNumNeutrinoCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3443,6 +3448,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceCRUMBSAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceCRUMBSAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceCRUMBSAfterCRUMBSCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceCRUMBS_afterCRUMBSCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBSAfterNumNeutrinoCut_upperBound").c_str(), "topRight", 0.76, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceCRUMBSBeforeCuts, &sliceCRUMBSAfterNumNeutrinoCut, 999, 999, 999, 999, (base_path + "sliceCRUMBSAfterNumNeutrinoCut_lowerBound").c_str(), "topRight", 0.2, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3450,6 +3457,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVXAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVX_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVXBeforeCuts, &sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVXBeforeCuts, &sliceRecoVXAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3457,6 +3466,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVYAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVY_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVYBeforeCuts, &sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVYBeforeCuts, &sliceRecoVYAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3464,6 +3475,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVZAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZ_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVZBeforeCuts, &sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVZBeforeCuts, &sliceRecoVZAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3471,6 +3484,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVXSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVXSmallerBinsBeforeCuts, &sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVXSmallerBinsBeforeCuts, &sliceRecoVXSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3478,6 +3493,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVYSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVYSmallerBinsBeforeCuts, &sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVYSmallerBinsBeforeCuts, &sliceRecoVYSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3485,6 +3502,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVZSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZSmallerBinsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZSmallerBinsAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBins_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVZSmallerBinsBeforeCuts, &sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBinsAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceRecoVZSmallerBinsBeforeCuts, &sliceRecoVZSmallerBinsAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZSmallerBinsAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3492,6 +3511,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVXLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVXLowBeforeCuts, &sliceRecoVXLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", -192, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3499,6 +3519,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVYLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVYLowBeforeCuts, &sliceRecoVYLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", -194, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3506,6 +3527,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVZLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZLowAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZLowAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZLow_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVZLowBeforeCuts, &sliceRecoVZLowAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZLowAfterCRUMBSCut_lowerBound").c_str(), "topRight", 6, nullptr, &right, -1);
 
     styleDrawAll(sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3513,6 +3535,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVXHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVXHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVXHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVXHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVXHighBeforeCuts, &sliceRecoVXHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVXHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 192, nullptr, &right, 1);
 
     styleDrawAll(sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3520,6 +3543,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVYHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVYHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVYHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVYHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVYHighBeforeCuts, &sliceRecoVYHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVYHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 194, nullptr, &right, 1);
 
     styleDrawAll(sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterCRUMBSCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3527,6 +3551,7 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceRecoVZHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceRecoVZHighAfterFVCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceRecoVZHighAfterFVCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceRecoVZHigh_afterFVCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceRecoVZHighBeforeCuts, &sliceRecoVZHighAfterCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceRecoVZHighAfterCRUMBSCut_upperBound").c_str(), "topRight", 450, nullptr, &right, 1);
 
     styleDrawAll(sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3534,6 +3559,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceNumPrimaryPFPsAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsAfterPrimaryPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPs_afterPrimaryPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsAfterFVCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceNumPrimaryPFPsBeforeCuts, &sliceNumPrimaryPFPsAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsAfterFVCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
     styleDrawAll(sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterFVCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3541,6 +3568,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(sliceNumPrimaryPFPsMinHitAfterPrimaryPFPCut_splitDLNuE, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHit_afterPrimaryPFPCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &sliceNumPrimaryPFPsMinHitBeforeCuts, &sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHitAfterFVCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
+    efficiency(actualSignalCount, &sliceNumPrimaryPFPsMinHitBeforeCuts, &sliceNumPrimaryPFPsMinHitAfterFVCut, 999, 999, 999, 999, (base_path + "sliceNumPrimaryPFPsMinHitAfterFVCut_lowerBound").c_str(), "topRight", 1, nullptr, &right, -1);
 
     styleDrawAll(razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterPrimaryPFPCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3548,6 +3577,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(razzledPDG11AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG11AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG11AfterRazzled11Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG11_afterRazzled11Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &razzledPDG11BeforeCuts, &razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11AfterPrimaryPFPCut_upperBound").c_str(), "topRight", 1, nullptr, &right, 1);
+    efficiency(actualSignalCount, &razzledPDG11BeforeCuts, &razzledPDG11AfterPrimaryPFPCut, 999, 999, 999, 999, (base_path + "razzledPDG11AfterPrimaryPFPCut_lowerBound").c_str(), "topRight", 0.875, nullptr, &right, -1);
 
     styleDrawAll(razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled11Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3555,6 +3586,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(razzledPDG211AfterRazzled211Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(razzledPDG211AfterRazzled211Cut, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(razzledPDG211AfterRazzled211Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "razzledPDG211_afterRazzled211Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &razzledPDG211BeforeCuts, &razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211AfterRazzled11Cut_upperBound").c_str(), "topRight", 0.0125, nullptr, &right, 1);
+    efficiency(actualSignalCount, &razzledPDG211BeforeCuts, &razzledPDG211AfterRazzled11Cut, 999, 999, 999, 999, (base_path + "razzledPDG211AfterRazzled11Cut_lowerBound").c_str(), "topRight", 0, nullptr, &right, -1);
 
     styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3562,13 +3595,17 @@ void allSelectionPlots_macro(){
     styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(ERecoHighestThetaRecoAfterETheta2Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_upperBound").c_str(), "topRight", 3.066, nullptr, &right, 1);
+    efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts, &ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_lowerBound").c_str(), "topRight", 0, nullptr, &right, -1);
 
-    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawBackSig(ERecoHighestThetaRecoAfterRazzled211Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
-    styleDrawSplit(ERecoHighestThetaRecoAfterRazzled211Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
-    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
-    styleDrawBackSig(ERecoHighestThetaRecoAfterETheta2Cut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
-    styleDrawSplit(ERecoHighestThetaRecoAfterETheta2Cut_splitDLNuE, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_BackSig_pfp10cmPoints.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawSplit(ERecoHighestThetaRecoAfterRazzled211Cut_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterRazzled211Cut_splitInt_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true);
+    styleDrawAll(ERecoHighestThetaRecoAfterETheta2Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
+    styleDrawBackSig(ERecoHighestThetaRecoAfterETheta2Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_BackSig_pfp10cmPoints.pdf").c_str(), "topRight", false, false, true, true);
+    styleDrawSplit(ERecoHighestThetaRecoAfterETheta2Cut_splitDLNuE_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_afterETheta2Cut_splitInt_pfp10cmPoints.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, &ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_upperBound_pfp10cmPoints").c_str(), "topRight", 3.066, nullptr, &right, 1);
+    efficiency(actualSignalCount, &ERecoHighestThetaRecoBeforeCuts_pfp10cmPoints, &ERecoHighestThetaRecoAfterRazzled211Cut_pfp10cmPoints, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoAfterRazzled211Cut_lowerBound_pfp10cmPoints").c_str(), "topRight", 0, nullptr, &right, -1);
 
     styleDrawAll(dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdx_afterETheta2Cut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
@@ -3576,6 +3613,8 @@ void allSelectionPlots_macro(){
     styleDrawAll(dEdxAfterdEdxCut, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut.pdf").c_str(), "topRight", nullptr, &right, true, true, true, true, true, false, true, false, true);
     styleDrawBackSig(dEdxAfterdEdxCut, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut_BackSig.pdf").c_str(), "topRight", false, false, true, true);
     styleDrawSplit(dEdxAfterdEdxCut_splitDLNuE, 999, 999, 999, 999, (base_path + "dEdx_afterdEdxCut_splitInt.pdf").c_str(), "topRight", nullptr, &right, true);
+    efficiency(actualSignalCount, &dEdxBeforeCuts, &dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdxAfterETheta2Cut_upperBound").c_str(), "topRight", 3.25, nullptr, &right, 1);
+    efficiency(actualSignalCount, &dEdxBeforeCuts, &dEdxAfterETheta2Cut, 999, 999, 999, 999, (base_path + "dEdxAfterETheta2Cut_lowerBound").c_str(), "topRight", 0, nullptr, &right, -1);
 
     // Make table of efficiency, purity, etc for each cut
     std::ofstream out_tablefile(tableFileName, std::ios::app);
