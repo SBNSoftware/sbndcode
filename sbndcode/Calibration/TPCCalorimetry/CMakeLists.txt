@@ -19,7 +19,9 @@ set(TOOL_LIBRARIES
 
 cet_build_plugin(NormalizeDriftSQLite art::tool LIBRARIES ${TOOL_LIBRARIES})
 cet_build_plugin(NormalizeYZ art::tool LIBRARIES ${TOOL_LIBRARIES})
-
+cet_make_library(LIBRARY_NAME sbndcode_GIMME_LIFETIMES
+                 SOURCE    NormalizeDriftSQLite_class.cc
+                 LIBRARIES  ${TOOL_LIBRARIES})
 install_headers()
 install_fhicl()
 install_source()

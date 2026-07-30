@@ -57,6 +57,8 @@
 // Blip-specific utils
 #include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
 #include "sbnobj/SBND/Blip/BlipDataTypes.h"
+//electron lifetime includes
+#include "sbndcode/Calibration/TPCCalorimetry/NormalizeDriftSQLite_class.h" //Danger of double definition
 
 // ROOT stuff
 #include "TH1D.h"
@@ -187,6 +189,8 @@ namespace blip {
     bool                fYZUniformityCorr;
     float               fModBoxA;
     float               fModBoxB;
+    sbnd::calo::NormalizeDriftSQLite* ElifetimeTool;
+    sbnd::calo::NormalizeDriftSQLite::RunInfo EventTPCLifetimes;
 
     // --- Splines for calo
     TSpline3* spline_PSTAR;
