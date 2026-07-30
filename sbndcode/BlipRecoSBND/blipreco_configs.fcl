@@ -29,10 +29,14 @@ sbnd_blipalg:
   CalodEdx:             2.8             #// assumed dE/dx for MeV-scale recombination corrections
   ESTAR_p0:             0.01730         #// p0 for electrons to energy conversion function using ESTAR table
   ESTAR_p1:		0.00003479	#// p1 for electrons to	energy conversion function using ESTAR table
-  LifetimeCorrection:   false           #// correct blips for lifetime (assumes T0 = 0)
+  LifetimeCorrection:   true           #// correct blips for lifetime (assumes T0 = 0)
   SCECorrection:        false           #// correct blips for space charge (requires known XYZ)
   CaloAlg:              @local::sbnd_calorimetryalgmc
-  
+  NormalizeDrift:{
+  DBFileName: tpc_elifetime
+  DBTag: @local::SBND_Calibration_GlobalTags.tpc_elifetime_data
+  Verbose: false
+  }
   VetoBadChannels:      false            #// don't cluster hits from "bad" channels
   BadChanProducer:      "nfspl1:badchannels" #// label for vector of bad channel IDs from signal processing
   #BadChanFile:          "blipreco_badchannels.txt"
