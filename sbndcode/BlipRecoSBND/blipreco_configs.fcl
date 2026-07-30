@@ -32,7 +32,11 @@ sbnd_blipalg:
   LifetimeCorrection:   true           #// correct blips for lifetime (assumes T0 = 0)
   SCECorrection:        false           #// correct blips for space charge (requires known XYZ)
   CaloAlg:              @local::sbnd_calorimetryalgmc
-  
+  NormalizeDrift:{
+  DBFileName: tpc_elifetime
+  DBTag: @local::SBND_Calibration_GlobalTags.tpc_elifetime_data
+  Verbose: false
+  }
   VetoBadChannels:      false            #// don't cluster hits from "bad" channels
   BadChanProducer:      "nfspl1:badchannels" #// label for vector of bad channel IDs from signal processing
   #BadChanFile:          "blipreco_badchannels.txt"
