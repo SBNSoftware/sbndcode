@@ -18,8 +18,16 @@
     <NuSettingsFile>PandoraSettings_Neutrino_SBND.xml</NuSettingsFile>
     <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
     <StitchingTools>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>false</ThreeDStitchingMode></tool>
+      <tool type = "LArStitchingCosmicRayMerging">
+        <ThreeDStitchingMode>true</ThreeDStitchingMode>
+        <MinLongitudinalDisplacementX>-4.0</MinLongitudinalDisplacementX>
+        <LooserMaxTransverseDisplacement>4.0</LooserMaxTransverseDisplacement>
+      </tool>
+      <tool type = "LArStitchingCosmicRayMerging">
+        <ThreeDStitchingMode>false</ThreeDStitchingMode>
+        <MinLongitudinalDisplacementX>-5.0</MinLongitudinalDisplacementX>
+        <LooserMaxTransverseDisplacement>4.0</LooserMaxTransverseDisplacement>
+      </tool>
     </StitchingTools>
     <CosmicRayTaggingTools>
       <tool type = "LArCosmicRayTagging"/>
@@ -39,6 +47,7 @@
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
     <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
     <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
+    <InTimeMaxX0>2.5</InTimeMaxX0>
   </algorithm>
 
   <algorithm type = "LArEventClusterValidation">
