@@ -304,6 +304,20 @@
         </HitCreationTools>
     </algorithm>
 
+    <algorithm type = "LArPfoStitching">
+      <InputPfoListNames>MuonParticles3D</InputPfoListNames>
+      <DaughterListNames>MuonParticles3D DeltaRayParticles3D ClustersU ClustersV ClustersW MuonClusters3D DeltaRayClusters3D</DaughterListNames>
+      <StitchingTools>
+        <tool type = "LArStitchingCosmicRayMerging">
+          <ThreeDStitchingMode>true</ThreeDStitchingMode>
+          <AlwaysApplyT0Calculation>false</AlwaysApplyT0Calculation>
+          <OnlyFinalStatePfos>false</OnlyFinalStatePfos>
+          <MinLongitudinalDisplacementX>-4.0</MinLongitudinalDisplacementX>
+          <LooserMaxTransverseDisplacement>4.0</LooserMaxTransverseDisplacement>
+        </tool>
+      </StitchingTools>
+    </algorithm>
+
     <!-- VertexAlgorithms -->
     <algorithm type = "LArCosmicRayVertexBuilding">
         <InputPfoListName>MuonParticles3D</InputPfoListName>
