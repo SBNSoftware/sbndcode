@@ -90,13 +90,17 @@ namespace opdet {
     }
     else if (fParams.PMTSinglePEmodel=="data"){
       //Build the average data PMT waveform for channels with uncalibrated SER
-      int dataSERSize;
+      int dataSERSize = -1;
       // Retrieve the data SER vector size from the first calibrated channel in the database
       for(size_t i=0; i<fSinglePEWave_HD.size(); i++){
         if(fPMTCalibrationDatabaseService->getReconstructChannel(i)){
           dataSERSize = fPMTCalibrationDatabaseService->getSER(i).size();
           break;
         }
+      }
+      if (dataSERSize <= 0) {
+          throw cet:exception("DigiPMTSBNDAlg")
+              << "No channel with calibrated SER found in the calibration database\n";
       }
       fAverageDataSER.resize(dataSERSize);
       fAverageDataSPEAmplitude = 0;
