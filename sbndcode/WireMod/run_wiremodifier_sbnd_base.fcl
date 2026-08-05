@@ -1,8 +1,11 @@
 #include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
+#include "channelstatus_sbnd.fcl"
+#include "seedservice_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-
+#include "mlreco_sbnd.fcl"
+#include "cluster_sbnd.fcl"
 #include "messages_sbnd.fcl"
 
 #include "wiremod_sbnd.fcl"
@@ -18,6 +21,9 @@ services:
     DetectorPropertiesService: @local::sbnd_detproperties
     ParticleInventoryService: @local::standard_particleinventoryservice
     BackTrackerService: @local::standard_backtrackerservice
+    ChannelStatusService: @local::sbnd_data_channelstatus
+    RandomNumberGenerator: {}
+    NuRandomService: @local::sbnd_seedservice
     message: @local::sbnd_message_services
 }
 
@@ -35,13 +41,20 @@ physics:
     {
         wiremod: @local::wiremod_sbnd
         gaushit: @local::sbnd_gaushitfinder
+        cluster3d: @local::sbnd_cluster3d
     }
 
-    wiremod:       [ wiremod, gaushit ]
+    analyzers:
+    {
+        superadata: @local::sbnd_supera_data
+    }
+
+    wiremod:       [ wiremod, gaushit, cluster3d ]
     trigger_paths: [ wiremod ]
     
+    ana: [ superadata ]
     stream1: [ out1 ]
-    end_paths: [ stream1 ]
+    end_paths: [ stream1, ana ]
 }
 
 physics.producers.gaushit.CalDataModuleLabel: "wiremod"
