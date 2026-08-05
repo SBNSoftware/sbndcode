@@ -99,7 +99,7 @@ namespace opdet {
         }
       }
       if (dataSERSize <= 0) {
-          throw cet:exception("DigiPMTSBNDAlg")
+          throw cet::exception("DigiPMTSBNDAlg")
               << "No channel with calibrated SER found in the calibration database\n";
       }
       fAverageDataSER.resize(dataSERSize);
