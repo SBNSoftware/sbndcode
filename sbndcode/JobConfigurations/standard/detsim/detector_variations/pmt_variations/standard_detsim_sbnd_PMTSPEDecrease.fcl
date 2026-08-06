@@ -1,8 +1,7 @@
 #include "detsim_detvar_PDSonly_sbnd.fcl"
 
-services.PMTCalibrationDatabase: @local::sbnd_pmtcalibrationdatabaseservice
-services.PMTCalibrationDatabaseService.ApplyScales: true
-services.PMTCalibrationDatabaseService.Scales: [
+services.IPMTCalibrationDatabaseService.ApplyScales: true
+services.IPMTCalibrationDatabaseService.Scales: [
     {
         Channel: -1
         SPEAmplitude: 0.94
