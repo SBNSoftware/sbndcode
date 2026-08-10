@@ -84,6 +84,8 @@
 #include "TF1.h"
 #include "TObjString.h"
 #include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TFitResult.h"
 // C++ Includes
 #include <map>
 #include <vector>
@@ -105,11 +107,19 @@ bool Cut_NS_Function_Diffusion(double x1, double z1,double x2, double z2){
   bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
   bool x=((x1>-250 && x1<-0.01) && (x2>-250 && x2<-0.01)) || ((x1>0.01 && x1<250) && (x2>0.01 && x2<250));
   bool angle_cut = fabs(x1 - x2) < tan(5 * M_PI / 180.0) * fabs(z1 - z2);
-  return x && z && angle_cut;
+
+  if (fabs(z2 - z1) < 1e-6)
+    return false;
+
+  // Find x at z = 100 and z = 400
+  double x_at_100 = x1 + (x2 - x1) * (100.0 - z1) / (z2 - z1);
+  double x_at_400 = x1 + (x2 - x1) * (400.0 - z1) / (z2 - z1);
+  bool box_cut = (x_at_100 > -195.0 && x_at_100 < 195.0) && (x_at_400 > -195.0 && x_at_400 < 195.0);
+
+  return x && z && angle_cut && box_cut;
 }
 
 double findIntersection(double m1, double c1, double m2, double c2) {
-
   if (m1 == m2) {
     return std::numeric_limits<double>::quiet_NaN();
   }
@@ -261,7 +271,7 @@ bool HasDoublePeakFeature(const std::vector<double>& adc_vals, double threshold)
       }
     }
 
-    ++i; // Move to the next point
+    ++i; 
   }
 
   return false;
@@ -278,6 +288,64 @@ double CalculateAreaUnderCurve(const std::vector<double>& adc_vals, const std::v
   }
 
   return area;
+}
+
+double CalculateAverageBaseline(const std::vector<double>& adc_vals,
+                                int edge_bins = 7)
+{
+  // Protect against invalid input
+  if (edge_bins <= 0)
+    return 0.0;
+
+  size_t edge = static_cast<size_t>(edge_bins);
+
+  if (adc_vals.size() < 2 * edge)
+    return 0.0;
+
+  double sum = 0.0;
+
+  // First edge bins
+  for (size_t i = 0; i < edge; ++i)
+    sum += adc_vals[i];
+
+  // Last edge bins
+  for (size_t i = adc_vals.size() - edge;
+       i < adc_vals.size();
+       ++i)
+    sum += adc_vals[i];
+
+  return sum / (2.0 * edge);
+}
+
+bool HasEdgeContamination(const std::vector<double>& adc,
+                          const std::vector<double>& time,
+                          double threshold = 20.0,
+                          int edge_nbins = 3)
+{
+  // Protect against invalid input
+  if (edge_nbins <= 0)
+    return false;
+
+  size_t edge = static_cast<size_t>(edge_nbins);
+
+  if (adc.size() < 2 * edge)
+    return false;
+
+  // Check start of waveform
+  for (size_t i = 0; i < edge; ++i) {
+    if (adc[i] > threshold)
+      return true;
+  }
+
+  // Check end of waveform
+  for (size_t i = adc.size() - edge;
+       i < adc.size();
+       ++i) {
+    if (adc[i] > threshold)
+      return true;
+  }
+
+  return false;
 }
 
 double CalculateDownPeakArea(const std::vector<double>& adc_vals, const std::vector<double>& time_vals, double peak_threshold = -10.0) {
@@ -439,8 +507,29 @@ private:
   std::vector<int>    _channel_number;
   std::vector<double> _hit_time;
   std::vector<double> _hit_z_pos;
+  std::vector<double> _hit_widths;
 
-  //****************diffusion*******************//
+  //********************geometric hit variables*********************/
+  std::vector<double> _hit_time_sigma;
+  std::vector<double> _fit_chi2;
+  std::vector<double> _fit_chi2_ndf;
+  std::vector<double> _fit_track_theta;
+  std::vector<double> _fit_sigma;
+  std::vector<double> _fit_angle_xz;
+  std::vector<double> _fit_m;
+  std::vector<double> _fit_c;
+
+  std::vector<double> _fit_chi2_quad;
+  std::vector<double> _fit_chi2_ndf_quad;
+  std::vector<double> _fit_a_quad;
+  std::vector<double> _fit_b_quad;
+  std::vector<double> _fit_c_quad;
+
+  std::vector<double> _wires_removed;
+  std::vector<double> _avg_hit_time;
+  std::vector<double> _final_hits;
+  double passing_events=0; 
+ //****************diffusion*******************//
 
   std::map<std::string, std::vector<std::vector<TH1D*>>> histogramsByWindow;
   struct TimeWindow {
@@ -1078,6 +1167,8 @@ void Hitdumper::analyze(const art::Event& evt)
 
 	  mt = (2.0/_electron_vel) * m;
 	  ct = (2.0/_electron_vel) * c + 400;
+	  
+	 
 	  /*
 	  std::cout << "\n=== CRT TRACK LINE DEBUG ===\n";
 	  std::cout << "Start point:  X=" << p1.X() << "  Z=" << p1.Z() << "\n";
@@ -1309,6 +1400,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
   ResetWaveforms();
+ 
   if (fcheckTransparency) {
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
     bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
@@ -1321,13 +1413,21 @@ void Hitdumper::analyze(const art::Event& evt)
     int waveform_number_tracker = 0;   
     _adc_count = _nhits * (fWindow * 2 + 1);  //number of adc values
 
+    std::unordered_set<int> bad_channels = {
+      4798, 4799, 4800, 4801, 4802, 4803, 4804, 4805, 4806, 4807,
+      10436, 10437, 10438, 10439, 10440, 10441, 10442, 10443, 10444, 10445,
+      4372, 4373, 4374, 4375, 4376, 5223, 5224, 5225, 5226, 5227,
+      10004, 10005, 10006, 10007, 10008, 10855, 10856, 10857, 10858, 10859
+    };
+
     std::vector<int> all_hits;
     for (int ihit = 0; ihit < _nhits; ++ihit) {
       double hit_y = findIntersection(crt_grad, crt_intercept, 0, _hit_z[ihit]);
+      if (bad_channels.count(_hit_channel[ihit])) continue;
       if (_hit_tpc[ihit] == _tpc_num &&
           _hit_plane[ihit] == _plane_num &&_hit_peakT[ihit] > 400 &&
-      hit_y > -190. && hit_y < 190. &&
-	  _hit_wire[ihit] > 35 && _hit_wire[ihit] < 1635){
+      hit_y > -100. && hit_y < 100. &&
+	  _hit_z[ihit] > 100. && _hit_z[ihit] < 400){
 	all_hits.push_back(ihit);
       }
     }
@@ -1336,58 +1436,204 @@ void Hitdumper::analyze(const art::Event& evt)
     int hit_counter=0;
     for (int ihit = 0; ihit < _nhits; ++ihit) {
       double hit_y = findIntersection(crt_grad, crt_intercept, 0, _hit_z[ihit]);
+      if (bad_channels.count(_hit_channel[ihit])) continue;
       if (_hit_tpc[ihit] == _tpc_num &&
 	  _hit_plane[ihit] == _plane_num  &&
 	    _hit_peakT[ihit] < ((mt*_hit_z[ihit])+ct+_time_window) &&
 	  _hit_peakT[ihit] > ((mt*_hit_z[ihit])+ct-_time_window) &&
       _hit_peakT[ihit] > 400 &&
-      hit_y > -190. && hit_y < 190. &&
-      _hit_wire[ihit] > 35 && _hit_wire[ihit] < 1635) {
+       hit_y > -190. && hit_y < 190. &&
+          _hit_wire[ihit] > 35 && _hit_wire[ihit] < 1635) {
 	geom_hits.push_back(ihit);
 	hit_counter++;
       }
     }
 
-    std::map<int,int> channel_counts;
-    for (int idx : geom_hits) {
-      channel_counts[_hit_channel[idx]]++;
+    std::vector<int> fv_hits;
+    for (int idx:geom_hits) {
+      double hit_y = findIntersection(crt_grad, crt_intercept, 0, _hit_z[idx]);
+      if (hit_y > -100. && hit_y < 100. &&
+          _hit_z[idx] > 100. && _hit_z[idx] < 400.) {
+        fv_hits.push_back(idx);
+      }
     }
 
+    std::map<int,int> channel_counts;
+    for (int idx : fv_hits) {
+      channel_counts[_hit_channel[idx]]++;
+    }
+    
     std::vector<int> seed_hits;
-    for (int idx : geom_hits) {
+    for (int idx : fv_hits) {
       if (channel_counts[_hit_channel[idx]] == 1) {
         seed_hits.push_back(idx);
       }
     }
+    
+    //************************** side quest start *****************************//
+    std::map<int,double> hit_time_sigma;
+    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+      int channel = digitVec->Channel();
+      std::vector<short> rawadc;
+      rawadc.resize(digitVec->Samples());
+      int pedestal = (int)digitVec->GetPedestal();
 
+      if (fUncompressWithPed) {
+	raw::Uncompress(digitVec->ADCs(),
+                        rawadc,
+                        pedestal,
+                        digitVec->Compression());
+      }
+      else {
+	raw::Uncompress(digitVec->ADCs(),
+                        rawadc,
+                        digitVec->Compression());
+      }
 
-    TGraph graph(seed_hits.size());
+      for (int ihit : seed_hits) {
+        if (_hit_channel[ihit] != channel)
+	  continue;
+        int peak = (int)_hit_peakT[ihit];
+
+        double weighted_mean = 0.0;
+        double weight_sum = 0.0;
+
+	for (int offset = -2; offset <= 2; ++offset) {
+	  int bin = peak + offset;
+	  if (bin < 0 || bin >= (int)rawadc.size())
+	    continue;
+
+	  double adc = rawadc[bin] - pedestal;
+
+	  if (adc < 0)
+	    adc = 0;
+
+	  weighted_mean += adc * bin;
+	  weight_sum += adc;
+        }
+
+        double sigma_t = 2.38;
+        if (weight_sum > 0) {
+	  weighted_mean /= weight_sum;
+	  double variance = 0.0;
+	  for (int offset = -2; offset <= 2; ++offset) {
+	    int bin = peak + offset;
+	    if (bin < 0 || bin >= (int)rawadc.size())
+	      continue;
+
+	    double adc = rawadc[bin] - pedestal;
+
+	    if (adc < 0)
+	      adc = 0;
+
+	    variance += adc * pow(bin - peak, 2);
+	  }
+
+	  variance /= weight_sum;
+	  sigma_t = sqrt(variance);
+	  sigma_t = std::max(sigma_t, 0.5);
+        }
+        hit_time_sigma[ihit] = sigma_t;
+      }
+    }
+
+    //************************* side quest end ******************************//
+    TGraphErrors graph(seed_hits.size());
     for (size_t i = 0; i < seed_hits.size(); ++i) {
       int idx = seed_hits[i];
-      graph.SetPoint(i, _hit_z[idx], _hit_peakT[idx]);
+      double sigma_t = 0.5;
+      auto it = hit_time_sigma.find(idx);
+      if (it != hit_time_sigma.end())
+        sigma_t = it->second;
+      graph.SetPoint(i,
+		     _hit_z[idx],
+		     _hit_peakT[idx] - (crt_trk_time/500.));
+      graph.SetPointError(i, 0.0, sigma_t);
     }
     TF1 lineFit("lineFit", "[0]*x + [1]");
     graph.Fit(&lineFit, "Q");  
 
     double m = lineFit.GetParameter(0);
     double c = lineFit.GetParameter(1);
-    double sum_res2 = 0;
-    for (int idx : seed_hits) {
-      double t_fit = m*_hit_z[idx] + c;
-      double res = _hit_peakT[idx] - t_fit;
-      sum_res2 += res*res;
-    }
-    double sigma = sqrt(sum_res2 / seed_hits.size());
-    double n_sigma = 1.0; 
 
+    double chi2 = lineFit.GetChisquare();
+    int ndf = lineFit.GetNDF();
+    double chi2_ndf = (ndf > 0) ? chi2 / ndf : -1;
+
+    std::cout << "Line fit chi2/ndf = " << chi2_ndf << std::endl;
+    TF1 quadFit("quadFit", "[0]*(x-250)*(x-250) + [1]*(x-250) + [2]");
+
+    quadFit.SetParameter(0, -1e-6);
+    quadFit.SetParameter(1, m);
+    quadFit.SetParameter(2, c + 250*m);    
+    graph.Fit(&quadFit, "Q");  // same graph, same errors
+
+    double a2 = quadFit.GetParameter(0);  // x^2 term
+    double b2 = quadFit.GetParameter(1);  // x term
+    double c2 = quadFit.GetParameter(2);  // constant
+
+    double chi2_quad = quadFit.GetChisquare();
+    int ndf_quad = quadFit.GetNDF();
+    double chi2_ndf_quad = (ndf_quad > 0) ? chi2_quad / ndf_quad : -1;
+
+    std::cout << "Quad fit chi2/ndf = " << chi2_ndf_quad << std::endl;
+
+    double theta_deg = atan2(m, 1.0) * 180.0 / M_PI;
+    double theta_deg_xz = atan2(0.08 * m, 1.0) * 180.0 / M_PI;
+
+    double sum_res2 = 0;
+    double sum2=0.0;
+    for (int idx : seed_hits) {
+      double s = hit_time_sigma[idx];
+      sum2 += s * s;
+      double t_fit = quadFit.Eval(_hit_z[idx]);
+      double res = _hit_peakT[idx] - t_fit;
+      sum_res2 += res * res;
+    }
+    double sigma_event = seed_hits.empty() ? -1.0 : std::sqrt(sum2 / seed_hits.size());
+    double sigma = sqrt(sum_res2 / seed_hits.size());
+    //    double n_sigma = 5.0; 
+
+    _hit_time_sigma.push_back(sigma_event);
+    _fit_chi2.push_back(chi2);
+    _fit_chi2_ndf.push_back(chi2_ndf);
+    _fit_track_theta.push_back(theta_deg);
+    _fit_sigma.push_back(sigma);
+    _fit_angle_xz.push_back(theta_deg_xz);
+    _fit_m.push_back(m);
+    _fit_c.push_back(c);
+
+
+    _fit_chi2_quad.push_back(chi2_quad);
+    _fit_chi2_ndf_quad.push_back(chi2_ndf_quad);
+    _fit_a_quad.push_back(a2);
+    _fit_b_quad.push_back(b2);
+    _fit_c_quad.push_back(c2);
+
+    double cut_width=2.5;
+    double offset=-0.45;
     std::vector<int> linecut_hits;
     for (int idx : all_hits) {
-      double t_fit = m*_hit_z[idx] + c;
-      if (fabs(_hit_peakT[idx] - t_fit) <= n_sigma * sigma) {
+      double t_fit = quadFit.Eval(_hit_z[idx]);
+      double res = ((_hit_peakT[idx] - (crt_trk_time/500.)) - t_fit)-offset;
+      if (fabs(res) <= cut_width) {
         linecut_hits.push_back(idx);
       }
     }
     
+    double sum_hit_time = 0.0;
+    for (int idx : linecut_hits) {
+      sum_hit_time += _hit_peakT[idx];
+    }
+
+    double avg_hit_time = 0.0;
+    if (!linecut_hits.empty()) {
+      avg_hit_time = sum_hit_time / linecut_hits.size();
+    }
+
+    _avg_hit_time.push_back(avg_hit_time);
+
     std::map<int,int> channel_counts_final;
     for (int idx : linecut_hits) {
       channel_counts_final[_hit_channel[idx]]++;
@@ -1400,7 +1646,31 @@ void Hitdumper::analyze(const art::Event& evt)
 	final_n_hits++;
 	 }
     }
+
+    int wires_with_duplicates = 0;
+
+    for (const auto& [channel, count] : channel_counts_final) {
+      if (count > 1) {
+	wires_with_duplicates++;
+      }
+    }
     
+    _wires_removed.push_back(wires_with_duplicates);
+    _final_hits.push_back(final_n_hits);
+
+
+    bool PassEventSelection =
+      (chi2_ndf_quad <= 2.8) &&
+      (hit_counter >= _min_tpc_hits) &&
+      (hit_counter <= _max_tpc_hits)&&
+      (final_n_hits > 200);
+    if((chi2_ndf_quad <= 2.8) &&
+       (hit_counter >= _min_tpc_hits) &&
+       (hit_counter <= _max_tpc_hits)&&
+       (final_n_hits > 200)){
+    passing_events++;
+    std::cout << "Passing events = " << passing_events << std::endl;
+    }
     std::cout << "Number of hits " << hit_counter << std::endl;
     std::cout << " final Number of hits " << final_n_hits << std::endl;
 
@@ -1411,6 +1681,7 @@ void Hitdumper::analyze(const art::Event& evt)
     std::vector<double> temp_channel_number;
     std::vector<double> temp_hit_time;
     std::vector<double> temp_z;
+    std::vector<double> temp_width;
 
     std::map<int, std::vector<double>> waveform_adc_map;
     std::map<int, std::vector<double>> waveform_time_map;
@@ -1419,7 +1690,7 @@ void Hitdumper::analyze(const art::Event& evt)
     std::map<int, std::vector<int>> waveform_channel_number;
     std::map<int, std::vector<int>> waveform_hit_time;
     std::map<int, std::vector<double>> waveform_z;
-
+    std::map<int, std::vector<double>> waveform_width;
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
       
@@ -1430,7 +1701,7 @@ void Hitdumper::analyze(const art::Event& evt)
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
 
-      if (hit_counter < _max_tpc_hits && hit_counter > _min_tpc_hits && final_n_hits>500) {
+      if (PassEventSelection) {
 	for (int ihit : final_hits) {
 	  if (_hit_channel[ihit] == channel){
 	    int pedestal = (int)digitVec->GetPedestal();
@@ -1473,6 +1744,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	     temp_channel_number.push_back(_hit_channel[ihit]);
 	     temp_hit_time.push_back(_hit_peakT[ihit]);
 	     temp_z.push_back(_hit_z[ihit]);	     
+	     temp_width.push_back(_hit_width[ihit]);
 
 	     int wave_num =static_cast<int>(temp_waveform_number.back());
 	     waveform_adc_map[wave_num].push_back(temp_adc_on_wire.back());
@@ -1482,7 +1754,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
 	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
 	     waveform_z[wave_num].push_back(temp_z.back());	   	   
-
+	     waveform_width[wave_num].push_back(temp_width.back());
 	    }//bin loop
 	  } // if cuts
 	} //end loop over hits
@@ -1498,7 +1770,7 @@ void Hitdumper::analyze(const art::Event& evt)
       const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
       const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
       const std::vector<double> &z_position=waveform_z[wave_num];
-
+      const std::vector<double> &width=waveform_width[wave_num];
       std::vector<int> hit_times;
       hit_times.reserve(waveform_hit_time[wave_num].size());
 
@@ -1508,25 +1780,21 @@ void Hitdumper::analyze(const art::Event& evt)
 	hit_times.push_back(static_cast<int>(t - crt_ticks));
       }
 
-
-
       /*******************hit quality cuts****************************/
-      //	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
-      //	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
-      
-      // If no data, skip this waveform
       if (adc_vals.empty() || time_vals.empty())continue;
+      //      auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
+      double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
+ 
       if (HasDoublePeakFeature(adc_vals, 10.0))  continue;
       double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
       if (max_adc > 130)continue;
-      /*
-	if (area_under_curve > 7.35 * amplitude + 250) {
-	continue;
-	}
-	if (half_width < 4.5 || half_width > 10) {
-	continue;
-	}
-      */
+      if (HasEdgeContamination(adc_vals, time_vals, 20.0, 3))continue;
+      double baseline =CalculateAverageBaseline(adc_vals);
+      if (std::abs(baseline) > 5.0)continue;                                                                                                        
+      double dx_track =0.3/cos(_theta_yz_CRT[0]*M_PI / 180.0);
+      double dqdx = area_under_curve / dx_track;   
+      if (dqdx > 1982.5) continue;
+     
       /********************hit quality cuts ************************/
 
       _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
@@ -1536,6 +1804,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
       _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
       _hit_z_pos.insert(_hit_z_pos.end(), z_position.begin(), z_position.end());
+      _hit_widths.insert(_hit_widths.end(),width.begin(),width.end());
 
       for (const auto& win : timeWindows) {
       if (hit_times[0] > win.low && hit_times[0] < win.high && _plane_num ==2) {
@@ -1904,7 +2173,23 @@ void Hitdumper::beginJob()
     fTree->Branch("channel_number", &_channel_number);
     fTree->Branch("hit_time", &_hit_time);
     fTree->Branch("hit_z_pos", &_hit_z_pos); 
-
+    fTree->Branch("hit_widths", &_hit_widths);
+    fTree->Branch("fit_chi2", &_fit_chi2);
+    fTree->Branch("fit_chi2_ndf", &_fit_chi2_ndf);
+    fTree->Branch("fit_track_theta", &_fit_track_theta);
+    fTree->Branch("fit_sigma", &_fit_sigma);
+    fTree->Branch("fit_angle_xz", &_fit_angle_xz);
+    fTree->Branch("fit_m", &_fit_m);
+    fTree->Branch("fit_c", &_fit_c);
+    fTree->Branch("fit_chi2_quad", &_fit_chi2_quad);
+    fTree->Branch("fit_chi2_ndf_quad", &_fit_chi2_ndf_quad);
+    fTree->Branch("fit_a_quad", &_fit_a_quad);
+    fTree->Branch("fit_b_quad", &_fit_b_quad);
+    fTree->Branch("fit_c_quad", &_fit_c_quad);
+    fTree->Branch("wires_removed", &_wires_removed);
+    fTree->Branch("avg_hit_time", &_avg_hit_time);
+    fTree->Branch("final_hits", &_final_hits);
+    fTree->Branch("hit_time_sigma", &_hit_time_sigma);
   }
 
   if (fKeepCRTStripHits) {
@@ -2165,6 +2450,23 @@ void Hitdumper::ResetWaveforms(){
   _channel_number.clear();
   _hit_time.clear();
   _hit_z_pos.clear();
+  _hit_widths.clear();
+  _fit_chi2.clear();
+  _fit_chi2_ndf.clear();
+  _fit_track_theta.clear();
+  _fit_sigma.clear();
+  _fit_angle_xz.clear();
+  _fit_m.clear();
+  _fit_c.clear();
+  _fit_chi2_quad.clear();
+  _fit_chi2_ndf_quad.clear();
+  _fit_a_quad.clear();
+  _fit_b_quad.clear();
+  _fit_c_quad.clear();
+  _wires_removed.clear();
+  _avg_hit_time.clear();
+  _final_hits.clear();
+  _hit_time_sigma.clear();
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
