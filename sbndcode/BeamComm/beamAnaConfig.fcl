@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+beamAnalysis:
+{
+    module_type:  "BeamAnalysis" 
+    DebugTdc: false
+    DebugCrtSP: false
+    DebugCrtTrack: false
+    DebugPmt: false
+}
+
+END_PROLOG

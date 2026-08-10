@@ -63,7 +63,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     //Initialize flash t0 tool
     auto const flasht0_pset = p.get<lightana::Config_t>("FlashT0Config");
     _flasht0calculator = art::make_tool<lightana::FlashT0Base>(flasht0_pset);
+  
     
+    produces< std::vector< recob::OpHit > >();
+    produces< art::Assns <recob::OpHit, recob::OpFlash> >();
+
     produces< std::vector<sbn::CorrectedOpFlashTiming> >();
     produces<art::Assns<recob::Slice, sbn::CorrectedOpFlashTiming>>();
     produces<art::Assns<recob::OpFlash, sbn::CorrectedOpFlashTiming>>();
@@ -75,6 +79,10 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fRun = e.id().run();
     fSubrun = e.id().subRun();
     _flashgeo->InitializeFlashGeoAlgo();
+
+    std::unique_ptr< std::vector< recob::OpHit > > ophits_tosave(new std::vector< recob::OpHit >);
+    art::PtrMaker<recob::OpHit> make_ophit_ptr{e};
+    std::unique_ptr< art::Assns <recob::OpHit, recob::OpFlash> > flash2hit_assn_v(new art::Assns<recob::OpHit, recob::OpFlash>);
 
     std::unique_ptr< std::vector<sbn::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbn::CorrectedOpFlashTiming>);
     art::PtrMaker<sbn::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e};
@@ -302,11 +310,35 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         art::Ptr<sbn::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
         newCorrectedOpFlashTimingSliceAssn->addSingle(slice, newCorrectedOpFlashTimingPtr);
         newCorrectedOpFlashTimingOpFlashAssn->addSingle(flashFM[0], newCorrectedOpFlashTimingPtr);
+
+        // Create OpHit association to flashRM[0]
+        for (size_t i = 0; i < newOpHitList.size(); ++i) {
+            int opCh = newOpHitList.at(i).OpChannel();
+            double newPeakTime = newOpHitList.at(i).PeakTime();
+            double newPeakTimeAbs = newOpHitList.at(i).PeakTimeAbs();
+            double newStartTime = newOpHitList.at(i).StartTime();
+            double riseTime = newOpHitList.at(i).RiseTime();
+            unsigned int frame = newOpHitList.at(i).Frame();
+            double width = newOpHitList.at(i).Width();
+            double area = newOpHitList.at(i).Area();
+            double amplitude = newOpHitList.at(i).Amplitude();
+            double pe = newOpHitList.at(i).PE();
+
+            recob::OpHit newOpHit = recob::OpHit(opCh, newPeakTime, newPeakTimeAbs, newStartTime, riseTime, frame, width, area, amplitude, pe, 0.0);
+            ophits_tosave->emplace_back(std::move(newOpHit));
+            art::Ptr<recob::OpHit> hit_ptr = make_ophit_ptr(ophits_tosave->size()-1); //get index from the size of the vector after emplace_back
+            flash2hit_assn_v->addSingle(hit_ptr, flashFM[0]);
+        }
+
         if(fSaveCorrectionTree){
             this->FillCorrectionTree(newFlashTime, *flashFM[0], oldOpHitList, newOpHitList);
         }
     }
     if(fSaveCorrectionTree) fTree->Fill();
+
+    e.put(std::move(ophits_tosave));
+    e.put(std::move(flash2hit_assn_v));
+
     ResetEventVars();
     e.put(std::move(correctedOpFlashTimes));
     e.put(std::move(newCorrectedOpFlashTimingSliceAssn));
