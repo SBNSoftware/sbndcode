@@ -16,6 +16,17 @@ cet_build_plugin( SBNDPTBDecoder art::module
   ROOT::Core
 )
 
+cet_build_plugin( SBNDPTBGateCountFilter art::module
+  SOURCE SBNDPTBGateCountFilter_module.cc
+  LIBRARIES
+  artdaq_core::artdaq-core_Utilities
+  art::Utilities
+  fhiclcpp::fhiclcpp
+  messagefacility::MF_MessageLogger
+  art::Framework_Core
+  ROOT::Core
+)
+
 cet_make_library(SOURCE
   SBNDPTBRawUtils.cxx
   LIBRARIES
