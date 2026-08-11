@@ -61,15 +61,17 @@ private:
   int _subrun;
   int _event;
 
-
+	// HLTs
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
+	std::vector<uint32_t> _ptb_hlt_gatecount;
+	std::vector<int> _ptb_hlt_trunmask;
   std::vector<uint64_t> _ptb_hlt_unmask_timestamp;
-  std::vector<uint64_t> _ptb_llt_unmask_timestamp;
-  std::vector<int> _ptb_hlt_trunmask;
+	// LLTs
   std::vector<uint64_t> _ptb_llt_trigger;
   std::vector<uint64_t> _ptb_llt_timestamp;
   std::vector<int> _ptb_llt_trunmask;
+	std::vector<uint64_t> _ptb_llt_unmask_timestamp;
 
   std::vector<uint64_t> _ptb_chStatus_timestamp;
   std::vector<uint64_t> _ptb_chStatus_beam;
@@ -123,6 +125,7 @@ sbnd::ptb::PTBAnalysis::PTBAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("ptb_hlt_trunmask", "std::vector<int>", &_ptb_hlt_trunmask);
       fTree->Branch("ptb_hlt_timestamp", "std::vector<uint64_t>", &_ptb_hlt_timestamp);
       fTree->Branch("ptb_hlt_unmask_timestamp", "std::vector<uint64_t>", &_ptb_hlt_unmask_timestamp);
+			fTree->Branch("ptb_hlt_gatecount", "std::vector<uint32_t>", &_ptb_hlt_gatecount);
       fTree->Branch("ptb_llt_unmask_timestamp", "std::vector<uint64_t>", &_ptb_llt_unmask_timestamp);
       fTree->Branch("ptb_llt_trigger", "std::vector<uint64_t>", &_ptb_llt_trigger);
       fTree->Branch("ptb_chStatus_timestamp", "std::vector<uint64_t>", &_ptb_chStatus_timestamp);
@@ -515,6 +518,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
   
   _ptb_hlt_trigger.resize(nHLTs);
   _ptb_hlt_timestamp.resize(nHLTs);
+	_ptb_hlt_gatecount.resize(nHLTs);
   _ptb_hlt_trunmask.resize(nHLTs);
   _ptb_hlt_unmask_timestamp.resize(nHLTs);
   
@@ -527,6 +531,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
         {
 	  _ptb_hlt_trigger[h_i] = ptb->GetHLTrigger(i).trigger_word;
 	  _ptb_hlt_timestamp[h_i] = ptb->GetHLTrigger(i).timestamp; //Units can be found in the Decoder Module 
+		_ptb_hlt_gatecount[h_i] = ptb->GetHLTrigger(i).gate_counter;	
 	  h_i++;
 
 	  int val = ptb->GetHLTrigger(i).trigger_word;
