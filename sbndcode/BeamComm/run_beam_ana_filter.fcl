@@ -1,0 +1,34 @@
+#include "simulationservices_sbnd.fcl"
+#include "beamAnaConfig.fcl"
+
+process_name: BeamAnalysis  # The process name must NOT contain any underscores
+
+source:
+{
+    module_type: RootInput  # Telling art we want a ROOT input
+    maxEvents:   -1
+}
+
+services:
+{
+    TFileService: { fileName: "beamAnalysisOutput.root" }
+    @table::sbnd_services
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::beamAnalysis  # Inserts into the workflow, matches name in config fcl
+    }
+                  
+    path0:     [ ana ]
+    end_paths: [ path0 ]
+}
+physics.analyzers.ana.IncludeTdc: false
+physics.analyzers.ana.IncludePtb: false
+physics.analyzers.ana.IncludeCrtSP: true
+physics.analyzers.ana.IncludeCrtTrack: true
+physics.analyzers.ana.IncludePmtMetric: false
+physics.analyzers.ana.IncludePmt: true
+physics.analyzers.ana.DebugFilter: true
