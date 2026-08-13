@@ -162,4 +162,30 @@ sbnd_kaon_filter:
     ]
 }
 
+# Any hyperon (Lambda or Sigma) + anything
+sbnd_hyperon_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            RequiredPDGs: [ 3122 ]
+            InTPC: true
+        },
+        {
+            RequiredPDGs: [ 3212 ]
+            InTPC: true
+        },
+	{
+            RequiredPDGs: [ 3112 ]
+            InTPC: true
+        },
+        {
+            RequiredPDGs: [ 3222 ]
+            InTPC: true
+        }
+    ]
+}
+
+
 END_PROLOG
