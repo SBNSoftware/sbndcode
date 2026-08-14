@@ -67,8 +67,9 @@ bool SBNDPTBGateCountFilter::filter(art::Event & evt){
   subrun = evt.id().subRun();
   event = evt.id().event();
 
-
-  std::cout << "SBNDPTBGateCountFilter::Processing event: " << run << ":" << subrun << ":" << event << std::endl;
+  if(fVerbose > 1){
+    std::cout << "SBNDPTBGateCountFilter::Processing event: " << run << ":" << subrun << ":" << event << std::endl;
+  }
 
   // Get PTB decoded data
   art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
@@ -90,8 +91,10 @@ bool SBNDPTBGateCountFilter::filter(art::Event & evt){
           int hlt_word = hlt.trigger_word;
           uint64_t timestamp = hlt.timestamp;
 
-          std::cout << "HLT word: " << std::bitset<32>(hlt_word)
+          if(fVerbose > 1){
+            std::cout << "  HLT word: " << std::bitset<32>(hlt_word)
                     << ", timestamp: " << timestamp << std::endl;
+          }
 
           // Look for the first HLT2 (BNBLight) instance in the event
           if (hlt_word & (1 << bnbLightHLT_id)) {
@@ -99,10 +102,12 @@ bool SBNDPTBGateCountFilter::filter(art::Event & evt){
               // If first HLT2 instance in the event — decision point
               // Check if HLT6 (BNBLowLight) is also present in the same trigger word
               bool hasHLT6 = hlt_word & (1 << bnbLowLightLLT_id);
-              std::cout << "Event " << run << ":" << subrun << ":" << event
-                        << " - first HLT2 instance"
-                        << (hasHLT6 ? ", coincident with HLT6. Filtering out." : ".")
-                        << std::endl;
+
+              if( fVerbose > 0 && hasHLT6){
+                std::cout << "  FILTERING OUT Event " << run << ":" << subrun << ":" << event
+                          << " - first HLT2 instance coincident with HLT6." << std::endl;
+              }
+              
               return !hasHLT6;  // false filters out, true keeps event
           }
       }
