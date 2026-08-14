@@ -40,6 +40,7 @@ namespace lightana
     double _min_pe_repeated;           // Minimum PE in one bin to declare a repeated flash during an existing OpFlash
     double _min_time_before;           // minimum start-time separation to declare a repeated flash before an existing OpFlash
     double _time_dif_flash_before;     // minimum end-gap before the existing OpFlash to declare a shortened OpFlash
+    int fPromptSamples;
 
     std::vector<double> _pesum_v;        // pw aum array
     std::vector<double> _pe_baseline_v;  // calibration: PEs to be subtracted from each opdet

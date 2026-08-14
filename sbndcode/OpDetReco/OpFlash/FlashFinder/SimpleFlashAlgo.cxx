@@ -33,6 +33,7 @@ namespace lightana{
         _veto_time     = p.get<double>("VetoSize");             // Veto time after a flash is found (8us in config file)
         _time_res      = p.get<double>("TimeResolution");       // Time resolution = bin size (0.01us in config file)
         _tpc           = p.get<int>("TPC");                     // TPC to associate the flash with (0 or 1)
+        fPromptSamples = p.get<int>("PromptSamples");
 
         // For shortened flashes
         _min_pe_repeated = p.get<double>("MinPECoincRepeated");                // Minimum PE in one bin to declare a repeated flash during an existing OpFlash (20PE in config file)
