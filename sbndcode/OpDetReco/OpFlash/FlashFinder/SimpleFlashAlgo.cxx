@@ -433,7 +433,7 @@ namespace lightana{
             }
             double prompt_sum = std::accumulate(summedWaveform_v.begin(), vector.begin()+promptSamples, 0);
             double total_sum = std::accumulate(summedWaveform_v.begin(), vector.end(), 0);
-            double prompt_fraction = PromptSum/TotalSum;
+            double prompt_fraction = prompt_sum/total_sum;
 
             // Get the associated OpHits for this flash
             std::vector<unsigned int> asshit_v;
