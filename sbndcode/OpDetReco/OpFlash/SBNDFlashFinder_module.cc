@@ -182,7 +182,7 @@ namespace opdet{
         recob::OpFlash flash(flasht0, lflash.time_err, trigger_time + flasht0,
                            (trigger_time + flasht0) / 1600., lflash.channel_pe,
                            0, 0, 1, // this are just default values
-                           drift_distance, -1, Ycenter, Ywidth, Zcenter, Zwidth);
+                           drift_distance, lflash.flash_prompt_fraction, Ycenter, Ywidth, Zcenter, Zwidth);
         opflashes->emplace_back(std::move(flash));
 
       }
@@ -190,7 +190,7 @@ namespace opdet{
         recob::OpFlash flash(flasht0, lflash.time_err, trigger_time + flasht0,
                            (trigger_time + flasht0) / 1600., lflash.channel_pe,
                            0, 0, 1, // this are just default values
-                           100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
+                           100., lflash.flash_prompt_fraction, Ycenter, Ywidth, Zcenter, Zwidth);
         opflashes->emplace_back(std::move(flash));
       }
 

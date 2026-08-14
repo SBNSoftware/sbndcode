@@ -29,6 +29,7 @@ namespace lightana {
     double time;
     double time_err;
     int tpc;
+    double prompt_fraction;
 
     LiteOpFlash_t() : channel_pe(),
                      time(kINVALID_TIME)
@@ -38,10 +39,11 @@ namespace lightana {
                   double flash_time_err,
                   int flash_tpc,
                   std::vector<double>&& pe_array,
-                  std::vector<unsigned int>&& hit_idx)
+                  std::vector<unsigned int>&& hit_idx, 
+                  double flash_prompt_fraction)
       : channel_pe(std::move(pe_array))
       , asshit_idx(std::move(hit_idx))
-    { time = flash_time; time_err = flash_time_err; tpc=flash_tpc; }
+    { time = flash_time; time_err = flash_time_err; tpc=flash_tpc; prompt_fraction=flash_prompt_fraction;}
 
     void Register(size_t channel, double pe)
     {
