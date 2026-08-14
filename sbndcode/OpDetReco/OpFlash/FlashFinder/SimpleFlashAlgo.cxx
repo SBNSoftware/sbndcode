@@ -422,8 +422,7 @@ namespace lightana{
 
             }
             //calculate prompt fraction
-            summedWaveform_v.clear();
-            summedWaveform_v.reserve(period); //possibly need some more bounds handling
+            std::vector<double> summedWaveform_v(period, 0);
             int promptSamples = fPromptSamples; //fcl config. Could be made into vector
             for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
                 // Loop over the PMTs
@@ -431,8 +430,8 @@ namespace lightana{
                     summedWaveform_v[index-start] += pespec_v[index][pmt_index];
                     }
             }
-            double prompt_sum = std::accumulate(summedWaveform_v.begin(), vector.begin()+promptSamples, 0);
-            double total_sum = std::accumulate(summedWaveform_v.begin(), vector.end(), 0);
+            double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
+            double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
             double prompt_fraction = prompt_sum/total_sum;
 
             // Get the associated OpHits for this flash
