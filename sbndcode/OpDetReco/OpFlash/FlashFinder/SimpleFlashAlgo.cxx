@@ -423,6 +423,8 @@ namespace lightana{
             }
             //calculate prompt fraction
             std::vector<double> summedWaveform_v(period, 0);
+            std::cout << "Op flash apparent size?? " << period << " Vector size " 
+            << pespec_v.size() << "  start " << start  << std::endl;
             int promptSamples = fPromptSamples; //fcl config. Could be made into vector
             for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
                 // Loop over the PMTs
