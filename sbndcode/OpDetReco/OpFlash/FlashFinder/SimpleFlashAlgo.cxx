@@ -436,6 +436,7 @@ namespace lightana{
             double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
             double prompt_fraction = prompt_sum/total_sum;
             std::cout << "My total sum " << total_sum << " my prompt sum " << prompt_sum << std::endl;
+            std::cout << " A single sample is " << _time_res << std::endl;
             // Get the associated OpHits for this flash
             std::vector<unsigned int> asshit_v;
             // Loop over time bins inside the integration window
