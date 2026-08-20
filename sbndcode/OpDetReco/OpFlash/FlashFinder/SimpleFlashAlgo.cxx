@@ -421,7 +421,7 @@ namespace lightana{
                 if(pe_v[opch]<0) pe_v[opch]=0;
 
             }
-            //calculate prompt fraction
+            //calculate prompt fraction may need to move this later
             std::vector<double> summedWaveform_v(period, 0);
             std::cout << "Op flash apparent size?? " << period << " Vector size " 
             << pespec_v.size() << "  start " << start  << std::endl;
@@ -435,7 +435,7 @@ namespace lightana{
             double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
             double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
             double prompt_fraction = prompt_sum/total_sum;
-
+            std::cout << "My total sum " << total_sum << " my prompt sum " << prompt_sum << std::endl;
             // Get the associated OpHits for this flash
             std::vector<unsigned int> asshit_v;
             // Loop over time bins inside the integration window
