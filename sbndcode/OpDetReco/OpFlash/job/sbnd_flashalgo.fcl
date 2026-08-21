@@ -5,7 +5,7 @@ SimpleFlashStandard:
   PEThreshold:       20
   MinPECoinc:        6
   MinMultCoinc:      3
-  PromptSamples:     50
+  PromptSamples:     10
   IntegralTime:      8.
   PreSample:         0.1
   VetoSize:          8.
