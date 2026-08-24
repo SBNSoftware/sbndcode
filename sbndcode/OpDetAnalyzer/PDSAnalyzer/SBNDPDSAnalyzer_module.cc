@@ -174,7 +174,7 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_ophit_width", "std::vector<std::vector<double>>", &_flash_ophit_width);
     fTree->Branch("flash_ophit_pe", "std::vector<std::vector<double>>", &_flash_ophit_pe);
     fTree->Branch("flash_ophit_ch", "std::vector<std::vector<int>>", &_flash_ophit_ch);
-    fTree->Branch("flash_prompt_fraction", "std::vector<std::vector<int>>", &_flash_prompt_fraction);
+    fTree->Branch("flash_prompt_fraction", "std::vector<double>", &_flash_prompt_fraction);
   }
 
   // Cosmic ID
