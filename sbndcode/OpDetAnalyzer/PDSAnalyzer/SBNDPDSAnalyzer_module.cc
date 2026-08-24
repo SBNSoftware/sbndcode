@@ -174,6 +174,7 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_ophit_width", "std::vector<std::vector<double>>", &_flash_ophit_width);
     fTree->Branch("flash_ophit_pe", "std::vector<std::vector<double>>", &_flash_ophit_pe);
     fTree->Branch("flash_ophit_ch", "std::vector<std::vector<int>>", &_flash_ophit_ch);
+    fTree->Branch("flash_prompt_fraction", "std::vector<std::vector<int>>", &_flash_prompt_fraction);
   }
 
   // Cosmic ID
@@ -611,6 +612,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _flash_ophit_width.clear();
     _flash_ophit_pe.clear();
     _flash_ophit_ch.clear();
+    _flash_prompt_fraction.clear();
 
     art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
@@ -646,6 +648,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _flash_xerr.push_back( Flash.XWidth() );
         _flash_z.push_back( Flash.ZCenter() );
         _flash_zerr.push_back( Flash.ZWidth() );
+        _flash_prompt_fraction.push_back( Flash.FastToTotal());
         _nopflash++;
 
         if(fSaveOpHits){

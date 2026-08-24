@@ -258,6 +258,7 @@ private:
   std::vector<std::vector<double>> _flash_ophit_width;
   std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
+  std::vector<double> _flash_prompt_fraction;
 
   // Cosmic ID
   std::vector<double> _CRUMBSScore;
