@@ -78,6 +78,8 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
   fNuToFLight=-99999.;
   fNuToFCharge=-99999.;
   fOpFlashT0Corrected=-99999.;
+  fParticlePropagationTime=-99999.;
+  fPhotonPropagationTime=-99999.;
 
   _eventID = -1;
   _runID = -1;
