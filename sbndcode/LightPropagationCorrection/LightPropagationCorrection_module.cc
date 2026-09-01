@@ -119,8 +119,8 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     //PFP to space points
     art::FindManyP<recob::SpacePoint> pfp_sp_assns(pfpHandle, e, fSpacePointLabel);
     //OpFlash to OpHit
-    flashToOpHitAssns_tpc0 = std::make_unique<art::FindManyP<recob::OpHit>>( opflashListHandle_tpc0, e, fOpFlashLabel_tpc0);
-    flashToOpHitAssns_tpc1 = std::make_unique<art::FindManyP<recob::OpHit>>(opflashListHandle_tpc1, e, fOpFlashLabel_tpc1);
+    art::FindManyP<recob::OpHit> flashToOpHitAssns_tpc0(opflashListHandle_tpc0, e, fOpFlashLabel_tpc0);
+    art::FindManyP<recob::OpHit> flashToOpHitAssns_tpc1(opflashListHandle_tpc1, e, fOpFlashLabel_tpc1);
     // PFP Metadata
     art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfpHandle, e, fReco2Label);
 
@@ -238,7 +238,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         else throw art::Exception(art::errors::LogicError) << " Flash matching tool " <<  fFlashMatchingTool << " not supported ." << std::endl; 
 
         sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
-        CorrectOpFlash(flashFM[0], correctedOpFlashTiming);
+        CorrectOpFlash(flashFM[0], correctedOpFlashTiming, flashToOpHitAssns_tpc0, flashToOpHitAssns_tpc1);
         correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         art::Ptr<sbn::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
         newCorrectedOpFlashTimingSliceAssn->addSingle(slice, newCorrectedOpFlashTimingPtr);
@@ -558,18 +558,18 @@ void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
     }
 }
 
-void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming)
+void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming, const art::FindManyP<recob::OpHit> &flashToOpHitAssns_tpc0, const art::FindManyP<recob::OpHit> &flashToOpHitAssns_tpc1)
 {
     // Get the ophits associated to the flash
     std::vector<art::Ptr<recob::OpHit>> ophitlist;
     if(flash->XCenter()<0)
     {
-        ophitlist = flashToOpHitAssns_tpc0->at(flash.key());
+        ophitlist = flashToOpHitAssns_tpc0.at(flash.key());
         _mgr = _mgr_tpc0; // Use the TPC 0 flash finder manager
     }
     else
     {
-        ophitlist = flashToOpHitAssns_tpc1->at(flash.key());
+        ophitlist = flashToOpHitAssns_tpc1.at(flash.key());
         _mgr = _mgr_tpc1; // Use the TPC 1 flash finder manager
     }
     std::vector<recob::OpHit> newOpHitList;
