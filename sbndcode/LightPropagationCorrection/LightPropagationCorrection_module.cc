@@ -501,7 +501,6 @@ double sbnd::LightPropagationCorrection::GetAverageParticlePropagationTime()
     }
     double average_prop_time = n ? sum / n : 0;
     return average_prop_time;
-    return n ? sum / n : 0.0;
 }
 
 
@@ -515,7 +514,6 @@ double sbnd::LightPropagationCorrection::GetAveragePhotonPropagationTime()
     }
     double average_prop_time = n ? sum / n : 0;
     return average_prop_time;
-    return n ? sum / n : 0.0;
 }
 
 void sbnd::LightPropagationCorrection::GetSelectedChannelsFlash(
