@@ -22,12 +22,10 @@
 
 #include <memory>
 
-namespace FragmentScramble {
-  class ArtDAQFragmentBlender;
-}
+class ArtDAQFragmentBlender;
 
 
-class FragmentScramble::ArtDAQFragmentBlender : public art::EDProducer {
+class ArtDAQFragmentBlender : public art::EDProducer {
 public:
   explicit ArtDAQFragmentBlender(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
@@ -53,7 +51,7 @@ private:
 };
 
 
-FragmentScramble::ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
+ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
@@ -68,7 +66,7 @@ FragmentScramble::ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterS
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
 
-void FragmentScramble::ArtDAQFragmentBlender::produce(art::Event& e)
+void ArtDAQFragmentBlender::produce(art::Event& e)
 {
   // Implementation of required member function here.
   int EventToScramble = TotalNoiseEvents*randDraws.Uniform(1.0);
