@@ -1,7 +1,7 @@
 add_definitions(-Wno-nested-anon-types)
 
 cet_build_plugin( FragmentScrambler art::module
-  SOURCE SBNDTPCDecoder_module.cc
+  SOURCE ArtDAQFragmentBlender_module.cc
   LIBRARIES
   sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
   sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND_NevisTPC
@@ -31,7 +31,7 @@ find_package(ROOT
   COMPONENTS Hist Tree RIO
   REQUIRED
   )
-  
+
 
 install_headers()
 install_fhicl()
