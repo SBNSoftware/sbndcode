@@ -36,6 +36,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            sbnobj::Common_CRT
                            sbndcode_BlipUtils
 			               sbnobj::SBND_Blip
+                        sbndcode_GIMME_LIFETIMES
 )
 
 install_headers()
