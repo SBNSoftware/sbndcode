@@ -15,22 +15,8 @@ cet_build_plugin( FragmentScrambler art::module
   ROOT::Tree
   sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
   sbnobj::Common_Analysis
+  gallery::gallery
 )
-find_package(gallery         REQUIRED)
-find_package(lardataalg      REQUIRED)
-find_package(lardataobj      REQUIRED)
-find_package(larcorealg      REQUIRED)
-find_package(larcoreobj      REQUIRED)
-find_package(sbnanaobj       REQUIRED)
-find_package(sbnobj          REQUIRED)
-find_package(sbncode         REQUIRED)
-find_package(sbndcode        REQUIRED)
-find_package(fhiclcpp        REQUIRED)
-find_package(messagefacility REQUIRED)
-find_package(ROOT
-  COMPONENTS Hist Tree RIO
-  REQUIRED
-  )
 
 
 install_headers()
