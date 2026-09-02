@@ -98,4 +98,4 @@ void FragmentScramble::ArtDAQFragmentBlender::produce(art::Event& e)
 
 }
 
-DEFINE_ART_MODULE(FragmentScramble::ArtDAQFragmentBlender)
+DEFINE_ART_MODULE(ArtDAQFragmentBlender)
