@@ -14,6 +14,10 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "canvas/Utilities/InputTag.h"
+#include "canvas/Persistency/Common/Ptr.h" 
+#include "canvas/Persistency/Common/PtrVector.h" 
+#include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "artdaq-core/Data/Fragment.hh"
 #include "TRandom.h"
@@ -62,7 +66,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
-  noiseGalleryEvent = new gallery::Event event(allInputFiles);
+  noiseGalleryEvent = new gallery::Event(allInputFiles[FileToGrab]);
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
 
@@ -82,17 +86,17 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   //Noise file
   art::Handle< std::vector<artdaq::Fragment> > NoiseFragHandle;
   std::vector< art::Ptr<artdaq::Fragment> > NoiseTPCfragmentList;
-  NoiseFragHandle = noiseGalleryEvent->getValidHandle(fTPCDAQLabel);
+  NoiseFragHandle = noiseGalleryEvent->getValidHandle(art::InputTag(fTPCDAQLabel));
   art::fill_ptr_vector(NominalTPCfragmentList, NoiseFragHandle);
   //Now mix up the entries in our scrambled vector
   //Will need to do a smarter thing in end to get the right mix
-  for(int i=0; i<NoiseTPCfragmentList.size(); i++)
+  for(int i=0; i<int(NoiseTPCfragmentList.size()); i++)
   {
-    if(i%2==0) ScrambledFragments.push_back(NoiseTPCfragmentList[i]);
-    else ScrambledFragments.push_back(NominalTPCfragmentList[i]);
+    if(i%2==0) ScrambledFragments->push_back(NoiseTPCfragmentList[i]);
+    else ScrambledFragments->push_back(NominalTPCfragmentList[i]);
   }
   //Add the new collection to the event
-  event.put(std::move(ScrambledFragments));
+  e.put(std::move(ScrambledFragments));
 
 }
 
