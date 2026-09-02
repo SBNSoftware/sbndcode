@@ -64,9 +64,10 @@ physics.producers.opt0finderSCE.ShowerProducer:   "pandoraSCEShowerSBN"
 physics.producers.opt0finderSCE.CaloProducer:     "pandoraSCECaloData"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
-
+physics.producers.blipreco.BlipAlg.CaloAlg: @local::sbnd_calorimetryalgdata
 
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.ana:            @local::sbnd_reco2_analyzer_sequence
 physics.end_paths: [stream1, caloskimana, ana ]
+physics.analyzers.blipana.BlipAlg.CaloAlg: @local::sbnd_calorimetryalgdata
