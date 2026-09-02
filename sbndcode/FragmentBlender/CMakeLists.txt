@@ -1,5 +1,7 @@
 add_definitions(-Wno-nested-anon-types)
 
+
+find_package(gallery         REQUIRED)
 cet_build_plugin( FragmentScrambler art::module
   SOURCE ArtDAQFragmentBlender_module.cc
   LIBRARIES
@@ -17,7 +19,6 @@ cet_build_plugin( FragmentScrambler art::module
   sbnobj::Common_Analysis
   gallery::gallery
 )
-
 
 install_headers()
 install_fhicl()
