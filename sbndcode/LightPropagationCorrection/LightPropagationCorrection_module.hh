@@ -142,10 +142,16 @@ private:
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
-
+    void GetSelectedChannelsFlash(double , ::lightana::LiteOpHitArray_t );
+    double GetAverageParticlePropagationTime();
+    double GetAveragePhotonPropagationTime();
+    void CorrectOpFlash(art::Ptr<recob::OpFlash> const& , sbn::CorrectedOpFlashTiming &);
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
     opdet::sbndPDMapAlg fPDSMap;
+    // Flash ophit associations
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc0;
+    std::unique_ptr<art::FindManyP<recob::OpHit>> flashToOpHitAssns_tpc1;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
@@ -177,6 +183,9 @@ private:
     bool fSaveCorrectionTree;
 
     std::vector<double> fTimeCorrectionPerChannel;
+    std::vector<double> fParticlePropagationTimePerChannel;
+    std::vector<double> fPhotonPropagationTimePerChannel;
+    std::vector<size_t> fSelectedChannelList;
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
     double fRecoVz = 0.0;
@@ -207,6 +216,14 @@ private:
     double fNuScoreThreshold;
     double fFMScoreThreshold;
 
+    // Parameters for the selected channel computation
+    int fMinHitPE;
+    double fPreWindow;
+    double fPostWindow;
+    double fPDFraction;
+
+    bool fIsMC; // Flag to indicate if the data is from MC or real data
+
     bool fDebug;
 
     art::ServiceHandle<art::TFileService> tfs;
@@ -215,6 +232,7 @@ private:
     int fEvent;
     int fRun;
     int fSubrun;
+    size_t fNOpChannels;
     double _fNuScore;
     double _fFMScore;
     double fEventTriggerTime=-999999.;
