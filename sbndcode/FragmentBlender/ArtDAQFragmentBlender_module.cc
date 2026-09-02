@@ -47,7 +47,7 @@ private:
   int fNumberNoiseFiles;
   TRandom randDraws;
   int TotalNoiseEvents;
-  std::unique_ptr<gallery::Event> noiseGalleryEvent =new gallery::Event;
+  std::unique_ptr<gallery::Event> noiseGalleryEvent;
 };
 
 
@@ -55,14 +55,14 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
-  fNoiseFileList = param.get<std::string>("NoiseFileList");
-  fNumberNoiseFiles = param.get<int>("NumberNoiseFiles");
-  fTPCDAQLabel = param.get<std::string>("TPCDAQLabel", "::");
+  fNoiseFileList = p.get<std::string>("NoiseFileList");
+  fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
+  fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
   produces<std::vector<artdaq::Fragments>>();
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
-  noiseGalleryEvent* = gallery::Event event(allInputFiles);
+  noiseGalleryEvent = new gallery::Event event(allInputFiles);
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
 
