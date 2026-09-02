@@ -73,8 +73,9 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
             allInputFiles.push_back(line);
         }
   file.close();
-  std::vector
-  noiseGalleryEvent = new gallery::Event(allInputFiles, FileToGrab);
+  std::vector<std::string> TempOneFile;
+  TempOneFile.push_back(allInputFiles[FileToGrab]);
+  noiseGalleryEvent = new gallery::Event(TempOneFile);
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
 
