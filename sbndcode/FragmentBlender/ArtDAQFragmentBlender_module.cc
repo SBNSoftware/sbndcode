@@ -66,6 +66,13 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
+  std::vector<std::string> allInputFiles;
+  ifstream file(fNoiseFileList);
+  std::string line;
+  while (getline(file, line)) {
+            allInputFiles.push_back(line);
+        }
+  file.close();
   noiseGalleryEvent = new gallery::Event(allInputFiles[FileToGrab]);
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
@@ -76,7 +83,7 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   int EventToScramble = TotalNoiseEvents*randDraws.Uniform(1.0);
   noiseGalleryEvent->goToEntry(EventToScramble);
   //Initialize fragment collection to put into the event
-  std::unique_ptr<std::vector<artdaq::Fragment>> ScrambledFragments(new std::vector<artdaq::Fragment>);
+  std::unique_ptr<std::vector<art::Ptr<artdaq::Fragment>>> ScrambledFragments(new std::vector<artdaq::Fragment>);
   //Read out the TPC fragments from both events
   //nominal file
   art::Handle< std::vector<artdaq::Fragment> > NominalFragHandle;
@@ -86,7 +93,7 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   //Noise file
   art::Handle< std::vector<artdaq::Fragment> > NoiseFragHandle;
   std::vector< art::Ptr<artdaq::Fragment> > NoiseTPCfragmentList;
-  NoiseFragHandle = noiseGalleryEvent->getValidHandle(art::InputTag(fTPCDAQLabel));
+  NoiseFragHandle = noiseGalleryEvent->getValidHandle(&art::InputTag(fTPCDAQLabel));
   art::fill_ptr_vector(NominalTPCfragmentList, NoiseFragHandle);
   //Now mix up the entries in our scrambled vector
   //Will need to do a smarter thing in end to get the right mix
