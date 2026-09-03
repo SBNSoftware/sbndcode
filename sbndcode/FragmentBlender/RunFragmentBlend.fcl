@@ -4,6 +4,7 @@ physics:
   producers:
   {
     FragmentScramble: {
+    module_type: FragmentScrambler
     NoiseFileList: "/exp/sbnd/app/users/jmclaugh/sbndcode_v10_22_00_AddPrompFrac/SpecialListOfNoiseFiles.txt"
     NumberNoiseFiles: 21000
     TPCDAQLabel: "NEVISTPC"
