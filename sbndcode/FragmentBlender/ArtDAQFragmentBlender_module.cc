@@ -75,6 +75,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   file.close();
   std::vector<std::string> TempOneFile;
   TempOneFile.push_back(allInputFiles[FileToGrab]);
+  std::cout << " grabbing "<< allInputFiles[FileToGrab] << " as noise file " << std::endl;
   noiseGalleryEvent.reset( new gallery::Event(TempOneFile) );
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
@@ -98,12 +99,14 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
   //Now mix up the entries in our scrambled vector
   //Will need to do a smarter thing in end to get the right mix
+  std::cout << "Noise TPC fragment list has length " <<NoiseTPCfragmentList.size() << std::endl;
   for(int i=0; i<int(NoiseTPCfragmentList.size()); i++)
   {
     if(i%2==0) ScrambledFragments->push_back(NoiseTPCfragmentList[i]);
     else ScrambledFragments->push_back(*NominalTPCfragmentList[i]);
   }
   //Add the new collection to the event
+  std::cout << " adding in scrambled fragments " << std::endl;
   e.put(std::move(ScrambledFragments), "test");
 
 }
