@@ -62,7 +62,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   fNoiseFileList = p.get<std::string>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
-  produces<std::vector<artdaq::Fragments>>();
+  produces<std::vector<artdaq::Fragment>>();
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   unsigned int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
