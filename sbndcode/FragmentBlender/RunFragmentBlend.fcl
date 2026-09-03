@@ -1,0 +1,33 @@
+physics:
+{
+  // now also have something produce the digits and headers
+  producers:
+  {
+    FragmentScramble: {
+    NoiseFileList: "/exp/sbnd/app/users/jmclaugh/sbndcode_v10_22_00_AddPrompFrac/SpecialListOfNoiseFiles.txt"
+    NumberNoiseFiles: 21000
+    TPCDAQLabel: "NEVISTPC"
+    }
+
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [FragmentScramble]
+  trigger_paths: [my_producer_modules]
+  a: [commissioning]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  commissioning: {
+    module_type: "RootOutput"
+    fileName: "%ifb_ScrambledFragments.root"
+    dataTier: "reconstructed"
+  }
+}
+
+
+process_name: TPCDECODER
