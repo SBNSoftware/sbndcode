@@ -94,9 +94,9 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   if (e.getByLabel(fTPCDAQLabel,NominalFragHandle))
     art::fill_ptr_vector(NominalTPCfragmentList, NominalFragHandle);
   //Noise file
-  std::vector<artdaq::Fragment > NoiseTPCfragmentList;
+  //std::vector<artdaq::Fragment > NoiseTPCfragmentList;
   art::InputTag TempTag(fTPCDAQLabel);
-  NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
+  const auto& NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
   //Now mix up the entries in our scrambled vector
   //Will need to do a smarter thing in end to get the right mix
   std::cout << "Noise TPC fragment list has length " <<NoiseTPCfragmentList.size() << std::endl;
