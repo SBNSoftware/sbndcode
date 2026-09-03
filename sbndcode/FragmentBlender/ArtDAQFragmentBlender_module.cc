@@ -85,23 +85,23 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   int EventToScramble = TotalNoiseEvents*randDraws.Uniform(1.0);
   noiseGalleryEvent->goToEntry(EventToScramble);
   //Initialize fragment collection to put into the event
-  std::unique_ptr<std::vector<artdaq::Fragment>> ScrambledFragments(new std::vector<art::Ptr<artdaq::Fragment>>);
+  std::unique_ptr<std::vector<artdaq::Fragment>> ScrambledFragments(new std::vector<artdaq::Fragment>);
   //Read out the TPC fragments from both events
   //nominal file
   art::Handle< std::vector<artdaq::Fragment> > NominalFragHandle;
-  std::vector< artdaq::Fragment > NominalTPCfragmentList;
+  std::vector< art::Ptr<artdaq::Fragment> > NominalTPCfragmentList;
   if (e.getByLabel(fTPCDAQLabel,NominalFragHandle))
     art::fill_ptr_vector(NominalTPCfragmentList, NominalFragHandle);
   //Noise file
   const std::vector<artdaq::Fragment > NoiseTPCfragmentList;
   art::InputTag TempTag(fTPCDAQLabel);
-  NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
+  NoiseTPCfragmentList = (noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
   //Now mix up the entries in our scrambled vector
   //Will need to do a smarter thing in end to get the right mix
   for(int i=0; i<int(NoiseTPCfragmentList.size()); i++)
   {
     if(i%2==0) ScrambledFragments->push_back(NoiseTPCfragmentList[i]);
-    else ScrambledFragments->push_back(NominalTPCfragmentList[i]);
+    else ScrambledFragments->push_back(*NominalTPCfragmentList[i]);
   }
   //Add the new collection to the event
   e.put(std::move(ScrambledFragments));
