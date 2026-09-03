@@ -104,7 +104,7 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
     else ScrambledFragments->push_back(*NominalTPCfragmentList[i]);
   }
   //Add the new collection to the event
-  e.put(std::move(ScrambledFragments));
+  e.put(std::move(ScrambledFragments), "test");
 
 }
 
