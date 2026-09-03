@@ -108,7 +108,7 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
     }
     else{ 
       ScrambledFragments->push_back(*(NominalTPCfragmentList[i]));
-      std::cout << "adding nominal fragment " << *(NominalTPCfragmentList[i]).fragmentID() << std::endl;
+      std::cout << "adding nominal fragment " << (*(NominalTPCfragmentList[i])).fragmentID() << std::endl;
     }
   }
   std::cout << "Scrambled size " << ScrambledFragments->size() << std::endl;
