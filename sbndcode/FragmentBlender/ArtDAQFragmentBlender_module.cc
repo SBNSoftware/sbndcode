@@ -102,9 +102,16 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   std::cout << "Noise TPC fragment list has length " <<NoiseTPCfragmentList.size() << std::endl;
   for(int i=0; i<int(NoiseTPCfragmentList.size()); i++)
   {
-    if(i%2==0) ScrambledFragments->push_back(NoiseTPCfragmentList[i]);
-    else ScrambledFragments->push_back(*NominalTPCfragmentList[i]);
+    if(i%2==0){ 
+      ScrambledFragments->push_back(NoiseTPCfragmentList[i]);
+      std::cout << "adding noise fragment " << NoiseTPCfragmentList[i].fragmentID() << std::endl;
+    }
+    else{ 
+      ScrambledFragments->push_back(*(NominalTPCfragmentList[i]));
+      std::cout << "adding nominal fragment " << *(NominalTPCfragmentList[i]).fragmentID() << std::endl;
+    }
   }
+  std::cout << "Scrambled size " << ScrambledFragments->size() << std::endl;
   //Add the new collection to the event
   std::cout << " adding in scrambled fragments " << std::endl;
   e.put(std::move(ScrambledFragments), "test");
