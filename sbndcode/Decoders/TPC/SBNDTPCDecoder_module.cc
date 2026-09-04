@@ -74,13 +74,16 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   _tag(param.get<std::string>("raw_data_label", "daq"),param.get<std::string>("fragment_type_label", "NEVISTPC")),
   _config(param)
 {
-  consumes<artdaq::Fragments>(_tag);
-  produces<RawDigits>();
-  produces<RDTimeStamps>();
-  produces<RDTsAssocs>();
-  produces<std::vector<anab::TPCChannelInfo>>();
-  if (_config.produce_header) {
-    produces<std::vector<tpcAnalysis::TPCDecodeAna>>();
+  if(NominalProcessing)
+  {
+    consumes<artdaq::Fragments>(_tag);
+    produces<RawDigits>();
+    produces<RDTimeStamps>();
+    produces<RDTsAssocs>();
+    produces<std::vector<anab::TPCChannelInfo>>();
+    if (_config.produce_header) {
+      produces<std::vector<tpcAnalysis::TPCDecodeAna>>();
+    }
   }
 }
 
@@ -90,7 +93,7 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
   baseline_calc = param.get<bool>("baseline_calc", true);
   // whether to put headerinfo in the art root file
   produce_header = param.get<bool>("produce_header", false);
-
+  NominalProcessing = param.get<bool>("NominalProcessing", true);
   // nevis readout window length
   timesize = param.get<unsigned>("timesize", 1);
 
@@ -102,6 +105,25 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
   channel_per_slot = param.get<unsigned>("channel_per_slot", 0);
   // index of 0th slot
   min_slot_no = param.get<unsigned>("min_slot_no", 0);
+}
+//some code duplication! Yippee!
+std::unique_ptr<RawDigits> daq::SBNDTPCDecoder::produce2(art::Event & event)
+{
+  auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
+  RDPmkr rdpm(event);
+  TSPmkr tspm(event);
+  // output collections
+  std::unique_ptr<RawDigits> rawdigit_collection(new RawDigits);
+  std::unique_ptr<RDTimeStamps> rdts_collection(new RDTimeStamps);
+  std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
+  std::unique_ptr<std::vector<anab::TPCChannelInfo>> channeldata_collection(new std::vector<anab::TPCChannelInfo>);
+  std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
+  if ( daq_handle.isValid() ) {
+    for (auto const &rawfrag: *daq_handle) {
+      process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+    }
+  }
+  return rawdigit_collection;
 }
 
 void daq::SBNDTPCDecoder::produce(art::Event & event)
@@ -133,7 +155,6 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
     channeldata_collection->push_back(i);
   }
 
-  
   event.put(std::move(rawdigit_collection));
   event.put(std::move(rdts_collection));
   event.put(std::move(rdtsassoc_collection));
