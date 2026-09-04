@@ -47,7 +47,7 @@ public:
   void produce(art::Event& e) override;
 
 private:
-
+  daq::SBNDTPCDecoder::SBNDTPCDecoder tpcDecoderBusiness;
   std::string fNoiseFileList;// Declare member data here.
   std::string fTPCDAQLabel;
   int fNumberNoiseFiles;
@@ -58,7 +58,8 @@ private:
 
 
 ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
-  : EDProducer{p}  // ,
+  : EDProducer{p} ,
+    tpcDecoderBusiness{p}
   // More initializers here.
 {
   fNoiseFileList = p.get<std::string>("NoiseFileList");
@@ -91,8 +92,8 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   //Update to recob wire
   //There is a small chance everything breaks and we need to save all the items from the decoder
   std::unique_ptr<std::vector<raw::RawDigit>> ScrambledFragments(new std::vector<raw::RawDigit>);
-  std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = daq::SBNDTPCDecoder::produce2(e);
-  std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = daq::SBNDTPCDecoder::produce2(noiseGalleryEvent);
+  std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness.produce2(e);
+  std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(noiseGalleryEvent);
   //Loop through fragments and find the right IDs to add in 
   //Should update this logic to use ranges of channel IDs
   for(int i=0; i<int(NominalFragments.size()); i++)
