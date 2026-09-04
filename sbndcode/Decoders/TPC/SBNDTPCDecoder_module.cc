@@ -121,11 +121,9 @@ std::unique_ptr<std::vector<raw::RawDigit>> daq::SBNDTPCDecoder::produce2(
   std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
   std::unique_ptr<std::vector<anab::TPCChannelInfo>> channeldata_collection(new std::vector<anab::TPCChannelInfo>);
   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
-  if ( daq_handle.isValid() ) {
-    for (auto const &rawfrag: daq_handle) {
+  for (auto const &rawfrag: daq_handle) {
       process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
     }
-  }
   return rawdigit_collection;
 }
 
