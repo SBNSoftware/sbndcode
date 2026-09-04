@@ -74,7 +74,7 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   _tag(param.get<std::string>("raw_data_label", "daq"),param.get<std::string>("fragment_type_label", "NEVISTPC")),
   _config(param)
 {
-  if(NominalProcessing)
+  if(param.get<bool>("NominalProcessing", true)) //config gets called in a weird order?
   {
     consumes<artdaq::Fragments>(_tag);
     produces<RawDigits>();
@@ -107,7 +107,7 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
   min_slot_no = param.get<unsigned>("min_slot_no", 0);
 }
 //some code duplication! Yippee!
-std::unique_ptr<raw::RawDigit> daq::SBNDTPCDecoder::produce2(art::Event & event)
+std::unique_ptr<std::vector<raw::RawDigit>> daq::SBNDTPCDecoder::produce2(art::Event & event)
 {
   auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
   RDPmkr rdpm(event);
