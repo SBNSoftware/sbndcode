@@ -48,7 +48,8 @@ public:
 
   // Required functions.
   void produce(art::Event & e) override;
-  std::unique_ptr<std::vector<raw::RawDigit>> produce2(art::Event & event);
+  std::unique_ptr<std::vector<raw::RawDigit>> produce2(art::Handle< std::vector<artdaq::Fragment> > daq_handle, 
+  art::PtrMaker<raw::RawDigit> rdpm, art::PtrMaker<raw::RDTimeStamp> tspm);
 
   // get checksum from a Nevis fragment
   static uint32_t compute_checksum(sbndaq::NevisTPCFragment &fragment);
