@@ -48,7 +48,7 @@ public:
 
   // Required functions.
   void produce(art::Event & e) override;
-  std::unique_ptr<RawDigits> daq::SBNDTPCDecoder::produce2(art::Event & event);
+  std::unique_ptr<raw::RawDigits> produce2(art::Event & event);
 
   // get checksum from a Nevis fragment
   static uint32_t compute_checksum(sbndaq::NevisTPCFragment &fragment);
