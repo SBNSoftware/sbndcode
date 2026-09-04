@@ -47,7 +47,7 @@ public:
   void produce(art::Event& e) override;
 
 private:
-  daq::SBNDTPCDecoder::SBNDTPCDecoder tpcDecoderBusiness;
+  daq::SBNDTPCDecoder tpcDecoderBusiness;
   std::string fNoiseFileList;// Declare member data here.
   std::string fTPCDAQLabel;
   int fNumberNoiseFiles;
