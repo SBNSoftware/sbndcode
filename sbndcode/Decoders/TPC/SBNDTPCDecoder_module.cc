@@ -107,7 +107,7 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
   min_slot_no = param.get<unsigned>("min_slot_no", 0);
 }
 //some code duplication! Yippee!
-std::unique_ptr<RawDigits> daq::SBNDTPCDecoder::produce2(art::Event & event)
+std::unique_ptr<raw::RawDigit> daq::SBNDTPCDecoder::produce2(art::Event & event)
 {
   auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
   RDPmkr rdpm(event);
