@@ -102,16 +102,16 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(NoiseTPCfragmentList, rdpm, tspm);
   //Loop through fragments and find the right IDs to add in 
   //Should update this logic to use ranges of channel IDs
-  for(int i=0; i<int(NominalFragments.size()); i++)
+  for(int i=0; i<int(NominalFragments->size()); i++)
   {
-    int ChannelID = NominalFragments[i].Channel();
+    int ChannelID = (*NominalFragments)[i].Channel();
     if(   (ChannelID>=3968 && ChannelID<5632) || (ChannelID>=9600 && ChannelID<11264)  ) //grab collection clusters
     {
-      ScrambledFragments->push_back(NominalFragments[i]);
+      ScrambledFragments->push_back((*NominalFragments)[i]);
     }
     else //must be induction
     {
-      ScrambledFragments->push_back(NoiseFragments[i]);
+      ScrambledFragments->push_back((*NoiseFragments)[i]);
     }
   }
   std::cout << "Scrambled size " << ScrambledFragments->size() << std::endl;
