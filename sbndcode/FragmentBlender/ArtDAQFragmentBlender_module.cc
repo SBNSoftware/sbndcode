@@ -96,13 +96,13 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   art::PtrMaker<raw::RawDigit> rdpm(e);
   art::PtrMaker<raw::RDTimeStamp> tspm(e);
   std::unique_ptr<std::vector<raw::RawDigit>> ScrambledFragments(new std::vector<raw::RawDigit>);
-  //std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness.produce2(*NominalFragHandle, rdpm, tspm);
+  std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness.produce2(*NominalFragHandle, rdpm, tspm);
   art::InputTag TempTag(fTPCDAQLabel);
-  //const auto& NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
-  //std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(NoiseTPCfragmentList, rdpm, tspm);
+  const auto& NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
+  std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(NoiseTPCfragmentList, rdpm, tspm);
   //Loop through fragments and find the right IDs to add in 
   //Should update this logic to use ranges of channel IDs
-  /*
+  
   for(int i=0; i<int(NominalFragments->size()); i++)
   {
     int ChannelID = (*NominalFragments)[i].Channel();
@@ -115,7 +115,7 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
       ScrambledFragments->push_back((*NoiseFragments)[i]);
     }
   }
-  */
+
   std::cout << "Scrambled size " << ScrambledFragments->size() << std::endl;
   //Add the new collection to the event
   std::cout << " adding in scrambled fragments " << std::endl;
