@@ -33,6 +33,23 @@ cet_build_plugin( NTBDecoder art::module
   ROOT::Tree
 )
 
+art_make_library(LIBRARY_NAME TPCDecoder
+  SOURCE SBNDTPCDecoder_module.cc
+  LIBRARIES
+  sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
+  sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND_NevisTPC
+  lardataobj::RawData
+  artdaq_core::artdaq-core_Utilities
+  art::Utilities
+  fhiclcpp::fhiclcpp
+  messagefacility::MF_MessageLogger
+  art::Framework_Core
+  ROOT::Core
+  ROOT::Tree
+  sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
+  sbnobj::Common_Analysis
+  )
+
 install_headers()
 install_fhicl()
 install_source()

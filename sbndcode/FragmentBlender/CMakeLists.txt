@@ -18,6 +18,7 @@ cet_build_plugin( FragmentScrambler art::module
   sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
   sbnobj::Common_Analysis
   gallery::gallery
+  TPCDecoder
 )
 
 install_headers()
