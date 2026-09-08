@@ -41,8 +41,8 @@ DEFINE_ART_MODULE(daq::SBNDTPCDecoder)
 
 // constructs a header data object from a nevis header
 // construct from a nevis header
-tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event &event, const artdaq::Fragment &frag) {
-  sbndaq::NevisTPCFragment fragment(frag);
+tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(const artdaq::Fragment &frag) { //remove event
+  sbndaq::NevisTPCFragment fragment(frag); 
 
   const sbndaq::NevisTPCHeader *raw_header = fragment.header();
   tpcAnalysis::TPCDecodeAna ret;
@@ -173,7 +173,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
 }
 
 
-void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Fragment &frag, 
+void daq::SBNDTPCDecoder::process_fragment( const artdaq::Fragment &frag, 
 					   std::unique_ptr<RawDigits> &rd_collection,
 					   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> &header_collection,
 					   RDPmkr &rdpm,
@@ -192,7 +192,7 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
 
   // need to retrieve the timestamp from the Nevis header and save it in the art event only on request
   
-  auto header_data = Fragment2TPCDecodeAna(event, frag);
+  auto header_data = Fragment2TPCDecodeAna(frag); //remove fragment
   if (_config.produce_header) {
     header_collection->push_back(header_data);
   }

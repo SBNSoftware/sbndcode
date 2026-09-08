@@ -80,8 +80,7 @@ private:
   typedef art::PtrMaker<raw::RDTimeStamp> TSPmkr;
     
   // process an individual fragment inside an art event
-  void process_fragment(art::Event &event,
-			const artdaq::Fragment &frag,
+  void process_fragment(const artdaq::Fragment &frag,
                         std::unique_ptr<RawDigits> &rd_collection,
                         std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> &header_collection,
 			RDPmkr &rdpm,
@@ -91,7 +90,7 @@ private:
 
 
   // build a TPCDecodeAna object from the Nevis Header
-  tpcAnalysis::TPCDecodeAna Fragment2TPCDecodeAna(art::Event &event, const artdaq::Fragment &frag);
+  tpcAnalysis::TPCDecodeAna Fragment2TPCDecodeAna(const artdaq::Fragment &frag);
 
   art::InputTag _tag;
   Config _config;
