@@ -122,7 +122,7 @@ std::unique_ptr<std::vector<raw::RawDigit>> daq::SBNDTPCDecoder::produce2(
   std::unique_ptr<std::vector<anab::TPCChannelInfo>> channeldata_collection(new std::vector<anab::TPCChannelInfo>);
   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
   for (auto const &rawfrag: daq_handle) {
-      process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+      process_fragment(rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
     }
   return rawdigit_collection;
 }
@@ -143,7 +143,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
 
   if ( daq_handle.isValid() ) {
     for (auto const &rawfrag: *daq_handle) {
-      process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+      process_fragment(rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
     }
   }
   else
