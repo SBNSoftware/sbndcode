@@ -25,6 +25,9 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "lardataobj/RawData/RawDigit.h"
 #include "sbndcode/Decoders/TPC/SBNDTPCDecoder.h"
+#include "sbndcode/Decoders/TPC/sbndntb.h"
+#include "sbndaq-artdaq-core/Overlays/SBND/NevisTPCFragment.hh"
+
 
 #include <memory>
 
