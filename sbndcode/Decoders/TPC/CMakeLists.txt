@@ -33,7 +33,7 @@ cet_build_plugin( NTBDecoder art::module
   ROOT::Tree
 )
 
-art_make_library(LIBRARY_NAME TPCDecoder
+art_make_library(LIBRARY_NAME sbndcode_TPCDecoder
   SOURCE SBNDTPCDecoder_module.cc
   LIBRARIES
   sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
