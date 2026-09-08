@@ -45,7 +45,6 @@ public:
   SBNDTPCDecoder(SBNDTPCDecoder &&) = delete;
   SBNDTPCDecoder & operator = (SBNDTPCDecoder const &) = delete;
   SBNDTPCDecoder & operator = (SBNDTPCDecoder &&) = delete;
-  virtual ~SBNDTPCDecoder();
   // Required functions.
   void produce(art::Event & e) override;
   std::unique_ptr<std::vector<raw::RawDigit>> produce2( std::vector<artdaq::Fragment>  daq_handle, 
