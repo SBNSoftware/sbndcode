@@ -45,8 +45,6 @@ public:
   SBNDTPCDecoder(SBNDTPCDecoder &&) = delete;
   SBNDTPCDecoder & operator = (SBNDTPCDecoder const &) = delete;
   SBNDTPCDecoder & operator = (SBNDTPCDecoder &&) = delete;
-  virtual ~SBNDTPCDecoder() = default;
-
 
   // Required functions.
   void produce(art::Event & e) override;
