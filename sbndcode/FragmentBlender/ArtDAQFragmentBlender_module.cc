@@ -42,12 +42,12 @@ public:
   ArtDAQFragmentBlender(ArtDAQFragmentBlender&&) = delete;
   ArtDAQFragmentBlender& operator=(ArtDAQFragmentBlender const&) = delete;
   ArtDAQFragmentBlender& operator=(ArtDAQFragmentBlender&&) = delete;
-
+  virtual ~ArtDAQFragmentBlender();
   // Required functions.
   void produce(art::Event& e) override;
 
 private:
-  daq::SBNDTPCDecoder tpcDecoderBusiness;
+  daq::SBNDTPCDecoder *tpcDecoderBusiness;
   std::string fNoiseFileList;// Declare member data here.
   std::string fTPCDAQLabel;
   int fNumberNoiseFiles;
@@ -55,13 +55,15 @@ private:
   int TotalNoiseEvents;
   std::unique_ptr<gallery::Event> noiseGalleryEvent;
 };
-
+ArtDAQFragmentBlender::~ArtDAQFragmentBlender()
+{
+  delete tpcDecoderBusiness
+}
 
 ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
-  : EDProducer{p} ,
-    tpcDecoderBusiness{p}
-  // More initializers here.
+  : EDProducer{p}  // More initializers here.
 {
+  tpcDecoderBusiness = new SBNDTPCDecoder(p);
   fNoiseFileList = p.get<std::string>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
@@ -96,10 +98,10 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   art::PtrMaker<raw::RawDigit> rdpm(e);
   art::PtrMaker<raw::RDTimeStamp> tspm(e);
   std::unique_ptr<std::vector<raw::RawDigit>> ScrambledFragments(new std::vector<raw::RawDigit>);
-  std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness.produce2(*NominalFragHandle, rdpm, tspm);
+  std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness->produce2(*NominalFragHandle, rdpm, tspm);
   art::InputTag TempTag(fTPCDAQLabel);
   const auto& NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
-  std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(NoiseTPCfragmentList, rdpm, tspm);
+  std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness->produce2(NoiseTPCfragmentList, rdpm, tspm);
   //Loop through fragments and find the right IDs to add in 
   //Should update this logic to use ranges of channel IDs
   
