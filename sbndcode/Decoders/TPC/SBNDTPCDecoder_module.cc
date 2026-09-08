@@ -172,7 +172,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   if ( daq_handle.isValid() ) daq_handle.removeProduct();
 }
 
-SBNDTPCDecoder::~SBNDTPCDecoder()
+daq::SBNDTPCDecoder::~SBNDTPCDecoder()
 {
 }
 

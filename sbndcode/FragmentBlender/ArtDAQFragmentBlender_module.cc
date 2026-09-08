@@ -63,7 +63,7 @@ ArtDAQFragmentBlender::~ArtDAQFragmentBlender()
 ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   : EDProducer{p}  // More initializers here.
 {
-  tpcDecoderBusiness = new daq::SBNDTPCDecoder::SBNDTPCDecoder(p);
+  tpcDecoderBusiness = new daq::SBNDTPCDecoder(p);
   fNoiseFileList = p.get<std::string>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
