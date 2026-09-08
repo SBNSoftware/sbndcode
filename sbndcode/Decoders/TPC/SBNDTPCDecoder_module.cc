@@ -172,6 +172,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   if ( daq_handle.isValid() ) daq_handle.removeProduct();
 }
 
+
 void daq::SBNDTPCDecoder::process_fragment( const artdaq::Fragment &frag, 
 					   std::unique_ptr<RawDigits> &rd_collection,
 					   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> &header_collection,
