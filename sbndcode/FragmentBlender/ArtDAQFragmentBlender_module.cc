@@ -57,7 +57,7 @@ private:
 };
 ArtDAQFragmentBlender::~ArtDAQFragmentBlender()
 {
-  delete tpcDecoderBusiness
+  delete tpcDecoderBusiness;
 }
 
 ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
