@@ -22,20 +22,91 @@
     <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
     <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
   </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLayerSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLongitudinalAssociation"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArTransverseAssociation"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLongitudinalExtension"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArTransverseExtension"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArCrossGapsAssociation"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArCrossGapsExtension"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArOvershootSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArBranchSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArKinkSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
+  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArHitWidthClusterMerging"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListU</CaloHitListNames>
+    <ClusterListNames>ClustersU</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
 
   <algorithm type = "LArClusteringParent">
     <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
@@ -44,7 +115,17 @@
     <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
     <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
   </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListV</CaloHitListNames>
+    <ClusterListNames>ClustersV</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLayerSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListV</CaloHitListNames>
+    <ClusterListNames>ClustersV</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLongitudinalAssociation"/>
   <algorithm type = "LArTransverseAssociation"/>
   <algorithm type = "LArLongitudinalExtension"/>
@@ -54,6 +135,22 @@
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
   <algorithm type = "LArKinkSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListV</CaloHitListNames>
+    <ClusterListNames>ClustersV</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
+  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListV</CaloHitListNames>
+    <ClusterListNames>ClustersV</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListV</CaloHitListNames>
+    <ClusterListNames>ClustersV</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
@@ -66,6 +163,11 @@
     <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
     <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
   </algorithm>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListW</CaloHitListNames>
+    <ClusterListNames>ClustersW</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArLayerSplitting"/>
   <algorithm type = "LArLongitudinalAssociation"/>
   <algorithm type = "LArTransverseAssociation"/>
@@ -76,6 +178,17 @@
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
   <algorithm type = "LArKinkSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListW</CaloHitListNames>
+    <ClusterListNames>ClustersW</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
+  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArVisualMonitoring">
+    <CaloHitListNames>CaloHitListW</CaloHitListNames>
+    <ClusterListNames>ClustersW</ClusterListNames>
+    <ShowDetector>true</ShowDetector>
+  </algorithm>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>

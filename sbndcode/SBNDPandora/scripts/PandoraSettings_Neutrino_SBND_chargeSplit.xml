@@ -32,7 +32,7 @@
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
   <algorithm type = "LArKinkSplitting"/>
-  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArChargeRatioSplitting"/>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
@@ -55,7 +55,7 @@
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
   <algorithm type = "LArKinkSplitting"/>
-  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArChargeRatioSplitting"/>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>
@@ -78,7 +78,7 @@
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
   <algorithm type = "LArKinkSplitting"/>
-  <algorithm type = "LArChargeMultiSplitting"/>
+  <algorithm type = "LArChargeRatioSplitting"/>
   <algorithm type = "LArTrackConsolidation">
     <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
   </algorithm>

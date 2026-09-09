@@ -17,6 +17,28 @@
     <ShowDetector>true</ShowDetector>
   </algorithm>
 
+  <!-- Showing nuclear clusters -->
+  <algorithm type= "LArMCMonitoring">
+        <CaloHitListName>CaloHitListU</CaloHitListName>
+  </algorithm>
+  <algorithm type= "LArMCMonitoring">
+        <CaloHitListName>CaloHitListV</CaloHitListName>
+  </algorithm>
+  <algorithm type= "LArMCMonitoring">
+        <CaloHitListName>CaloHitListW</CaloHitListName>
+  </algorithm>
+
+  <!-- Showing hits above threshold -->
+  <algorithm type= "LArMCHitMonitoring">
+        <CaloHitListName>CaloHitListU</CaloHitListName>
+  </algorithm>
+  <algorithm type= "LArMCHitMonitoring">
+        <CaloHitListName>CaloHitListV</CaloHitListName>
+  </algorithm>
+  <algorithm type= "LArMCHitMonitoring">
+        <CaloHitListName>CaloHitListW</CaloHitListName>
+  </algorithm>
+
   <algorithm type = "LArMaster">
     <CRSettingsFile>PandoraSettings_Cosmic_SBND.xml</CRSettingsFile>
     <NuSettingsFile>clusterPandoraNeutrinoSettings.xml</NuSettingsFile>
@@ -51,4 +73,9 @@
     <ShowCurrentPfos>true</ShowCurrentPfos>
     <ShowDetector>true</ShowDetector>
   </algorithm>
+
+  <!-- Showing reco vertices-->
+  <algorithm type= "LArVertexMonitoring">
+  </algorithm>
+
 </pandora>
