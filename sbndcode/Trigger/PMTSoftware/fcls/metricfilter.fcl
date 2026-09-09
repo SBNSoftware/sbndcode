@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+metricfilter_sbnd:
+{
+ module_type:         "MetricFilter"
+ metric_module_labels: ["pmtmetricproducer",
+                        "pmtmetricbnbzero",
+                        "pmtmetricbnblight",
+                        "pmtmetricoffbeamzero",
+                        "pmtmetricoffbeamlight",
+                        "pmtmetriccrossingmuon",
+                        "pmtmetricbnb",
+                        "pmtmetricoffbeam"]
+ time_max: 3
+ pe_thresh: 30
+}
+
+END_PROLOG

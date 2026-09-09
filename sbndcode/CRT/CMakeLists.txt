@@ -2,6 +2,7 @@ add_subdirectory(CRTAna)
 add_subdirectory(CRTBackTracker)
 add_subdirectory(CRTEventDisplay)
 add_subdirectory(CRTReco)
+add_subdirectory(CRTVeto)
 add_subdirectory(CRTSimulation)
 add_subdirectory(CRTTPCMatching)
 add_subdirectory(CRTUtils)
@@ -27,7 +28,10 @@ art_make_library(
         cetlib::cetlib
 )
 
-cet_build_plugin( CRTAuxDetInitializer art::tool
+cet_build_plugin( CRTAuxDetInitializerSBND art::tool
+    SOURCE
+    CRTAuxDetInitializerSBND_tool.cc
+    CRTAuxDetInitializerSBND.cxx
     LIBRARIES REG
         larcorealg::Geometry
         sbndcode_CRTData

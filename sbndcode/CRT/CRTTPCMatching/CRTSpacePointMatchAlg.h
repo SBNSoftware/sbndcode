@@ -167,10 +167,6 @@ namespace sbnd::crt {
                                  const geo::Vector_t &trackDir, const art::Ptr<CRTSpacePoint> &crtSP,
                                  const int driftDirection, const double t0, const art::Event &e);
 
-    std::pair<geo::Vector_t, geo::Vector_t> AverageTrackDirections(const art::Ptr<recob::Track> &track, const double frac);
-    std::pair<geo::Vector_t, geo::Vector_t> TrackDirections(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                            const double frac, const double CRTtime, const int driftDirection);
-
   private:
 
     geo::GeometryCore const* fGeometryService;

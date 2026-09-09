@@ -52,7 +52,7 @@ sbnd_corsika_p: {
     "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/p_showers_*.db"
   ] # ShowerInputFiles
   
-  
+  ShowerAreaExtension: 2000  
 } # sbnd_corsika_p
 
 
@@ -75,6 +75,7 @@ sbnd_corsika_cmc: {
     "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/Fe_showers_*.db"
   ] # ShowerInputFiles
   
+  ShowerAreaExtension: 2000 
   
 } # sbnd_corsika_cmc
 

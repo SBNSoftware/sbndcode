@@ -1,1 +1,9 @@
 #include "sbnd_ci_nucosmics_detsim_quick_test_sbndcode.fcl"
+
+#Adding these drops because the WireCell Toolkit simulation
+# is not deterministic, but they would like to keep these 
+# in main production to further develop.
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                               ,"drop *_simtpc2d_badmasks_*"
+                               ,"drop *_simtpc2d_badchannels_*"
+                           ]

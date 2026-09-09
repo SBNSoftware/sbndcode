@@ -1,0 +1,33 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "sbnd_lightpropagationcorrectionana_config.fcl"
+
+process_name: CorrectedOpFlashAna
+
+services:
+{
+  TFileService:              { fileName: "correctedopflashana_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice  
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+physics:
+{
+  analyzers:
+  {
+    lightpropcorrectionanatree: @local::lightpropagationcorrection_ana
+  }
+  ana: [lightpropcorrectionanatree]
+  end_paths: [ana]
+}

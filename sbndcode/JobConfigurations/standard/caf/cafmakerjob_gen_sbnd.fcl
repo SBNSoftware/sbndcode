@@ -1,0 +1,99 @@
+#include "CAFMaker.fcl"
+
+#include "services_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "larproperties.fcl"
+#include "backtrackerservice.fcl"
+#include "detectorproperties_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "photonbacktrackerservice.fcl"
+#include "mccheatermodules.fcl"
+
+
+#include "cafmaker_common_defs.fcl"
+#include "eventweight_genie_systtools.fcl"
+
+process_name: CAFmaker
+
+services:
+{
+  # Load the service that manages root files for histograms.
+#  scheduler:    {wantTracer : false wantSummary : false}
+  TimeTracker: {}
+  RandomNumberGenerator: {} #ART native random number generator
+  TFileService: { fileName: "fullchain_production_hist_prod5.root" closeFileFast: false }
+#  scheduler:    { wantTracer: false wantSummary: true }
+  message:      { debugModules: ["*"] destinations: { debugmsg:{type: "cout" threshold: "INFO"} } }
+  TimeTracker:  { printSummary: true }
+  # #  @table::standard_services
+
+  WireReadout:               @local::sbnd_wire_readout
+  GeometryConfigurationWriter: {}
+  Geometry:                  @local::sbnd_geo
+  AuxDetGeometry:            @local::sbnd_auxdetgeo
+  LArPropertiesService:      @local::standard_properties
+  DetectorClocksService:     @local::sbnd_services.DetectorClocksService
+  DetectorPropertiesService: @local::sbnd_detproperties
+  ChannelStatusService:      @local::sbnd_channelstatus
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  SpaceCharge:               @local::sbnd_spacecharge
+  NuRandomService: {
+    policy: perEvent
+  }
+}
+
+# services.IFBeam: {}
+# services.BackTracker: @local::standard_backtracker
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+ producers: {
+
+   @table::cafmaker_common_producers
+   systtools: @local::sbn_systtools
+   cafmaker: @local::standard_cafmaker
+
+}
+  filters: {
+  }
+  analyzers: {
+  }
+  
+  runprod: [ rns
+           , systtools
+           , fluxweight
+           , cafmaker
+           ]
+
+  stream1:       [ ]
+  trigger_paths: [ runprod ]
+  end_paths:     [ stream1 ]
+}
+
+# Overwrite weight_functions label:
+physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+
+physics.producers.cafmaker.SystWeightLabels: [ "systtools", "fluxweight" ]
+
+# Blinding not needed for MC
+physics.producers.cafmaker.CreateBlindedCAF: false
+
+# Save GENIE event record for MC
+# Turn this to false for data CAFMaker
+# More details can be found in here: https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=36869
+physics.producers.cafmaker.SaveGENIEEventRecord: true
+
+physics.producers.cafmaker.FillTrueParticles: true
+physics.producers.cafmaker.FillHits: false
+physics.producers.cafmaker.FillTrackCaloTruth: false
+physics.producers.cafmaker.FillHitsAllSlices: false
+physics.producers.cafmaker.FillHitsNeutrinoSlices: false
+
+
+

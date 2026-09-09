@@ -242,7 +242,7 @@ private:
 
     std::vector<std::vector<int>> fAuxData; //!< This member stores the indeces of SiPM per AuxDetIDE
 
-    CRTGeoAlg fCRTGeoAlg;
+    art::ServiceHandle<CRTGeoService> fCRTGeoService;
 
     /**
      * Configures the waveform by reading waveform points from configuration and

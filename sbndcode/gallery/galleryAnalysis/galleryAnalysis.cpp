@@ -28,7 +28,7 @@
 // - data products
 #include "lardataobj/RecoBase/Track.h"
 // - DetectorProperties
-#include "lardataalg/DetectorInfo/DetectorPropertiesStandardTestHelpers.h"
+//#include "lardataalg/DetectorInfo/DetectorPropertiesStandardTestHelpers.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesStandard.h"
 // - DetectorClocks
 #include "lardataalg/DetectorInfo/DetectorClocksStandardTestHelpers.h"
@@ -39,7 +39,10 @@
 // - Geometry
 #include "larcorealg/Geometry/StandaloneGeometrySetup.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
+#include "larcorealg/Geometry/AuxDetGeoObjectSorterStandard.h"
+#include "larcorealg/Geometry/WireReadoutStandardGeom.h"
+#include "sbndcode/Geometry/GeoObjectSorterSBND.h"
+#include "sbndcode/Geometry/WireReadoutSorterSBND.h"
 // - configuration
 #include "larcorealg/Geometry/StandaloneBasicSetup.h"
 
@@ -95,8 +98,14 @@ int galleryAnalysis(std::string const& configFile, std::vector<std::string> cons
     //
   
     // geometry setup (it's special)
-    auto geom = lar::standalone::SetupGeometry<geo::ChannelMapSBNDAlg>(config.get<fhicl::ParameterSet>("services.Geometry"));
-  
+    auto geom = lar::standalone::SetupGeometry<geo::GeoObjectSorterSBND>(config.get<fhicl::ParameterSet>("services.Geometry"));
+
+    // aux det geometry setup (it's special)
+    auto geom_auxdet = lar::standalone::SetupAuxDetGeometry<geo::AuxDetGeoObjectSorterStandard>(config.get<fhicl::ParameterSet>("services.AuxDetGeometry"));
+ 
+    // readout setup (it's special)
+    auto readout = lar::standalone::SetupReadout<geo::WireReadoutSorterSBND, geo::WireReadoutStandardGeom>(config.get<fhicl::ParameterSet>("services.WireGeom"), geom.get());
+   
     // LArProperties setup
     auto larp = testing::setupProvider<detinfo::LArPropertiesStandard>(config.get<fhicl::ParameterSet>("services.LArPropertiesService"));
   
@@ -105,7 +114,7 @@ int galleryAnalysis(std::string const& configFile, std::vector<std::string> cons
   
     // DetectorProperties setup
     auto detp = testing::setupProvider<detinfo::DetectorPropertiesStandard>(config.get<fhicl::ParameterSet>("services.DetectorPropertiesService"),
-                                                                            detinfo::DetectorPropertiesStandard::providers_type{geom.get(),static_cast<detinfo::LArProperties const*>(larp.get())}); // TODO type cast is required until issue #18001 is solved
+                                                                            geom.get(),readout.get(), static_cast<detinfo::LArProperties const*>(larp.get())); // TODO type cast is required until issue #18001 is solved
   
     // ***************************************************************************
     // ***  SERVICE PROVIDER SETUP END    ****************************************
@@ -144,11 +153,11 @@ int galleryAnalysis(std::string const& configFile, std::vector<std::string> cons
     auto const det_prop_data = detp->DataFor(clock_data);
     HitAnalysis::HitAnalysisAlg hitAnalysisAlg(analysisConfig.get<fhicl::ParameterSet>("hitAnalysisAlg"));
     
-    hitAnalysisAlg.setup(*geom, pHistFile.get());
+    hitAnalysisAlg.setup(*geom, *readout, pHistFile.get());
     
     MCAssociations mcAssociations(analysisConfig.get<fhicl::ParameterSet>("mcAssociations"));
     
-    mcAssociations.setup(*geom, det_prop_data, pHistFile.get());
+    mcAssociations.setup(*geom, *readout, det_prop_data, pHistFile.get());
     mcAssociations.prepare();
     
     int numEvents(0);

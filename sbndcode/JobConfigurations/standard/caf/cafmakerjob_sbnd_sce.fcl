@@ -8,20 +8,28 @@ physics.producers.cafmaker.RecoShowerLabel: "pandoraSCEShowerSBN"
 physics.producers.cafmaker.RecoTrackLabel: "pandoraSCETrack"
 physics.producers.cafmaker.TrackCaloLabel: "pandoraSCECalo"
 physics.producers.cafmaker.TrackChi2PidLabel:  "pandoraSCEPid"
+physics.producers.cafmaker.TrackLikePidLabel:  "pandoraSCELikePid"
 physics.producers.cafmaker.CRTSpacePointMatchLabel: "crtspacepointmatchingSCE"
 physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
 physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatchingSCE"
+physics.producers.cafmaker.CVNLabel: "cvnSCE"
+physics.producers.cafmaker.LightCaloLabel: "lightcaloSCE"
+physics.producers.cafmaker.BlipTag: "blipreco"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
+physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
 
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
 
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
+physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
+physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"

@@ -1,0 +1,19 @@
+BEGIN_PROLOG
+
+sbnd_pmtpulseoscillation:
+{
+  # Parameters for ideal SER simulation
+  module_type: "PMTPulseOscillation"
+  InputLabel: "opdaq"
+  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  Electronics: []
+  OscillationFrequency: 0.000178571
+  OscillationDampingConstant: 50000
+  SamplingPeriod: 2
+  OscillationFunction: "[0]*exp([1] * x)"
+  OscillationFunctionParams: [0.20292146, 0.00079746]
+  PulseOscillationThreshold: 70
+  OscillationOffset: 0
+}
+
+END_PROLOG

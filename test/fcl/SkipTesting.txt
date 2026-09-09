@@ -3,6 +3,11 @@
 # with the exception of the ones listed in this file.
 #
 
+# Skip for BNB Flux see discussion on PR#854
+set_flux_rhc.fcl
+set_flux_fhc_g4bnb.fcl
+set_flux_beamdump.fcl
+
 # GENIE Configuration fhicls
 set_flux_config_b.fcl
 set_flux_config_c.fcl

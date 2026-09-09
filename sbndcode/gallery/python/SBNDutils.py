@@ -9,7 +9,8 @@ This module requires ROOT.
 
 __all__ = [
   'loadSBNDgeometry',
-  'justLoadSBNDgeometry',
+  'loadWireReadout',
+  'loadSBNDauxDetgeometry',
 ]
 
 import LArSoftUtils
@@ -26,22 +27,47 @@ def loadSBNDgeometry(config = None, registry = None):
   """
   SourceCode = LArSoftUtils.SourceCode # alias
   
-  SourceCode.loadHeaderFromUPS('sbndcode/Geometry/ChannelMapSBNDAlg.h')
+  SourceCode.loadHeaderFromUPS('sbndcode/Geometry/GeoObjectSorterSBND.h')
   SourceCode.loadLibrary('sbndcode_Geometry')
   return LArSoftUtils.loadGeometry \
-    (config=config, registry=registry, mapping=ROOT.geo.ChannelMapSBNDAlg)
+    (config=config, registry=registry, sorterClass=ROOT.geo.GeoObjectSorterSBND)
 # loadSBNDgeometry()
 
 
-def justLoadSBNDgeometry(configFile, mapping = None):
-  """Loads and returns SBND geometry from the specified configuration file.
+def loadSBNDwireReadout(config = None, registry = None, geometry = None):
+  """Loads and returns SBND wire readout with the standard SBND channel mapping.
   
-  This is a one-stop procedure recommended only when running interactively.
+  See `loadGeometry()` for the meaning of the arguments.
   """
-  if mapping is not None:
-    raise NotImplementedError("Support for non-standard mapping not implemented yet.")
-  return loadSBNDgeometry(config=LArSoftUtils.ConfigurationClass(configFile))
-# justLoadSBNDgeometry()
+  # we use the common `loadWireReadout()`, but before that, we need to load
+  # and instantiate the sorter.
+  assert registry, "Registry is required" # because we'll load Geometry from it
+  SourceCode = LArSoftUtils.SourceCode # alias
+  
+  SourceCode.loadHeaderFromUPS('sbndcode/Geometry/WireReadoutSorterSBND.h')
+  SourceCode.loadLibrary('sbndcode_Geometry') # should be already loaded by now
+  return LArSoftUtils.loadWireReadout(
+    config=config, registry=registry,
+    sorterClass=ROOT.geo.WireReadoutSorterSBND,
+    geometry=geometry,
+    )
+# loadSBNDwireReadout()
+
+
+def loadSBNDauxDetgeometry(config = None, registry = None):
+  """Loads and returns SBND geometry with the standard SBND channel mapping.
+  
+  See `loadGeometry()` for the meaning of the arguments.
+  """
+  SourceCode = LArSoftUtils.SourceCode # alias
+  
+  # SourceCode.loadHeaderFromUPS('sbndcode/CRT/CRTGeoObjectSorter.h')
+  # SourceCode.loadLibrary('sbndcode_CRTData')
+  # SourceCode.loadHeaderFromUPS('sbndcode/CRT/CRTAuxDetInitializerSBND.h')
+  # SourceCode.loadLibrary('libsbndcode_CRT_CRTAuxDetInitializerSBND_tool')
+
+  return LArSoftUtils.loadAuxDetGeometry(config=config, registry=registry)
+#    , auxDetReadoutInitClass=ROOT.sbnd.crt.CRTAuxDetInitializerSBND)
 
 
 ################################################################################

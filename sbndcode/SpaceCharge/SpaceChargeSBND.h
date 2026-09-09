@@ -69,7 +69,8 @@ namespace spacecharge
 	bool IsInsideBoundaries(double xVal, double yVal, double zVal) const;
 
 	//to store Voxelized_TH3 histograms
-	std::vector<TH3F*> SCEhistograms = std::vector<TH3F*>(9);
+        std::vector<TH3F*> SCEhistograms_E = std::vector<TH3F*>(9);
+        std::vector<TH3F*> SCEhistograms_W = std::vector<TH3F*>(9);
 
 	TGraph *gSpatialGraphX[99][99];
 	TF1 *intermediateSpatialFitFunctionX[99];

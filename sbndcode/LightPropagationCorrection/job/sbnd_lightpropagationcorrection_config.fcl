@@ -1,0 +1,51 @@
+#include "opticalsimparameterisations_sbnd.fcl"
+#include "sbnd_flashalgo.fcl"
+#include "sbnd_flasht0algo.fcl"
+#include "sbnd_flashgeoalgo.fcl"
+#include "sbnd_flashfinder.fcl"
+
+BEGIN_PROLOG
+
+LightPropagationCorrection:
+{
+    module_type: "LightPropagationCorrection"
+    OpFlashLabel_tpc0: "opflashtpc0"
+    OpFlashLabel_tpc1: "opflashtpc1"
+
+    Reco2Label: "pandora"
+    OpHitsModuleLabel: "ophitpmt"
+    SpacePointLabel: "pandora"
+    OpT0FinderModuleLabel: "opt0finder"
+    TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
+    SPECTDCLabel: "tdcdecoder"
+
+    VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
+    VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
+    SpeedOfLight: 29.9
+
+    FlashT0Config: @local::FlashT0SelectedChannels
+    FlashGeoConfig: @local::FlashGeoThreshold
+    AlgoConfig_tpc0: @local::SimpleFlashStandard
+    AlgoConfig_tpc1: @local::SimpleFlashStandard
+    FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
+
+    SaveSPECTDC: true
+    SaveCorrectionTree: false
+
+    NuScoreThreshold: 0.1
+    FMScoreThreshold: 0.001
+
+    FlashMatchingTool: "BarycenterFM"
+}
+
+LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
+LightPropagationCorrection.AlgoConfig_tpc1.TPC: 1
+
+LightPropagationCorrectionSCE: @local::LightPropagationCorrection
+LightPropagationCorrectionSCE.Reco2Label: "pandoraSCE"
+LightPropagationCorrectionSCE.SpacePointLabel: "pandoraSCE"
+LightPropagationCorrectionSCE.OpT0FinderModuleLabel: "opt0finderSCE"
+LightPropagationCorrectionSCE.TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatchingSCE"
+
+
+END_PROLOG

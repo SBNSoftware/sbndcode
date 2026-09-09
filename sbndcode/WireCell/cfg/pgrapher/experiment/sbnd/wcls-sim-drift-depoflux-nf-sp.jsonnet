@@ -5,10 +5,16 @@
 local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local savetid = std.extVar("save_track_id");
+local roi = std.extVar('roi');
+local nchunks = std.extVar('nchunks');
+local tick_per_slice = std.extVar('tick_per_slice');
+local dnnroi_model_p0 = std.extVar('dnnroi_model_p0');
+local dnnroi_model_p1 = std.extVar('dnnroi_model_p1');
 
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/common/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
+local wc_device = std.extVar('wc_device');
 local io = import 'pgrapher/common/fileio.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
@@ -34,7 +40,9 @@ local params = base {
   }
 };
 
-local tools = tools_maker(params);
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
 local sim_maker = import 'pgrapher/experiment/sbnd/sim.jsonnet';
 local sim = sim_maker(params, tools);
 local nanodes = std.length(tools.anodes);
@@ -119,11 +127,11 @@ local wcls_depoflux_writer = g.pnode({
     anodes: [wc.tn(anode) for anode in tools.anodes],
     field_response: wc.tn(tools.field),
     tick: 0.5 * wc.us,
-    window_start: 0.0 * wc.ms,
+    window_start: params.sim.tick0_time, // -205 * wc.us,
     window_duration: self.tick * params.daq.nticks,
     nsigma: 3.0,
 
-    reference_time: -1700 * wc.us,
+    reference_time: - 1700  * wc.us - self.window_start, // target is tick 410 should be 3400
 
     //energy: 1, # equivalent to use_energy = true
     simchan_label: 'simpleSC',
@@ -133,7 +141,44 @@ local wcls_depoflux_writer = g.pnode({
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+
+local sp_override = 
+if roi == "dnn" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+    //decon_charge_tag: "",
+    gauss_tag: "",
+    wiener_tag: "",
+} 
+else if roi == "both" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+} 
+else if roi == "trad" then {
+    sparse: true,
+};
+
+local sp = sp_maker(params, tools, sp_override);
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';
@@ -251,8 +296,59 @@ local wcls_output_sp = {
        chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
+ dnnsp_signals: g.pnode({
+    type: 'wclsFrameSaver',
+    name: 'dnnsaver',
+    data: {
+      anode: wc.tn(mega_anode),
+      digitize: false,  // true means save as RawDigit, else recob::Wire
+      frame_tags: ['dnnsp'],
+
+      // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
+      frame_scale: [0.02],
+      nticks: params.daq.nticks,
+      chanmaskmaps: [],
+    },
+  }, nin=1, nout=1, uses=[mega_anode]),
 
 };
+local dnnroi = import 'dnnroi.jsonnet';
+
+local ts_p0 = {
+    type: "TorchService",
+    name: "dnnroi_p0",
+    tick_per_slice: tick_per_slice, 
+    data: {
+        model: dnnroi_model_p0,
+        device: wc_device,
+        concurrency: 1,
+    },
+};
+
+local ts_p1 = {
+    type: "TorchService",
+    name: "dnnroi_p1",
+    tick_per_slice: tick_per_slice, 
+    data: {
+        model: dnnroi_model_p1,
+        device: wc_device,
+        concurrency: 1,
+    },
+};
+
+local dnnroi_pipes = [ dnnroi(tools.anodes[n], ts_p0, ts_p1, output_scale=1, nchunks=nchunks) for n in std.range(0, std.length(tools.anodes) - 1) ];
+
+local fanout = function (name, multiplicity=2)
+  g.pnode({
+    type: 'FrameFanout',
+    name: name,
+    data: {
+        multiplicity: multiplicity
+    },
+  }, nin=1, nout=multiplicity);
+
+local sp_fans = [fanout("sp_fan_%d" % n) for n in std.range(0, std.length(tools.anodes) - 1)];
+
 
 
 local chsel_pipes = [
@@ -267,7 +363,47 @@ local chsel_pipes = [
 ];
 
 
-local nfsp_pipes = [
+local nfsp_pipes = 
+if roi == "dnn" then
+// oports: 0: dnnroi, 1: traditional sp
+[
+  g.intern(
+    innodes=[chsel_pipes[n]],
+    outnodes=[dnnroi_pipes[n],sp_fans[n]],
+    centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
+    edges=[
+      g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
+      g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
+      g.edge(sp_pipes[n], sp_fans[n], 0, 0),
+      g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
+    ],
+    iports=chsel_pipes[n].iports,
+    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
+    name='nfsp_pipe_%d' % n,
+  )
+  for n in std.range(0, std.length(tools.anodes) - 1)
+]
+else if roi == "both" then
+// oports: 0: dnnroi, 1: traditional sp
+[
+  g.intern(
+    innodes=[chsel_pipes[n]],
+    outnodes=[dnnroi_pipes[n],sp_fans[n]],
+    centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
+    edges=[
+      g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
+      g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
+      g.edge(sp_pipes[n], sp_fans[n], 0, 0),
+      g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
+    ],
+    iports=chsel_pipes[n].iports,
+    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
+    name='nfsp_pipe_%d' % n,
+  )
+  for n in std.range(0, std.length(tools.anodes) - 1)
+]
+else if roi == "trad" then
+[
   g.pipeline([
                chsel_pipes[n],
                //sinks.orig_pipe[n],
@@ -287,9 +423,9 @@ local nfsp_pipes = [
 //local fanpipe = f_sp.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf'); // commented Ewerton 2023-05-24
 local fanpipe = f_sp.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf_mod');   //added Ewerton 2023-05-24
 
-local retagger_sp = g.pnode({
+local retagger = function(name) g.pnode({
   type: 'Retagger',
-  name: 'sp',  //added Ewerton 2023-05-24
+  name: name,
   data: {
     // Note: retagger keeps tag_rules an array to be like frame fanin/fanout.
     tag_rules: [{
@@ -301,14 +437,63 @@ local retagger_sp = g.pnode({
       merge: {
         'gauss\\d': 'gauss',
         'wiener\\d': 'wiener',
+        'dnnsp\\d': 'dnnsp',
       },
     }],
   },
 }, nin=1, nout=1);
 
-local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
+local retagger_dnnroi = retagger("retagger_dnnroi");
+local retagger_sp = retagger("retagger_sp");
 
-local graph1 = g.pipeline([
+local sink = function(name) g.pnode({ type: 'DumpFrames', name: name }, nin=1, nout=0);
+local sink_dnnroi = sink("sink_dnnroi");
+local sink_sp = sink("sink_sp");
+
+local fanout_apa = g.pnode({
+    type: 'FrameFanout',
+    name: 'fanout_apa',
+    data: {
+        multiplicity: std.length(tools.anodes),
+        "tag_rules": [
+            {
+               "frame": {
+                  ".*": "orig%d" % n
+               },
+               "trace": { }
+            }
+            for n in std.range(0, std.length(tools.anodes) - 1)
+        ]
+        }},
+    nin=1, nout=std.length(tools.anodes));
+
+local framefanin = function(name) g.pnode({
+    type: 'FrameFanin', 
+    name: name,
+    data: {
+        multiplicity: std.length(tools.anodes),
+
+         "tag_rules": [
+            {     
+                "frame": {
+                  ".*": "framefanin"
+                },
+                trace: {
+                  ['dnnsp%d' % n]: ['dnnsp%d' % n],
+                  ['gauss%d' % n]: ['gauss%d' % n],
+                  ['wiener%d' % n]: ['wiener%d' % n],
+                  ['threshold%d' % n]: ['threshold%d' % n],
+                },
+            }
+            for n in std.range(0, std.length(tools.anodes) - 1)
+         ],    
+         "tags": [ ]
+    },
+}, nin=std.length(tools.anodes), nout=1);
+local fanin_apa_dnnroi = framefanin('fanin_apa_dnnroi');
+local fanin_apa_sp = framefanin('fanin_apa_sp');
+
+local graph1_trad = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
@@ -322,7 +507,7 @@ sink_sp                         //sp
 ]);
 
 
-local graph2 = g.pipeline([
+local graph2_trad = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
@@ -332,9 +517,75 @@ wcls_output_sp.sp_signals,      //sp
 sink_sp                         //sp
 ]);
 
+local graph_sim = g.pipeline([
+wcls_input_sim.deposet,         //sim
+setdrifter,                     //sim
+wcls_depoflux_writer,           //sim
+bi_manifold1,                   //sim
+]);
+
+local graph_sp_dnn = 
+g.intern(
+  innodes=[retagger_sim],
+  outnodes=[],
+  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
+  edges=[
+    g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
+    g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_dnnroi, 0, 1),
+    g.edge(fanin_apa_dnnroi, retagger_dnnroi, 0, 0),
+    g.edge(retagger_dnnroi, wcls_output_sp.dnnsp_signals, 0, 0),
+    g.edge(wcls_output_sp.dnnsp_signals, sink_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
+    g.edge(fanin_apa_sp, retagger_sp, 0, 0),
+    g.edge(retagger_sp, sink_sp, 0, 0),
+  ]
+);
+
+local graph_sp_both = 
+g.intern(
+  innodes=[retagger_sim],
+  outnodes=[],
+  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.sp_signals, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
+  edges=[
+    g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
+    g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_dnnroi, 0, 1),
+    g.edge(fanin_apa_dnnroi, retagger_dnnroi, 0, 0),
+    g.edge(retagger_dnnroi, wcls_output_sp.dnnsp_signals, 0, 0),
+    g.edge(wcls_output_sp.dnnsp_signals, sink_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
+    g.edge(fanin_apa_sp, retagger_sp, 0, 0),
+    g.edge(retagger_sp, wcls_output_sp.sp_signals, 0, 0),
+    g.edge(wcls_output_sp.sp_signals, sink_sp, 0, 0),
+  ]
+);
+
+local graph_dnn = g.pipeline([
+graph_sim,
+graph_sp_dnn,
+]);
+
+local graph_both = g.pipeline([
+graph_sim,
+graph_sp_both,
+]);
+
 local save_simdigits = std.extVar('save_simdigits');
 
-local graph = if save_simdigits == "true" then graph1 else graph2;
+local graph = 
+if roi == "dnn" then graph_dnn 
+else if roi == "both" then graph_both 
+else if save_simdigits == "true" then graph1_trad 
+else graph2_trad;
 
 local app = {
   type: 'TbbFlow',
@@ -345,4 +596,4 @@ local app = {
 
 // Finally, the configuration sequence
 g.uses(graph) + [app]
-  
+

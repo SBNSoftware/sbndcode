@@ -1,0 +1,45 @@
+#Nominal configuration uses dnn (ind) + trad (col) for hit finding.
+#Blip requires trad (all) for hit finding. 
+#This fcl configures everything to use the nominal config (dnn + trad)
+
+#include "standard_reco2_sbnd.fcl"
+physics.producers.blipreco.BlipAlg.HitProducer: "gaushit"
+physics.analyzers.blipana.BlipAlg.HitProducer: "gaushit"
+physics.producers.blipreco.BlipAlg.TrkProducer: "pandoraSCETrack"
+physics.analyzers.blipana.BlipAlg.TrkProducer: "pandoraSCETrack"
+physics.reco2: [ rns
+    , pandora
+    , pandoraTrack
+    , blipPandoraCopy
+    , blipPandoraTrackCopy
+    , pandoraShower
+    , pandoraShowerSBN
+    , pandoraCalo
+    , pandoraPid
+    , pandoraLikePid
+    , crtveto
+    , crtspacepointmatching
+    , crttrackmatching
+    , fmatch
+    , fmatchop
+    , caloskimCalorimetry
+    , opt0finder
+    , tpcpmtbarycentermatching
+    , pandoraSCE
+    , pandoraSCETrack
+    , pandoraSCEShower
+    , pandoraSCEShowerSBN
+    , pandoraSCECalo
+    , pandoraSCEPid
+    , pandoraSCELikePid
+    , crtspacepointmatchingSCE
+    , crttrackmatchingSCE
+    , fmatchSCE
+    , fmatchopSCE
+    , opt0finderSCE
+    , tpcpmtbarycentermatchingSCE
+    , cvn
+    , cvnSCE
+    , blipreco
+    ]
+physics.trigger_paths:  [ reco2 ]

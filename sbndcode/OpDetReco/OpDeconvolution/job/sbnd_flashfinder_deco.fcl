@@ -2,7 +2,11 @@
 
 BEGIN_PROLOG
 
+
 ####OpFlash finder for PMT deconvolved waveforms#####
+
+
+###### PMT IDEAL MC ######
 ###TPC0
 SBNDDecoSimpleFlashTPC0: @local::SBNDSimpleFlashTPC0
 SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 200
@@ -22,9 +26,39 @@ SBNDDecoSimpleFlashTPC1.ReadoutDelay: 0.135 //cable time delay in us
 SBNDDecoSimpleFlashTPC1.CorrectLightPropagation: true
 
 
+###### PMT DATA ######
+###TPC0
+SBNDDecoSimpleFlashTPC0_data: @local::SBNDDecoSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2_tpc0.root"
+SBNDDecoSimpleFlashTPC0_data.FlashGeoConfig: @local::FlashGeoThresholdTPC0Data
+
+#TPC1
+SBNDDecoSimpleFlashTPC1_data: @local::SBNDDecoSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.DataCalibration: true
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data_v2_tpc1.root"
+SBNDDecoSimpleFlashTPC1_data.FlashGeoConfig: @local::FlashGeoThresholdTPC1Data
 
 
+###### PMT REALISTIC MC ######
+###TPC0
+SBNDDecoSimpleFlashTPC0_realisticMC: @local::SBNDDecoSimpleFlashTPC0_data
+SBNDDecoSimpleFlashTPC0_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_MC3.root"
+SBNDDecoSimpleFlashTPC0_realisticMC.ReadoutDelay: 0. //cable time delay in us
+SBNDDecoSimpleFlashTPC0_realisticMC.FlashGeoConfig: @local::FlashGeoThresholdTPC0_realisticMC
 
+#TPC1
+SBNDDecoSimpleFlashTPC1_realisticMC: @local::SBNDDecoSimpleFlashTPC1_data
+SBNDDecoSimpleFlashTPC1_realisticMC.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_MC3.root"
+SBNDDecoSimpleFlashTPC1_realisticMC.ReadoutDelay: 0. //cable time delay in us
+SBNDDecoSimpleFlashTPC1_realisticMC.FlashGeoConfig: @local::FlashGeoThresholdTPC1_realisticMC
+
+
+###### XA IDEAL MC ######
 ####OpFlash finder for XArapucas deconvolved waveforms#####
 ###TPC0
 SBNDDecoSimpleFlashTPC0Arapuca: @local::SBNDSimpleFlashTPC0

@@ -3,10 +3,11 @@ BEGIN_PROLOG
 sbnd_timefilterssimphotonlitetime: {
    module_type: "FilterSimPhotonLiteTime"
    SimPhotonsLiteCollectionLabel: larg4intime
-   # Currently in overlay generation, events are generated
-   # uniformly in a window [0, 1596ns] to approximate a beam spill.
-   # Add a little width here to up that width to 2000ns
-   TimeWindows: [ [-202, 1798] ] # ns
+   # Generate in-time cosmics uniformly in a window [-873, 2467] ns
+   # To simulate a 3.34us trigger acceptance window that starts 1.24us before the beam spill that starts at +367ns
+   # Consistent with the trigger acceptance window for light-based trigger streams in Run 1 data (docdb-40000, slides from Feb 21)
+   # With a 100 ns buffer on either side
+   TimeWindows: [ [-973, 2567] ] # ns
    # 10 PE
    MinTotalPhotons: 10
    # Reflected photons are not used in trigger -- we can ignore them

@@ -1,5 +1,3 @@
-#include "crtgeoalg_sbnd.fcl"
-
 BEGIN_PROLOG
 
 hitdumper:
@@ -50,8 +48,6 @@ hitdumper:
 
     SkipInduction:            false
     SelectEvents: []
-
-    CRTGeoAlg: @local::crtgeoalg_sbnd
 }
 
 hitdumper_data: @local::hitdumper

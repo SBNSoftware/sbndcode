@@ -92,7 +92,6 @@ namespace opdet{
 
     auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
     _flashgeo = art::make_tool<lightana::FlashGeoBase>(flashgeo_pset);
-
     if(_use_t0tool){
       auto const flasht0_pset = p.get<lightana::Config_t>("FlashT0Config");
       _flasht0calculator = art::make_tool<lightana::FlashT0Base>(flasht0_pset);
@@ -109,6 +108,7 @@ namespace opdet{
 
   void SBNDFlashFinder::produce(art::Event & e)
   {
+    _flashgeo->InitializeFlashGeoAlgo();
 
     // produce OpFlash data-product to be filled within module
     std::unique_ptr< std::vector<recob::OpFlash> > opflashes(new std::vector<recob::OpFlash>);

@@ -1,0 +1,54 @@
+# A script to run the producer module: TPCPMTBarycenterMatchProducer
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+
+process_name: BarycenterMatchProducer
+
+services:
+{
+  TFileService:              { fileName: "tpcpmt3dbarycentermatch_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+ }
+}
+
+# The 'physics' section defines and configures some modules to do work on each event.
+physics:
+{
+   producers:
+  {
+    tpcpmtbarycentermatch: @local::TPCPMTBarycenterMatchProducer
+  }
+
+  # Schedule job step(s) for execution by defining the analysis module for this job.
+  reco: [ tpcpmtbarycentermatch ]
+
+  stream1: [ out1 ]
+
+  trigger_paths: [reco]
+
+  # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
+  # i.e., analyzers and output streams.
+  end_paths: [ stream1 ]
+}

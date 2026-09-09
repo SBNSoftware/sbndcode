@@ -3,6 +3,7 @@ cet_build_plugin( SBNDPMTDecoder art::module
     LIBRARIES 
 	sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
 	sbnobj::SBND_Timing
+        sbndcode_OpDetSim
     lardata::Utilities
     canvas::canvas
     lardataobj::RecoBase

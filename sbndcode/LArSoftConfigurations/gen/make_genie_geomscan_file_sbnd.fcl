@@ -1,0 +1,21 @@
+# This FHiCL file generates the geomscal file needed for GENIE rockbox.
+# Author: Marco Del Tutto (mdeltutt@fnal.gov)
+#
+# Run with:
+#
+# bash> lar -c make_genie_geomscan_file_sbnd.fcl -n 1
+#
+# This will generate a file called "maxpathlength.xml". Rename this file
+# to include the current flux config and gdml version. For example,
+# for flux config L and gdml v02_03, assign it the following name:
+#
+# bash> mv maxpathlength.xml sbnd_rock_maxpathlength_fluxL_gdmlv02_03.xml
+#
+# Lastly, this file needs to live in sbnd_data. Specifically, in
+# sbnd_data/GENIE/. Ask the currect release manager to copy your
+# file in sbnd_data/GENIE/ and tag a new sbnd_data version.
+
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+physics.producers.generator.GeomScan: "flux: 10000 1.1 1"
+

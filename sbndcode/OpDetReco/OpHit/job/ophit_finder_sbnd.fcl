@@ -8,7 +8,7 @@ sbnd_ophit_finder:
   GenModule:      "generator"
   InputModule:    "opdaq"
   InputLabels:    [""]
-  ChannelMasks:   []                  # Will ignore channels in this list
+  ChannelMasks:    [ 39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302 ] #Channels that are not being run for data reconstruction
   PD:             ["pmt_coated", "pmt_uncoated"]  # Will only use PDS in this list
   Electronics:    "CAEN" #Will only use PDS with CAEN/Daphne readouts (500/62.5MHz sampling frec)
   DaphneFreq:     62.5  # Frequency of Daphne(XArapucas) readouts (in MHz)

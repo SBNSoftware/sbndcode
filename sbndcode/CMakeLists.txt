@@ -16,6 +16,7 @@ add_subdirectory(OpDetSim)
 add_subdirectory(OpDetReco)
 add_subdirectory(OpDetAnalyzer)
 add_subdirectory(OpT0Finder)
+add_subdirectory(OpPathTool)
 #add_subdirectory(PDS)
 #add_subdirectory(CosmicId)
 add_subdirectory(ShowerAna)
@@ -39,6 +40,7 @@ add_subdirectory(FlashMatch)
 add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
 
+add_subdirectory(Calorimetry)
 # for wirecell
 add_subdirectory(WireCell)
 
@@ -47,3 +49,8 @@ add_subdirectory(ChannelMaps)
 
 # for CVN
 add_subdirectory(SBNDCVN)
+
+add_subdirectory(TPCPMTBarycenterMatching)
+
+add_subdirectory(BlipRecoSBND)
+add_subdirectory(LightPropagationCorrection)

@@ -33,10 +33,12 @@ MCAssociations::MCAssociations(fhicl::ParameterSet const& config)
   {}
 
 void MCAssociations::setup(const geo::GeometryCore&           geometry,
+                           const geo::WireReadoutGeom&        readout,
                            const detinfo::DetectorPropertiesData& detectorProperties,
                            TDirectory*                        outDir)
 {
     fGeometry           = &geometry;
+    fReadout            = &readout;
     fDetectorProperties = &detectorProperties;
     fDir                = outDir->mkdir(fLocalDirName.c_str());
 }
@@ -440,7 +442,7 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
             try
             {
                 std::cout << ">>> Track #" << findTrackID << ", pos: " << posVec.X() << ", " << posVec.Y() << ", " << posVec.Z() << ", ticks: " << ticks << ", nearest Y wire: ";
-                geo::WireID wireID = fGeometry->NearestWireID(geo::vect::toPoint(pos), geo::PlaneID{0, 0, 2});
+                geo::WireID wireID = fReadout->NearestWireID(geo::vect::toPoint(pos), geo::PlaneID{0, 0, 2});
                 std::cout << wireID << std::endl;
             }
             catch(...) {}

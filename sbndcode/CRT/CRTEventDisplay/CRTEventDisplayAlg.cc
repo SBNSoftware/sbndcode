@@ -1,9 +1,14 @@
 #include "CRTEventDisplayAlg.h"
+#include "lardataobj/AnalysisBase/T0.h"
+#include "canvas/Persistency/Common/FindManyP.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "TH1D.h"
+#include "TPaveText.h"
 
 namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
-    : fCRTGeoAlg(config.GeoAlgConfig())
   {
     this->reconfigure(config);
 
@@ -23,6 +28,10 @@ namespace sbnd::crt {
     fClusterLabel = config.ClusterLabel();
     fSpacePointLabel = config.SpacePointLabel();
     fTrackLabel = config.TrackLabel();
+    fTPCSpacePointMatchLabel = config.TPCSpacePointMatchLabel();
+    fTPCTrackMatchLabel = config.TPCTrackMatchLabel();
+    fTPCTrackLabel = config.TPCTrackLabel();
+    fPFPLabel = config.PFPLabel();
 
     fSaveRoot = config.SaveRoot();
     fSaveViews = config.SaveViews();
@@ -39,6 +48,10 @@ namespace sbnd::crt {
     fDrawClusters = config.DrawClusters();
     fDrawSpacePoints = config.DrawSpacePoints();
     fDrawTracks = config.DrawTracks();
+    fDrawTPCMatching = config.DrawTPCMatching();
+    fOnlyDrawMatched = config.OnlyDrawMatched();
+    fDisplayMatchScore = config.DisplayMatchScore();
+    fDrawTPCTracks = config.DrawTPCTracks();
 
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
@@ -58,6 +71,7 @@ namespace sbnd::crt {
     fClusterColourInterval = config.ClusterColourInterval();
     fSpacePointColour = config.SpacePointColour();
     fTrackColour = config.TrackColour();
+    fTPCMatchColour = config.TPCMatchColour();
 
     fUseTs0  = config.UseTs0();
     fMinTime = config.MinTime();
@@ -98,6 +112,16 @@ namespace sbnd::crt {
   void CRTEventDisplayAlg::SetDrawClusters(bool tf)
   {
     fDrawClusters = tf;
+  }
+
+  void CRTEventDisplayAlg::SetMinTime(double time)
+  {
+    fMinTime = time;
+  }
+
+  void CRTEventDisplayAlg::SetMaxTime(double time)
+  {
+    fMaxTime = time;
   }
 
   void CRTEventDisplayAlg::SetPrint(bool tf)
@@ -142,6 +166,11 @@ namespace sbnd::crt {
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                                 const art::Event& event, const TString& saveName)
   {
+    auto geometryService = lar::providerFrom<geo::Geometry>();
+    auto const detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
+
+    if(fPrint) std::cout << "\n\nEvent: " << saveName << std::endl;
+
     if(fMC)
       fCRTBackTrackerAlg.SetupMaps(event);
 
@@ -151,24 +180,21 @@ namespace sbnd::crt {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     
-    std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
+    std::vector<double> crtLims = fCRTGeoService->CRTLimits();
+    std::vector<double> crtLims2 = fCRTGeoService->CRTLimits();
     crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
     crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
-        for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
+        for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {tagger.minX, 
-                              tagger.minY, 
-                              tagger.minZ};
-            double rmax[3] = {tagger.maxX, 
-                              tagger.maxY, 
-                              tagger.maxZ};
+            double rmin[3] = {tagger.minX, tagger.minY, tagger.minZ};
+            double rmax[3] = {tagger.maxX, tagger.maxY, tagger.maxZ};
 
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
@@ -177,17 +203,13 @@ namespace sbnd::crt {
     // Draw individual CRT modules
     if(fDrawModules)
       {
-        for(auto const &[name, module] : fCRTGeoAlg.GetModules())
+        for(auto const &[name, module] : fCRTGeoService->GetModules())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {module.minX, 
-                              module.minY, 
-                              module.minZ};
-            double rmax[3] = {module.maxX, 
-                              module.maxY, 
-                              module.maxZ};
+            double rmin[3] = {module.minX, module.minY, module.minZ};
+            double rmax[3] = {module.maxX, module.maxY, module.maxZ};
 
             if(fHighlightModules && std::find(fHighlightedModules.begin(), fHighlightedModules.end(), module.adID) == fHighlightedModules.end())
               {
@@ -201,29 +223,19 @@ namespace sbnd::crt {
 
             if(fDrawFEBs)
               {
-                const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
+                const std::array<double, 6> febPos = fCRTGeoService->FEBWorldPos(module);
                 
-                double rminFEB[3] = {febPos[0],
-                                     febPos[2],
-                                     febPos[4]};
-
-                double rmaxFEB[3] = {febPos[1],
-                                     febPos[3],
-                                     febPos[5]};
+                double rminFEB[3] = {febPos[0], febPos[2], febPos[4]};
+                double rmaxFEB[3] = {febPos[1], febPos[3], febPos[5]};
 
                 DrawCube(c1, rminFEB, rmaxFEB, fFEBColour);
 
                 if(fDrawFEBEnds)
                   {
-                    const std::array<double, 6> febCh0Pos = fCRTGeoAlg.FEBChannel0WorldPos(module);
+                    const std::array<double, 6> febCh0Pos = fCRTGeoService->FEBChannel0WorldPos(module);
 
-                    double rminCh0[3] = {febCh0Pos[0],
-                                         febCh0Pos[2],
-                                         febCh0Pos[4]};
-
-                    double rmaxCh0[3] = {febCh0Pos[1],
-                                         febCh0Pos[3],
-                                         febCh0Pos[5]};
+                    double rminCh0[3] = {febCh0Pos[0], febCh0Pos[2], febCh0Pos[4]};
+                    double rmaxCh0[3] = {febCh0Pos[1], febCh0Pos[3], febCh0Pos[5]};
 
                     DrawCube(c1, rminCh0, rmaxCh0, fFEBEndColour);
                   }
@@ -234,17 +246,13 @@ namespace sbnd::crt {
     // Draw individual CRT strips
     if(fDrawStrips)
       {
-        for(auto const &[name, strip] : fCRTGeoAlg.GetStrips())
+        for(auto const &[name, strip] : fCRTGeoService->GetStrips())
           {
-            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoAlg.ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoService->ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {strip.minX, 
-                              strip.minY, 
-                              strip.minZ};
-            double rmax[3] = {strip.maxX, 
-                              strip.maxY, 
-                              strip.maxZ};
+            double rmin[3] = {strip.minX, strip.minY, strip.minZ};
+            double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
 
             DrawCube(c1, rmin, rmax, fTaggerColour, 1);
           }
@@ -253,23 +261,15 @@ namespace sbnd::crt {
     // Draw the TPC with central cathode
     if(fDrawTPC)
       {
-        double rmin[3] = {fTPCGeoAlg.MinX(), 
-                          fTPCGeoAlg.MinY(), 
-                          fTPCGeoAlg.MinZ()};
-        double rmax[3] = {-fTPCGeoAlg.CpaWidth(), 
-                          fTPCGeoAlg.MaxY(), 
-                          fTPCGeoAlg.MaxZ()};
+        double rmin[3] = {fTPCGeoAlg.MinX(), fTPCGeoAlg.MinY(), fTPCGeoAlg.MinZ()};
+        double rmax[3] = {-fTPCGeoAlg.CpaWidth(), fTPCGeoAlg.MaxY(), fTPCGeoAlg.MaxZ()};
         DrawCube(c1, rmin, rmax, fTPCColour);
-        double rmin2[3] = {fTPCGeoAlg.CpaWidth(), 
-                           fTPCGeoAlg.MinY(), 
-                           fTPCGeoAlg.MinZ()};
-        double rmax2[3] = {fTPCGeoAlg.MaxX(), 
-                           fTPCGeoAlg.MaxY(), 
-                           fTPCGeoAlg.MaxZ()};
 
+        double rmin2[3] = {fTPCGeoAlg.CpaWidth(), fTPCGeoAlg.MinY(), fTPCGeoAlg.MinZ()};
+        double rmax2[3] = {fTPCGeoAlg.MaxX(), fTPCGeoAlg.MaxY(), fTPCGeoAlg.MaxZ()};
         DrawCube(c1, rmin2, rmax2, fTPCColour);
       }
-    
+
     // Draw true track trajectories for visible particles that cross the CRT
     if(fDrawTrueTracks)
       { 
@@ -330,7 +330,7 @@ namespace sbnd::crt {
                 if(t < fMinTime || t > fMaxTime)
                   continue;
 
-                CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z, 1.);
+                CRTTagger tagger = fCRTGeoService->WhichTagger(x, y, z, 1.);
 
                 if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
                   continue;
@@ -369,8 +369,8 @@ namespace sbnd::crt {
             if(stripHitTime < fMinTime || stripHitTime > fMaxTime)
               continue;
 
-            CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
-            CRTTagger tagger  = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+            CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
+            CRTTagger tagger  = fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel());
 
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
               continue;
@@ -428,7 +428,7 @@ namespace sbnd::crt {
               {
                 for(auto stripHit : stripHitVec)
                   {
-                    CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+                    CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
                     
                     double rmin[3] = {strip.minX, strip.minY, strip.minZ};
                     double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
@@ -461,22 +461,122 @@ namespace sbnd::crt {
                 if(spacePointVec.size() == 1)
                   {
                     const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
+                    const double spacepointTime = fUseTs0 ? spacepoint->Ts0() : spacepoint->Ts1();
+
+                    double matchScore = -999.f;
+                    bool foundMatch   = false;
+
+                    if(fDrawTPCMatching)
+                      {
+                        auto spacePointsHandle = event.getValidHandle<std::vector<CRTSpacePoint>>(fSpacePointLabel);
+                        auto tpcTracksHandle   = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+                        art::FindOneP<recob::Track, anab::T0> CRTSPstoTPCTracks(spacePointsHandle, event, fTPCSpacePointMatchLabel);
+                        art::FindManyP<recob::Hit> TPCTracksToHits(tpcTracksHandle, event, fTPCTrackLabel);
+
+                        const art::Ptr<recob::Track> TPCTrack = CRTSPstoTPCTracks.at(spacepoint.key());
+
+                        if(TPCTrack.isNonnull())
+                          {
+                            const std::vector<art::Ptr<recob::Hit>> hits = TPCTracksToHits.at(TPCTrack.key());
+                            const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(geometryService, hits);
+                            const double shift = driftDirection * spacepointTime * detProp.DriftVelocity() * 1e-3;
+
+                            foundMatch = true;
+
+                            const anab::T0 t0Match = CRTSPstoTPCTracks.data(spacepoint.key()).ref();
+
+                            matchScore            = t0Match.TriggerConfidence();
+                            geo::Point_t startTPC = TPCTrack->Start();
+                            geo::Point_t endTPC   = TPCTrack->End();
+
+                            startTPC.SetX(startTPC.X() + shift);
+                            endTPC.SetX(endTPC.X() + shift);
+
+                            const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(TPCTrack, 0.2);
+                            const geo::Vector_t startDirTPC = directions.first;
+                            const geo::Vector_t endDirTPC   = directions.second;
+
+                            TPolyLine3D *lineTPC = new TPolyLine3D(2);
+                            lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+                            lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+                            lineTPC->SetLineColor(fTPCMatchColour);
+                            lineTPC->SetLineWidth(fLineWidth);
+                            lineTPC->Draw();
+
+                            TPolyLine3D *lineTPCDashStart = new TPolyLine3D(2);
+                            geo::Point_t intersectionStart {0,0,0};
+
+                            int i = 0;
+                            do
+                              {
+                                intersectionStart = startTPC + i * startDirTPC;
+                                --i;
+                              }
+                            while(IsPointInsideBox(crtLims2, intersectionStart));
+
+                            lineTPCDashStart->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+                            lineTPCDashStart->SetPoint(1, intersectionStart.X(), intersectionStart.Y(), intersectionStart.Z());
+                            lineTPCDashStart->SetLineStyle(2);
+                            lineTPCDashStart->SetLineColor(fTPCMatchColour);
+                            lineTPCDashStart->SetLineWidth(fLineWidth - 1);
+                            lineTPCDashStart->Draw();
+
+                            TPolyLine3D *lineTPCDashEnd = new TPolyLine3D(2);
+                            geo::Point_t intersectionEnd {0,0,0};
+
+                            i = 0;
+                            do
+                              {
+                                intersectionEnd = endTPC + i * endDirTPC;
+                                ++i;
+                              }
+                            while(IsPointInsideBox(crtLims2, intersectionEnd));
+
+                            lineTPCDashEnd->SetPoint(0, endTPC.X(), endTPC.Y(), endTPC.Z());
+                            lineTPCDashEnd->SetPoint(1, intersectionEnd.X(), intersectionEnd.Y(), intersectionEnd.Z());
+                            lineTPCDashEnd->SetLineStyle(2);
+                            lineTPCDashEnd->SetLineColor(fTPCMatchColour);
+                            lineTPCDashEnd->SetLineWidth(fLineWidth - 1);
+                            lineTPCDashEnd->Draw();
+
+                            if(fDisplayMatchScore)
+                              {
+                                TPaveText *pt = new TPaveText(0.4,0.86,0.85,0.9, "NDC");
+                                pt->SetTextSize(0.02);
+                                pt->SetFillStyle(0);
+                                pt->SetLineStyle(0);
+                                pt->SetTextAlign(12);
+                                pt->SetBorderSize(0);
+                                pt->AddText(Form("SP Matching Score = %g", matchScore));
+                                pt->AddText(Form("SP Shift = %g cm (t = %g ns)", shift, spacepointTime));
+                                pt->Draw();
+                              }
+                          }
+                      }
+
                     const geo::Point_t pos = spacepoint->Pos();
                     const geo::Point_t err = spacepoint->Err();
 
                     double rmin[3] = {pos.X() - err.X(), pos.Y() - err.Y(), pos.Z() - err.Z()};
                     double rmax[3] = {pos.X() + err.X(), pos.Y() + err.Y(), pos.Z() + err.Z()};
 
-                    DrawCube(c1, rmin, rmax, fSpacePointColour);
+                    if((fOnlyDrawMatched && foundMatch) || !fOnlyDrawMatched)
+                      DrawCube(c1, rmin, rmax, fSpacePointColour);
 
                     if(fPrint)
-                      std::cout << "Space Point: (" 
-                                << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t0 = "
-                                << spacepoint->Ts0() << " (" << spacepoint->Ts0() - G4RefTime << ") or t1 = "
-                                << spacepoint->Ts1() << " (" << spacepoint->Ts1() - G4RefTime << ")"
-                                << " with PE " << spacepoint->PE()
-                                << std::endl;
+                      {
+                        std::cout << "Space Point: ("
+                                  << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+                                  << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t0 = "
+                                  << spacepoint->Ts0() << " (" << spacepoint->Ts0() + G4RefTime << ") or t1 = "
+                                  << spacepoint->Ts1() << " (" << spacepoint->Ts1() + G4RefTime << ")"
+                                  << " with PE " << spacepoint->PE();
+
+                        if(foundMatch)
+                          std::cout << " and found TPC track match with score: " << matchScore << std::endl;
+                        else
+                          std::cout << std::endl;
+                      }
                   }
                 else if(spacePointVec.size() != 0)
                   std::cout << "What an earth is going on here then..." << std::endl;
@@ -492,14 +592,14 @@ namespace sbnd::crt {
 
         for(auto track : tracksVec)
           {
-            const double trackTime = fUseTs0 ? track->Ts0() - G4RefTime : track->Ts1() - G4RefTime;
+            const double trackTime = fUseTs0 ? track->Ts0() : track->Ts1();
 
             if(trackTime < fMinTime || trackTime > fMaxTime)
               continue;
 
-            std::set<CRTTagger> taggers = track->Taggers();
+            std::vector<CRTTagger> taggers = track->Taggers();
 
-            bool none = true;
+            bool none = fChoseTaggers;
             for(auto const& tagger : taggers)
               {
                 if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) != fChosenTaggers.end())
@@ -508,6 +608,96 @@ namespace sbnd::crt {
 
             if(none)
               continue;
+
+            double matchScore = -999.f;
+            bool foundMatch   = false;
+
+            if(fDrawTPCMatching)
+              {
+                art::FindOneP<recob::Track, anab::T0> CRTTrackstoTPCTracks(tracksHandle, event, fTPCTrackMatchLabel);
+                const art::Ptr<recob::Track> TPCTrack = CRTTrackstoTPCTracks.at(track.key());
+
+                auto tpcTracksHandle   = event.getValidHandle<std::vector<recob::Track>>(fTPCTrackLabel);
+                art::FindManyP<recob::Hit> TPCTracksToHits(tpcTracksHandle, event, fTPCTrackLabel);
+
+                if(TPCTrack.isNonnull())
+                  {
+                    const std::vector<art::Ptr<recob::Hit>> hits = TPCTracksToHits.at(TPCTrack.key());
+                    const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(geometryService, hits);
+                    const double shift = driftDirection * trackTime * detProp.DriftVelocity() * 1e-3;
+
+                    foundMatch = true;
+
+                    const anab::T0 t0Match = CRTTrackstoTPCTracks.data(track.key()).ref();
+
+                    matchScore            = t0Match.TriggerConfidence();
+                    geo::Point_t startTPC = TPCTrack->Start();
+                    geo::Point_t endTPC   = TPCTrack->End();
+
+                    startTPC.SetX(startTPC.X() + shift);
+                    endTPC.SetX(endTPC.X() + shift);
+
+                    const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(TPCTrack, 0.2);
+                    const geo::Vector_t startDirTPC = directions.first;
+                    const geo::Vector_t endDirTPC   = directions.second;
+
+                    TPolyLine3D *lineTPC = new TPolyLine3D(2);
+                    lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+                    lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+                    lineTPC->SetLineColor(fTPCMatchColour);
+                    lineTPC->SetLineWidth(fLineWidth);
+                    lineTPC->Draw();
+
+                    TPolyLine3D *lineTPCDashStart = new TPolyLine3D(2);
+                    geo::Point_t intersectionStart {0,0,0};
+
+                    int i = 0;
+                    do
+                      {
+                        intersectionStart = startTPC + i * startDirTPC;
+                        --i;
+                      }
+                    while(IsPointInsideBox(crtLims2, intersectionStart));
+
+                    lineTPCDashStart->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+                    lineTPCDashStart->SetPoint(1, intersectionStart.X(), intersectionStart.Y(), intersectionStart.Z());
+                    lineTPCDashStart->SetLineStyle(2);
+                    lineTPCDashStart->SetLineColor(fTPCMatchColour);
+                    lineTPCDashStart->SetLineWidth(fLineWidth - 1);
+                    lineTPCDashStart->Draw();
+
+                    TPolyLine3D *lineTPCDashEnd = new TPolyLine3D(2);
+                    geo::Point_t intersectionEnd {0,0,0};
+
+                    i = 0;
+                    do
+                      {
+                        intersectionEnd = endTPC + i * endDirTPC;
+                        ++i;
+                      }
+                    while(IsPointInsideBox(crtLims2, intersectionEnd));
+
+                    lineTPCDashEnd->SetPoint(0, endTPC.X(), endTPC.Y(), endTPC.Z());
+                    lineTPCDashEnd->SetPoint(1, intersectionEnd.X(), intersectionEnd.Y(), intersectionEnd.Z());
+                    lineTPCDashEnd->SetLineStyle(2);
+                    lineTPCDashEnd->SetLineColor(fTPCMatchColour);
+                    lineTPCDashEnd->SetLineWidth(fLineWidth - 1);
+                    lineTPCDashEnd->Draw();
+
+                    if(fDisplayMatchScore)
+                      {
+                        TPaveText *pt = new TPaveText(0.4,0.9,0.85,0.94, "NDC");
+                        pt->SetTextSize(0.02);
+                        pt->SetFillStyle(0);
+                        pt->SetLineStyle(0);
+                        pt->SetTextAlign(12);
+                        pt->SetBorderSize(0);
+                        pt->AddText(Form("Track Matching Score = %g", matchScore));
+                        pt->AddText(Form("Track Shift = %g cm (t = %g ns)", shift, trackTime));
+                        pt->Draw();
+                      }
+                  }
+              }
 
             const geo::Point_t start = track->Start();
             const geo::Vector_t dir  = track->Direction();
@@ -537,17 +727,110 @@ namespace sbnd::crt {
 
             line->SetLineColor(fTrackColour);
             line->SetLineWidth(fLineWidth);
-            line->Draw();
+
+            if((fOnlyDrawMatched && foundMatch) || !fOnlyDrawMatched)
+              line->Draw();
 
             if(fPrint)
-              std::cout << "Track at (" << start.X() << ", " << start.Y() << ", " << start.Z() << ")\n"
-                        << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
-                        << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
-                        << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-                        << "\tat ts0 " << track->Ts0() << " (" << track->Ts0() - G4RefTime << ")\n"
-                        << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() - G4RefTime << ")\n"
-                        << "\tfrom three hits? " << track->Triple() << std::endl;
+              {
+                std::cout << "Track at (" << start.X() << ", " << start.Y() << ", " << start.Z() << ")\n"
+                          << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
+                          << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
+                          << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
+                          << "\tat ts0 " << track->Ts0() << " (" << track->Ts0() + G4RefTime << ")\n"
+                          << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() + G4RefTime << ")\n"
+                          << "\tfrom three hits? " << track->Triple();
 
+                if(foundMatch)
+                  std::cout << " and found TPC track match with score: " << matchScore << std::endl;
+                else
+                  std::cout << std::endl;
+              }
+          }
+      }
+
+    if(fDrawTPCTracks)
+      {
+        auto pfpsHandle = event.getValidHandle<std::vector<recob::PFParticle>>(fPFPLabel);
+        std::vector<art::Ptr<recob::PFParticle>> pfpsVec;
+        art::fill_ptr_vector(pfpsVec, pfpsHandle);
+
+        for(auto pfp : pfpsVec)
+          {
+            if(pfp->PdgCode() == 11)
+              continue;
+
+            art::FindOneP<anab::T0> pfpsToT0s(pfpsHandle, event, fPFPLabel);
+            const art::Ptr<anab::T0> pfpT0 = pfpsToT0s.at(pfp.key());
+
+            if(!pfpT0)
+              continue;
+
+            const double pfpTime = pfpT0->Time();
+
+            if(pfpTime < fMinTime || pfpTime > fMaxTime)
+              continue;
+
+            art::FindOneP<recob::Track> pfpsToTracks(pfpsHandle, event, fTPCTrackLabel);
+            const art::Ptr<recob::Track> tpcTrack = pfpsToTracks.at(pfp.key());
+
+            geo::Point_t startTPC = tpcTrack->Start();
+            geo::Point_t endTPC   = tpcTrack->End();
+
+            const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(tpcTrack, 0.2);
+            const geo::Vector_t startDirTPC = directions.first;
+            const geo::Vector_t endDirTPC   = directions.second;
+
+            TPolyLine3D *lineTPC = new TPolyLine3D(2);
+            lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+            lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+            lineTPC->SetLineColor(fTPCMatchColour);
+            lineTPC->SetLineWidth(fLineWidth);
+            lineTPC->Draw();
+
+            TPolyLine3D *lineTPCDashStart = new TPolyLine3D(2);
+            geo::Point_t intersectionStart {0,0,0};
+
+            int i = 0;
+            do
+              {
+                intersectionStart = startTPC + i * startDirTPC;
+                --i;
+              }
+            while(IsPointInsideBox(crtLims2, intersectionStart));
+
+            lineTPCDashStart->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+            lineTPCDashStart->SetPoint(1, intersectionStart.X(), intersectionStart.Y(), intersectionStart.Z());
+            lineTPCDashStart->SetLineStyle(2);
+            lineTPCDashStart->SetLineColor(fTPCMatchColour);
+            lineTPCDashStart->SetLineWidth(fLineWidth - 1);
+            lineTPCDashStart->Draw();
+
+            TPolyLine3D *lineTPCDashEnd = new TPolyLine3D(2);
+            geo::Point_t intersectionEnd {0,0,0};
+
+            i = 0;
+            do
+              {
+                intersectionEnd = endTPC + i * endDirTPC;
+                ++i;
+              }
+            while(IsPointInsideBox(crtLims2, intersectionEnd));
+
+            lineTPCDashEnd->SetPoint(0, endTPC.X(), endTPC.Y(), endTPC.Z());
+            lineTPCDashEnd->SetPoint(1, intersectionEnd.X(), intersectionEnd.Y(), intersectionEnd.Z());
+            lineTPCDashEnd->SetLineStyle(2);
+            lineTPCDashEnd->SetLineColor(fTPCMatchColour);
+            lineTPCDashEnd->SetLineWidth(fLineWidth - 1);
+            lineTPCDashEnd->Draw();
+
+            if(fPrint)
+              {
+                std::cout << "TPC Track " << tpcTrack->ID() << " at (" << startTPC.X() << ", " << startTPC.Y() << ", " << startTPC.Z() << ")\n"
+                          << "\tto (" << endTPC.X() << ", " << endTPC.Y() << ", " << endTPC.Z() << ")\n"
+                          << "\tat time " << pfpTime << "\n"
+                          << std::endl;
+              }
           }
       }
 

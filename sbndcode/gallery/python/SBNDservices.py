@@ -15,26 +15,40 @@ python interactive session is started. The main code also show how to override
 the service manager setup by choosing a different service configuration.
 """
 
-__all__ = [ 'ServiceManager', 'geometry', ]
+__all__ = [ 'ServiceManager', 'geometry', 'wireReadout' ]
 
 
-import SBNDutils  # loadSBNDgeometry()
+import SBNDutils  # loadSBNDgeometry(), ...
 import LArSoftUtils
+from cppUtils import UnusedAttr
 
 
 ################################################################################
 ### special known services
 ###
 
-class SBNDGeometryServiceGetter(LArSoftUtils.SimpleServiceLoader):
+class SBNDGeometryServiceGetter(LArSoftUtils.GeometryServiceGetter):
   
-  def __init__(self):
-    LArSoftUtils.SimpleServiceLoader.__init__(self, 'Geometry')
-  
-  def load(self, manager):
+  def _loadService(self, manager, dependencies: UnusedAttr = {}):
     return SBNDutils.loadSBNDgeometry(registry=manager.registry())
   
 # class SBNDGeometryServiceGetter
+
+class SBNDWireReadoutServiceGetter(LArSoftUtils.WireReadoutServiceGetter):
+  
+  def _loadService(self, manager, dependencies = dict(Geometry=None)):
+    return SBNDutils.loadSBNDwireReadout \
+      (registry=manager.registry(), geometry=dependencies['Geometry'])
+  #
+  
+# class SBNDWireReadoutServiceGetter
+
+class SBNDAuxDetGeometryServiceGetter(LArSoftUtils.AuxDetGeometryServiceGetter):
+  
+  def _loadService(self, manager, dependencies: UnusedAttr = {}):
+    return SBNDutils.loadSBNDauxDetgeometry(registry=manager.registry())
+  
+# class SBNDAuxDetGeometryServiceGetter
 
 
 ################################################################################
@@ -69,7 +83,7 @@ class SBNDserviceManagerClass(LArSoftUtils.ServiceManagerInstance):
   # defaultConfiguration()
   
   def __init__(self):
-    LArSoftUtils.ServiceManagerInstance.__init__(self)
+    super().__init__()
     self.setConfiguration(
       configFile=SBNDserviceManagerClass.DefaultConfigPath,
       serviceTable=SBNDserviceManagerClass.DefaultServiceTable,
@@ -79,7 +93,7 @@ class SBNDserviceManagerClass(LArSoftUtils.ServiceManagerInstance):
   def setup(self):
     """Prepares for SBND service provider access in python/Gallery."""
     
-    LArSoftUtils.ServiceManagerInstance.setup(self)
+    super().setup()
 
     #
     # register the services we know about;
@@ -90,6 +104,8 @@ class SBNDserviceManagerClass(LArSoftUtils.ServiceManagerInstance):
     #
     
     self.manager.registerLoader('Geometry', SBNDGeometryServiceGetter())
+    self.manager.registerLoader('WireReadout', SBNDWireReadoutServiceGetter())
+    self.manager.registerLoader('AuxDetGeometry', SBNDAuxDetGeometryServiceGetter())
     
     return self.manager
     
@@ -104,6 +120,7 @@ ServiceManager = SBNDserviceManagerClass()
 ################################################################################
 
 def geometry(): return ServiceManager.get('Geometry')
+def wireReadout(): return ServiceManager.get('WireReadout')
 
 
 ################################################################################

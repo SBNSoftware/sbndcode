@@ -28,9 +28,15 @@ cet_build_plugin( SignalShapingServiceSBND  art::service SOURCE SignalShapingSer
         )
 
 cet_build_plugin( DigitalNoiseChannelStatus art::service SOURCE DigitalNoiseChannelStatus_service.cc LIBRARIES
-	${sbnd_util_lib_list}
+  ${sbnd_util_lib_list}
 	)
-      
+
+cet_build_plugin( DigitalNoiseEventFilter art::module SOURCE DigitalNoiseEventFilter_module.cc LIBRARIES
+  ${sbnd_util_lib_list}
+  sbnobj::Common_Analysis
+  larevt::CalibrationDBI_Providers
+	)
+	
 cet_build_plugin ( SBNDGeoHelper art::module
                      larcorealg::Geometry
                      larcore::Geometry_Geometry_service

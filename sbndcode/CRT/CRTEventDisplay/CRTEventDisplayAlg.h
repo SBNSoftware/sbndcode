@@ -26,6 +26,7 @@
 
 //larsoft
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 // sbnobj
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -35,8 +36,9 @@
 
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
+#include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 
 // ROOT
 #include "TPolyLine3D.h"
@@ -55,11 +57,6 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
-        Name("CRTGeoAlg"),
-        Comment("Configuration parameters for the CRT geometry algorithm"),
-      };
-
       fhicl::Table<CRTBackTrackerAlg::Config> BackTrackerAlgConfig {
         Name("CRTBackTrackerAlg"),
         Comment("Configuration parameters for the CRT back tracking algorithm")
@@ -86,6 +83,18 @@ namespace sbnd::crt {
       };
       fhicl::Atom<art::InputTag> TrackLabel {
         Name("TrackLabel")
+      };
+      fhicl::Atom<art::InputTag> TPCSpacePointMatchLabel {
+        Name("TPCSpacePointMatchLabel")
+      };
+      fhicl::Atom<art::InputTag> TPCTrackMatchLabel {
+        Name("TPCTrackMatchLabel")
+      };
+      fhicl::Atom<art::InputTag> TPCTrackLabel {
+        Name("TPCTrackLabel")
+      };
+      fhicl::Atom<art::InputTag> PFPLabel {
+        Name("PFPLabel")
       };
 
       fhicl::Atom<bool> SaveRoot {
@@ -130,6 +139,18 @@ namespace sbnd::crt {
       };
       fhicl::Atom<bool> DrawTracks {
         Name("DrawTracks")
+      };
+      fhicl::Atom<bool> DrawTPCMatching {
+        Name("DrawTPCMatching")
+      };
+      fhicl::Atom<bool> OnlyDrawMatched {
+        Name("OnlyDrawMatched")
+      };
+      fhicl::Atom<bool> DisplayMatchScore {
+        Name("DisplayMatchScore")
+      };
+      fhicl::Atom<bool> DrawTPCTracks {
+        Name("DrawTPCTracks")
       };
 
       fhicl::Atom<bool> ChoseTaggers {
@@ -182,6 +203,9 @@ namespace sbnd::crt {
       fhicl::Atom<int> TrackColour {
         Name("TrackColour")
       };
+      fhicl::Atom<int> TPCMatchColour {
+        Name("TPCMatchColour")
+      };
 
       fhicl::Atom<bool> UseTs0 {
         Name ("UseTs0")
@@ -222,6 +246,9 @@ namespace sbnd::crt {
     void SetDrawStripHits(bool tf);
     void SetDrawClusters(bool tf);
 
+    void SetMinTime(double time);
+    void SetMaxTime(double time);
+
     void SetPrint(bool tf);
 
     void SetHighlightedModules(std::vector<int> hm);
@@ -235,8 +262,8 @@ namespace sbnd::crt {
 
   private:
 
+    art::ServiceHandle<CRTGeoService> fCRTGeoService;
     TPCGeoAlg         fTPCGeoAlg;
-    CRTGeoAlg         fCRTGeoAlg;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
 
     bool fMC;
@@ -247,6 +274,10 @@ namespace sbnd::crt {
     art::InputTag fClusterLabel;
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
+    art::InputTag fTPCSpacePointMatchLabel;
+    art::InputTag fTPCTrackMatchLabel;
+    art::InputTag fTPCTrackLabel;
+    art::InputTag fPFPLabel;
 
     bool fSaveRoot;
     bool fSaveViews;
@@ -263,6 +294,10 @@ namespace sbnd::crt {
     bool fDrawClusters;
     bool fDrawSpacePoints;
     bool fDrawTracks;
+    bool fDrawTPCMatching;
+    bool fOnlyDrawMatched;
+    bool fDisplayMatchScore;
+    bool fDrawTPCTracks;
 
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
@@ -282,6 +317,7 @@ namespace sbnd::crt {
     int fClusterColourInterval;
     int fSpacePointColour;
     int fTrackColour;
+    int fTPCMatchColour;
 
     bool   fUseTs0;
     double fMinTime;

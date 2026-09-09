@@ -20,7 +20,7 @@ set(
         sbndcode_CRTUtils
         sbnobj::Common_CRT
         sbnobj::SBND_CRT
-	sbnobj::SBND_Timing
+        sbnobj::SBND_Timing
         sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
         nusimdata::SimulationBase
         art::Framework_Core
@@ -39,7 +39,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
-        sbndcode_GeoWrappers
+        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
         sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
         hep_hpc_hdf5
         ${HDF5_LIBRARIES}
@@ -50,6 +50,7 @@ cet_build_plugin(HitDumper art::module SOURCE HitDumper_module.cc LIBRARIES ${MO
 cet_build_plugin(MuonTrackFilter art::module SOURCE MuonTrackFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(MuonTrackProducer art::module SOURCE MuonTrackProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(OnlineEvd art::module SOURCE OnlineEvd_module.cc LIBRARIES ${MODULE_LIBRARIES})
+target_include_directories(sbndcode_Commissioning_OnlineEvd_module PRIVATE $ENV{HEP_HPC_INC})
 
 install_source()
 

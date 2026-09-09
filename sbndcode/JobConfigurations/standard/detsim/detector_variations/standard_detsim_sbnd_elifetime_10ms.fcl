@@ -1,0 +1,10 @@
+# File: standard_detsim_sbnd_elifetime_10ms.fcl
+# Author: Mun Jung Jung (munjung@uchicago.edu)
+# 
+# fcl to change the electron lifetime used in WC detsim
+# elifetime = 10ms
+# 
+#include "standard_detsim_sbnd.fcl"
+
+# change electron lifetime
+physics.producers.simtpc2d.wcls_main.structs.lifetime: 10

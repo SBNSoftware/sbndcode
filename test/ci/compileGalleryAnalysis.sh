@@ -33,7 +33,8 @@ mkdir "$BuildDir"
 # set up
 #
 # set up some UPS version of CMake only if none is set up already:
-[[ -n "$CMAKE_DIR" ]] || source "$(ups setup cmake 'v3_10_1')"
+[[ -n "$CMAKE_DIR" ]] || source "$(ups setup cmake 'v3_27_4')"
+[[ -n "$CETMODULES_DIR" ]] || source "$(ups setup cetmodules 'v3_24_00')"
 
 #
 # proceed with compilation

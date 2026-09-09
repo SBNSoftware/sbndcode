@@ -1,0 +1,16 @@
+#include "calibration_database_GlobalTags_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_pmtcalibrationdatabaseservice : {
+  service_provider: "PMTCalibrationDatabaseService" 
+    CorrectionTags: {
+      PMTCalibrationDatabaseTag: @local::SBND_Calibration_GlobalTags.PMTCalibrationDatabaseTag
+      DatabaseTimeStamp: @local::SBND_Calibration_GlobalTags.DatabaseTimeStamp
+      TableName: "pds_calibration"
+      SERLength: 550
+    }
+  Verbose: false
+}
+
+END_PROLOG

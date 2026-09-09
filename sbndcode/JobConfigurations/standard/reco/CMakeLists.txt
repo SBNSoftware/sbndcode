@@ -1,5 +1,6 @@
 add_subdirectory(deprecated)
 add_subdirectory(config)
+add_subdirectory(detector_variations)
 
 install_fhicl()
 

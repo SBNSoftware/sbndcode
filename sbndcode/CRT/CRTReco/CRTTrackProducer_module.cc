@@ -26,7 +26,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 #include "Eigen/Dense"
@@ -97,7 +97,8 @@ public:
 
 private:
 
-  CRTGeoAlg        fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+
   std::string      fCRTSpacePointModuleLabel;
   double           fCoincidenceTimeRequirement;
   double           fThirdSpacePointMaximumDCA;
@@ -108,7 +109,6 @@ private:
 
 sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
@@ -238,7 +238,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
                       const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
 
-                      const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
+                      const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
  
                       geo::Point_t fitStart, fitMid, fitEnd;
                       double gof;
@@ -264,7 +264,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
           const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
 
-          const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
+          const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
           const CRTTrack track(start, end, t0, et0, t1, et1, pe, tof, used_taggers);
           const std::set<unsigned> used_spacepoints = {i, ii};
@@ -480,7 +480,7 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::
 geo::Point_t sbnd::crt::CRTTrackProducer::LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger)
 {
   const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-  const CRTTaggerGeo taggerGeo    = fCRTGeoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+  const CRTTaggerGeo taggerGeo    = fCRTGeoService->GetTagger(CRTCommonUtils::GetTaggerName(tagger));
   double k;
 
   switch(constrainedPlane)

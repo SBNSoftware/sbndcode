@@ -11,7 +11,7 @@ IncludeHDOpticalWaveforms_PMT:
 {
   tool_type: "HDOpticalWaveforms"
 
-  ResolutionIncrease: 2.
+  ResolutionIncrease: 1.
 }
 
 END_PROLOG

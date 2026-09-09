@@ -1,0 +1,6 @@
+#include "detsim_detvar.fcl"
+
+services.SpaceCharge.EnableSimSpatialSCE: true
+services.SpaceCharge.EnableSimEfieldSCE: true
+
+services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_dualmap_2x_voxelTH3.root"

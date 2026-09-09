@@ -1,3 +1,4 @@
+#include "crt_services_sbnd.fcl"
 #include "crtana_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 
@@ -7,9 +8,12 @@ services:
 {
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
-  ParticleInventoryService: @local::sbnd_particleinventoryservice
-  BackTrackerService:       @local::sbnd_backtrackerservice
-  DetectorClocksService:    @local::sbnd_detectorclocks
+  @table::crt_services_sbnd
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  DetectorClocksService:     @local::sbnd_detectorclocks
+  LArPropertiesService:      @local::sbnd_properties
+  DetectorPropertiesService: @local::sbnd_detproperties
 }
 
 source:

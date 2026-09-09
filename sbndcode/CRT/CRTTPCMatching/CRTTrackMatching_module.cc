@@ -20,10 +20,12 @@
 
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 #include "sbndcode/CRT/CRTTPCMatching/CRTTrackMatchAlg.h"
+#include "sbndcode/CRT/CRTEventDisplay/CRTEventDisplayAlg.h"
 
 #include <memory>
 
@@ -45,9 +47,13 @@ public:
 
 private:
 
-    CRTTrackMatchAlg fMatchingAlg;
-    art::InputTag    fTPCTrackModuleLabel;
-    art::InputTag    fCRTTrackModuleLabel;
+  CRTTrackMatchAlg fMatchingAlg;
+  art::InputTag    fTPCTrackModuleLabel;
+  art::InputTag    fCRTTrackModuleLabel;
+
+  CRTEventDisplayAlg    fCRTEventDisplayAlg;
+
+  bool fMakeEventDisplays;
 };
 
 
@@ -56,9 +62,12 @@ sbnd::crt::CRTTrackMatching::CRTTrackMatching(fhicl::ParameterSet const& p)
   , fMatchingAlg(p.get<fhicl::ParameterSet>("MatchingAlg"))
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTTrackModuleLabel(p.get<art::InputTag>("CRTTrackModuleLabel"))
-  {
+  , fCRTEventDisplayAlg(p.get<fhicl::ParameterSet>("CRTEventDisplayAlg"))
+  , fMakeEventDisplays(p.get<bool>("MakeEventDisplays"))
+{
+  if(!fMakeEventDisplays)
     produces<art::Assns<CRTTrack, recob::Track, anab::T0>>();
-  }
+}
 
 void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
 {
@@ -101,6 +110,8 @@ void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
 
   std::set<int> used_crt_tracks;
 
+  int nmatches = 0;
+
   for(auto const &candidate : candidates)
     {
       if(used_crt_tracks.count(candidate.thisCRTTrack.key()) == 0)
@@ -108,11 +119,22 @@ void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
           const anab::T0 t0(candidate.time * 1e3, 0, 0, 0, candidate.score);
           crtTrackTPCTrackAssn->addSingle(candidate.thisCRTTrack, candidate.thisTPCTrack, t0);
 
+          if(fMakeEventDisplays)
+            {
+              fCRTEventDisplayAlg.SetPrint(false);
+              fCRTEventDisplayAlg.SetMinTime(candidate.time * 1e3 - 1e3);
+              fCRTEventDisplayAlg.SetMaxTime(candidate.time * 1e3 + 1e3);
+              auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+              fCRTEventDisplayAlg.Draw(clockData, e, Form("crtEventDisplayEvent%iTrackMatch%i", e.event(), nmatches));
+            }
+
           used_crt_tracks.insert(candidate.thisCRTTrack.key());
+          ++nmatches;
         }
     }
 
-  e.put(std::move(crtTrackTPCTrackAssn));
+  if(!fMakeEventDisplays)
+    e.put(std::move(crtTrackTPCTrackAssn));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackMatching)
