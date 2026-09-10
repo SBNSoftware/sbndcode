@@ -1,0 +1,92 @@
+###
+### fcl file for producing the hdf5 files used as input for NuGraph training.
+### Author: G. Cerati (FNAL)
+###
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+process_name: makehdf5
+
+services:
+{
+  TFileService:            { fileName: "reco_hist.root" }
+  TimeTracker:             {}
+  MemoryTracker:           {}
+  RandomNumberGenerator:   {}
+  FileCatalogMetadata:     @local::sbnd_file_catalog_mc
+  @table::sbnd_services
+  @table::sbnd_random_services
+  @table::sbnd_g4_services
+  message:                 @local::sbnd_message_services_prod_debug
+  BackTrackerService:      @local::sbnd_backtrackerservice
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    hdf5maker: {
+      module_type:  "SBNDHDF5Maker"
+      TruthLabel:   "generator"
+      #HitTruthLabel: "largeantnu"
+      HitTruthLabel: "gaushitTruthMatch"
+      #SPLabel: "nuslhits"
+      #HitLabel: "nuslhits"
+      SPLabel: "pandoraSCE"
+      HitLabel: "gaushit"
+      OpFlashLabel:"opflashtpc0"
+      OpHitLabel:"ophitpmt"
+      UseMap: true
+      OutputName:   "NeutrinoML"
+    }
+  }
+
+ producers:
+  {
+    #nuslhitsE: { 
+    #  module_type: "SBNDTrueNuSliceHitsProducer"
+    #  BaryMatchLabel: "tpcpmtbarycentermatchCryoE"
+    #  SliceLabel:    "pandoraGausCryoE"
+    #  SpsLabel:      "cluster3DCryoE"
+    #}
+    #nuslhitsW: { 
+    #  module_type: "SBNDTrueNuSliceHitsProducer"
+    #  BaryMatchLabel: "tpcpmtbarycentermatchCryoW"
+    #  SliceLabel:    "pandora"
+    #  SpsLabel:      "cluster3DCryoW"
+    #}
+    #nuslhits: {
+    #  module_type:             "HitMerger"
+    #  HitProducerLabelVec:     ["nuslhitsE","nuslhitsW"]
+    #}
+    nuslhits: { 
+      module_type: "SBNDTrueNuSliceHitsProducer"
+      BaryMatchLabel: "tpcpmtbarycentermatching"
+      SliceLabel:    "pandoraSCE"
+      SpsLabel:      "pandoraSCE"
+      DoFlashAssn: true
+    }
+    # sps: cluster3DCryoE
+  }
+ 
+ #reco: [nuslhitsE,nuslhitsW,nuslhits]
+ reco: [nuslhits]
+ ana:       [ hdf5maker ]
+  
+ trigger_paths:       [ reco ]
+ end_paths:     [ ana ]
+  
+}
+
+services.BackTrackerService.BackTracker.G4ModuleLabel: "largeant"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "merge"
