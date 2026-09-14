@@ -156,8 +156,11 @@ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
 physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 
-# Include 3D barycenter flahs matching 
+# Include 3D barycenter flash matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
+
+# Include propagation correction on the flash timing
+physics.producers.cafmaker.CorrectedOpFlashLabel: "lightpropagationcorrectionSCE"
 
 # Include MC version of PMT Software Trigger
 physics.producers.cafmaker.SBNDSoftwareTriggerLabel: "pmtmetricmc"
