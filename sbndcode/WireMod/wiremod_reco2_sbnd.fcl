@@ -1,0 +1,5 @@
+#include "standard_reco2_sbnd.fcl"
+
+physics.analyzers.caloskim.HITproducer: "gaushit::WireModifier"
+
+physics.ana: [ caloskim ]
