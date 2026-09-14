@@ -65,7 +65,8 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   fNoiseFileList = p.get<std::string>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
-  produces<std::vector<raw::RawDigit>>("test");
+  produces<std::vector<raw::RawDigit>>();
+  produces<std::vector<raw::RDTimeStamp>>();
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   unsigned int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
@@ -85,6 +86,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
 
 void ArtDAQFragmentBlender::produce(art::Event& e)
 {
+  std::cout << " starting producer run " << std::endl;
   // Implementation of required member function here.
   int EventToScramble = TotalNoiseEvents*randDraws.Uniform(1.0);
   noiseGalleryEvent->goToEntry(EventToScramble);
@@ -93,9 +95,12 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   //There is a small chance everything breaks and we need to save all the items from the decoder
   art::Handle< std::vector<artdaq::Fragment> > NominalFragHandle;
   e.getByLabel(fTPCDAQLabel,NominalFragHandle);
+  std::cout << " is it mad that I am using these? " << std::endl;
   art::PtrMaker<raw::RawDigit> rdpm(e);
   art::PtrMaker<raw::RDTimeStamp> tspm(e);
+  std::cout <<"about to call produce 2" << std::endl;
   std::unique_ptr<std::vector<raw::RawDigit>> ScrambledFragments(new std::vector<raw::RawDigit>);
+  std::unique_ptr<std::vector<raw::RDTimeStamp>> Filler(new std::vector<raw::RDTimeStamp>);
   std::unique_ptr<std::vector<raw::RawDigit>> NominalFragments = tpcDecoderBusiness.produce2(*NominalFragHandle, rdpm, tspm);
   art::InputTag TempTag(fTPCDAQLabel);
   const auto& NoiseTPCfragmentList = *(noiseGalleryEvent->getValidHandle< std::vector<artdaq::Fragment> >(TempTag));
@@ -109,15 +114,24 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
     {
       ScrambledFragments->push_back((*NominalFragments)[i]);
     }
-    else //must be induction
-    {
-      ScrambledFragments->push_back((*NoiseFragments)[i]);
-    }
   }
+  for(int i=0; i<int(NoiseFragments->size()); i++)
+    {
+      int ChannelID = (*NoiseFragments)[i].Channel();
+      if(   (ChannelID>=3968 && ChannelID<5632) || (ChannelID>=9600 && ChannelID<11264)  ) //grab collection clusters
+	{
+	  continue;
+	}
+      else //must be induction
+	{
+	  ScrambledFragments->push_back((*NoiseFragments)[i]);
+	}
+   }
   std::cout << "Scrambled size " << ScrambledFragments->size() << std::endl;
   //Add the new collection to the event
   std::cout << " adding in scrambled fragments " << std::endl;
-  e.put(std::move(ScrambledFragments), "test");
+  e.put(std::move(ScrambledFragments));
+  e.put(std::move(Filler));
 }
 
 DEFINE_ART_MODULE(ArtDAQFragmentBlender)

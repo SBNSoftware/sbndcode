@@ -74,6 +74,7 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   _tag(param.get<std::string>("raw_data_label", "daq"),param.get<std::string>("fragment_type_label", "NEVISTPC")),
   _config(param)
 {
+  std::cout <<"oim a TPC decoda and I got this nominal settin " <<   _config.NominalProcessing << std::endl;
   if(_config.NominalProcessing) //config gets called in a weird order?
   {
     consumes<artdaq::Fragments>(_tag);
