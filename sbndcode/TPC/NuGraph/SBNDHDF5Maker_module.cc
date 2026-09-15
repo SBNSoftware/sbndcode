@@ -306,32 +306,53 @@ void SBNDHDF5Maker::analyze(art::Event const& e) {
 
   std::array<int, 3> evtID { run, subrun, event };
   // Fill event table
-  // Get MC truth
+  // Get MC truth and handle multiple truth entries per event.
   auto truthHandle = e.getValidHandle<std::vector<simb::MCTruth>>(fTruthLabel);
   std::cout << "truthHandle->size()=" << truthHandle->size() << std::endl;
-  if (truthHandle->size() != 1) {
-    std::cout << "truthHandle->size()=" << truthHandle->size() << "  skipping event" << std::endl;
-    //avoid pile-up, which is not handled downstream
-    return;
-  }
-  simb::MCNeutrino const& nutruth = truthHandle->at(0).GetNeutrino();
 
-  auto up = nutruth.Nu().Momentum().Vect().Unit();
-  std::array<float, 3> nuMomentum {(float)up.X(),(float)up.Y(),(float)up.Z()};
-  std::cout << "Filling Neutrino info: "
-      << "is cc? " << (nutruth.CCNC() == simb::kCC)
-      << ", nu energy " << nutruth.Nu().E()
-      << ", lepton energy " << nutruth.Lepton().E()
-      << "\nnu momentum x " << nuMomentum[0] << ", y "
-      << nuMomentum[1] << ", z " << nuMomentum[2]
-      << std::endl;
-  fHDFData->eventNtupleNu.insert( evtID.data(),
-				  nutruth.CCNC() == simb::kCC,
-				  nutruth.Nu().PdgCode(),
-				  nutruth.Nu().E(),
-				  nutruth.Lepton().E(),
-				  nuMomentum.data()
-				  );
+  if (truthHandle->empty()) {
+    mf::LogWarning("SBNDHDF5Maker") << "No MCTruth entries found for event "
+                                   << evtID[0] << ", " << evtID[1] << ", " << evtID[2]
+                                   << "; skipping event-level truth insertion.";
+  } else {
+    for (size_t i_truth = 0; i_truth < truthHandle->size(); ++i_truth) {
+      auto const& truth = truthHandle->at(i_truth);
+      if (!truth.NeutrinoSet()) {
+        mf::LogDebug("SBNDHDF5Maker") << "MCTruth entry " << i_truth
+                                      << " in event " << evtID[0] << ", " << evtID[1] << ", " << evtID[2]
+                                      << " has no neutrino information; skipping.";
+        continue;
+      }
+
+      simb::MCNeutrino const& nutruth = truth.GetNeutrino();
+      auto up = nutruth.Nu().Momentum().Vect().Unit();
+      std::array<float, 3> nuMomentum {(float)up.X(),(float)up.Y(),(float)up.Z()};
+      std::cout << "Filling Neutrino info for truth entry " << i_truth << ": "
+          << "pdg: " << nutruth.Nu().PdgCode()
+          << " is cc? " << (nutruth.CCNC() == simb::kCC) 
+          << ", nu energy " << nutruth.Nu().E()
+          << ", lepton energy " << nutruth.Lepton().E()
+          << "\nnu momentum x " << nuMomentum[0] << ", y "
+          << nuMomentum[1] << ", z " << nuMomentum[2]
+          << std::endl; std::cout << "X " << nutruth.Nu().Position().X() << ", Y " << nutruth.Nu().Position().Y() << ", Z " << nutruth.Nu().Position().Z() << std::endl;
+      fHDFData->eventNtupleNu.insert( evtID.data(),
+					  nutruth.CCNC() == simb::kCC,
+					  nutruth.Nu().PdgCode(),
+					  nutruth.Nu().E(),
+					  nutruth.Lepton().E(),
+					  nuMomentum.data()
+					  );
+
+      mf::LogDebug("SBNDHDF5Maker") << "Filling event table for truth entry " << i_truth
+					  << "\nrun " << evtID[0] << ", subrun " << evtID[1]
+					  << ", event " << evtID[2]
+					  << "\nis cc? " << (nutruth.CCNC() == simb::kCC)
+					  << ", nu energy " << nutruth.Nu().E()
+					  << ", lepton energy " << nutruth.Lepton().E()
+					  << "\nnu momentum x " << nuMomentum[0] << ", y "
+					  << nuMomentum[1] << ", z " << nuMomentum[2];
+    }
+  }
 
   // for (int ip=0;ip<truthHandle->at(0).NParticles();ip++) {
   //   std::cout << "mcp tkid=" << truthHandle->at(0).GetParticle(ip).TrackId() << " pdg=" << truthHandle->at(0).GetParticle(ip).PdgCode() 
@@ -339,15 +360,6 @@ void SBNDHDF5Maker::analyze(art::Event const& e) {
   // 		<< " vtx=" << truthHandle->at(0).GetParticle(ip).Vx() << " " << truthHandle->at(0).GetParticle(ip).Vy() << " " << truthHandle->at(0).GetParticle(ip).Vz()
   // 		<< std::endl;
   // }
-
-  mf::LogDebug("SBNDHDF5Maker") << "Filling event table"
-				  << "\nrun " << evtID[0] << ", subrun " << evtID[1]
-				  << ", event " << evtID[2]
-				  << "\nis cc? " << (nutruth.CCNC() == simb::kCC)
-				  << ", nu energy " << nutruth.Nu().E()
-				  << ", lepton energy " << nutruth.Lepton().E()
-				  << "\nnu momentum x " << nuMomentum[0] << ", y "
-				  << nuMomentum[1] << ", z " << nuMomentum[2];
 
   std::cout << "Grabbing SpacePoints" << std::endl;
   // Get spacepoints from the event record
