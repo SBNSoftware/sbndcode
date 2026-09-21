@@ -691,9 +691,9 @@ namespace blip {
           double Collection_SecondCorner=fHitFilterAmpRMSCollection[TPC][2];
           double Slope = Collection_CornerHeight/(Collection_SecondCorner-Collection_FirstCorner);
           if(hit->RMS()<=Collection_FirstCorner) continue;
-          else if( (hit->RMS()>CollectionOne_FirstCorner) && 
-            (hit->RMS()<=CollectionOne_SecondCorner) && 
-            (hit->Amp()>= Slope*(HitRMS-CollectionOne_FirstCorner))) continue;
+          else if( (hit->RMS()>Collection_FirstCorner) && 
+            (hit->RMS()<=Collection_SecondCorner) && 
+            (hit->PeakAmplitude()>= Slope*(HitRMS-Collection_FirstCorner))) continue;
           //else good
         }
         else{ //induction plane
@@ -702,10 +702,10 @@ namespace blip {
           double Induction_FirstCorner = fHitFilterAmpRMSInduction[TPC+plane][2];
           double Induction_SecondCorner = fHitFilterAmpRMSInduction[TPC+plane][3];
           double Slope = (LateBase-EarlyBase)/(Induction_SecondCorner-Induction_FirstCorner);
-          if(hit->RMS()<=Induction_FirstCorner && hit->Amp()<=Induction_FirstCorner) continue;
+          if(hit->RMS()<=Induction_FirstCorner && hit->PeakAmplitude()<=Induction_FirstCorner) continue;
           else if(hit->RMS()>Induction_FirstCorner && hit->RMS()<=Induction_SecondCorner && 
-            hit->Amp() <= (Slope*(hit->RMS()-Induction_FirstCorner) + EarlyBase)) continue;
-          else if(hit->RMS()>Induction_SecondCorner && hit->Amp()<=LateBase) continue;
+            hit->PeakAmplitude() <= (Slope*(hit->RMS()-Induction_FirstCorner) + EarlyBase)) continue;
+          else if(hit->RMS()>Induction_SecondCorner && hit->PeakAmplitude()<=LateBase) continue;
         //else good
         }
         //cuts blow here are not tuned for SBND
