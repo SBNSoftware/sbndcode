@@ -246,8 +246,8 @@ namespace blip {
     fMinHitRatio        = pset.get<std::vector<float>>  ("MinHitRatio",     {-99e9,-99e9,-99e9});
     fMaxHitGOF          = pset.get<std::vector<float>>  ("MaxHitGOF",       { 99e9, 99e9, 99e9});
     fMinHitGOF          = pset.get<std::vector<float>>  ("MinHitGOF",       {-99e9,-99e9,-99e9});
-    fHitFilterAmpRMSInduction = pset.get<std::vector<float>>("HitFilterAmpRMSInduction", {-1, -1, -1});
-    fHitFilterAmpRMSCollection = pset.get<std::vector<float>>("HitFilterAmpRMSCollection", {-1, -1, -1});
+    fHitFilterAmpRMSInduction = pset.get<std::vector<std::vector<float>>>("HitFilterAmpRMSInduction", {-1, -1, -1});
+    fHitFilterAmpRMSCollection = pset.get<std::vector<std::vector<float>>>("HitFilterAmpRMSCollection", {-1, -1, -1});
     
     fHitClustWidthFact  = pset.get<float>         ("HitClustWidthFact", 5.0);
     fHitClustWireRange  = pset.get<int>           ("HitClustWireRange", 1);
