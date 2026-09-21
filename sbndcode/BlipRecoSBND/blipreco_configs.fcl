@@ -12,7 +12,13 @@ sbnd_blipalg:
   SimEDepProducer:      "ionandscint:priorSCE:G4"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
   SimChanProducer:      "simtpc2d:simpleSC:DetSim"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
-  DoHitFiltering:       false           #// filter hits based on amp, width, RMS
+  DoHitFiltering:       true           #// filter hits based on amp, width, RMS
+  HitFilterAmpRMSInduction: [[14, 25, 5, 6], 
+                             [18, 48, 4.5, 6],
+                             [14, 25, 5, 6], 
+                             [18, 48, 4.5, 6]]
+  HitFilterAmpRMSCollection: [[15, 2, 3], 
+                              [15, 2.5, 3]]
   HitClustWireRange:    1               #// clustering wire width
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
