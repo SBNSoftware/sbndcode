@@ -702,7 +702,7 @@ namespace blip {
           double Induction_FirstCorner = fHitFilterAmpRMSInduction[TPC+plane][2];
           double Induction_SecondCorner = fHitFilterAmpRMSInduction[TPC+plane][3];
           double Slope = (LateBase-EarlyBase)/(Induction_SecondCorner-Induction_FirstCorner);
-          if(hit->RMS()<=Induction_FirstCorner && hit->Amp()<=Induction_FirstCorner) continue;
+          if(hit->RMS()<=Induction_FirstCorner && hit->PeakAmplitude()<=Induction_FirstCorner) continue;
           else if(hit->RMS()>Induction_FirstCorner && hit->RMS()<=Induction_SecondCorner && 
             hit->PeakAmplitude() <= (Slope*(hit->RMS()-Induction_FirstCorner) + EarlyBase)) continue;
           else if(hit->RMS()>Induction_SecondCorner && hit->PeakAmplitude()<=LateBase) continue;
