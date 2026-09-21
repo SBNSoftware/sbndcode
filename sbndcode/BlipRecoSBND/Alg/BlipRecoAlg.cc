@@ -693,7 +693,7 @@ namespace blip {
           if(hit->RMS()<=Collection_FirstCorner) continue;
           else if( (hit->RMS()>Collection_FirstCorner) && 
             (hit->RMS()<=Collection_SecondCorner) && 
-            (hit->PeakAmplitude()>= Slope*(HitRMS-Collection_FirstCorner))) continue;
+            (hit->PeakAmplitude()>= Slope*(hit->RMS()-Collection_FirstCorner))) continue;
           //else good
         }
         else{ //induction plane
