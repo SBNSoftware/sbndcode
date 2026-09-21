@@ -150,6 +150,8 @@ namespace blip {
     std::vector<float>  fMaxHitGOF;
     std::vector<float>  fMinHitRatio;
     std::vector<float>  fMaxHitRatio;
+    std::vector<float>  fHitFilterAmpRMSInduction;
+    std::vector<float>  fHitFilterAmpRMSCollection;
     int                 fMaxHitMult;
     float               fHitClustWidthFact;
     int                 fHitClustWireRange;

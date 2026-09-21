@@ -246,6 +246,8 @@ namespace blip {
     fMinHitRatio        = pset.get<std::vector<float>>  ("MinHitRatio",     {-99e9,-99e9,-99e9});
     fMaxHitGOF          = pset.get<std::vector<float>>  ("MaxHitGOF",       { 99e9, 99e9, 99e9});
     fMinHitGOF          = pset.get<std::vector<float>>  ("MinHitGOF",       {-99e9,-99e9,-99e9});
+    fHitFilterAmpRMSInduction = pset.get<std::vector<float>>("HitFilterAmpRMSInduction", {-1, -1, -1});
+    fHitFilterAmpRMSCollection = pset.get<std::vector<float>>("HitFilterAmpRMSCollection", {-1, -1, -1});
     
     fHitClustWidthFact  = pset.get<float>         ("HitClustWidthFact", 5.0);
     fHitClustWireRange  = pset.get<int>           ("HitClustWireRange", 1);
@@ -680,13 +682,38 @@ namespace blip {
         hitIsGood[i] = false;
         auto& hit = hitlist[i];
         int plane = hit->WireID().Plane;
-        if( hitinfo[i].gof        <= fMinHitGOF[plane] ) continue;
-        if( hitinfo[i].gof        >= fMaxHitGOF[plane] ) continue;
-        if( hit->RMS()            <= fMinHitRMS[plane] ) continue;
-        if( hit->RMS()            >= fMaxHitRMS[plane] ) continue;
-        if( hit->PeakAmplitude()  <= fMinHitAmp[plane] ) continue;
-        if( hit->PeakAmplitude()  >= fMaxHitAmp )        continue;
-        if( hit->Multiplicity()   >= fMaxHitMult )       continue;
+        int TPC = hit->WireID().TPC;
+        if(plane==2){ //collection
+          double Collection_CornerHeight =fHitFilterAmpRMSCollection[TPC, 0];
+          double Collection_FirstCorner=fHitFilterAmpRMSCollection[TPC, 1];
+          double Collection_SecondCorner=fHitFilterAmpRMSCollection[TPC, 2];
+          double Slope = Collection_CornerHeight/(Collection_SecondCorner-Collection_FirstCorner)
+          if(hit->RMS()<=Collection_FirstCorner) continue;
+          else if( (hit->RMS()>CollectionOne_FirstCorner) && 
+            (hit->RMS()<=CollectionOne_SecondCorner) && 
+            (hit->Amp()>= Slope*(HitRMS-CollectionOne_FirstCorner))) continue;
+          //else good
+        }
+        else{ //induction plane
+          double EarlyBase = fHitFilterAmpRMSInduction[TPC+plane, 0];
+          double LateBase = fHitFilterAmpRMSInduction[TPC+plane, 1];
+          double Induction_FirstCorner = fHitFilterAmpRMSInduction[TPC+plane, 2];
+          double Induction_SecondCorner = fHitFilterAmpRMSInduction[TPC+plane, 3];
+          double Slope = (LateBase-EarlyBase)/(Induction_SecondCorner-Induction_FirstCorner)
+          if(hit->RMS()<=Induction_FirstCorner && hit->Amp()<=Induction_FirstCorner) continue;
+          else if(hit->RMS()>Induction_FirstCorner && hit->RMS()<=Induction_SecondCorner && 
+            hit->Amp() <= (Slope*(hit->RMS()-Induction_FirstCorner) + EarlyBase)) continue;
+          else if(hit->RMS()>Induction_SecondCorner && hit->Amp()<=LateBase) continue;
+        //else good
+        }
+        //cuts blow here are not tuned for SBND
+        //if( hitinfo[i].gof        <= fMinHitGOF[plane] ) continue;
+        //if( hitinfo[i].gof        >= fMaxHitGOF[plane] ) continue;
+        //if( hit->RMS()            <= fMinHitRMS[plane] ) continue;
+        //if( hit->RMS()            >= fMaxHitRMS[plane] ) continue;
+        //if( hit->PeakAmplitude()  <= fMinHitAmp[plane] ) continue;
+        //if( hit->PeakAmplitude()  >= fMaxHitAmp )        continue;
+        //if( hit->Multiplicity()   >= fMaxHitMult )       continue;
         //float hit_ratio = hit->RMS() / hit->PeakAmplitude();
         //if( hit_ratio             < fMinHitRatio[plane] ) continue;
         //if( hit_ratio             > fMaxHitRatio[plane] ) continue;
