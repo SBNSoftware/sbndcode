@@ -11,6 +11,10 @@ wiremod_sbnd:
     WireAssnLabel: "gaushit"
     ApplyYZScale: false
     ApplyXXZAngleScale: false
+    # false: rescale each ROI tick by q_mod/q_orig (subject to the low-charge and
+    #        3-sigma cutoffs in WireModUtility::ModifyROI)
+    # true:  add (q_mod - q_orig) to each tick instead; no cutoffs are applied
+    AdditiveModification: false
     SplineFileXTXW_Q: "wiremod_xtxwq_splines_sbnd.root"
     SplineFileXTXW_W: "wiremod_xtxww_splines_sbnd.root"
     SplineFileYZ_Q: "wiremod_yzq_splines_sbnd.root"

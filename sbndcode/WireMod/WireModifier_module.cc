@@ -102,6 +102,13 @@ public:
         fhicl::Atom<bool> ApplyXXZAngleScale {
             Name("ApplyXXZAngleScale"), Comment("Apply scaling based on X and theta_XW")
         };
+        fhicl::Atom<bool> AdditiveModification {
+            Name("AdditiveModification"),
+            Comment("Modify each ROI tick by an additive charge offset rather than a"
+                    " multiplicative rescale.  The additive path bypasses the"
+                    " sigma-distance and low-charge cutoffs in WireModUtility::ModifyROI."),
+            false
+        };
         fhicl::Atom<std::string> SplineFileXTXW_Q {
             Name("SplineFileXTXW_Q"), Comment("ROOT file containing TGraph2D for ADC scaling in each plane by X and Theta_XW")
         };
@@ -141,6 +148,7 @@ private:
     art::InputTag fWireAssnLabel; 
     bool applyYZScale;
     bool applyXXZAngleScale;
+    bool additiveModification;
 
     std::vector<TGraph2D*> splines_x_txw_q;
     std::vector<TGraph2D*> splines_x_txw_w;
@@ -162,7 +170,8 @@ WireModifier::WireModifier(Parameters const& config) :
     fMCPartAssnLabel(config().MCPartAssnLabel()),
     fWireAssnLabel(config().WireAssnLabel()),
     applyYZScale(config().ApplyYZScale()), 
-    applyXXZAngleScale(config().ApplyXXZAngleScale())
+    applyXXZAngleScale(config().ApplyXXZAngleScale()),
+    additiveModification(config().AdditiveModification())
 {
 
     cet::search_path sp("FW_SEARCH_PATH");
@@ -211,6 +220,7 @@ void WireModifier::produce(art::Event& evt) {
     sys::WireModUtility wmUtil(fGeometry, fWireReadout, det_prop);
     wmUtil.applyYZScale = applyYZScale;
     wmUtil.applyXXZAngleScale = applyXXZAngleScale;
+    wmUtil.additiveModification = additiveModification;
     // Defaults to true in the library, but this module supplies its own
     // theta_XW scaling below; leaving it on would double-count.
     wmUtil.applyXXWScale = false;
