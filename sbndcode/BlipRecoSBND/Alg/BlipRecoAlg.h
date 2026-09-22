@@ -159,6 +159,7 @@ namespace blip {
     float               fMatchMaxQRatio;
     std::vector<float>  fTimeOffset;
     bool                fApplyXTicksOffset;
+    float               fMinClusterMatchScore;
     float               fMatchMinOverlap;
     float               fMatchSigmaFact;
     float               fMatchMaxTicks;

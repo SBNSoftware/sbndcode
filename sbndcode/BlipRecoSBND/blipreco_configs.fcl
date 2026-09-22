@@ -22,7 +22,8 @@ sbnd_blipalg:
   HitClustWireRange:    1               #// clustering wire width
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
-  ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching
+  MinClusterMatchScore: 0.5
+  ClustMatchMinOverlap: 0.7             #// minimum fractional overlap to be eligible for matching
   ClustMatchMaxTicks:   2.0             #// max extent for matching start/end time of clusters [ticks]
   ClustMatchSigmaFact:  0.8             #// max extent for matching charge-weighted time [xRMS]
   ClustMatchMaxQRatio:  4.0             #// max allowed charge ratio of two clusters to be matched

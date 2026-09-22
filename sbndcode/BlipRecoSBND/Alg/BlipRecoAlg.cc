@@ -260,6 +260,7 @@ namespace blip {
     
     fApplyXTicksOffset  = pset.get<bool>          ("ApplyXTicksOffset",     true);
     fTimeOffset         = pset.get<std::vector<float>>("TimeOffset", {0.,0.,0.});
+    fMinClusterMatchScore = pset.get<float>         ("MinClusterMatchScore",  0.5 );
     fMatchMinOverlap    = pset.get<float>         ("ClustMatchMinOverlap",  0.5 );
     fMatchSigmaFact     = pset.get<float>         ("ClustMatchSigmaFact",   1.0);
     fMatchMaxTicks      = pset.get<float>         ("ClustMatchMaxTicks",    5.0 );
@@ -992,6 +993,7 @@ namespace blip {
               if( overlapFrac   < fMatchMinOverlap  ) continue;
               if( fabs(dt)      > fMatchMaxTicks    ) continue;
               if( fabs(dtfrac)  > fMatchSigmaFact   ) continue;
+              if( score < fMinClusterMatchScore     ) continue;
               if( qdiff         > _matchQDiffLimit 
                && ratio         > _matchMaxQRatio   ) continue;
               
@@ -1286,6 +1288,7 @@ namespace blip {
     printf("  Input trk collection      : %s\n",          fTrkProducer.c_str());
     printf("  Max wires per cluster     : %i\n",          fMaxWiresInCluster);
     printf("  Max cluster timespan      : %.1f ticks\n",    fMaxClusterSpan);
+    printf("  Min cluster match score   : %4.1f\n",       fMinClusterMatchScore);
     printf("  Min cluster overlap       : %4.1f\n",       fMatchMinOverlap);
     printf("  Clust match sigma-factor  : %4.1f\n",       fMatchSigmaFact);
     printf("  Clust match max dT        : %4.1f ticks\n", fMatchMaxTicks);
