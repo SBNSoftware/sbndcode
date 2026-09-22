@@ -315,24 +315,40 @@ local wcls_output_sp = {
 local dnnroi = import 'dnnroi.jsonnet';
 
 local ts_p0 = {
-    type: "TorchService",
+    //type: "TorchService",
+    //name: "dnnroi_p0",
+    //tick_per_slice: tick_per_slice, 
+    //data: {
+    //    model: dnnroi_model_p0,
+    //    device: wc_device,
+    //    concurrency: 1,
+    //},
+    type: "TritonService",
     name: "dnnroi_p0",
-    tick_per_slice: tick_per_slice, 
     data: {
-        model: dnnroi_model_p0,
-        device: wc_device,
-        concurrency: 1,
+        url: "ailab01.fnal.gov:8101",  // self-built SBND server (triton_sbnd/run_triton.sh)
+        //url: "triton.fnal.gov:443",
+        model: "dnnroi-sbnd-plane0",
+        soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
     },
 };
 
 local ts_p1 = {
-    type: "TorchService",
+    //type: "TorchService",
+    //name: "dnnroi_p1",
+    //tick_per_slice: tick_per_slice, 
+    //data: {
+    //    model: dnnroi_model_p1,
+    //    device: wc_device,
+    //    concurrency: 1,
+    //},
+    type: "TritonService",
     name: "dnnroi_p1",
-    tick_per_slice: tick_per_slice, 
     data: {
-        model: dnnroi_model_p1,
-        device: wc_device,
-        concurrency: 1,
+        url: "ailab01.fnal.gov:8101",  // self-built SBND server (triton_sbnd/run_triton.sh)
+        //url: "triton.fnal.gov:443",
+        model: "dnnroi-sbnd-plane1",
+        soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
     },
 };
 
