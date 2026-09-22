@@ -1,0 +1,10 @@
+# Mother and daughters PDG codes for decay filter
+
+sbnd_lambda_charged_decay_filter:
+{
+    module_type:	"DecayFilterG4"
+	MCModuleLabel: "largeant"
+
+	MotherPDG: 3122
+	DaughterPDG: [2212, -211]
+}
