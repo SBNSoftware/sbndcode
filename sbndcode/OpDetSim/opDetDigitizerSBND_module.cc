@@ -562,7 +562,7 @@ namespace opdet {
       auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
 
       std::vector<std::vector<int>> SlicedMonPulses;
-        for (auto [start, end] : intervals) {
+      for (auto [start, end] : intervals) {
           if (start < 0) start = 0;
           if (end > static_cast<int>(MonPulse->size())) end = static_cast<int>(MonPulse->size());
           if (start >= end) continue;
@@ -570,7 +570,7 @@ namespace opdet {
           slicedMonPulse.reserve(end - start);
           for (int idx = start; idx < end; ++idx) slicedMonPulse.push_back((*MonPulse)[idx]);
           if (!slicedMonPulse.empty()) SlicedMonPulses.push_back(std::move(slicedMonPulse));
-        }
+      }
       return SlicedMonPulses;
   }
 
