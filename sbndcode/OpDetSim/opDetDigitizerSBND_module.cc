@@ -522,27 +522,27 @@ namespace opdet {
       }
 
       // create 10us (or given) slices around crossingPoints
-      for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
-          // if near end of full waveform
-          if (crossingPoints[j] + ticksAfterCross > static_cast<int>(pulse->size())) {
-              interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, static_cast<int>(pulse->size()) - 1);
-          }
-          // if near beginning of full waveform
-          else if (crossingPoints[j] - ticksBeforeCross < 0) {
-              interestIntervals.emplace_back(0, crossingPoints[j] + ticksAfterCross);
-          }
-          else {
-              // check if overlaps with previous interval
-              if (!interestIntervals.empty() && crossingPoints[j] - ticksBeforeCross < interestIntervals.back().second) {
-                  // if overlaps, extend interval
-                  interestIntervals.back() = {interestIntervals.back().first, crossingPoints[j] + ticksAfterCross};
+        for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
+            // compute proposed start/end (end will be exclusive)
+            int proposedStart = crossingPoints[j] - ticksBeforeCross;
+            //int proposedEnd   = crossingPoints[j] + ticksAfterCross + 1; // make end exclusive
+            int proposedEnd   = crossingPoints[j] + ticksAfterCross; // make end exclusive
+
+            // clamp to valid range
+            if (proposedStart < 0) proposedStart = 0;
+            if (proposedEnd > static_cast<int>(pulse->size())) proposedEnd = static_cast<int>(pulse->size());
+
+            // merge with previous interval if overlapping or contiguous
+            if (!interestIntervals.empty() && proposedStart <= interestIntervals.back().second) {
+              // extend previous interval's end if needed
+              if (proposedEnd > interestIntervals.back().second) {
+                interestIntervals.back().second = proposedEnd;
               }
-              // if does not overlap or if first, use typical interval length
-              else {
-                  interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, crossingPoints[j] + ticksAfterCross);
-              }
+            }
+            else {
+              interestIntervals.emplace_back(proposedStart, proposedEnd);
+            }
           }
-      }
 
       return interestIntervals;
   }
@@ -563,10 +563,15 @@ namespace opdet {
       auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
 
       std::vector<std::vector<int>> SlicedMonPulses;
-      for (auto [start, end] : intervals) {
-          std::vector<int> slicedMonPulse(MonPulse->begin() + start, MonPulse->begin() + end);
+        for (auto [start, end] : intervals) {
+          if (start < 0) start = 0;
+          if (end > static_cast<int>(MonPulse->size())) end = static_cast<int>(MonPulse->size());
+          if (start >= end) continue;
+          std::vector<int> slicedMonPulse;
+          slicedMonPulse.reserve(end - start);
+          for (int idx = start; idx < end; ++idx) slicedMonPulse.push_back((*MonPulse)[idx]);
           if (!slicedMonPulse.empty()) SlicedMonPulses.push_back(std::move(slicedMonPulse));
-      }
+        }
       return SlicedMonPulses;
   }
 
@@ -593,8 +598,14 @@ namespace opdet {
           const raw::OpDetWaveform& wf = fWaveforms[chan];
 
           for (auto [start, end] : intervals) {
+              if (start < 0) start = 0;
+              if (end > static_cast<int>(wf.size())) end = static_cast<int>(wf.size());
+              if (start >= end) continue;
+
               double sliceTime = wf.TimeStamp() + start * tickPeriod;
-              std::vector<uint16_t> sliceData(wf.begin() + start, wf.begin() + end);
+              std::vector<uint16_t> sliceData;
+              sliceData.reserve(end - start);
+              for (int idx = start; idx < end; ++idx) sliceData.push_back(wf[idx]);
 
               if (!sliceData.empty()) {
                   raw::OpDetWaveform slice(sliceTime, wf.ChannelNumber(), sliceData);
