@@ -523,9 +523,8 @@ namespace opdet {
 
       // create 10us (or given) slices around crossingPoints
         for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
-            // compute proposed start/end (end will be exclusive)
+            // compute proposed start/end
             int proposedStart = crossingPoints[j] - ticksBeforeCross;
-            //int proposedEnd   = crossingPoints[j] + ticksAfterCross + 1; // make end exclusive
             int proposedEnd   = crossingPoints[j] + ticksAfterCross; // make end exclusive
 
             // clamp to valid range
