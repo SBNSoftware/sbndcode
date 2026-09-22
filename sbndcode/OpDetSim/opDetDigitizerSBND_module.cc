@@ -525,7 +525,7 @@ namespace opdet {
         for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
             // compute proposed start/end
             int proposedStart = crossingPoints[j] - ticksBeforeCross;
-            int proposedEnd   = crossingPoints[j] + ticksAfterCross; // make end exclusive
+            int proposedEnd   = crossingPoints[j] + ticksAfterCross;
 
             // clamp to valid range
             if (proposedStart < 0) proposedStart = 0;
