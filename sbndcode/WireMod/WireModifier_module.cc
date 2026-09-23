@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -360,14 +362,47 @@ void WireModifier::produce(art::Event& evt) {
                 // TODO for SBND SPRING PRODUCTION ONLY using sim::IDEs
                 // We will use WireMod Utility functions for most of this once
                 // we have access to SimEnergyDeposits
+                //
+                // Take the charge-weighted IDE position in case there is more
+                // than one IDE
+                double sum_w  = 0.;
+                double sum_wx = 0.;
+                double sum_wy = 0.;
+                double sum_wz = 0.;
+                double y_min  = std::numeric_limits<double>::max();
+                double y_max  = std::numeric_limits<double>::lowest();
+                size_t n_ide  = 0;
+                const sim::IDE* first_ide = nullptr;
+
                 for (const auto& id_ide : id_to_ide) {
                     const auto id = id_ide.first;
                     if (wire.Channel() != fWireReadout->PlaneWireToChannel(id)) continue;
                     const auto ide_ptr = id_ide.second;
                     if (!wiremod::ide_in_tpc(ide_ptr)) continue;
 
-                    // get the plane & corresponding spline
-                    const geo::TPCGeo& tpc_geom = fGeometry->PositionToTPC({ ide_ptr->x, ide_ptr->y, ide_ptr->z });
+                    const double w_ide = ide_ptr->numElectrons;
+                    if (!(w_ide > 0.)) continue;
+
+                    if (first_ide == nullptr) first_ide = ide_ptr;
+                    sum_w  += w_ide;
+                    sum_wx += w_ide * ide_ptr->x;
+                    sum_wy += w_ide * ide_ptr->y;
+                    sum_wz += w_ide * ide_ptr->z;
+                    y_min = std::min(y_min, static_cast<double>(ide_ptr->y));
+                    y_max = std::max(y_max, static_cast<double>(ide_ptr->y));
+                    ++n_ide;
+                }
+
+                // no usable IDE on this channel, leave this subROI unscaled
+                if (first_ide == nullptr) continue;
+
+                const double ide_x = sum_wx / sum_w;
+                const double ide_y = sum_wy / sum_w;
+                const double ide_z = sum_wz / sum_w;
+
+                {
+                    // original tpc lookup, instead of charge-weighted one
+                    const geo::TPCGeo& tpc_geom = fGeometry->PositionToTPC({ first_ide->x, first_ide->y, first_ide->z });
                     const auto plane = fWireReadout->Plane(tpc_geom.ID(), wire.View());
                     unsigned int ip = plane.ID().Plane;
 
@@ -377,8 +412,8 @@ void WireModifier::produce(art::Event& evt) {
                     if (wmUtil.applyYZScale) { 
                         TGraph2D* spline_yz_q = splines_y_z_q.at(plane_idx);
                         TGraph2D* spline_yz_w = splines_y_z_w.at(plane_idx);
-                        factor_yz_q = spline_yz_q->Interpolate(ide_ptr->y, ide_ptr->z);
-                        factor_yz_w = spline_yz_w->Interpolate(ide_ptr->y, ide_ptr->z);
+                        factor_yz_q = spline_yz_q->Interpolate(ide_y, ide_z);
+                        factor_yz_w = spline_yz_w->Interpolate(ide_y, ide_z);
                         factor_q *= factor_yz_q;
                         factor_w *= factor_yz_w;
                     }
@@ -390,18 +425,19 @@ void WireModifier::produce(art::Event& evt) {
                         if (std::abs(txw) < fMaxThetaXW) {
                             TGraph2D* spline_xtxw_q = splines_x_txw_q.at(plane_idx);
                             TGraph2D* spline_xtxw_w = splines_x_txw_w.at(plane_idx);
-                            factor_xtxw_q = spline_xtxw_q->Interpolate(ide_ptr->x, txw);
-                            factor_xtxw_w = spline_xtxw_w->Interpolate(ide_ptr->x, txw);
+                            factor_xtxw_q = spline_xtxw_q->Interpolate(ide_x, txw);
+                            factor_xtxw_w = spline_xtxw_w->Interpolate(ide_x, txw);
                             factor_q *= factor_xtxw_q;
                             factor_w *= factor_xtxw_w;
                         }
                     }
                 
                     MF_LOG_INFO("WireModifier")
-                        << "IDE info\n"
-                        << " - x: " << ide_ptr->x << "\n"
-                        << " - y: " << ide_ptr->y << "\n"
-                        << " - z: " << ide_ptr->z << "\n"
+                        << "IDE info (charge-weighted position over " << n_ide << " IDEs)\n"
+                        << " - x: " << ide_x << "\n"
+                        << " - y: " << ide_y << "\n"
+                        << " - z: " << ide_z << "\n"
+                        << " - y span: " << (y_max - y_min) << "\n"
                         << " - dirx: " << mcp_dir.X() << "\n"
                         << " - diry: " << mcp_dir.Y() << "\n"
                         << " - dirz: " << mcp_dir.Z() << "\n"
@@ -414,7 +450,6 @@ void WireModifier::produce(art::Event& evt) {
                         << " - YZ Spline (q, w): " << factor_yz_q << " " << factor_yz_w << "\n"
                         << " - XThetaXW Spline (q, w): " << factor_xtxw_q << " " << factor_xtxw_w << "\n"
                         << " - Total Spline (q, w): " << factor_q << " " << factor_w << "\n";
-                    break;
                 }
 
                 scale_vals.r_Q *= factor_q;
