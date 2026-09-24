@@ -1,6 +1,11 @@
-
+include(CetTest)
 # geometry test on SBND geometries
-
+cet_transitive_paths(FHICL_DIR BINARY IN_TREE)
+cet_test_env_prepend(FHICL_FILE_PATH "." ${TRANSITIVE_PATHS_WITH_FHICL_DIR} ${CMAKE_CURRENT_LIST_DIR})
+cet_transitive_paths(LIBRARY_DIR BINARY IN_TREE)
+cet_test_env_prepend(CET_PLUGIN_PATH ${TRANSITIVE_PATHS_WITH_LIBRARY_DIR})
+cet_transitive_paths(GDML_DIR BINARY IN_TREE)
+cet_test_env_prepend(FW_SEARCH_PATH ${TRANSITIVE_PATHS_WITH_GDML_DIR})
 # these tests run a FCL file and fail only if lar exits with a bad exit code;
 # they are fast and always run.
 # FCL files need to be copied to the test area (DATAFILES directive) since they

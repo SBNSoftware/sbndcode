@@ -19,6 +19,6 @@ art_make_library( SOURCE NuAnaAlg.cxx
             CLHEP::CLHEP
             ROOT::Core
           )
-target_include_directories (sbndcode_MCTruthExtractor_alg PRIVATE $ENV{GENIE_INC}/GENIE )
+target_include_directories (sbndcode_MCTruthExtractor_alg PRIVATE $ENV{GENIE_INC}/GENIE ${GENIE_INCLUDE_DIRS})
 install_headers()
 

@@ -12,7 +12,7 @@ $${\color{blue}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 - [ ] Assigned at least 1 reviewer under `Reviewers`,
 - [ ] Assigned all contributers including yourself under `Assignees`
 - [ ] Linked any relevant issues under `Developement`
-- [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer ([PetrilloAtWork](https://github.com/PetrilloAtWork) or [JosiePaton](https://github.com/JosiePaton)) as additional reviewer.
+- [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer ([PetrilloAtWork](https://github.com/PetrilloAtWork) or [tjones79](https://github.com/tjones79)) as additional reviewer.
 - [ ] Does this affect the standard workflow? 
 - [ ] Is this PR a patch for the ongoing production? If so, separate PR must also be made for production/v10_06_00 branch! 
 
