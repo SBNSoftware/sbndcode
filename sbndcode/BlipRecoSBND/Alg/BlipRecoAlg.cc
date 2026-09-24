@@ -218,8 +218,8 @@ namespace blip {
   //Destructor
   BlipRecoAlg::~BlipRecoAlg()
   {
-    delete fCaloAlg;
-    delete ElifetimeTool;
+    //delete fCaloAlg;
+    //delete ElifetimeTool;
   }
   
   
@@ -268,8 +268,8 @@ namespace blip {
     fApplyTrkCylinderCut= pset.get<bool>          ("ApplyTrkCylinderCut", false);
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
-    fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
-    ElifetimeTool       = new sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
+    fCaloAlg            = std::make_unique(calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") ));
+    ElifetimeTool       = std::make_unique(sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift")));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
@@ -1145,12 +1145,10 @@ namespace blip {
       float depEl   = std::max(0.0,(double)blip.Charge);
       float Efield  = kNominalEfield;
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
-      blip.EnergyNoDriftCorrection   = depEl * (1./recomb) * kWion;
+      blip.EnergyNoDriftCorrection   = depEl/recomb * kWion;
       // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
-      float energy_estar = Q_to_E_ESTAR(depEl);
-      float energy_pstar = Q_to_E_PSTAR(depEl);
-      blip.EnergyESTARNoDriftCorrection  = energy_estar;
-      blip.EnergyPSTARNoDriftCorrection  = energy_pstar;
+      blip.EnergyESTARNoDriftCorrection  = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTARNoDriftCorrection  = Q_to_E_PSTAR(depEl);
       // --- Lifetime correction ---
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
@@ -1194,12 +1192,10 @@ namespace blip {
       }
       
       // METHOD 1: recombination factor from Mod Box model with a fixed dE/dx (fCalodEdx)
-      blip.Energy   = depEl * (1./recomb) * kWion;
+      blip.Energy   = depEl/recomb * kWion;
       // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
-      energy_estar = Q_to_E_ESTAR(depEl);
-      energy_pstar = Q_to_E_PSTAR(depEl); //reaculate after drift correction
-      blip.EnergyESTAR = energy_estar;
-      blip.EnergyPSTAR = energy_pstar;
+      blip.EnergyESTAR = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTAR = Q_to_E_PSTAR(depEl);
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
       //blips[i].EnergyESTAR = ESTAR->Interpolate(depEl, Efield); 
       

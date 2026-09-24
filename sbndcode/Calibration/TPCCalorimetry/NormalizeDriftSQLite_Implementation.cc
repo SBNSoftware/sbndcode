@@ -1,3 +1,13 @@
+#include "art/Framework/Principal/Handle.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Persistency/Common/PtrMaker.h"
+
+#include "cetlib_except/exception.h"
+#include "cetlib/cpu_timer.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
+
+
+
 sbnd::calo::NormalizeDriftSQLite::NormalizeDriftSQLite(fhicl::ParameterSet const &pset):
   fDBFileName(pset.get<std::string>("DBFileName")),
   fDBTag(pset.get<std::string>("DBTag")),
