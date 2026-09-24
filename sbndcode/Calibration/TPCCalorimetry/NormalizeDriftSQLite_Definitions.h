@@ -1,20 +1,15 @@
 // Framework Includes
 //#include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Persistency/Common/PtrMaker.h"
-#include "art/Utilities/ToolMacros.h"
-#include "cetlib_except/exception.h"
-#include "cetlib/cpu_timer.h"
+
+
 #include "fhiclcpp/ParameterSet.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "larevt/CalibrationDBI/Providers/DBFolder.h"
 
-// Tool include
+#include "lardataobj/RecoBase/Hit.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "larreco/Calorimetry/INormalizeCharge.h"
-
 // Services
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
@@ -25,6 +20,8 @@
 #include <string>
 #include <optional>
 #include <cassert>
+#include <map>
+#include <cstdint>
 
 namespace sbnd {
   namespace calo {

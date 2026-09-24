@@ -127,7 +127,7 @@ namespace blip {
 
    private:
     
-    calo::CalorimetryAlg*         fCaloAlg;
+    std::unique_ptr<calo::CalorimetryAlg>         fCaloAlg;
     geo::GeometryCore const&      fGeom;
     
     CTPMap_t  kXTicksOffsets;
@@ -189,7 +189,7 @@ namespace blip {
     bool                fYZUniformityCorr;
     float               fModBoxA;
     float               fModBoxB;
-    sbnd::calo::NormalizeDriftSQLite* ElifetimeTool;
+    std::unique_ptr<sbnd::calo::NormalizeDriftSQLite> ElifetimeTool;
     sbnd::calo::NormalizeDriftSQLite::RunInfo EventTPCLifetimes;
 
     // --- Splines for calo
