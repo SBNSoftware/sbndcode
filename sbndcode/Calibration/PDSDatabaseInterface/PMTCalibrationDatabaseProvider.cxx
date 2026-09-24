@@ -323,30 +323,20 @@ void sbndDB::PMTCalibrationDatabaseProvider::readPMTCalibrationDatabase(const ar
 sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDB sbndDB::PMTCalibrationDatabaseProvider::scalePMTCalibrationData(
         const PMTCalibrationDB& db, const PMTCalibrationDBScales& scales) const
 {
-    PMTCalibrationDB result;
+    PMTCalibrationDB result = db;
 
-    // copy IDs, no modification
-    result.breakoutBox = db.breakoutBox;
-    result.caenDigitizer = db.caenDigitizer;
-    result.caenDigitizerChannel = db.caenDigitizerChannel;
-
-    // copy and scale calibrations
-    // bools: change value if set
     if (scales.onPMT) result.onPMT = scales.onPMT.value();
     if (scales.reconstructChannel) result.reconstructChannel = scales.reconstructChannel.value();
 
     // otherwise multiply
-    result.totalTransitTime = db.totalTransitTime * scales.totalTransitTime.value_or(1.0);
-    result.cosmicTimeCorrection = db.cosmicTimeCorrection * scales.cosmicTimeCorrection.value_or(1.0);
-    result.spe_amplitude = db.spe_amplitude * scales.spe_amplitude.value_or(1.0);
-    result.spe_amplitude_std = db.spe_amplitude_std * scales.spe_amplitude_std.value_or(1.0);
-    result.gauss_wc_power = db.gauss_wc_power * scales.gauss_wc_power.value_or(1.0);
-    result.gauss_wc = db.gauss_wc * scales.gauss_wc.value_or(1.0);
-    result.nonlinearity_pesat = db.nonlinearity_pesat * scales.nonlinearity_pesat.value_or(1.0);
-    result.nonlinearity_alpha = db.nonlinearity_alpha * scales.nonlinearity_alpha.value_or(1.0);
-
-    // TODO not implemented
-    result.ser = db.ser;
+    result.totalTransitTime *= scales.totalTransitTime.value_or(1.0);
+    result.cosmicTimeCorrection *= scales.cosmicTimeCorrection.value_or(1.0);
+    result.spe_amplitude *= scales.spe_amplitude.value_or(1.0);
+    result.spe_amplitude_std *= scales.spe_amplitude_std.value_or(1.0);
+    result.gauss_wc_power *= scales.gauss_wc_power.value_or(1.0);
+    result.gauss_wc *= scales.gauss_wc.value_or(1.0);
+    result.nonlinearity_pesat *= scales.nonlinearity_pesat.value_or(1.0);
+    result.nonlinearity_alpha *= scales.nonlinearity_alpha.value_or(1.0);
 
     return result;
 }
