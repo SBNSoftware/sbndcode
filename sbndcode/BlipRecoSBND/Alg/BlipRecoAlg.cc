@@ -268,8 +268,8 @@ namespace blip {
     fApplyTrkCylinderCut= pset.get<bool>          ("ApplyTrkCylinderCut", false);
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
-    fCaloAlg            = std::make_unique(calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") ));
-    ElifetimeTool       = std::make_unique(sbnd::calo::NormalizeDriftSQLite( pset.get<fhicl::ParameterSet>("NormalizeDrift")));
+    fCaloAlg            = std::make_unique<calo::CalorimetryAlg>( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    ElifetimeTool       = std::make_unique<sbnd::calo::NormalizeDriftSQLite>( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
