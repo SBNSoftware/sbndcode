@@ -35,7 +35,8 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            sbndcode_CRTUtils
                            sbnobj::Common_CRT
                            sbndcode_BlipUtils
-			               sbnobj::SBND_Blip
+			   sbnobj::SBND_Blip
+                           sbndcode::Calibration_TPCCalorimetry_NormalizeDriftSQLite
 )
 
 install_headers()

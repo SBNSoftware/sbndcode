@@ -256,6 +256,9 @@ class BlipAnaTreeDataStruct
   float blip_energy[kMaxBlips];       // blip reco energy [MeV]
   float blip_energy_estar[kMaxBlips]; // blip reco energy [MeV], based on ESTAR
   float blip_energy_pstar[kMaxBlips]; // blip reco energy [MeV], based on PSTAR
+  float blip_energy_nodriftcorr[kMaxBlips];       // blip reco energy [MeV]
+  float blip_energy_estar_nodriftcorr[kMaxBlips]; // blip reco energy [MeV], based on ESTAR
+  float blip_energy_pstar_nodriftcorr[kMaxBlips]; // blip reco energy [MeV], based on PSTAR
   float blip_energyTrue[kMaxBlips];   // blip truth energy [MeV]
   float blip_yzcorr[kMaxBlips];       // YZ uniformity correction factor (already applied)
   bool  blip_isMC[kMaxBlips];         // blip is matched to MC particle
@@ -408,6 +411,9 @@ class BlipAnaTreeDataStruct
     FillWith(blip_energy,     -999);
     FillWith(blip_energy_estar, -999);
     FillWith(blip_energy_pstar, -999);
+    FillWith(blip_energy_nodriftcorr,     -999);
+    FillWith(blip_energy_estar_nodriftcorr, -999);
+    FillWith(blip_energy_pstar_nodriftcorr, -999);
     FillWith(blip_energyTrue, -999);
     FillWith(blip_yzcorr,     -9);
     FillWith(blip_proxtrkdist,-99);
@@ -522,6 +528,9 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_energy",blip_energy,"blip_energy[nblips]/F");
     evtTree->Branch("blip_energy_estar",blip_energy_estar,"blip_energy_estar[nblips]/F");
     evtTree->Branch("blip_energy_pstar",blip_energy_pstar,"blip_energy_pstar[nblips]/F");
+    evtTree->Branch("blip_energy_nodriftcorr",blip_energy_nodriftcorr,"blip_energy_nodriftcorr[nblips]/F");
+    evtTree->Branch("blip_energy_estar_nodriftcorr",blip_energy_estar_nodriftcorr,"blip_energy_estar_nodriftcorr[nblips]/F");
+    evtTree->Branch("blip_energy_pstar_nodriftcorr",blip_energy_pstar_nodriftcorr,"blip_energy_pstar_nodriftcorr[nblips]/F");
     //evtTree->Branch("blip_yzcorr",blip_yzcorr,"blip_yzcorr[nblips]/F");
     //evtTree->Branch("blip_energyTrue",blip_energyTrue,"blip_energyTrue[nblips]/F");
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
@@ -1369,6 +1378,9 @@ void BlipAna::analyze(const art::Event& evt)
     fData->blip_energy[i]      = blp.Energy;
     fData->blip_energy_estar[i]= blp.EnergyESTAR;
     fData->blip_energy_pstar[i]= blp.EnergyPSTAR;
+    fData->blip_energy_nodriftcorr[i]      = blp.EnergyNoDriftCorrection;
+    fData->blip_energy_estar_nodriftcorr[i]= blp.EnergyESTARNoDriftCorrection;
+    fData->blip_energy_pstar_nodriftcorr[i]= blp.EnergyPSTARNoDriftCorrection;
 
     //fData->blip_yzcorr[i]     = tpcCalib.YZdqdxCorrection(fCaloPlane,blp.Position.Y(),blp.Position.Z());
     
