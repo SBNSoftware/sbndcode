@@ -33,9 +33,10 @@ physics:
     crtclustering:  @local::crtclusterproducer_sbnd
     crtspacepoints: @local::crtspacepointproducer_sbnd
     crttracks:      @local::crttrackproducer_sbnd
+    crtblobs:       @local::crtblobproducer_sbnd
   }
 
-  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks ]
+  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
   stream1: [ out1 ]
 
   trigger_paths: [ reco ]

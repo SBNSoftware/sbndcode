@@ -30,6 +30,8 @@ sbnd_data_badchannels_east_dead_femb: [
 #Shorted channels                                      
 sbnd_data_badchannels_west_plane0_shorted: [ 7169 ]
 sbnd_data_badchannels_west_plane1_shorted: [ 8378 ]
+sbnd_data_badchannels_east_plane1_shorted: [ 3048 ]
+sbnd_data_badchannels_east_plane2_shorted: [ 4405 ]
 
 #No response from channels
 sbnd_data_badchannels_no_response: [ 546, 607, 2781, 7166, 7167, 8574, 8395, 11147 ]

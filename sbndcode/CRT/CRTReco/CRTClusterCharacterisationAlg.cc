@@ -198,14 +198,8 @@ namespace sbnd::crt {
   void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
                                                   double &t0, double &et0, double &t1, double &et1)
   {
-    const double dist0 = fCRTGeoService->DistanceDownStrip(pos, hit0->Channel());
-    const double dist1 = fCRTGeoService->DistanceDownStrip(pos, hit1->Channel());
-
-    const double pe0 = ReconstructPE(hit0, dist0);
-    const double pe1 = ReconstructPE(hit1, dist1);
-
-    const double corr0 = TimingCorrectionOffset(dist0, pe0);
-    const double corr1 = TimingCorrectionOffset(dist1, pe1);
+    const double corr0 = TimingCorrectionOffset(hit0, pos);
+    const double corr1 = TimingCorrectionOffset(hit1, pos);
 
     t0  = (hit0->Ts0() - corr0 + hit1->Ts0() - corr1) / 2.;
     et0 = std::abs((hit0->Ts0() - corr0) - (hit1->Ts0() - corr1)) / 2.;
@@ -214,12 +208,25 @@ namespace sbnd::crt {
     et1 = std::abs((hit0->Ts1() - corr0) - (hit1->Ts1() - corr1)) / 2.;
   }
 
-  double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)
+  double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos)
   {
-
-    double t_TimeWalk  = fTimeWalkNorm * std::exp(- fTimeWalkScale * pe);
-    double t_PropDelay = fPropDelay * dist;
+    double t_TimeWalk  = TimeWalk(hit, pos);
+    double t_PropDelay = PropagationDelay(hit, pos);
     return t_PropDelay + t_TimeWalk;
+  }
+
+  double CRTClusterCharacterisationAlg::TimeWalk(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos)
+  {
+    const double dist = fCRTGeoService->DistanceDownStrip(pos, hit->Channel());
+    const double pe   = ReconstructPE(hit, dist);
+
+    return fTimeWalkNorm * std::exp(-fTimeWalkScale * pe);
+  }
+
+  double CRTClusterCharacterisationAlg::PropagationDelay(const art::Ptr<CRTStripHit> &hit, const geo::Point_t &pos)
+  {
+    const double dist = fCRTGeoService->DistanceDownStrip(pos, hit->Channel());
+    return fPropDelay * dist;
   }
 
   void CRTClusterCharacterisationAlg::AggregatePositions(const std::vector<CRTSpacePoint> &complete_spacepoints, geo::Point_t &pos, geo::Point_t &err)

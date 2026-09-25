@@ -27,14 +27,14 @@
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/WireReadout.h"
-//#include "larcorealg/Geometry/GeometryCore.h"
-//#include "larcorealg/Geometry/WireReadoutGeom.h"
+#include "larcorealg/Geometry/geo_vectors_utils.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // c++
 #include <vector>
 #include <map>
 
-#include "sbndcode/BlipRecoSBND/Utils/DataTypes.h"
+#include "sbnobj/SBND/Blip/BlipDataTypes.h"
 #include "TH1D.h"
 
 typedef std::vector<art::Ptr<sim::SimEnergyDeposit>> SEDVec_t;
@@ -78,7 +78,7 @@ namespace BlipUtils {
   //void    HitTruth(art::Ptr<recob::Hit> const&, int&, float&, float&, float&);
   //si_t    HitTruthIds( art::Ptr<recob::Hit> const&);
   //bool    G4IdToMCTruth( int const, art::Ptr<simb::MCTruth>&);
-  double  PathLength(const simb::MCParticle&, TVector3&, TVector3&);
+  double  PathLength(const simb::MCParticle&, geo::Point_t&, geo::Point_t&);
   double  PathLength(const simb::MCParticle&);
   bool    IsAncestorOf(int, int, bool, bool);
   double  DistToBoundary(const recob::Track::Point_t&);

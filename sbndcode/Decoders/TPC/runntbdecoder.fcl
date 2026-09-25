@@ -22,7 +22,7 @@ outputs: {
   commissioning: {
     module_type: "RootOutput"
     fileName: "%ifb_ntbdecode.root"
-    dataTier: "decoded-raw"
+    dataTier: "reconstructed"
   }
 }
 

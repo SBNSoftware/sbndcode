@@ -2,7 +2,7 @@ install_headers()
 install_fhicl()
 install_source()
 
-file(GLOB channel_map_file *ChannelMap*.txt)
+file(GLOB channel_map_file *Map*.txt)
 install_fw( LIST ${channel_map_file} )
 
 art_make(SERVICE_LIBRARIES 

@@ -25,7 +25,7 @@ outputs: {
   commissioning: {
     module_type: "RootOutput"
     fileName: "%ifb_tpcdecode.root"
-    dataTier: "decoded-raw"
+    dataTier: "reconstructed"
   }
 }
 

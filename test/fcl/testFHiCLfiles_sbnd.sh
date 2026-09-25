@@ -46,13 +46,14 @@ if [[ -n "$MRB_BUILDDIR" ]]; then
   fi
 fi
 
-if [[ -n "$MRB_SOURCE" ]]; then
-  SourceFHiCLdir="${MRB_SOURCE}/sbndcode/sbndcode/JobConfigurations"
-  if [[ -d "$SourceFHiCLdir" ]]; then
-    echo "Will test the job configuration directory in MRB source area ('${SourceFHiCLdir}')"
-    TestDirs+=( "$SourceFHiCLdir" )
-  fi
-fi
+# DO NOT test files that are not installed
+#if [[ -n "$MRB_SOURCE" ]]; then
+#  SourceFHiCLdir="${MRB_SOURCE}/sbndcode/sbndcode/JobConfigurations"
+#  if [[ -d "$SourceFHiCLdir" ]]; then
+#    echo "Will test the job configuration directory in MRB source area ('${SourceFHiCLdir}')"
+#    TestDirs+=( "$SourceFHiCLdir" )
+#  fi
+#fi
 
 if [[ "${#TestDirs[@]}]" == 0 ]]; then
   echo "FATAL: no suitable FHiCL directory found to be tested!" >&2

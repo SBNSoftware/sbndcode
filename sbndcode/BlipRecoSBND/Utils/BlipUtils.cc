@@ -52,7 +52,8 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo){
     // Pathlength (in AV) and start/end point
     pinfo.pathLength  = PathLength( part, pinfo.startPoint, pinfo.endPoint);
     // Central position of trajectory
-    pinfo.position    = 0.5*(pinfo.startPoint+pinfo.endPoint);
+    pinfo.Position = geo::vect::middlePoint({ pinfo.startPoint, pinfo.endPoint });
+
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
@@ -157,7 +158,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
 
     // If this is a new blip, initialize
     if( !tblip.G4ChargeMap.size() ) {
-      tblip.Position    = pinfo.position;
+      tblip.Position    = pinfo.Position;
       tblip.Time        = pinfo.time;
     
     // .. otherwise, check that the new particle
@@ -167,7 +168,9 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
-      tblip.Position    = w1*tblip.Position + w2*pinfo.position;
+      tblip.Position.SetXYZ( w1*tblip.Position.X() + w2*pinfo.Position.X(), 
+                            w1*tblip.Position.Y() + w2*pinfo.Position.Y(),
+                            w1*tblip.Position.Z() + w2*pinfo.Position.Z());
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;
     // ... if the particle isn't a match, show's over
@@ -208,7 +211,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
         // check that the times are similar (we don't want to merge
         // together a blip that happened much later but in the same spot)
         if( fabs(blip_i.Time - blip_j.Time) > 5 ) continue;
-        float d = (blip_i.Position-blip_j.Position).Mag();
+        float d = (blip_i.Position-blip_j.Position).R(); //Size of vector spanning two blips
         if( d < dmin ) {
           isGrouped.at(j) = true;
           //float totE = blip_i.Energy + blip_j.Energy;
@@ -216,7 +219,9 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
           float w1 = blip_i.DepElectrons/totQ;
           float w2 = blip_j.DepElectrons/totQ;
           blip_i.Energy       += blip_j.Energy;
-          blip_i.Position     = w1*blip_i.Position + w2*blip_j.Position;
+          blip_i.Position.SetXYZ( w1*blip_i.Position.X() + w2*blip_j.Position.X(), 
+                                  w1*blip_i.Position.Y() + w2*blip_j.Position.Y(),
+                                  w1*blip_i.Position.Z() + w2*blip_j.Position.Z());
           blip_i.DriftTime    = w1*blip_i.DriftTime+ w2*blip_j.DriftTime; 
           blip_i.Time         = w1*blip_i.Time + w2*blip_j.Time; 
           blip_i.DepElectrons += blip_j.DepElectrons;
@@ -387,7 +392,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // ------------------------------------------------
     /// Look for valid wire intersections between 
     // central-most hits in each cluster
-    std::vector<TVector3> wirex;
+    std::vector<geo::Point_t> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
       int pli = hcs[i].Plane;
       auto const& planegeo = wireReadoutGeom->Get().Plane(geo::PlaneID{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane}); 
@@ -415,7 +420,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
         }
 
         if( match3d ) {
-          TVector3 a(0., intsec_p.Y(), intsec_p.Z());
+          geo::Point_t a{0., intsec_p.Y(), intsec_p.Z()};
           wirex.push_back(a);
           newblip.clusters[pli] = hcs[i];
           newblip.clusters[plj] = hcs[j];
@@ -430,12 +435,16 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     // YZ-plane, as well as the mean difference between intersection points.
     newblip.Position.SetXYZ(0,0,0);
     if( wirex.size() == 1 ) {
-      newblip.Position= wirex[0];
+      newblip.Position = wirex[0];
     } else {
       newblip.SigmaYZ = 0;
       double fact = 1./wirex.size();
-      for(auto& v : wirex ) newblip.Position  += v * fact;
-      for(auto& v : wirex ) newblip.SigmaYZ   += (v-newblip.Position).Mag() * fact;
+      for(auto& v : wirex ) newblip.Position.SetXYZ( newblip.Position.X()  + v.X() * fact, 
+                                                     newblip.Position.Y()  + v.Y() * fact, 
+                                                     newblip.Position.Z()  + v.Z() * fact);
+      for(auto& v : wirex ) newblip.SigmaYZ   += TMath::Sqrt( pow(v.X()-newblip.Position.X(), 2) + 
+                                                              pow(v.Y()-newblip.Position.Y(), 2) + 
+                                                              pow(v.Z()-newblip.Position.Z(), 2)) * fact;
       // Ensure that difference between intersection points is
       // consistent with the maximal wire extent
       if( newblip.SigmaYZ > std::max(1.,0.5*newblip.dYZ) ) return newblip;
@@ -625,7 +634,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
   
   //=============================================================================
   // Length of particle trajectory
-  double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end)
+  double PathLength(const simb::MCParticle& part, geo::Point_t& start, geo::Point_t& end)
   {
     int n = part.NumberTrajectoryPoints();
     if( n <= 1 ) return 0.;
@@ -645,7 +654,7 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
     return L;
   }
   double PathLength(const simb::MCParticle& part){
-    TVector3 a,b;
+    geo::Point_t a,b;
     return PathLength(part,a,b);
   }
 

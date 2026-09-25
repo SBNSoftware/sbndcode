@@ -1,0 +1,28 @@
+#include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
+#include "adrift_sbnd.fcl"
+
+process_name: ADRIFT
+
+services:
+{
+  TFileService: { fileName: "adrift_sbnd.root" }
+  @table::sbnd_basic_services
+  @table::crt_services_data_sbnd
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    adrift: @local::adrift_data_sbnd
+  }
+
+  ana:       [ adrift ]
+  end_paths: [ ana ]
+}

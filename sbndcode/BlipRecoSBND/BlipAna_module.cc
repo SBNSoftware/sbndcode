@@ -32,6 +32,7 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 #include "cetlib/search_path.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // SBND-specific includes
 #include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"
@@ -75,7 +76,8 @@ const int kMaxTrks    =   1000;
 const int kMaxBlips   =   5000;
 const int kMaxG4      =   30000;
 const int kMaxEDeps   =   10000;
-const int kMaxTrkPts  =   2000;  
+const int kMaxTrkPts  =   2000; 
+const int kNplanes    = blip::kNplanes;
 
 class BlipAna;
   

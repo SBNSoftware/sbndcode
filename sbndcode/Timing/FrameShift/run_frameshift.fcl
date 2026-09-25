@@ -21,7 +21,7 @@ outputs:
     {
         fileName: "%ifb_frameshift.root"
         module_type: RootOutput
-        dataTier: "reco"
+        dataTier: "reconstructed"
     }
 }
 

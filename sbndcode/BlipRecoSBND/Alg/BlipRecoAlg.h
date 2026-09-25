@@ -38,9 +38,11 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/WireReadoutGeom.h"
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/geo_vectors_utils.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
-
+#include "larcore/Geometry/WireReadout.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // Microboone includes
 //#include "ubevt/Database/TPCEnergyCalib/TPCEnergyCalibService.h"
@@ -54,6 +56,7 @@
 
 // Blip-specific utils
 #include "sbndcode/BlipRecoSBND/Utils/BlipUtils.h"
+#include "sbnobj/SBND/Blip/BlipDataTypes.h"
 
 // ROOT stuff
 #include "TH1D.h"

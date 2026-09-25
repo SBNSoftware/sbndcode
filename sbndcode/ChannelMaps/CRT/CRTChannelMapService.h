@@ -59,6 +59,12 @@ public:
 
   unsigned int GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id);
 
+  unsigned int GetTimingChainFromOfflineModuleID(unsigned int offline_module_id);
+
+  unsigned int GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id);
+
+  unsigned int GetTimingChainFromMAC5(unsigned int mac5);
+
 private:
 
   typedef struct ModuleInfo {
@@ -75,6 +81,12 @@ private:
   // look up channel info by MAC5
   std::unordered_map<unsigned int, ModuleInfo_t> fModuleInfoFromMAC5;
   ModuleInfo_t GetModuleInfoFromMAC5(unsigned int mac5) const;
+
+  // look up timing chain by offline module number
+  std::unordered_map<unsigned int, unsigned int> fTimingChainFromOfflineID;
+
+  // look up channel info by MAC5
+  std::unordered_map<unsigned int, unsigned int> fTimingChainFromMAC5;
 };
 
 DECLARE_ART_SERVICE(SBND::CRTChannelMapService, LEGACY)
