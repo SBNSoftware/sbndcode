@@ -326,8 +326,9 @@ local ts_p0 = {
     type: "TritonService",
     name: "dnnroi_p0",
     data: {
-        url: "ailab01.fnal.gov:8101",  // self-built SBND server (triton_sbnd/run_triton.sh)
-        //url: "triton.fnal.gov:443",
+        url: "eaf.fnal.gov:443",  // EAF Triton server (models already loaded there)
+        use_ssl: true,
+        //url: "ailab01.fnal.gov:8101",  // self-built server (triton_sbnd/run_triton.sh), no SSL
         model: "dnnroi-sbnd-plane0",
         soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
     },
@@ -345,8 +346,9 @@ local ts_p1 = {
     type: "TritonService",
     name: "dnnroi_p1",
     data: {
-        url: "ailab01.fnal.gov:8101",  // self-built SBND server (triton_sbnd/run_triton.sh)
-        //url: "triton.fnal.gov:443",
+        url: "eaf.fnal.gov:443",  // EAF Triton server (models already loaded there)
+        use_ssl: true,
+        //url: "ailab01.fnal.gov:8101",  // self-built server (triton_sbnd/run_triton.sh), no SSL
         model: "dnnroi-sbnd-plane1",
         soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
     },
