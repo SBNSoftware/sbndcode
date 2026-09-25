@@ -1,0 +1,18 @@
+# MC: dump the generator's POTSummary of reco1 files, nothing else.
+#include "potdump.fcl"
+
+process_name: POTDump
+
+services: {}
+
+source: {
+  module_type: RootInput
+}
+
+physics: {
+  analyzers: {
+    potdump: @local::potdump
+  }
+  dump: [ potdump ]
+  end_paths: [ dump ]
+}

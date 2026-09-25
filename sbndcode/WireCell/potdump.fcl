@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+potdump: {
+  module_type:       POTDump
+  POTSummaryLabel:   "generator"     # MC: sumdata::POTSummary per subrun
+  BNBSpillInfoLabel: "bnbinfo"       # beam-on: SBNDBNBRetriever output
+  EXTCountInfoLabel: "bnbextinfo"    # beam-off: SBNDBNBEXTRetriever output
+  OutputPrefix:      "potdump"       # <prefix>_{events,pot,spills,gates}.csv
+}
+
+END_PROLOG

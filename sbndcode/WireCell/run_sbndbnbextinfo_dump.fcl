@@ -1,0 +1,9 @@
+# Beam-off: the EXT retriever plus the CSV dump, no ROOT output.
+#include "potdump.fcl"
+#include "run_sbndbnbextinfo_sbn.fcl"
+
+physics.analyzers.potdump: @local::potdump
+physics.dump: [ potdump ]
+physics.end_paths: [ dump ]
+physics.stream1: @erase
+outputs: @erase
