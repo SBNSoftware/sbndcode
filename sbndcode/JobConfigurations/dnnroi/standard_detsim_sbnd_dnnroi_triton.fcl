@@ -1,10 +1,16 @@
 # File: standard_detsim_sbnd_dnnroi_triton.fcl
 #
 # runs WC 2D signal processing during detsim using only DNN-based ROI finding,
-# with DNN inference sent to a remote Triton server (TritonService, see
-# wcls-sim-drift-depoflux-nf-sp.jsonnet) instead of local TorchService
+# with DNN inference sent to a remote Triton server (TritonService) instead of
+# local TorchService
 # create one Wire product: simtpc2d:dnnsp
+#
+# The server is chosen by the model settings, see wcls-sim-drift-depoflux-nf-sp.jsonnet:
+#   triton://HOST:PORT/MODEL   plain gRPC       tritons://HOST:PORT/MODEL   gRPC over TLS
 
 #include "standard_detsim_sbnd_dnnroi.fcl"
 
 physics.producers.simtpc2d.wcls_main.plugins: [@sequence::sbnd_wcls_simsp_dnnroi.wcls_main.plugins, "WireCellTriton"]
+
+physics.producers.simtpc2d.wcls_main.params.dnnroi_model_p0: "tritons://triton.fnal.gov:443/dnnroi-sbnd-plane0"
+physics.producers.simtpc2d.wcls_main.params.dnnroi_model_p1: "tritons://triton.fnal.gov:443/dnnroi-sbnd-plane1"

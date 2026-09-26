@@ -314,45 +314,42 @@ local wcls_output_sp = {
 };
 local dnnroi = import 'dnnroi.jsonnet';
 
-local ts_p0 = {
-    //type: "TorchService",
-    //name: "dnnroi_p0",
-    //tick_per_slice: tick_per_slice, 
-    //data: {
-    //    model: dnnroi_model_p0,
-    //    device: wc_device,
-    //    concurrency: 1,
-    //},
-    type: "TritonService",
-    name: "dnnroi_p0",
-    data: {
-        url: "eaf.fnal.gov:443",  // EAF Triton server (models already loaded there)
-        use_ssl: true,
-        //url: "ailab01.fnal.gov:8101",  // self-built server (triton_sbnd/run_triton.sh), no SSL
-        model: "dnnroi-sbnd-plane0",
-        soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
-    },
-};
+// The DNN-ROI inference backend is chosen by the model setting given in the fcl
+// (dnnroi_model_p0/p1):
+//   "DNN_ROI/plane0.ts"                                   -> TorchService, runs in this job (default)
+//   "triton://HOST:PORT/MODEL"                            -> TritonService, plain gRPC
+//   "tritons://HOST:PORT/MODEL"                           -> TritonService, gRPC over TLS
+// Triton needs the WireCellTriton plugin in wcls_main.plugins, and stops the job on
+// a failed call (soft_fail false) instead of returning an all-zero ROI mask.
+// See JobConfigurations/dnnroi/standard_detsim_sbnd_dnnroi_triton.fcl.
+local inference_service(name, model) =
+    if std.startsWith(model, "triton://") || std.startsWith(model, "tritons://") then
+        local nscheme = if std.startsWith(model, "tritons://") then 10 else 9;   // length of the scheme prefix
+        local target = std.substr(model, nscheme, std.length(model) - nscheme);   // HOST:PORT/MODEL
+        {
+            type: "TritonService",
+            name: name,
+            data: {
+                url: std.split(target, "/")[0],
+                model: std.split(target, "/")[1],
+                use_ssl: std.startsWith(model, "tritons://"),
+                soft_fail: false,
+            },
+        }
+    else
+        {
+            type: "TorchService",
+            name: name,
+            tick_per_slice: tick_per_slice,
+            data: {
+                model: model,
+                device: wc_device,
+                concurrency: 1,
+            },
+        };
 
-local ts_p1 = {
-    //type: "TorchService",
-    //name: "dnnroi_p1",
-    //tick_per_slice: tick_per_slice, 
-    //data: {
-    //    model: dnnroi_model_p1,
-    //    device: wc_device,
-    //    concurrency: 1,
-    //},
-    type: "TritonService",
-    name: "dnnroi_p1",
-    data: {
-        url: "eaf.fnal.gov:443",  // EAF Triton server (models already loaded there)
-        use_ssl: true,
-        //url: "ailab01.fnal.gov:8101",  // self-built server (triton_sbnd/run_triton.sh), no SSL
-        model: "dnnroi-sbnd-plane1",
-        soft_fail: false,  // fail loudly instead of returning an all-zero ROI mask
-    },
-};
+local ts_p0 = inference_service("dnnroi_p0", dnnroi_model_p0);
+local ts_p1 = inference_service("dnnroi_p1", dnnroi_model_p1);
 
 local dnnroi_pipes = [ dnnroi(tools.anodes[n], ts_p0, ts_p1, output_scale=1, nchunks=nchunks) for n in std.range(0, std.length(tools.anodes) - 1) ];
 
