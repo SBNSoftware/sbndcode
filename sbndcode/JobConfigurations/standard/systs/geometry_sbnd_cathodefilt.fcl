@@ -1,28 +1,15 @@
 #
-# Shared geometry override for the cathode-filter chain.
+# Shared service overrides for the cathode-filter (DENT) chain.
 #
-# Every fcl in the cathode-filter chain #include's this file and then
-# applies `@table::sbnd_geometry_cathodefilt` to `services`, so that
-# Geant4 and every downstream geometry consumer uses the *cathode-less*
-# GDML.  The physical cathode's role in absorbing ionisation is then
-# taken over by the CathodeSimEnergyDepositFilter module.
+# Every fcl in the cathode-filter chain #include's this file.  The
+# stock SBND geometry is kept: the nominal CPA (mesh/foils, |x| < ~0.6 cm)
+# lies entirely inside the data-driven cathode volume used by the
+# CathodeSimEnergyDepositFilter, so no cathode-less GDML is needed.
 #
-# Drop
-#   sbnd_v02_06_nocathode_base.gdml
-#   sbnd_v02_06_nocathode_nowires.gdml
-# (produced in sbndcode/CathodeFilter/gdml/) on FW_SEARCH_PATH
-# alongside the rest of the SBND GDMLs.
-#
-# LArSoft's Geometry service uses the *nowires* GDML; the base file is
-# included for completeness so both variants stay consistent.
+# SBND_DataMap_v4.root is provided by sbnd_data
+# (https://github.com/SBNSoftware/sbnd_data/pull/11).
 #
 
-### Created a GDML without a cathode since we model it with the cathode filter
-services.Geometry.GDML:       "sbnd_v02_06_nocathode.gdml"
-services.Geometry.ROOT:       "sbnd_v02_06_nocathode.gdml"
-services.AuxDetGeometry.GDML: "sbnd_v02_06_nocathode.gdml"
-services.AuxDetGeometry.ROOT: "sbnd_v02_06_nocathode.gdml"
-services.LArG4Detector.gdmlFileName_:  "sbnd_v02_06_nocathode_nowires.gdml"
 ### Updates the drift velocity to the data measured value of 0.15532 cm/us
 services.DetectorPropertiesService.DriftVelFudgeFactor: 0.99373000639 #1.5532/1.563
 

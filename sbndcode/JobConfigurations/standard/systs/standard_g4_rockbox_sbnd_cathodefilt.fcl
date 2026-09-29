@@ -1,23 +1,18 @@
 #
 # g4 stage for the cathode-filter chain.
 #
-# Wraps standard_g4_rockbox_sbnd.fcl and does two things:
+# Wraps standard_g4_rockbox_sbnd.fcl and inserts the
+# CathodeSimEnergyDepositFilter *between* largeant (the raw LArG4
+# SimEnergyDeposit producer) and ionandscint (which applies SCE and
+# computes ionisation/scintillation).  The data-driven cathode volume
+# (sbnd_cathode_v8.txt) is applied to the un-shifted LArG4 deposits,
+# and SCE is applied to the surviving deposits afterwards -- which is
+# what you want, because the cathode is a physical surface at the
+# *real* (un-shifted) deposit position.
 #
-#   1. Swaps the stock SBND GDML for the cathode-less counterpart.
-#      With the CPA removed from the geometry, Geant4 propagates
-#      particles through LAr where the cathode used to be.
-#
-#   2. Inserts the CathodeSimEnergyDepositFilter *between* largeant
-#      (the raw LArG4 SimEnergyDeposit producer) and ionandscint
-#      (which applies SCE and computes ionisation/scintillation).
-#      The data-driven cathode volume (sbnd_cathode_v8.txt) is now
-#      applied to the un-shifted LArG4 deposits, and SCE is applied
-#      to the surviving deposits afterwards -- which is what you
-#      want, because the cathode is a physical surface at the
-#      *real* (un-shifted) deposit position.
-#
-# Uses sbnd_v02_06_nocathode*.gdml (see
-# sbndcode/CathodeFilter/gdml/README.md).
+# The stock SBND geometry is kept (see geometry_sbnd_cathodefilt.fcl);
+# that file also sets the measured drift velocity and the data-driven
+# SCE displacement/field map.
 #
 # Data flow inside this stage:
 #
@@ -31,7 +26,7 @@
 #       ionandscint : priorSCE                         (pre-SCE)
 #
 # Chain:
-#   gen                  -> prodgenie_corsika_proton_rockbox_sbnd_cathodefilt.fcl
+#   gen                  -> prodgenie_corsika_proton_rockbox_sbnd.fcl (or _cathodefilt wrapper)
 #   g4                   -> THIS FILE                                   <--
 #   filter               -> standard_cathodefilter_sbnd.fcl  (no-op)
 #   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
