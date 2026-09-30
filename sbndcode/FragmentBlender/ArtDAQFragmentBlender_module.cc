@@ -48,7 +48,7 @@ public:
 
 private:
   daq::SBNDTPCDecoder tpcDecoderBusiness;
-  std::string fNoiseFileList;// Declare member data here.
+  std::vector<std::string> fNoiseFileList;// Declare member data here.
   std::string fTPCDAQLabel;
   int fNumberNoiseFiles;
   TRandom randDraws;
@@ -62,7 +62,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
     tpcDecoderBusiness{p}
   // More initializers here.
 {
-  fNoiseFileList = p.get<std::string>("NoiseFileList");
+  fNoiseFileList = p.get<std::vector<std::string>>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
   produces<std::vector<raw::RawDigit>>();
@@ -70,16 +70,18 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   unsigned int FileToGrab = fNumberNoiseFiles*randDraws.Uniform(1.0);
-  std::vector<std::string> allInputFiles;
-  std::ifstream file(fNoiseFileList);
-  std::string line;
-  while (getline(file, line)) {
-            allInputFiles.push_back(line);
-        }
-  file.close();
+  //std::cout << " about to get the input noise file list " << fNoiseFileList << std::endl;
+  //std::vector<std::string> allInputFiles;
+  //std::ifstream file(fNoiseFileList);
+  //std::string line;
+  //while (getline(file, line)) {
+  //          allInputFiles.push_back(line);
+  //      }
+  //file.close();
+  std::cout << " got my file list" << "  " << fNoiseFileList.size() << "  " << FileToGrab  << std::endl;
   std::vector<std::string> TempOneFile;
-  TempOneFile.push_back(allInputFiles[FileToGrab]);
-  std::cout << " grabbing "<< allInputFiles[FileToGrab] << " as noise file " << std::endl;
+  TempOneFile.push_back(fNoiseFileList[FileToGrab]);
+  std::cout << " grabbing "<< fNoiseFileList[FileToGrab] << " as noise file " << std::endl;
   noiseGalleryEvent.reset( new gallery::Event(TempOneFile) );
   TotalNoiseEvents =  noiseGalleryEvent->numberOfEventsInFile();
 }
