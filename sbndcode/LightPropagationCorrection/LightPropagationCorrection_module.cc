@@ -147,14 +147,15 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                     if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
                     if(_fNuScore>_sliceMaxNuScore) _sliceMaxNuScore = _fNuScore;
                 }
+                std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
+                for(const art::Ptr<recob::Vertex> &ver : vertexVec){
+                    geo::Point_t xyz_vertex = ver->position();
+                    fRecoVx= xyz_vertex.X();
+                    fRecoVy= xyz_vertex.Y();
+                    fRecoVz= xyz_vertex.Z();
+                }
             }
-            std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
-            for(const art::Ptr<recob::Vertex> &ver : vertexVec){
-                geo::Point_t xyz_vertex = ver->position();
-                fRecoVx= xyz_vertex.X();
-                fRecoVy= xyz_vertex.Y();
-                fRecoVz= xyz_vertex.Z();
-            }
+
             //Get the spacepoints associated to the PFParticle
             std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
             //Get the SP Hit assns    
