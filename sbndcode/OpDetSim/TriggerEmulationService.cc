@@ -25,21 +25,20 @@ namespace calib {
   {} // deconstructor
 
   void TriggerEmulationService::ConstructMonPulse(
-      std::vector<raw::OpDetWaveform> fWaveforms,
+      const std::vector<raw::OpDetWaveform> fWaveforms,
       int MonThreshold,
       std::vector<int> *MonPulse,
       int FlashCounter,
       int *numPairsOverThreshold,
-      std::vector<int> PMT_Channels
+      const std::vector<int> PMT_Channels
   )
   {
 
       // Loop over the entries in our waveform vector
       // We care about getting the pairing correct
 
-      std::fill(MonPulse->begin(), MonPulse->end(), 0);    
-
       if (fMC) { // monte carlo
+
           if (fWaveforms.empty()) {
               std::cout << "Empty waveform vector. Exiting ConstructMonPulse." << std::endl;
               return;
@@ -57,8 +56,8 @@ namespace calib {
 
           // resize
           int ReadoutSize;
-          if (PMT_Channels.empty()) { std::cout<<"Warning: Please provide PMT channels list."<<std::endl; ReadoutSize = fWaveforms[Pair1[0]].size(); }
-          else ReadoutSize = fWaveforms[PMT_Channels[0]].size();
+          if (PMT_Channels.empty()) { std::cout<<"Warning: Please provide PMT channels list."<<std::endl; ReadoutSize = (channel_to_waveform.at(Pair1[0]))->size(); }
+          else ReadoutSize = (channel_to_waveform.at(PMT_Channels[0]))->size();
           MonPulse->assign(ReadoutSize, 0);
 
           for (size_t i = 0; i < Pair1.size(); ++i) {
@@ -76,6 +75,14 @@ namespace calib {
                       continue; 
                   }
               }
+
+              // add checks for ReadoutSize
+              if ((int)channel_to_waveform[ch1]->size() != ReadoutSize) {
+                  throw cet::exception("TriggerEmulationService")<<"Waveform size mismatch on channel "<<ch1<<" expected "<<ReadoutSize<<" got "<<channel_to_waveform[ch1]->size();
+              }
+              if ((int)channel_to_waveform[ch2]->size() != ReadoutSize) {
+                  throw cet::exception("TriggerEmulationService")<<"Waveform size mismatch on channel "<<ch2<<" expected "<<ReadoutSize<<" got "<<channel_to_waveform[ch2]->size();
+              }
  
               // skip if either waveform is missing
               if (channel_to_waveform.count(ch1) == 0 || channel_to_waveform.count(ch2) == 0) continue;
@@ -85,8 +92,12 @@ namespace calib {
               const auto& wvf1 = *channel_to_waveform[ch1];
               const auto& wvf2 = *channel_to_waveform[ch2];
 
+              if ((int)wvf1.size() != ReadoutSize || (int)wvf2.size() != ReadoutSize) throw cet::exception("TriggerEmulationService")<<"Waveform size mismatch";
+
               auto bin1 = ConstructBinaryResponse(wvf1, MonThreshold);
               auto bin2 = ConstructBinaryResponse(wvf2, MonThreshold);
+
+              if ((int)bin1.size() != ReadoutSize || (int)bin2.size() != ReadoutSize) throw cet::exception("TriggerEmulationService")<<"Binary response size mismatch";
 
               for (int j = 0; j < ReadoutSize; ++j) {
                   if (bin1[j] || bin2[j]) {
@@ -174,11 +185,14 @@ namespace calib {
           if (numPairsOverThreshold) *numPairsOverThreshold = *std::max_element(MonPulse->begin(), MonPulse->end());
 
       } // data  
+
   } // ConstructMonPulse
 
   std::vector<bool> TriggerEmulationService::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) 
   {
+
     std::vector<bool> BinaryResponse(wvf.size());
+
     int WaveformIndex=1;
     while (WaveformIndex<int(wvf.size()))
     {
@@ -197,7 +211,7 @@ namespace calib {
       }
       else WaveformIndex=WaveformIndex+1;
     }
-
+    
     return BinaryResponse; 
   } // ConstructBinaryResponse
 

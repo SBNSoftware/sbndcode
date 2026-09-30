@@ -78,8 +78,23 @@ namespace opdet { //OpDet means optical detector
 
     void ResetTree();
     void SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int FlashCounter);
-    void SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter);
+    void SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter, int BeamWindowStart, std::vector<std::vector<int>> *tree_simLLTs, std::vector<std::vector<int>> *tree_simLLTTimes, int *numMergedMonPulses, std::vector<std::vector<int>> *tree_MonPulses, std::vector<double> *tree_timestamps, int *passedTriggerTotal);
     void analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle);
+    template <typename PulseContainer> std::vector<std::pair<int,int>> findInterestIntervals(
+                        const PulseContainer* pulse,
+                        bool InBeamWindow,
+                        int BeamWindowStart, 
+                        int BeamWindowEnd, 
+                        int BeamWindowThreshold,
+                        int OffBeamWindowThreshold,
+                        int LLT20, 
+                        int LLT21, 
+                        int LLT18, 
+                        int ticksBeforeCross,
+                        int ticksAfterCross,
+                        std::vector<std::vector<int>>* tree_simLLTTimes,
+                        std::vector<std::vector<int>>* tree_simLLTs,
+                        bool* passedTrigger);
     void Validate_MonSim_Outputs(art::Event const & e);
     double GetWaveformMedian(raw::OpDetWaveform wvf);
     opdet::sbndPDMapAlg pdMap; //map for photon detector types
@@ -95,6 +110,7 @@ namespace opdet { //OpDet means optical detector
     std::vector<std::string> fOpDetsToPlot; //keep for now but probably don't need
     std::string opdetType;
     std::string fTimingInstanceName;
+    std::string fFTrigInstanceName;
     std::string opdetElectronics;
     TH2D* hist_PropTriggers; //Initializes as nullptr
     TH2D* hist_PropTriggers_OffBeam; //Initializes as nullptr
@@ -164,8 +180,13 @@ namespace opdet { //OpDet means optical detector
     std::vector<ULong64_t> tree_HLTTimes;
     std::vector<int> tree_LLTs;
     std::vector<ULong64_t> tree_LLTTimes;
-    
-
+    std::vector<std::vector<int>> tree_simLLTs;
+    std::vector<std::vector<int>> tree_simLLTTimes;
+    std::vector<std::vector<int>> tree_MonPulses;
+    std::vector<double> tree_timestamps;
+    int numMonPulses;
+    int numMergedMonPulses;
+    int passedTriggerTotal;
   };
 
   BeamRateCalib::BeamRateCalib(fhicl::ParameterSet const & p)
@@ -186,6 +207,7 @@ namespace opdet { //OpDet means optical detector
     fInputProcessName = p.get< std::string >("InputProcess" );
     fInputInstanceName = p.get< std::string >("InputInstance" );
     fTimingInstanceName = p.get<std::string>("TimingInstanceName");
+    fFTrigInstanceName = p.get<std::string>("FTrigInstanceName");
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
     fNominalGoodStart = p.get<int>("NominalGoodStartTime", 2000); 
     fMonWidth        = p.get<int>("MonWidth");
@@ -242,6 +264,16 @@ namespace opdet { //OpDet means optical detector
     tree_LLTs.resize(1300);
     tree_LLTTimes.clear();
     tree_LLTTimes.resize(1300);
+    tree_simLLTs.clear();
+    //tree_simLLTs.resize(1500);
+    tree_simLLTTimes.clear();
+    //tree_simLLTTimes.resize(1500);
+    tree_MonPulses.clear();
+    //tree_MonPulses.resize(8000);
+    tree_timestamps.clear();
+    numMonPulses = 0;
+    numMergedMonPulses = 0;
+    passedTriggerTotal = 0;
     for(int i=0; i<int(tree_HLTs.size()); i++) tree_HLTs[i] = -1;
     tree_MonStart=fMonStart;
     tree_MonEnd=fMonStop;
@@ -335,6 +367,13 @@ namespace opdet { //OpDet means optical detector
       evtTree->Branch("HLTTimes", &tree_HLTTimes);
       evtTree->Branch("LLT", &tree_LLTs);
       evtTree->Branch("LLTTimes", &tree_LLTTimes);
+      evtTree->Branch("SimLLT", &tree_simLLTs);
+      evtTree->Branch("SimLLTTimes", &tree_simLLTTimes);
+      evtTree->Branch("MonPulses", &tree_MonPulses);
+      evtTree->Branch("MonPulseTimes", &tree_timestamps);
+      evtTree->Branch("numMonPulses", &numMonPulses);
+      evtTree->Branch("numMergedMonPulses", &numMergedMonPulses);
+      evtTree->Branch("passedTrigger", &passedTriggerTotal);
     }
   }
 
@@ -344,6 +383,9 @@ namespace opdet { //OpDet means optical detector
     art::ServiceHandle<art::TFileService> tfs; //Common art service should read about
     ResetTree();
     fEvNumber = e.id().event();
+    int BeamWindowStart = -1;
+    double BeamTime = -1;
+    double EventTime = -1;
     tree_event = fEvNumber;
     tree_run = e.run();
     tree_subrun = e.subRun();
@@ -387,6 +429,8 @@ namespace opdet { //OpDet means optical detector
           if(HLTIndexer>=int(tree_HLTs.size())) break; //Error handling for weird events
           tree_HLTs[HLTIndexer] = GrabbedHLTs[i];
           tree_HLTTimes[HLTIndexer] = hltrigs[HLT].timestamp*20;
+          if (GrabbedHLTs[i] == 1) EventTime = hltrigs[HLT].timestamp*20;  
+          if (GrabbedHLTs[i] == 2 || GrabbedHLTs[i] == 4) std::cout<<"Should pass!"<<std::endl;  
           HLTIndexer=HLTIndexer+1;
         }
       }
@@ -414,17 +458,24 @@ namespace opdet { //OpDet means optical detector
         if(LLTIndexer>=int(tree_LLTs.size())) continue; //Error handling for weird events
         tree_LLTs[LLTIndexer] = GrabbedLLTs[i];
         tree_LLTTimes[LLTIndexer] = lltrigs[LLT].timestamp*20;
+        if (GrabbedLLTs[i] == 26) BeamTime = lltrigs[LLT].timestamp*20; 
+        if (GrabbedLLTs[i] == 30) BeamTime = lltrigs[LLT].timestamp*20; 
         LLTIndexer=LLTIndexer+1;
       }
       }
     }
+
     //Seems to be a vector with some extra stuff like isValid()
     //raw::OpDetWaveform is a class with start time, vector of samples, and channel ID
     analyzeTrigger(waveHandle); //Update the TH2D in other loop...Although maybe we dont need to 
+    numMonPulses = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard); 
+
     if(EventCounter<20 || fSaveAllMON)
     {
         //SaveChannelWaveforms(waveHandle, fEvNumber);
-        SaveMonWaveforms(waveHandle, fFCLthreshold, fEvNumber);
+        if (BeamTime != -1 && EventTime != -1) BeamWindowStart = (int)(BeamTime - EventTime);
+        else BeamWindowStart = -1;
+        SaveMonWaveforms(waveHandle, fFCLthreshold, fEvNumber, BeamWindowStart, &tree_simLLTs, &tree_simLLTTimes, &numMergedMonPulses, &tree_MonPulses, &tree_timestamps, &passedTriggerTotal);
     }
     if(fCheckTriggers)
     {
@@ -447,7 +498,7 @@ namespace opdet { //OpDet means optical detector
     if(fMakeTree) evtTree->Fill(); //call at end of every event
   }
 
-  void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter)
+  void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter, int BeamWindowStart, std::vector<std::vector<int>> *tree_simLLTs, std::vector<std::vector<int>> *tree_simLLTTimes, int *numMergedMonPulses, std::vector<std::vector<int>> *tree_MonPulses, std::vector<double> *tree_timestamps, int *passedTriggerTotal)
   {
 
     // Implement service
@@ -461,6 +512,7 @@ namespace opdet { //OpDet means optical detector
     {
       int WaveIndex = FlashCounter*PMTPerBoard;
       double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); //Getting channel 17 every time!
+      tree_timestamps->push_back(currentTimeStamp);
       if(FlashCounter==0) SmallestTimestamp=TMath::Abs(currentTimeStamp);
       if(TMath::Abs(currentTimeStamp)<SmallestTimestamp) 
       {
@@ -473,8 +525,39 @@ namespace opdet { //OpDet means optical detector
       int WaveIndex = FlashCounter*PMTPerBoard;
       int WaveformSize = (*waveHandle)[WaveIndex].size();
       std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); // add a waveform size getter?
-      if(!fSaveAllMON) fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, FlashCounter);
-      else fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, FlashCounter);
+      fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, FlashCounter);
+      tree_MonPulses->push_back(*MonPulse);
+
+      // TEMPORARY ADDITION FOR VALIDATION
+      int BeamWindowThreshold = 3;
+      int OffBeamWindowThreshold = 4;
+      int LLT20 = 4;
+      int LLT21 = 3;
+      int LLT18 = 2;
+      bool passedTrigger = false;
+      int ticksBeforeCross = static_cast<int>(std::round(0.2*5000));
+      int ticksAfterCross  = 5000 - ticksBeforeCross;
+      int BeamWindowEnd = BeamWindowStart + 3.4*1000;
+      int BeamWindowStart_monpulse = 0;
+      int BeamWindowEnd_monpulse = 0;
+      double MonPulse_start = 1000*(*waveHandle)[WaveIndex].TimeStamp();
+      double MonPulse_end = 1000*(*waveHandle)[WaveIndex].TimeStamp() + 2*(MonPulse->size());
+      bool InBeamWindow = false; 
+      if (MonPulse_start <= BeamWindowStart && BeamWindowStart <= MonPulse_end) {
+        InBeamWindow = true;
+        BeamWindowStart_monpulse = (BeamWindowStart - MonPulse_start)/2;
+        BeamWindowEnd_monpulse = BeamWindowStart_monpulse + (BeamWindowEnd-BeamWindowStart)/2;
+      }
+      if (MonPulse_start <= BeamWindowEnd && BeamWindowEnd <= MonPulse_end) { 
+        InBeamWindow = true;
+        BeamWindowEnd_monpulse = (BeamWindowEnd - MonPulse_start)/2; 
+        BeamWindowStart_monpulse = BeamWindowEnd_monpulse - (BeamWindowEnd-BeamWindowStart)/2;
+      }
+
+      auto intervals = findInterestIntervals(MonPulse, InBeamWindow, BeamWindowStart_monpulse, BeamWindowEnd_monpulse, BeamWindowThreshold, OffBeamWindowThreshold, LLT20, LLT21, LLT18, ticksBeforeCross, ticksAfterCross, tree_simLLTTimes, tree_simLLTs, &passedTrigger);
+      if (passedTrigger == true) *passedTriggerTotal = *passedTriggerTotal + 1;
+      if (MonPulse->size() > 5000) *numMergedMonPulses = *numMergedMonPulses+1;
+
       // Save MonPulses
       std::stringstream histname;
       if(GoodFlashIndex==FlashCounter) histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
@@ -566,6 +649,7 @@ namespace opdet { //OpDet means optical detector
           }
           int PeakMon_NoRange = *std::max_element(MonPulse->begin(), MonPulse->end());
           int PeakOffBeam = *std::max_element(MonPulse->end()-1-(BeamAcceptanceEnd-BeamAcceptanceStart), MonPulse->end()-1);
+
           //Loop over MTCA thresholds
           if(GoodFlash)
           {
@@ -615,6 +699,143 @@ namespace opdet { //OpDet means optical detector
     } // Loop over flash counters
 
   }
+
+  // TEMPORARY ADDITION FOR VALIDATION
+  template <typename PulseContainer>
+  std::vector<std::pair<int,int>> BeamRateCalib::findInterestIntervals(const PulseContainer* pulse,
+                        bool InBeamWindow,
+                        int BeamWindowStart, 
+                        int BeamWindowEnd, 
+                        int BeamWindowThreshold,
+                        int OffBeamWindowThreshold,
+                        int LLT20, 
+                        int LLT21, 
+                        int LLT18, 
+                        int ticksBeforeCross,
+                        int ticksAfterCross,
+                        std::vector<std::vector<int>>* tree_simLLTTimes,
+                        std::vector<std::vector<int>>* tree_simLLTs,
+                        bool* passedTrigger)
+  {
+      // find interesting area
+      std::vector<std::pair<int,int>> interestIntervals;
+      std::vector<int> crossingPoints;
+      // clear initial variables
+      crossingPoints.clear();
+      interestIntervals.clear();
+      int Threshold = 0;
+      bool InBeamWindow_thistick = false;
+      bool interest = false;
+      int LLT20_up_time = -1;
+      int LLT21_up_time = -1;
+      int LLT18_up_time = -1;
+      bool LLT20_up = false;
+      bool LLT21_up = false;
+      bool LLT18_up = false;
+      std::vector<int> RisingEdgeTimes;
+      std::vector<int> RisingEdgePairs;
+      
+      for (int i = 0; i < static_cast<int>(pulse->size()); ++i) {
+          // beam window
+          if (!InBeamWindow) InBeamWindow_thistick = false;
+          else {
+              if (i >= BeamWindowStart && i <= BeamWindowEnd) {
+                  Threshold = BeamWindowThreshold;
+                  InBeamWindow_thistick = true;
+              }
+              else {
+                  Threshold = OffBeamWindowThreshold;
+                  InBeamWindow_thistick = false;
+              }
+          }
+
+          // find crossing points
+          if ((*pulse)[i] >= Threshold && !interest) {
+              crossingPoints.push_back(i);
+              interest = true;
+          } 
+          else if ((*pulse)[i] < Threshold) {
+              interest = false;
+
+          }
+
+          // find LLTs
+          if ((*pulse)[i] >= LLT20) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT20_up_time
+              if (LLT20_up_time < 0 || (i-LLT20_up_time) > 120) {
+                  // and LLT20 flag has gone down
+                  if (!LLT20_up) {
+                      RisingEdgeTimes.push_back(i);
+                      RisingEdgePairs.push_back(20);
+                      LLT20_up_time = i;
+                  }
+              }
+              LLT20_up = true;
+          } else LLT20_up = false;
+
+          // passes LLT threshold
+          if ((*pulse)[i] >= LLT21) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT21_up_time
+              if (LLT21_up_time < 0 || (i-LLT21_up_time) > 120) {
+                  // and LLT21 flag has gone down
+                  if (!LLT21_up) {
+                      RisingEdgeTimes.push_back(i);
+                      RisingEdgePairs.push_back(21);
+                      LLT21_up_time = i;
+                      // passes trigger if BeamGate+LLT21
+                      if (InBeamWindow_thistick) *passedTrigger = true;
+                  }
+              }
+              LLT21_up = true;
+          } else LLT21_up = false;
+
+          // passes LLT threshold
+          if ((*pulse)[i] >= LLT18) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT18_up_time
+              if (LLT18_up_time < 0 || (i-LLT18_up_time) > 120) {
+                  // and LLT18 flag has gone down
+                  if (!LLT18_up) {
+                      RisingEdgeTimes.push_back(i);
+                      RisingEdgePairs.push_back(18);
+                      LLT18_up_time = i;
+                  }
+              }
+              LLT18_up = true;
+          } else LLT18_up = false;
+
+      }
+      // push to vector
+      tree_simLLTTimes->push_back(RisingEdgeTimes);
+      tree_simLLTs->push_back(RisingEdgePairs);
+    
+      // create 10us (or given) slices around crossingPoints
+      for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
+          // if near end of full waveform
+          if (crossingPoints[j] + ticksAfterCross > static_cast<int>(pulse->size())) {
+              interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, static_cast<int>(pulse->size()) - 1);
+          }
+          // if near beginning of full waveform
+          else if (crossingPoints[j] - ticksBeforeCross < 0) {
+              interestIntervals.emplace_back(0, crossingPoints[j] + ticksAfterCross);
+          }
+          else {
+              // check if overlaps with previous interval
+              if (!interestIntervals.empty() && crossingPoints[j] - ticksBeforeCross < interestIntervals.back().second) {
+                  // if overlaps, extend interval
+                  interestIntervals.back() = {interestIntervals.back().first, crossingPoints[j] + ticksAfterCross};
+              }
+              // if does not overlap or if first, use typical interval length
+              else {
+                  interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, crossingPoints[j] + ticksAfterCross);
+              }
+          }
+      }
+
+      return interestIntervals;
+  }
+
+
+
 
 //Function made to run over run 15670 where we digitized the MTCA outputs in the timing CAEN 
 //Assumes we have run the pmttriggerproducer as well

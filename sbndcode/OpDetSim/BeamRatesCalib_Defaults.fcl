@@ -30,17 +30,19 @@ BeamRatesCalib:
     NominalWaveformSize: 5000
     NominalGoodStartTime: 10 #ns. extra offset from TDC 
     # Flags for additional outputs for MSUM digitization + software trigger 
-    CheckHardwareTriggers: true
-    CheckSoftTrig: true
+    CheckHardwareTriggers: false
+    CheckSoftTrig: false
     # Number of CAEN boards on for this run
     TotalCAENBoards: 8
     # Assorted labels to get data products out of Art files
     SoftTrigLabel: "pmtmetricproducer"
     InputModule: "pmtdecoder"
-    InputProcess: "DECODE"
+    InputProcess: "PMTDecoder"
     InputInstance: "PMTChannels"
-    PTBLabel: "ptbdecoder::DECODE"
-    TimingInstanceName: "pmtdecoder:TimingChannels:DECODE"
+    PTBLabel: "ptbdecoder::PMTDecoder"
+    TimingInstanceName: "pmtdecoder:TimingChannels:PMTDecoder"
+    FTrigInstanceName: "pmtdecoder:FTrigChannels:PMTDecoder"
+    fMakeTree: true
 
 }
 

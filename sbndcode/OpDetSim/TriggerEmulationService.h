@@ -33,12 +33,12 @@
            TriggerEmulationService(fhicl::ParameterSet const&pset, art::ActivityRegistry&amp);
            ~TriggerEmulationService();
            void ConstructMonPulse(
-             std::vector<raw::OpDetWaveform> fWaveforms,
+             const std::vector<raw::OpDetWaveform> fWaveforms,
              int MonThreshold, 
              std::vector<int> *MonPulse, 
              int FlashCounter,
              int *numPairsOverThreshold = nullptr,
-             std::vector<int> PMT_Channels={}
+             const std::vector<int> PMT_Channels={}
            );
 
            int getTotalCAENBoards() const { return fTotalCAENBoards; } 

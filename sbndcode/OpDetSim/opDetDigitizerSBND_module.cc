@@ -132,9 +132,44 @@ namespace opdet {
         Comment("Threshold")
       };
 
-      fhicl::Atom<int> PairMultiplicityThreshold{
-        Name("PairMultiplicityThreshold"),
-        Comment("Threshold for pair count threshold for event/flash triggers (to determine interesting trigger)")
+      fhicl::Atom<int> LLT18{
+        Name("LLT18"),
+        Comment("LLT extra threshold (purpose differs by run)")
+      };
+
+      fhicl::Atom<int> LLT20{
+        Name("LLT20"),
+        Comment("LLT event trigger threshold")
+      };
+
+      fhicl::Atom<int> LLT21{
+        Name("LLT21"),
+        Comment("LLT flash trigger threshold")
+      };
+
+      fhicl::Atom<int> BeamWindowWidth{
+        Name("BeamWindowWidth"),
+        Comment("Width of beam window in ticks")
+      };
+
+      fhicl::Atom<int> BeamWindowOffset{
+        Name("BeamWindowOffset"),
+        Comment("Time to offset center of the beam window by in ticks")
+      };
+
+      fhicl::Atom<float> FracBeforeForBeamWindow{
+        Name("FracBeforeForBeamWindow"),
+        Comment("Fraction of beam window before middle of 3ms waveform window")
+      };
+
+      fhicl::Atom<int> BeamWindowThreshold{
+        Name("BeamWindowThreshold"),
+        Comment("Threshold for pair count threshold for event/flash triggers during the beam window (to determine interesting trigger)")
+      };
+
+      fhicl::Atom<int> OffBeamWindowThreshold{
+        Name("OffBeamWindowThreshold"),
+        Comment("Threshold for pair count threshold for event/flash triggers outside of the beam window (to determine interesting trigger)")
       };
 
       fhicl::TableFragment<opdet::DigiPMTSBNDAlgMaker::Config> pmtAlgoConfig;
@@ -160,15 +195,25 @@ namespace opdet {
     void produce(art::Event & e) override;
     std::vector<raw::OpDetWaveform> sliceWaveforms(std::vector<raw::OpDetWaveform> fWaveforms,
                                                         std::vector<int> fPMT_Channels,
-                                                        std::vector<int> *MonPulse,
-                                                        int PairMultiplicityThreshold,
-                                                        double tickPeriod,
-                                                        int ticksPerSlice,
-                                                        float PercentTicksBeforeCross); 
+                                                        std::vector<int>* MonPulse,
+                                                        std::vector<std::pair<int,int>> intervals,
+                                                        double tickPeriod);
     std::vector<std::vector<int>> sliceMonPulse(std::vector<int> *MonPulse,
-                                                        int PairMultiplicityThreshold,
-                                                        int ticksPerSlice,
-                                                        float PercentTicksBeforeCross); 
+                                                std::vector<std::pair<int,int>> intervals);
+    template <typename PulseContainer> std::vector<std::pair<int,int>> findInterestIntervals(
+                        const PulseContainer* pulse,
+                        int BeamWindowStart, 
+                        int BeamWindowEnd, 
+                        int BeamWindowThreshold,
+                        int OffBeamWindowThreshold,
+                        int LLT18, 
+                        int LLT20, 
+                        int LLT21, 
+                        int ticksBeforeCross,
+                        int ticksAfterCross,
+                        std::vector<int>* RisingEdgeTimes,
+                        std::vector<int>* RisingEdgePairs,
+                        bool* passedTrigger);
     void PlotWaveforms(const std::vector<raw::OpDetWaveform>& waveforms,
                                            const std::string& basename);
     opdet::sbndPDMapAlg map; //map for photon detector types
@@ -193,6 +238,9 @@ namespace opdet {
     std::vector<std::vector<raw::OpDetWaveform>> SlicedWaveformsAll;
     std::vector<int> MonPulsesFlat;
     std::vector<int> pulseSizes;
+    std::vector<int> RisingEdgeTimes;
+    std::vector<int> RisingEdgePairs;
+    //bool passedTrigger;
 
     // product containers
     std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> fPhotonLiteHandles;
@@ -209,7 +257,14 @@ namespace opdet {
     int ticksPerSlice;
     float PercentTicksBeforeCross; 
     int MonThreshold;
-    int PairMultiplicityThreshold;
+    int BeamWindowWidth;
+    int BeamWindowOffset;
+    float FracBeforeForBeamWindow;
+    int BeamWindowThreshold;
+    int OffBeamWindowThreshold;
+    int LLT18;
+    int LLT20;
+    int LLT21;
   };
 
   opDetDigitizerSBND::opDetDigitizerSBND(Parameters const& config)
@@ -222,7 +277,14 @@ namespace opdet {
     , ticksPerSlice(config().ticksPerSlice())
     , PercentTicksBeforeCross(config().PercentTicksBeforeCross())
     , MonThreshold(config().MonThreshold())
-    , PairMultiplicityThreshold(config().PairMultiplicityThreshold())
+    , BeamWindowWidth(config().BeamWindowWidth())
+    , BeamWindowOffset(config().BeamWindowOffset())
+    , FracBeforeForBeamWindow(config().FracBeforeForBeamWindow())
+    , BeamWindowThreshold(config().BeamWindowThreshold())
+    , OffBeamWindowThreshold(config().OffBeamWindowThreshold())
+    , LLT18(config().LLT18())
+    , LLT20(config().LLT20())
+    , LLT21(config().LLT21())
   {
     opDetDigitizerWorker::Config wConfig( config().pmtAlgoConfig(), config().araAlgoConfig());
 
@@ -305,12 +367,15 @@ namespace opdet {
     // Call appropriate produces<>() functions here.
     produces< std::vector< raw::OpDetWaveform > >();
     produces<bool>("triggerEmulation");
+    produces<bool>("OLDtriggerEmulation");
     produces<int>("pairsOverThreshold");
     produces< std::vector<int> >("pairsOverThresholdVec");
     produces<int>("numSlices");
     produces< std::vector< raw::OpDetWaveform > >("slicedWaveforms");
     produces< std::vector<int> >("MonPulses");
     produces< std::vector<int> >("MonPulseSizes");
+    produces< std::vector<int> >("RisingEdgeTimes");
+    produces< std::vector<int> >("RisingEdgePairs");
   }
 
   opDetDigitizerSBND::~opDetDigitizerSBND()
@@ -360,7 +425,11 @@ namespace opdet {
       // clear previous
       SlicedWaveformsAll.clear();
       MonPulsesFlat.clear();
+      RisingEdgeTimes.clear();
+      RisingEdgePairs.clear();
       pulseSizes.clear();
+      // default value 
+      bool passedTrigger = false;
       // find the trigger locations for the waveforms using the LArService
       if (!fWaveforms.empty()) {
           // Implement service
@@ -382,8 +451,20 @@ namespace opdet {
 
           double tickPeriod = sampling_rate(clockData);
 
-          std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, fPMT_Channels, MonPulse, PairMultiplicityThreshold, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
-          std::vector<std::vector<int>> SlicedMonPulse = sliceMonPulse(MonPulse, PairMultiplicityThreshold, ticksPerSlice, PercentTicksBeforeCross);
+          // before and after crossing point (default is ~20% and ~80%)
+          int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
+          int ticksAfterCross  = ticksPerSlice - ticksBeforeCross;
+
+          // beam window start and end (1/6 before "t=0" and the rest after)
+          int center = (int)(MonPulse->size()/2) + BeamWindowOffset;
+          int BeamWindowStart = center - (int)(BeamWindowWidth*FracBeforeForBeamWindow);
+          int BeamWindowEnd = BeamWindowStart + BeamWindowWidth;
+ 
+          // Find interesting intervals to slice up each waveform into 10us (or given) chunks based on if "interesting" or not
+          auto intervals = findInterestIntervals(MonPulse, BeamWindowStart, BeamWindowEnd, BeamWindowThreshold, OffBeamWindowThreshold, LLT18, LLT20, LLT21, ticksBeforeCross, ticksAfterCross, &RisingEdgeTimes, &RisingEdgePairs, &passedTrigger);
+
+          std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, fPMT_Channels, MonPulse, intervals, tickPeriod);
+          std::vector<std::vector<int>> SlicedMonPulse = sliceMonPulse(MonPulse, intervals);
 
           int numSlices = SlicedMonPulse.size();
           SlicedWaveformsAll.push_back(std::move(SlicedWaveforms));
@@ -395,6 +476,7 @@ namespace opdet {
 
           // find the trigger locations for the waveforms - old version, keeping for validation
           for (const raw::OpDetWaveform &waveform : fWaveforms) {
+
             raw::Channel_t ch = waveform.ChannelNumber();
             // skip light channels which don't correspond to readout channels
             if (ch == std::numeric_limits<raw::Channel_t>::max() /* "NULL" value*/) {
@@ -429,9 +511,13 @@ namespace opdet {
 
 
           // put boolean trigger result in the event
-          bool passedTrigger = false;
-          // passes trigger if any of the SlicedWaveforms have size > 0 
-          for (auto wav : SlicedWaveformsAll) if (wav.size() > 0) passedTrigger = true;
+          // OLD VERSION: passes trigger if any of the SlicedWaveforms have size > 0 
+          bool oldpassedTrigger = false;
+          for (auto wav : SlicedWaveformsAll) if (wav.size() > 0) oldpassedTrigger = true;
+          auto oldtriggerFlag = std::make_unique<bool>(oldpassedTrigger);
+          e.put(std::move(oldtriggerFlag), "OLDtriggerEmulation");
+          
+          // passes trigger if BeamGate+LLT Medium 
           auto triggerFlag = std::make_unique<bool>(passedTrigger);
           e.put(std::move(triggerFlag), "triggerEmulation");
 
@@ -467,13 +553,22 @@ namespace opdet {
             SlicedWaveformsAll[i] = std::vector<raw::OpDetWaveform>();
           }
 
+
           // put MonPulses in the event
           auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
           e.put(std::move(flatPtr), "MonPulses");
 
+
           // put pulseSizes in the event
           auto sizesPtr = std::make_unique<std::vector<int>>(std::move(pulseSizes));
           e.put(std::move(sizesPtr), "MonPulseSizes");
+
+
+          // put RisingEdge in the event
+          auto risingEdgeTimesPtr = std::make_unique<std::vector<int>>(std::move(RisingEdgeTimes));
+          e.put(std::move(risingEdgeTimesPtr), "RisingEdgeTimes");
+          auto risingEdgePairsPtr = std::make_unique<std::vector<int>>(std::move(RisingEdgePairs));
+          e.put(std::move(risingEdgePairsPtr), "RisingEdgePairs");
 
       } else std::cout << "Empty waveforms found on event " << e.id().event() << "  " << fWaveforms.empty() << std::endl; 
     }
@@ -496,11 +591,19 @@ namespace opdet {
 
 
   template <typename PulseContainer>
-  std::vector<std::pair<int,int>>
-  findInterestIntervals(const PulseContainer* pulse,
-                        int PairMultiplicityThreshold,
+  std::vector<std::pair<int,int>> opDetDigitizerSBND::findInterestIntervals(const PulseContainer* pulse,
+                        int BeamWindowStart, 
+                        int BeamWindowEnd, 
+                        int BeamWindowThreshold,
+                        int OffBeamWindowThreshold,
+                        int LLT18, 
+                        int LLT20, 
+                        int LLT21, 
                         int ticksBeforeCross,
-                        int ticksAfterCross)
+                        int ticksAfterCross,
+                        std::vector<int>* RisingEdgeTimes,
+                        std::vector<int>* RisingEdgePairs,
+                        bool* passedTrigger)
   {
       // find interesting area
       std::vector<std::pair<int,int>> interestIntervals;
@@ -508,19 +611,83 @@ namespace opdet {
       // clear initial variables
       crossingPoints.clear();
       interestIntervals.clear();
+      int Threshold = 0;
+      bool InBeamWindow = false;
       bool interest = false;
-
+      int LLT20_up_time = -1;
+      int LLT21_up_time = -1;
+      int LLT18_up_time = -1;
+      bool LLT20_up = false;
+      bool LLT21_up = false;
+      bool LLT18_up = false;
+       
+      std::cout<<"static_cast<int>(pulse->size()): "<<static_cast<int>(pulse->size())<<std::endl;     
+ 
       for (int i = 0; i < static_cast<int>(pulse->size()); ++i) {
-          // find crossing point
-          if ((*pulse)[i] > PairMultiplicityThreshold && !interest) {
+          // beam window
+          if (i >= BeamWindowStart && i <= BeamWindowEnd) {
+              Threshold = BeamWindowThreshold;
+              InBeamWindow = true;
+          }
+          else {
+              Threshold = OffBeamWindowThreshold;
+              InBeamWindow = false;
+          }
+
+          // find crossing points
+          if ((*pulse)[i] >= Threshold && !interest) {
               crossingPoints.push_back(i);
               interest = true;
-          }
-          else if ((*pulse)[i] <= PairMultiplicityThreshold) {
+          } 
+          else if ((*pulse)[i] < Threshold) {
               interest = false;
           }
-      }
 
+          // get LLTs
+          if ((*pulse)[i] >= LLT20) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT20_up_time
+              if (LLT20_up_time < 0 || (i-LLT20_up_time) > 120) {
+                  // and LLT20 flag has gone down
+                  if (!LLT20_up) {
+                      RisingEdgeTimes->push_back(i);
+                      RisingEdgePairs->push_back(20);
+                      LLT20_up_time = i;
+                  }
+              }
+              LLT20_up = true;
+          } else LLT20_up = false;
+
+          // passes LLT threshold
+          if ((*pulse)[i] >= LLT21) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT21_up_time
+              if (LLT21_up_time < 0 || (i-LLT21_up_time) > 120) {
+                  // and LLT21 flag has gone down
+                  if (!LLT21_up) {
+                      RisingEdgeTimes->push_back(i);
+                      RisingEdgePairs->push_back(21);
+                      LLT21_up_time = i;
+                      // passes trigger if BeamGate+LLT21
+                      if (InBeamWindow) *passedTrigger = true;
+                  }
+              }
+              LLT21_up = true;
+          } else LLT21_up = false;
+
+          // passes LLT threshold
+          if ((*pulse)[i] >= LLT18) {
+              // LLT not filled yet or it has been at least 240ns (120 ticks) since last LLT18_up_time
+              if (LLT18_up_time < 0 || (i-LLT18_up_time) > 120) {
+                  // and LLT18 flag has gone down
+                  if (!LLT18_up) {
+                      RisingEdgeTimes->push_back(i);
+                      RisingEdgePairs->push_back(18);
+                      LLT18_up_time = i;
+                  }
+              }
+              LLT18_up = true;
+          } else LLT18_up = false;
+      }
+    
       // create 10us (or given) slices around crossingPoints
       for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
           // if near end of full waveform
@@ -551,16 +718,8 @@ namespace opdet {
   // sliced MonPulses
   std::vector<std::vector<int>> opDetDigitizerSBND::sliceMonPulse(
                                     std::vector<int>* MonPulse,
-                                    int PairMultiplicityThreshold,
-                                    int ticksPerSlice,
-                                    float PercentTicksBeforeCross)
+                                    std::vector<std::pair<int,int>> intervals)
   {
-      // before and after crossing point (default is ~20% and ~80%)
-      int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
-      int ticksAfterCross  = ticksPerSlice - ticksBeforeCross;
-
-      // Slice up each waveform into 10us (or given) chunks based on if "interesting" or not
-      auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
 
       std::vector<std::vector<int>> SlicedMonPulses;
       for (auto [start, end] : intervals) {
@@ -575,17 +734,9 @@ namespace opdet {
                                    std::vector<raw::OpDetWaveform> fWaveforms,
                                    std::vector<int> fPMT_Channels,
                                    std::vector<int>* MonPulse,
-                                   int PairMultiplicityThreshold,
-                                   double tickPeriod,
-                                   int ticksPerSlice,
-                                   float PercentTicksBeforeCross)
+                                   std::vector<std::pair<int,int>> intervals,
+                                   double tickPeriod)
   {
-      // before and after crossing point (default is ~20% and ~80%)
-      int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
-      int ticksAfterCross  = ticksPerSlice - ticksBeforeCross;
-
-      // Slice up each waveform into 10us (or given) chunks based on if "interesting" or not
-      auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
 
       std::vector<raw::OpDetWaveform> SlicedWaveforms;
       // loop through channels
@@ -593,11 +744,13 @@ namespace opdet {
           const raw::OpDetWaveform& wf = fWaveforms[chan];
 
           for (auto [start, end] : intervals) {
-              double sliceTime = wf.TimeStamp() + start * tickPeriod;
+              //double sliceTime = wf.TimeStamp() + start * tickPeriod;
+              //double sliceTime = wf.TimeStamp() + ((double)start)/1000;
               std::vector<uint16_t> sliceData(wf.begin() + start, wf.begin() + end);
 
               if (!sliceData.empty()) {
-                  raw::OpDetWaveform slice(sliceTime, wf.ChannelNumber(), sliceData);
+                  //raw::OpDetWaveform slice(sliceTime, wf.ChannelNumber(), sliceData);
+                  raw::OpDetWaveform slice(start, wf.ChannelNumber(), sliceData);
                   SlicedWaveforms.push_back(std::move(slice));
               }
           }

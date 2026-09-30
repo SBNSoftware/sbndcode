@@ -15,7 +15,14 @@ sbnd_opdetdigitizer:
   ticksPerSlice:             5000 # corresponds to 10us
   PercentTicksBeforeCross:             0.2
   MonThreshold:             50
-  PairMultiplicityThreshold:             4 
+  BeamWindowWidth:             3000
+  BeamWindowOffset:             -100000
+  FracBeforeForBeamWindow:             0.16667
+  BeamWindowThreshold:             3 
+  OffBeamWindowThreshold:             4 
+  LLT20:            3
+  LLT21:            4
+  LLT18:            5
 
   @table::sbnd_digipmt_alg
   @table::sbnd_digiarapuca_alg
