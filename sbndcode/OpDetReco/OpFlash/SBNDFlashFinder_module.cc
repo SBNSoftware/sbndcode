@@ -271,7 +271,7 @@ namespace opdet{
     return flash_hits_v;
   }
   //Changes to the order of processing in the PMT decoder or PMT deconvolution could break this function
-  void ConstructSummedWaveforms(std::vector<raw::OpDetWaveform> InputChannels, 
+  void SBNDFlashFinder::ConstructSummedWaveforms(std::vector<raw::OpDetWaveform> InputChannels, 
       std::vector<std::vector<double>>& SummedWaveforms, std::vector<double>& SummedWaveformStartTimes, int TPC)
   {
     //Opdet waveforms are arranged first by CAEN, then flash, then PMT
