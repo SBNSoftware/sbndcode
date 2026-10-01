@@ -29,6 +29,8 @@
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashGeoBase.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashT0Base.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/DriftEstimatorBase.hh"
+#include "lardataobj/RawData/OpDetWaveform.h"
+
 
 namespace opdet{
 
@@ -48,6 +50,8 @@ namespace opdet{
 
     // Required functions.
     void produce(art::Event & e) override;
+    void ConstructSummedWaveforms(std::vector<raw::OpDetWaveform> InputChannels, 
+      std::vector<std::vector<double>>& SummedWaveforms, std::vector<double>& SummedWaveformStartTimes, int TPC);
 
   private:
 
@@ -61,6 +65,8 @@ namespace opdet{
 
     // Tool for calculating the OpFlash Y and Z centers
     std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
+    double fTickRate;
+    int fPromptSamples;
 
     // Tool for calculating the OpFlash t0
     std::unique_ptr<lightana::FlashT0Base> _flasht0calculator;
@@ -83,12 +89,15 @@ namespace opdet{
     auto const flash_pset = p.get<lightana::Config_t>("AlgoConfig");
     auto algo_ptr = ::lightana::FlashAlgoFactory::get().create(flash_algo,flash_algo);
     algo_ptr->Configure(flash_pset);
+    _time_res= flash_pset.get<double>("TimeResolution");
     _mgr.SetFlashAlgo(algo_ptr);
     _pecalib.Configure(p.get<lightana::Config_t>("PECalib"));
     _ophit_input_time = p.get<std::string>("OpHitInputTime", "PeakTime");
     _use_t0tool = p.get<bool>("UseT0Tool", false);
     _readout_delay = p.get<double>("ReadoutDelay", 0);
     _correct_light_propagation = p.get<bool>("CorrectLightPropagation", false);
+    fTickRate = p.get<double>("TickRate", 2.0e-3); //us
+    fPromptSamples = p.get<int>("PromptSamples");
 
     auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
     _flashgeo = art::make_tool<lightana::FlashGeoBase>(flashgeo_pset);
@@ -152,7 +161,47 @@ namespace opdet{
     }
 
     auto const flash_v = _mgr.RecoFlash(ophits);
+    //OpFlash Prompt Fraction calculation
+    art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
+    if(fInputLabels.empty())
+      evt.getByLabel(fInputModule, wfHandle);
+    else
+      evt.getByLabel(fInputModule, fInputLabels.front(), wfHandle);
+    //*wfHandle acts like a vector of raw::OpDetWaveforms
+    std::vector<std::vector<double>> SummedWaveforms;
+    std::vector<double> SummedWaveformStartTimes;
+    //Need some way to indicate TPC being run. Could use 
+    ConstructSummedWaveforms((*wfHandle), SummedWaveforms, SummedWaveformStartTimes, flash_v[0].tpc);
+    //Can loop over each flash and construct the prompt fraction for each bin
+    for(const auto& lflash :  flash_v) 
+    {
+      double flasht0 = lflash.time; //might need to add in trigger time
+      //loop over the waveforms and find which one this flash slots into
+      int IndexToGrab=0;
+      for(int iWave=0; iWave<SummedWaveforms.size(); iWave++)
+      {
+        if(flasht0 > SummedWaveformStartTimes[iWave] + SummedWaveforms.size()*fTickRate ) continue;
+        else
+        { 
+          IndexToGrab=iWave; 
+          break; // found the right waveform 
+        }
+      }
+      //Get flash width (in samples?)
+      double width = lfash.time_err*2*_time_res; //us width
+      int InitialSample = (flasht0-SummedWaveformStartTimes[iWave])/fTickRate;
+      int FinalSample = (flasht0+width-SummedWaveformStartTimes[iWave])/fTickRate;
+      double PromptFraction=1;
+      if(FinalSample - InitialSample > fPromptSamples)
+      {
+        double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
+        double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
+        PromptFraction = prompt_sum/total_sum;
+      }
+      lflash.prompt_fraction = PromptFraction;
+    }
 
+    //OpFlash Position calculation
     for(const auto& lflash :  flash_v) {
 
       // Get Flash Barycenter
@@ -216,6 +265,48 @@ namespace opdet{
     }
 
     return flash_hits_v;
+  }
+  //Changes to the order of processing in the PMT decoder or PMT deconvolution could break this function
+  void ConstructSummedWaveforms(std::vector<raw::OpDetWaveform> InputChannels, 
+      std::vector<std::vector<double>>& SummedWaveforms, std::vector<double>& SummedWaveformStartTimes, int TPC)
+  {
+    //Opdet waveforms are arranged first by CAEN, then flash, then PMT
+    int NPMT=120; //Total TPC with entries in the deco waveform array
+    int NFlashTriggers=InputChannels->size()/NPMT; // really distinct readout windows
+    int NPMTPerCAEN=15;
+    int NCAEN=NPMT/NPMTPerCAEN;
+    for(int iFlash=0; iFlash<NFlashTriggers; iFlash++)
+    {
+      std::vector<double> TempSummedWaveform( InputChannels[iFlash*NPMTPerCAEN]->Waveform().size() );
+      SummedWaveformStartTimes.push_back(InputChannels[iFlash*NPMTPerCAEN]->TimeStamp() );
+      for(int iCAEN=0; iCAEN<NCAEN; iCAEN++)
+      {
+        for(int iPMT=0; iPMT<NPMTPerCAEN; iPMT++)
+        {
+          if(TPC==0)
+          {
+            //Have to grab the correct PMTs for this TPC
+            //Wiring has paired PMTs from opposite TPC
+            if(iPMT%2 == 0 && iPMT<14) continue; //other tpc
+            if(iPMT==14 && iCAEN%2==0) continue;
+          }
+          else if(TPC==1)
+          {
+            if(iPMT%2==1 && iPMT<14) continue;
+            if(iPMT==14 && iCAEN%2==1) continue;
+          }
+          int IndexToGrab = iCAEN*NFlashTriggers + iFlash*NPMTPerCAEN + iPMT;
+          raw::OpDetWaveform ThisChannel = InputChannels[IndexToGrab];
+          //Collect the samples and add them into the summed waveform
+          for(int iSample=0; iSample<TempSummedWaveform.size(); iSample++)
+          {
+            TempSummedWaveform += ThisChannel[iSample];
+          }
+        }
+      }
+    //Add summed waveform for this flash window to the collection
+    SummedWaveforms->push_back(TempSummedWaveform);
+    }
   }
 
   DEFINE_ART_MODULE(SBNDFlashFinder)

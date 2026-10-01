@@ -33,7 +33,6 @@ namespace lightana{
         _veto_time     = p.get<double>("VetoSize");             // Veto time after a flash is found (8us in config file)
         _time_res      = p.get<double>("TimeResolution");       // Time resolution = bin size (0.01us in config file)
         _tpc           = p.get<int>("TPC");                     // TPC to associate the flash with (0 or 1)
-        fPromptSamples = p.get<int>("PromptSamples");
 
         // For shortened flashes
         _min_pe_repeated = p.get<double>("MinPECoincRepeated");                // Minimum PE in one bin to declare a repeated flash during an existing OpFlash (20PE in config file)
@@ -422,17 +421,17 @@ namespace lightana{
 
             }
             //calculate prompt fraction may need to move this later
-            std::vector<double> summedWaveform_v(period, 0);
-            int promptSamples = fPromptSamples; //fcl config. Could be made into vector
-            for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
-                // Loop over the PMTs
-                for(size_t pmt_index=0; pmt_index<NOpDet; ++pmt_index) {
-                    summedWaveform_v[index-start] += pespec_v[index][pmt_index];
-                    }
-            }
-            double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
-            double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
-            double prompt_fraction = prompt_sum/total_sum;
+            //std::vector<double> summedWaveform_v(period, 0);
+            //int promptSamples = fPromptSamples; //fcl config. Could be made into vector
+            //for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
+            //    // Loop over the PMTs
+            //    for(size_t pmt_index=0; pmt_index<NOpDet; ++pmt_index) {
+            //        summedWaveform_v[index-start] += pespec_v[index][pmt_index];
+            //        }
+            //}
+            //double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
+            //double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
+            double prompt_fraction = -1.0;//prompt_sum/total_sum;
             // Get the associated OpHits for this flash
             std::vector<unsigned int> asshit_v;
             // Loop over time bins inside the integration window
