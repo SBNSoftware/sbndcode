@@ -20,6 +20,7 @@ SBNDSimpleFlash:
   FlashT0Config   : @local::FlashT0SelectedChannels
   ReadoutDelay    : 0. //in us
   CorrectLightPropagation : false
+  PromptSamples:     50
   DriftEstimatorConfig    : @local::DriftEstimatorPMTRatio
 }
 
