@@ -7,6 +7,7 @@ set(
         larcore::Geometry_Geometry_service
         lardata::Utilities
         lardataobj::RecoBase
+        lardataobj::RawData
         larsim::Simulation
         lardataobj::Simulation
         nusimdata::SimulationBase
