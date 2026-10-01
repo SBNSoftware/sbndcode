@@ -5,7 +5,9 @@ SimpleFlashStandard:
   PEThreshold:       20
   MinPECoinc:        6
   MinMultCoinc:      3
-  PromptSamples:     10
+  PromptSamples:     50
+  DecoWaveformInput: "opdecopmt"
+  TickRate:          0.002
   IntegralTime:      8.
   PreSample:         0.1
   VetoSize:          8.
