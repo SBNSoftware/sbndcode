@@ -173,7 +173,7 @@ namespace opdet{
     //Need some way to indicate TPC being run. Could use 
     ConstructSummedWaveforms((*wfHandle), SummedWaveforms, SummedWaveformStartTimes, flash_v[0].tpc);
     //Can loop over each flash and construct the prompt fraction for each bin
-    for(const auto& lflash :  flash_v) 
+    for(auto& lflash :  flash_v) 
     {
       double flasht0 = lflash.time; //might need to add in trigger time
       //loop over the waveforms and find which one this flash slots into
@@ -194,8 +194,12 @@ namespace opdet{
       double PromptFraction=1;
       if(FinalSample - InitialSample > fPromptSamples)
       {
-        double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+fPromptSamples, 0);
-        double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
+        double prompt_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin(), 
+          SummedWaveforms[IndexToGrab].begin()+fPromptSamples, 
+          0);
+        double total_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin(), 
+          SummedWaveforms[IndexToGrab].end(), 
+          0);
         PromptFraction = prompt_sum/total_sum;
       }
       lflash.prompt_fraction = PromptFraction;
