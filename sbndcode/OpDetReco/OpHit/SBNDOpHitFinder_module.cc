@@ -100,6 +100,7 @@ namespace opdet {
 
     Float_t  fHitThreshold,fDaphne_Freq;
     unsigned int fMaxOpChannel;
+    double _time_res
 
     calib::IPhotonCalibrator const* fCalib = nullptr;
 

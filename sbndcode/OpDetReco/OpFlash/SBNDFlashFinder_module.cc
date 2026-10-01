@@ -98,6 +98,7 @@ namespace opdet{
     _correct_light_propagation = p.get<bool>("CorrectLightPropagation", false);
     fTickRate = p.get<double>("TickRate", 2.0e-3); //us
     fPromptSamples = p.get<int>("PromptSamples");
+    fDecoWaveformInput = p.get<string>("DecoWaveformInput", "opdecopmt")
 
     auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
     _flashgeo = art::make_tool<lightana::FlashGeoBase>(flashgeo_pset);
@@ -163,10 +164,7 @@ namespace opdet{
     auto const flash_v = _mgr.RecoFlash(ophits);
     //OpFlash Prompt Fraction calculation
     art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
-    if(fInputLabels.empty())
-      evt.getByLabel(fInputModule, wfHandle);
-    else
-      evt.getByLabel(fInputModule, fInputLabels.front(), wfHandle);
+    e.getByLabel(fDecoWaveformInput, wfHandle);
     //*wfHandle acts like a vector of raw::OpDetWaveforms
     std::vector<std::vector<double>> SummedWaveforms;
     std::vector<double> SummedWaveformStartTimes;
@@ -178,7 +176,7 @@ namespace opdet{
       double flasht0 = lflash.time; //might need to add in trigger time
       //loop over the waveforms and find which one this flash slots into
       int IndexToGrab=0;
-      for(int iWave=0; iWave<SummedWaveforms.size(); iWave++)
+      for(int iWave=0; iWave<int(SummedWaveforms.size()); iWave++)
       {
         if(flasht0 > SummedWaveformStartTimes[iWave] + SummedWaveforms.size()*fTickRate ) continue;
         else
@@ -188,13 +186,13 @@ namespace opdet{
         }
       }
       //Get flash width (in samples?)
-      double width = lfash.time_err*2*_time_res; //us width
-      int InitialSample = (flasht0-SummedWaveformStartTimes[iWave])/fTickRate;
-      int FinalSample = (flasht0+width-SummedWaveformStartTimes[iWave])/fTickRate;
+      double width = lflash.time_err*2*_time_res; //us width
+      int InitialSample = (flasht0-SummedWaveformStartTimes[IndexToGrab])/fTickRate;
+      int FinalSample = (flasht0+width-SummedWaveformStartTimes[IndexToGrab])/fTickRate;
       double PromptFraction=1;
       if(FinalSample - InitialSample > fPromptSamples)
       {
-        double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+promptSamples, 0);
+        double prompt_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.begin()+fPromptSamples, 0);
         double total_sum = std::accumulate(summedWaveform_v.begin(), summedWaveform_v.end(), 0);
         PromptFraction = prompt_sum/total_sum;
       }
@@ -272,13 +270,13 @@ namespace opdet{
   {
     //Opdet waveforms are arranged first by CAEN, then flash, then PMT
     int NPMT=120; //Total TPC with entries in the deco waveform array
-    int NFlashTriggers=InputChannels->size()/NPMT; // really distinct readout windows
+    int NFlashTriggers=InputChannels.size()/NPMT; // really distinct readout windows
     int NPMTPerCAEN=15;
     int NCAEN=NPMT/NPMTPerCAEN;
     for(int iFlash=0; iFlash<NFlashTriggers; iFlash++)
     {
-      std::vector<double> TempSummedWaveform( InputChannels[iFlash*NPMTPerCAEN]->Waveform().size() );
-      SummedWaveformStartTimes.push_back(InputChannels[iFlash*NPMTPerCAEN]->TimeStamp() );
+      std::vector<double> TempSummedWaveform( InputChannels[iFlash*NPMTPerCAEN].Waveform().size() );
+      SummedWaveformStartTimes.push_back(InputChannels[iFlash*NPMTPerCAEN].TimeStamp() );
       for(int iCAEN=0; iCAEN<NCAEN; iCAEN++)
       {
         for(int iPMT=0; iPMT<NPMTPerCAEN; iPMT++)
@@ -298,14 +296,14 @@ namespace opdet{
           int IndexToGrab = iCAEN*NFlashTriggers + iFlash*NPMTPerCAEN + iPMT;
           raw::OpDetWaveform ThisChannel = InputChannels[IndexToGrab];
           //Collect the samples and add them into the summed waveform
-          for(int iSample=0; iSample<TempSummedWaveform.size(); iSample++)
+          for(int iSample=0; iSample<int(TempSummedWaveform.size()); iSample++)
           {
-            TempSummedWaveform += ThisChannel[iSample];
+            TempSummedWaveform += ThisChannel.Waveform()[iSample];
           }
         }
       }
     //Add summed waveform for this flash window to the collection
-    SummedWaveforms->push_back(TempSummedWaveform);
+    SummedWaveforms.push_back(TempSummedWaveform);
     }
   }
 
