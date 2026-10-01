@@ -304,7 +304,7 @@ namespace opdet{
           //Collect the samples and add them into the summed waveform
           for(int iSample=0; iSample<int(TempSummedWaveform.size()); iSample++)
           {
-            TempSummedWavefor[iSample] += ThisChannel.Waveform()[iSample];
+            TempSummedWaveform[iSample] += ThisChannel.Waveform()[iSample];
           }
         }
       }
