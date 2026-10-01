@@ -100,7 +100,7 @@ namespace opdet{
     _correct_light_propagation = p.get<bool>("CorrectLightPropagation", false);
     fTickRate = p.get<double>("TickRate", 2.0e-3); //us
     fPromptSamples = p.get<int>("PromptSamples");
-    fDecoWaveformInput = p.get<string>("DecoWaveformInput", "opdecopmt")
+    fDecoWaveformInput = p.get<std::string>("DecoWaveformInput", "opdecopmt");
 
     auto const flashgeo_pset = p.get<lightana::Config_t>("FlashGeoConfig");
     _flashgeo = art::make_tool<lightana::FlashGeoBase>(flashgeo_pset);
@@ -163,7 +163,7 @@ namespace opdet{
       ophits.emplace_back(std::move(loph));
     }
 
-    auto const flash_v = _mgr.RecoFlash(ophits);
+    auto flash_v = _mgr.RecoFlash(ophits);
     //OpFlash Prompt Fraction calculation
     art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
     e.getByLabel(fDecoWaveformInput, wfHandle);
