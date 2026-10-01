@@ -180,25 +180,25 @@ namespace opdet{
       int IndexToGrab=0;
       for(int iWave=0; iWave<int(SummedWaveforms.size()); iWave++)
       {
-        if(flasht0 > SummedWaveformStartTimes[iWave] + SummedWaveforms.size()*fTickRate ) continue;
-        else
-        { 
+        if((flasht0 < SummedWaveformStartTimes[iWave] + SummedWaveforms[iWave].size()*fTickRate) &&
+	   (flasht0 > SummedWaveformStartTimes[iWave])
+	   )        { 
           IndexToGrab=iWave; 
           break; // found the right waveform 
         }
       }
       //Get flash width (in samples?)
-      double width = lflash.time_err*2*_time_res; //us width
+      double width = lflash.time_err*2; //us width
       int InitialSample = (flasht0-SummedWaveformStartTimes[IndexToGrab])/fTickRate;
       int FinalSample = (flasht0+width-SummedWaveformStartTimes[IndexToGrab])/fTickRate;
       double PromptFraction=1;
       if(FinalSample - InitialSample > fPromptSamples)
       {
-        double prompt_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin(), 
-          SummedWaveforms[IndexToGrab].begin()+fPromptSamples, 
+        double prompt_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin() + InitialSample, 
+          SummedWaveforms[IndexToGrab].begin()+InitialSample+fPromptSamples, 
           0);
-        double total_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin(), 
-          SummedWaveforms[IndexToGrab].end(), 
+        double total_sum = std::accumulate(SummedWaveforms[IndexToGrab].begin() + InitialSample, 
+					   SummedWaveforms[IndexToGrab].begin() + FinalSample, 
           0);
         PromptFraction = prompt_sum/total_sum;
       }
