@@ -67,6 +67,8 @@ namespace opdet{
     std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
     double fTickRate;
     int fPromptSamples;
+    double _time_res;
+    std::string fDecoWaveformInput;
 
     // Tool for calculating the OpFlash t0
     std::unique_ptr<lightana::FlashT0Base> _flasht0calculator;
