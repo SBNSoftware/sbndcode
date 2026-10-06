@@ -56,6 +56,8 @@ private:
   double fNuToFLight;
   double fNuToFCharge;
   double fOpFlashT0Corrected;
+  double fParticlePropagationTime;
+  double fPhotonPropagationTime;
 
   unsigned int _eventID;
   unsigned int _runID;
@@ -76,6 +78,8 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
   fNuToFLight=-99999.;
   fNuToFCharge=-99999.;
   fOpFlashT0Corrected=-99999.;
+  fParticlePropagationTime=-99999.;
+  fPhotonPropagationTime=-99999.;
 
   _eventID = -1;
   _runID = -1;
@@ -94,7 +98,6 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
     mf::LogWarning("fLightPropCorrectionLabel") << "No LightPropCorrectionLabel objects with label " << fLightPropCorrectionLabel << std::endl;
     return;
   }
-
 
   std::vector<art::Ptr<sbn::CorrectedOpFlashTiming>> correctedopflash_v;
   art::fill_ptr_vector(correctedopflash_v, correctedopflash_h);
@@ -121,11 +124,15 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
     std::cout << "Corrected flash time light only  " << correctedopflash->NuToFLight << std::endl;
     std::cout << "Corrected flash time tpc z corr " << correctedopflash->NuToFCharge << std::endl;
     std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->OpFlashT0Corrected << std::endl;
+    std::cout << "Particle propagation time " << correctedopflash->ParticlePropagationTime << std::endl;
+    std::cout << "Photon propagation time " << correctedopflash->PhotonPropagationTime << std::endl;
 
     fOpFlashT0 = correctedopflash->OpFlashT0;
     fNuToFLight = correctedopflash->NuToFLight;
     fNuToFCharge = correctedopflash->NuToFCharge;
     fOpFlashT0Corrected = correctedopflash->OpFlashT0Corrected;
+    fParticlePropagationTime = correctedopflash->ParticlePropagationTime;
+    fPhotonPropagationTime = correctedopflash->PhotonPropagationTime;
     fTree->Fill();
   }
 }
@@ -144,7 +151,8 @@ void LightPropagationCorrectionAna::beginJob()
   fTree->Branch("fNuToFLight", &fNuToFLight, "NuToFLight/d");
   fTree->Branch("fNuToFCharge", &fNuToFCharge, "NuToFCharge/d");
   fTree->Branch("fOpFlashT0Corrected", &fOpFlashT0Corrected, "OpFlashT0Corrected/d");
-
+  fTree->Branch("fParticlePropagationTime", &fParticlePropagationTime, "ParticlePropagationTime/d");
+  fTree->Branch("fPhotonPropagationTime", &fPhotonPropagationTime, "PhotonPropagationTime/d");
 }
 
 DEFINE_ART_MODULE(LightPropagationCorrectionAna)
