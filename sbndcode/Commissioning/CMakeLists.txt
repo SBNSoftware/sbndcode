@@ -1,5 +1,6 @@
 add_subdirectory(fcls)
-
+include_directories(${HEP_HPC_INCLUDE_DIRS})
+include_directories($ENV{OPENMPI_INCLUDE_DIR})
 set(
    MODULE_LIBRARIES
         larcorealg::Geometry

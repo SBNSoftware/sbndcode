@@ -16,6 +16,10 @@ SimpleFlashStandard:
   #PD:                ["pmt_coated", "pmt_uncoated", "xarapuca", "xarapuca_vuv", "xarapuca_vis"]
   PD:                ["pmt_coated", "pmt_uncoated"]
   DebugMode:         false
+
+  MinPECoincRepeated:     20 
+  MinTimeBefore:     0.5
+  TimeDifferenceFlashBefore:  0.05
 }
 
 SimpleFlashTPC0: @local::SimpleFlashStandard

@@ -20,7 +20,7 @@ wfalign_data:
    
     #Configure input projects
     #Types of High Level Trigger for data stream
-    PtbAllowedHlts: [1, 2, 3, 4, 5, 14, 15]
+    PtbAllowedHlts: [1, 2, 3, 4, 5, 14, 15, 16, 17]
     #Time interval between TDC ch3 (FTRIG) and ch15 CAEN
     Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 101, 101] #ns
     #Time interval between HLT issued in PTB and ch15 CAEN
