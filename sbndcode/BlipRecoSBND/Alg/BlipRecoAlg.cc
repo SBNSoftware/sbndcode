@@ -1,4 +1,4 @@
-g#include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"
+#include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"
 
 namespace blip {
 
