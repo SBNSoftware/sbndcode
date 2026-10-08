@@ -15,6 +15,10 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
 
+// Services
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
+
 // ROOT and C++ includes
 #include <TTree.h>
 #include <string.h>
@@ -26,12 +30,16 @@
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/WireReadout.h"
 #include "lardata/Utilities/AssociationUtil.h"
+#include "larsim/Utils/TruthMatchUtils.h"
+
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
 
 
 // G4 includes
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
+
 
 // Reco includes
 // PDS
@@ -65,6 +73,9 @@
 #include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
+
 
 // CRT
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
@@ -76,6 +87,7 @@
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 #include "sbnobj/Common/Reco/CorrectedOpFlashTiming.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/Common/Reco/RangeP.h"
 #include "lardataobj/AnalysisBase/T0.h"
 
 // Geometry and mapping
@@ -91,6 +103,7 @@
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashGeoBase.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashT0Base.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/DriftEstimatorBase.hh"
+
 
 #define fXFidCut1 1.5
 #define fXFidCut2 190
@@ -141,11 +154,19 @@ private:
     void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
-    double GetAverageParticlePropagationTime();
-    double GetAveragePhotonPropagationTime();
     void CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming, bool matched, int tpc);
+    int GetTrackPID(art::FindManyP<anab::ParticleID> , art::Ptr<recob::Track>  );
+    double GetTrackMomentum(int, art::FindManyP<sbn::RangeP>, art::FindManyP<sbn::RangeP>, art::FindManyP<recob::MCSFitResult> , art::FindManyP<recob::MCSFitResult>  , art::Ptr<recob::Track>);
+    void SaveTrueTrajectory(art::Event const&);
+    void GetMCNeutrino(art::Event const& );
+    bool GetParticlePropagationTime(int, double, art::FindManyP<anab::Calorimetry>, art::Ptr<recob::Track>, int, int);
+    void GetParticlePropagationTimeLite(int, std::vector<art::Ptr<recob::SpacePoint>>, art::FindManyP<recob::Hit>);
+    void GetParticlePropagationTimeMC(art::Event const& , const std::vector<art::Ptr<recob::Hit> >& , int );
+    void GetTruthMatchedID(art::Event const& , const std::vector<art::Ptr<recob::Hit> >& );
+
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
-    void GetSelectedChannelsFlash(double , ::lightana::LiteOpHitArray_t );
+
+    trkf::TrackMomentumCalculator tmc;
 
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
@@ -175,8 +196,21 @@ private:
     std::string fOpFlashLabel_tpc0;
     std::string fOpFlashLabel_tpc1;
     std::string fSpacePointLabel;
+    std::string fTPCTrackLabel;
+    std::string fParticleIDLabel;
+    std::string fCalorimetryLabel;
+    std::string fPandoraRangeLabel;
+    std::string fPandoraMCSLabel;
     std::string fOpHitsModuleLabel;
-    std::string fOpFlashNewLabel;
+    bool fUseCheatMC; 
+    bool fUseMCVIS;
+    std::string fMCModuleLabel;
+    std::vector<std::string> fMCTruthModuleLabel;
+    std::vector<std::string> fMCTruthInstanceLabel;
+    std::vector<int> fMCTruthOrigin;
+    std::vector<int> fMCTruthPDG;
+    std::string fSimDepProducer;
+    
     std::string fFlashMatchingTool;
     
     bool fSaveCorrectionTree;
@@ -184,17 +218,36 @@ private:
     std::vector<double> fTimeCorrectionPerChannel;
     std::vector<double> fParticlePropagationTimePerChannel;
     std::vector<double> fPhotonPropagationTimePerChannel;
+    std::vector<double> fPhotonPropagationDistancePerChannel;
     std::vector<size_t> fSelectedChannelList;
 
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
     double fRecoVz = 0.0;
 
+    double fTrueVx = 0.0;
+    double fTrueVy = 0.0;
+    double fTrueVz = 0.0;
+    double fTrueVt = 0.0;
+
     //Space Point Variables
     std::vector<double> fSpacePointX;
     std::vector<double> fSpacePointY;
     std::vector<double> fSpacePointZ;
+    std::vector<double> fSpacePointPropagationTime;
     std::vector<double> fSpacePointIntegral;
+    std::vector<double> fSpacePointMomentum;
+    std::vector<double> fSpacePointEnergy;
+    std::vector<double> fSpacePointBeta;
+    std::vector<int> fSpacePointPFPID;
+    std::vector<int> fSpacePointTMID;
+
+    std::vector<double> fTruthMatchedX;
+    std::vector<double> fTruthMatchedY;
+    std::vector<double> fTruthMatchedZ;
+    std::vector<double> fTruthMatchedT;
+    std::vector<double> fTruthMatchedID;
+    std::vector<double> fTruthMatchedE;
 
     //Charge Barycenter 
     std::vector<double> fChargeBarycenterX{0.,0.};
@@ -204,6 +257,8 @@ private:
     std::vector<double> fChargeWeightY{0.,0.};
     std::vector<double> fChargeWeightZ{0.,0.};
     std::vector<double> fChargeTotalWeight{0.,0.};
+
+    bool fDoPIDCorrection;
 
     double fDriftDistance; // Total Drift Distance
     double fSpeedOfLight; // Speed of light in mm/ns
@@ -216,10 +271,14 @@ private:
     double fNuScoreThreshold;
     double fFMScoreThreshold;
 
+
     bool fDebug;
 
     art::ServiceHandle<art::TFileService> tfs;
     TTree *fTree;
+
+    int fNeutrinoID;
+    bool fAllPFPsCorrected;
 
     int fEvent;
     int fRun;
@@ -238,9 +297,43 @@ private:
     std::vector<double> fSliceVx;
     std::vector<double> fSliceVy;
     std::vector<double> fSliceVz;
-    std::vector<std::vector<double>> fSliceSPX;
-    std::vector<std::vector<double>> fSliceSPY;
-    std::vector<std::vector<double>> fSliceSPZ;
+    std::vector<double> fSliceSPX;
+    std::vector<double> fSliceSPY;
+    std::vector<double> fSliceSPZ;
+    std::vector<double> fSliceSPT;
+    std::vector<double> fSliceSPMomentum;
+    std::vector<double> fSliceSPEnergy;
+    std::vector<double> fSliceSPBeta;
+    std::vector<double> fSliceSPID;
+    std::vector<int> fSliceSPTMID;
+    std::vector<double> fRecoMomentum; 
+    std::vector<int> fRecoPID;
+    std::vector<double> fTMX;
+    std::vector<double> fTMY;
+    std::vector<double> fTMZ;
+    std::vector<double> fTMT;
+    std::vector<double> fTME;
+    std::vector<double> fTMID;
+    std::vector<double> fTMPartID;
+    std::vector<double> truedE;
+    std::vector<double> truedE_vecX;
+    std::vector<double> truedE_vecY;
+    std::vector<double> truedE_vecZ;
+    std::vector<double> truedE_vecID;
+    std::vector<double> truedE_vecT;
+
+    std::vector<double> truedE_;
+    std::vector<double> truedE_X;
+    std::vector<double> truedE_Y;
+    std::vector<double> truedE_Z;
+    std::vector<double> truedE_ID;
+    std::vector<double> truedE_T;
+
+    std::vector<double> fTrueMomentum;
+    std::vector<int> fTruePID;
+
+    int fTruthMatchedTrackID;
+
     std::vector<std::vector<double>> fOpHitOldTime;
     std::vector<std::vector<double>> fOpHitNewTime;
     std::vector<std::vector<double>> fOpHitPE;

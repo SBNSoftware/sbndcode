@@ -15,6 +15,20 @@ LightPropagationCorrection:
     Reco2Label: "pandora"
     OpHitsModuleLabel: "ophitpmt"
     SpacePointLabel: "pandora"
+    TPCTrackLabel: "pandoraTrack"
+    ParticleIDLabel: "pandoraPidData"
+    CalorimetryLabel: "pandoraCaloData"
+    PandoraRangeLabel: "pandoraTrackRange"
+    PandoraMCSLabel: "pandoraTrackMCS"
+    MCModuleLabel: "largeant"
+    MCTruthModuleLabel: ["generator"]
+	MCTruthInstanceLabel: [""]
+    MCTruthOrigin: [1]
+    MCTruthPDG: [12, 14, 16, -12, -14, -16]
+    SimDepProducer: "ionandscint" 
+    UseCheatMC: false
+    UseMCVIS: false
+
     OpT0FinderModuleLabel: "opt0finder"
     TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
     SPECTDCLabel: "tdcdecoder"
@@ -35,6 +49,8 @@ LightPropagationCorrection:
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
 
+    DoPIDCorrection: true
+
     FlashMatchingTool: "BarycenterFM"
 }
 
@@ -44,6 +60,9 @@ LightPropagationCorrection.AlgoConfig_tpc1.TPC: 1
 LightPropagationCorrectionSCE: @local::LightPropagationCorrection
 LightPropagationCorrectionSCE.Reco2Label: "pandoraSCE"
 LightPropagationCorrectionSCE.SpacePointLabel: "pandoraSCE"
+LightPropagationCorrectionSCE.TPCTrackLabel: "pandoraSCETrack"
+LightPropagationCorrectionSCE.ParticleIDLabel: "pandoraSCEPidData"
+LightPropagationCorrectionSCE.CalorimetryLabel: "pandoraSCECaloData"
 LightPropagationCorrectionSCE.OpT0FinderModuleLabel: "opt0finderSCE"
 LightPropagationCorrectionSCE.TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatchingSCE"
 
