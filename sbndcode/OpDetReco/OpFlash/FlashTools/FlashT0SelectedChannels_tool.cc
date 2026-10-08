@@ -17,6 +17,8 @@
 #include "art/Utilities/make_tool.h"
 #include "art/Utilities/ToolConfigTable.h"
 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
 #include "FlashT0Base.hh"
 
 namespace lightana{
@@ -49,6 +51,16 @@ namespace lightana{
         fhicl::Comment("Minimum number of reconstructed PE to consider the OpHit for the t0 calculation")
       };
 
+      fhicl::Atom<int> MinNumberChannels {
+        fhicl::Name("MinNumberChannels"),
+        fhicl::Comment("Minimum number of channels to consider for the t0 calculation")
+      };
+
+      fhicl::Atom<std::string> PDType {
+      fhicl::Name("PDType"),
+      fhicl::Comment("Type of PD to use: pmt_coated or pmt_uncoated")
+      };
+
     };
 
     // Default constructor
@@ -63,14 +75,17 @@ namespace lightana{
     double fPreWindow;
     double fPostWindow;
     double fMinHitPE;
-
+    int fMinNumberChannels;
+    std::string fPDType;
   };
 
   FlashT0SelectedChannels::FlashT0SelectedChannels(art::ToolConfigTable<Config> const& config)
     : fPDFraction { config().PDFraction() },
     fPreWindow  { config().PreWindow()  },
     fPostWindow { config().PostWindow() },
-    fMinHitPE   { config().MinHitPE()   }
+    fMinHitPE   { config().MinHitPE()   },
+    fMinNumberChannels { config().MinNumberChannels() },
+    fPDType     { config().PDType()     }
   {
   }
 
@@ -78,14 +93,19 @@ namespace lightana{
 
     std::vector< std::pair<double, double> > selected_hits;
     double pe_sum = 0;
+    
+    fChannelWeights.resize(fWireReadout.NOpChannels(), 0.0);
 
     // fill vector with selected hits in the specified window
     for(auto const& hit : ophit_list) {
-      if( hit.peak_time<flash_time+fPostWindow && hit.peak_time>flash_time-fPreWindow && hit.pe>fMinHitPE){
+      int channel = hit.channel;
+      if( hit.peak_time<flash_time+fPostWindow && hit.peak_time>flash_time-fPreWindow && hit.pe>fMinHitPE && fPDSMap.pdType(channel)==fPDType ) {
         selected_hits.push_back( std::make_pair(hit.pe, hit.peak_time));
+        fChannelWeights[channel]=1;
         pe_sum += hit.pe ;
       }
     }
+    
 
     if(pe_sum>0){
       // sort vector by number of #PE (ascending order)
@@ -99,7 +119,7 @@ namespace lightana{
         pe_count += selected_hits[ix].first;
         flasht0_mean += selected_hits[ix].second;
         nophits++;
-        if( pe_count/pe_sum>fPDFraction ) break;
+        if (nophits >= fMinNumberChannels && pe_count / pe_sum > fPDFraction) break;
       }
 
       return flasht0_mean/nophits;

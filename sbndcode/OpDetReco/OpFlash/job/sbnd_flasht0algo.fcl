@@ -12,7 +12,19 @@ FlashT0SelectedChannels:
   PDFraction: 0.6
   PreWindow:  0.02
   PostWindow: 0.01
-  MinHitPE:   1.
+  MinHitPE:   20.
+  PDType: "pmt_coated"
+  MinNumberChannels: 5
+}
+
+FlashT0Average:
+{
+  tool_type: "FlashT0Average"
+  PreWindow:  0.02
+  PostWindow: 0.01
+  MinHitPE:   20.
+  PDType: "pmt_coated"
+  PE0: 1000
 }
 
 END_PROLOG
