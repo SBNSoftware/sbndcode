@@ -13,13 +13,16 @@ set (
     ROOT::Core
     
     larsim::Utils
+    larsim::MCCheater_BackTrackerService_service
+    larsim::MCCheater_ParticleInventoryService_service
+
     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
     larcore::Geometry_Geometry_service
     larcorealg::Geometry
     lardataobj::RecoBase
     lardataobj::MCBase
     lardataobj::Simulation
-
+    larreco::RecoAlg
 
     sbndcode_OpDetReco_OpFlash_FlashFinder
 

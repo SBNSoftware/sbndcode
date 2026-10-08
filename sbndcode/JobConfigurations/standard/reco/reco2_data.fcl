@@ -35,6 +35,9 @@ physics.producers:
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
 
     lightcaloSCE: @local::sbnd_lightcalo_data_sce
+
+    pandoraTrackMCS: @local::mcs_sbn
+    pandoraTrackRange: @local::range_sbn
 }
 
 physics.reco2: [ pandora, pandoraTrack, blipPandoraCopy, blipPandoraTrackCopy, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, pandoraLikePidData,
