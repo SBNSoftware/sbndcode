@@ -1,0 +1,24 @@
+#
+# gen stage for the cathode-filter chain.
+#
+# Thin wrapper around prodgenie_corsika_proton_rockbox_sbnd.fcl, kept so
+# the chain uses the same fcl names as the production/v10_06_00 version.
+# The stock SBND geometry is used throughout, so this is equivalent to
+# the standard gen fcl (the drift-velocity / SCE overrides pulled in from
+# geometry_sbnd_cathodefilt.fcl do not affect generation).
+#
+# Chain entry-point:
+#   gen                  -> THIS FILE                                   <--
+#   g4                   -> standard_g4_rockbox_sbnd_cathodefilt.fcl
+#                            (now runs CathodeSimEnergyDepositFilter
+#                             between largeant and ionandscint, so the
+#                             cathode is applied to the raw LArG4 SED
+#                             *before* the SCE shift in ionandscint.)
+#   filter               -> standard_cathodefilter_sbnd.fcl
+#                            (deprecated; kept as a no-op pass-through
+#                             for backwards compatibility.)
+#   detsim / reco / caf  -> standard_*_sbnd_cathodefilt.fcl
+#
+
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"

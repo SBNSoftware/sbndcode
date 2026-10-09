@@ -1,0 +1,45 @@
+#
+# g4 stage for the cathode-filter chain, for generators that do not run
+# largeant in the gen stage (e.g. singlegen_anode_muons.fcl).
+#
+# Same as standard_g4_rockbox_sbnd_cathodefilt.fcl: the
+# CathodeSimEnergyDepositFilter runs between largeant and ionandscint,
+# so the data-driven cathode is applied before the SCE shift.
+#
+
+#include "standard_g4_sbnd.fcl"
+#include "geometry_sbnd_cathodefilt.fcl"
+
+physics.producers.cathodefiltered: {
+  module_type:            "CathodeFilterSBND"
+  SimEnergyDepositLabels: [ "largeant:LArG4DetectorServicevolTPCActive" ]
+  OutputInstances:        [ "LArG4DetectorServicevolTPCActive" ]
+  CathodeVolumeFile:      "sbnd_cathode_v8.txt"
+  UseStepEndpoints:       false
+  NanPolicy:              "outside"
+  Interp:                 "bilinear"
+  Verbose:                false
+}
+
+physics.producers.ionandscint.InputModuleLabels: [ "cathodefiltered" ]
+
+# Same path as standard_g4_sbnd.fcl, with cathodefiltered added
+# immediately before ionandscint.
+physics.simulate: [ rns
+                  , loader
+                  , largeant
+                  , simplemerge
+                  , sedlite
+                  , cathodefiltered
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  , mcreco
+                  , genericcrt
+                  ]
+
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             , "drop sim::OpDetBacktrackerRecords_*_*_*"
+                             , "drop sim::SimEnergyDeposits_largeant_LArG4DetectorServicevolTPCActive_*"
+                             ]

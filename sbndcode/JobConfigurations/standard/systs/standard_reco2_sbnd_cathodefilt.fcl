@@ -1,0 +1,23 @@
+#
+# reco2 after the cathode filter.
+#
+# reco2 is higher-level reconstruction (pandora, flash matching, ...).
+# Some truth-matching / MC-diagnostic modules can read
+# sim::SimEnergyDeposit to build backtrack tables.  Override any such
+# label here to point at the cathodefiltered collection.
+#
+
+#include "standard_reco2_sbnd.fcl"
+####include "geometry_sbnd_cathodefilt.fcl"
+
+# Typical SBND truth-match tools that read SimEnergyDeposit.  Override
+# as needed for your local configuration; delete any lines whose keys
+# are not defined in your checkout (FHiCL will complain otherwise).
+
+# ParticleInventoryService typically reads largeant, not ionandscint,
+# so normally no change is required.
+
+# Backtrackers / analyzers that do read ionandscint:
+# physics.analyzers.<ana>.SimEnergyDepositLabel: "cathodefiltered"
+# physics.producers.<prod>.SimEnergyDepositLabel: "cathodefiltered"
+
