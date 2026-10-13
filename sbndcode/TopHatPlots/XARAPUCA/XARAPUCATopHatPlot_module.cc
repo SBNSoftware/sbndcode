@@ -102,7 +102,7 @@ private:
   constexpr static int DEFAULT_INT = -999999;         // Default integer value.
   // Top-hat plot configuration constants
   constexpr static int NUM_FIT_POINTS = 7;           // Number of points used for the linear fit.
-  constexpr static int BOARD_SLOT = 7;                // Board slot.
+  constexpr static int BOARD_SLOT = 7;                // Board slot (BOARD_SLOT == 7 for APSAIA, BOARD_SLOT != 8 for ARARA. If all XA do not use it in: if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW) { // us.).
   constexpr static float MIN_WINDOW = -10.0;           //-2.5; // us.
   constexpr static float MAX_WINDOW = 10.0;           //-2.4; // us.
   constexpr static float NS_PER_SAMPLE = 16.0;        // ns.
@@ -291,16 +291,23 @@ void thp::XARAPUCATopHatPlot::analyze(art::Event const& e)
     int32_t jitt = 0;               // ns.
     int32_t t_diff = 0;             // ns.
     // ===== End jittering variables ======
-    
+
     // Navigates over all the waveforms of this event.
     for (size_t w = 0; w < num_opdetwvfm; w++) {
-      const raw::OpDetWaveform wvfm = waveforms_handle->at(w);
+      raw::OpDetWaveform wvfm = waveforms_handle->at(w);
       unsigned int channel_number = wvfm.ChannelNumber();
       unsigned int board_slot = channel_number / 100;
       float time_stamp = wvfm.TimeStamp();
 
+      // ARARA reversing waveforms
+      if (board_slot != 7) {
+        for (size_t i = 0; i < wvfm.size(); i++) {
+          wvfm[i] = -wvfm[i];
+        }
+      }
+
       // Filters waveforms near to the zero.
-      if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW && board_slot == BOARD_SLOT) { // us.
+      if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW) { // us.
         
         if (fDebugWaveforms | (fDebugJittering && channel_number == 700)) std::cout << "[WVFM_ID: " << w << "]\tChannel number: " << channel_number << "\tTimeStamp: " << time_stamp << " us\tBoard slot: " << board_slot << std::endl;
         
