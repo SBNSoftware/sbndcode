@@ -1,0 +1,6 @@
+#include "SBNDPTBGateCountFilter_config.fcl"
+#include "run_decoders_job.fcl"
+
+physics.filters.filterPTBGateCount: @local::SBNDPTBGateCountFilterConfig
+
+physics.dropchoppy: [@sequence::physics.dropchoppy, filterPTBGateCount]

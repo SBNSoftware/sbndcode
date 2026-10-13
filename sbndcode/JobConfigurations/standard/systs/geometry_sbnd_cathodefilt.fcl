@@ -1,0 +1,17 @@
+#
+# Shared service overrides for the cathode-filter (DENT) chain.
+#
+# Every fcl in the cathode-filter chain #include's this file.  The
+# stock SBND geometry is kept: the nominal CPA (mesh/foils, |x| < ~0.6 cm)
+# lies entirely inside the data-driven cathode volume used by the
+# CathodeSimEnergyDepositFilter, so no cathode-less GDML is needed.
+#
+# SBND_DataMap_v4.root is provided by sbnd_data
+# (https://github.com/SBNSoftware/sbnd_data/pull/11).
+#
+
+### Updates the drift velocity to the data measured value of 0.15532 cm/us
+services.DetectorPropertiesService.DriftVelFudgeFactor: 0.99373000639 #1.5532/1.563
+
+### Updated Det Geom, uses non-planar cathode v8 and emperical displacement maps v4 
+services.SpaceCharge.InputFilename: "SCEoffsets/SBND_DataMap_v4.root"
