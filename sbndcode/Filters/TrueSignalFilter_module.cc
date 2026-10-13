@@ -4,6 +4,7 @@
  * - True nu flavors
  * - CC/NC
  * - Modes
+ * - Hadronic invariant mass W (MCNeutrino W, or GENIE's hadronic-system W from GTruth)
  * - Fiducial vertex
  * - Final state primary PDG
  * - Final state primary KE thresholds
@@ -28,8 +29,10 @@
 #include "art/Framework/Core/EDFilter.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCNeutrino.h"
+#include "nusimdata/SimulationBase/GTruth.h"
 #include "sbndcode/RecoUtils/RecoUtils.h"
 
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -52,6 +55,14 @@ struct FilterBlockConfig {
     fhicl::OptionalSequence<float, 2> WRange {
         fhicl::Name("WRange"),
         fhicl::Comment("Range of allowed invariant hadronic mass (W) as (min, max). Use -1 for min or max to indicate one-sided bound.")
+    };
+
+    fhicl::OptionalSequence<float, 2> GENIEWRange {
+        fhicl::Name("GENIEWRange"),
+        fhicl::Comment("Range of allowed GENIE hadronic invariant mass (GTruth::fgWrun, falling back to GTruth::fgW if unset) as (min, max). "
+                       "This is the W GENIE uses to choose between the KNO and PYTHIA hadronizers in DIS, unlike WRange which uses the "
+                       "MCNeutrino W computed from the lepton kinematics with the struck nucleon at rest. Use -1 for min or max to indicate "
+                       "one-sided bound. Requires the MCTruth-GTruth association from GENIELabel; MCTruths without a GTruth fail this check.")
     };
 
     fhicl::OptionalAtom<bool> InTPC {
@@ -105,6 +116,7 @@ struct FilterBlock {
     std::optional<std::vector<int>> nu_pdgs;
     std::optional<std::vector<int>> target_pdgs;
     std::optional<std::array<float, 2>> wrange;
+    std::optional<std::array<float, 2>> genie_wrange;
     std::optional<bool> in_tpc;
     std::optional<bool> iscc;
     std::optional<bool> keep_bad_status;
@@ -120,6 +132,8 @@ struct FilterBlock {
     std::map<int, int> required_counts;
     float wmin = -1.0;
     float wmax = -1.0;
+    float genie_wmin = -1.0;
+    float genie_wmax = -1.0;
 };
 
 
@@ -142,12 +156,13 @@ public:
     virtual bool filter(art::Event& e) override;
 
 protected:
-    bool PassBlock(const art::Ptr<simb::MCTruth>&, const FilterBlock&, mf::LogDebug&) const;
+    bool PassBlock(const art::Ptr<simb::MCTruth>&, const simb::GTruth*, const FilterBlock&, mf::LogDebug&) const;
     void PrintBlock(const FilterBlock&) const;
 
 private:
     art::InputTag fGenieModuleLabel;
     std::vector<FilterBlock> fFilterBlocks;
+    bool fNeedGTruth = false;
 };
 
 
@@ -184,6 +199,20 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
                     << block.wmin << ", " << block.wmax << ") invalid\n";
             }
 
+        }
+
+        std::array<float, 2> genie_wrange;
+        if (cfg.GENIEWRange(genie_wrange)) {
+            block.genie_wrange = genie_wrange;
+            block.genie_wmin = genie_wrange.at(0);
+            block.genie_wmax = genie_wrange.at(1);
+
+            if (block.genie_wmin > block.genie_wmax && block.genie_wmax > 0) {
+                throw cet::exception("TrueSignalFilter")
+                    << "In Filters[" << i << "]: GENIEWRange ("
+                    << block.genie_wmin << ", " << block.genie_wmax << ") invalid\n";
+            }
+            fNeedGTruth = true;
         }
 
         bool in_tpc;
@@ -249,7 +278,7 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
 }
 
 
-bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const FilterBlock& block, mf::LogDebug& debug_log) const {
+bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const simb::GTruth* gtruth, const FilterBlock& block, mf::LogDebug& debug_log) const {
     const std::string kSpace = "    ";
     debug_log << kSpace << "Checking MCTruth is neutrino... ";
     if (mc->Origin() != simb::kBeamNeutrino) return false;
@@ -278,6 +307,21 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const Filter
         debug_log << kSpace << "Checking MCTruth has W within range (W=" << w << ")... ";
         if (block.wmin >= 0. && w < block.wmin) return false;
         if (block.wmax >= 0. && w > block.wmax) return false;
+        debug_log << "PASS\n";
+    }
+
+    if (block.genie_wrange) {
+        debug_log << kSpace << "Checking GTruth has GENIE W within range ";
+        if (!gtruth) {
+            debug_log << "(no associated GTruth)... ";
+            return false;
+        }
+        // fgWrun is the hadronic system invariant mass set by GENIE right
+        // before hadronization; fgW (selected kinematics) as fallback
+        float w = gtruth->fgWrun >= 0. ? gtruth->fgWrun : gtruth->fgW;
+        debug_log << "(W=" << w << ")... ";
+        if (block.genie_wmin >= 0. && w < block.genie_wmin) return false;
+        if (block.genie_wmax >= 0. && w > block.genie_wmax) return false;
         debug_log << "PASS\n";
     }
 
@@ -398,12 +442,23 @@ bool TrueSignalFilter::filter(art::Event & e) {
     auto mclists = e.getMany<std::vector<simb::MCTruth>>();
     for (size_t i = 0; i != mclists.size(); i++) {
         const auto& mclist(mclists.at(i));
+
+        // GTruth is only associated with the MCTruths made by the GENIE module
+        std::optional<art::FindOneP<simb::GTruth>> fmgt;
+        if (fNeedGTruth && mclist.provenance()->moduleLabel() == fGenieModuleLabel.label()) {
+            fmgt.emplace(mclist, e, fGenieModuleLabel);
+        }
+
         for (size_t j = 0; j != mclist->size(); j++) {
             art::Ptr<simb::MCTruth> mc(mclist, j);
+            const simb::GTruth* gtruth = nullptr;
+            if (fmgt && fmgt->at(j).isNonnull()) {
+                gtruth = fmgt->at(j).get();
+            }
             debug_log << "Filtering MCTruth " << j << "...\n";
             for (size_t ib = 0; ib != fFilterBlocks.size(); ib++) {
                 const auto& block = fFilterBlocks.at(ib);
-                if (PassBlock(mc, block, debug_log)) {
+                if (PassBlock(mc, gtruth, block, debug_log)) {
                     // mctruth passes at least one filter, so we are done
                     debug_log << "MCTruth " << j << " passed filter " << ib << "!\n";
                     return true;
@@ -451,6 +506,15 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
             log << (val.value() ? "True" : "False") << "\n";
         }
     };
+    auto print_range = [&](const std::string& name, const std::optional<std::array<float, 2>>& val) {
+        log << " - " << name << ": ";
+        if (!val) {
+            log << kNotSet << "\n";
+        }
+        else {
+            log << "( " << val->at(0) << ", " << val->at(1) << " ) GeV\n";
+        }
+    };
     auto print_ke_thresholds = [&](const std::string& name, const std::optional<std::map<int, float>>& val) {
         log << " - " << name << ": ";
         if (!val) {
@@ -466,6 +530,8 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
 
     print_int_vec("NuPDGs", block.nu_pdgs);
     print_int_vec("TargetPDGs", block.target_pdgs);
+    print_range("WRange", block.wrange);
+    print_range("GENIEWRange", block.genie_wrange);
     print_bool("InTPC", block.in_tpc);
     print_bool("IsCC", block.iscc);
     print_int_vec("Modes", block.modes);
@@ -474,7 +540,6 @@ void TrueSignalFilter::PrintBlock(const FilterBlock& block) const {
     print_int_vec("DisallowedPDGs", block.disallowed_pdgs);
     print_bool("ExactCounts", block.exact_counts);
     print_ke_thresholds("KEThresholds", block.ke_thresholds);
-    // TODO WRange
 }
 
 DEFINE_ART_MODULE(TrueSignalFilter)
