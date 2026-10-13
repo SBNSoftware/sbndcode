@@ -8,6 +8,8 @@ tophatplot:
     waveforms_module_label: "xarapucadecoder:XARAPUCAChannels"
     timing_reference_module_label: "xarapucadecoder"
 
+    save_jittering: false
+
     debug_rising_edge_fit: false
     debug_waveforms: false
     debug_TDC: false

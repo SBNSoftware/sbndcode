@@ -90,6 +90,7 @@ private:
 
   // Verbose and debug options
   bool fVerbose;
+  bool fSaveJittering;
   bool fDebugWaveforms;
   bool fDebugTDC;
   bool fDebugRisingEdgeFit;
@@ -176,6 +177,7 @@ thp::XARAPUCATopHatPlot::XARAPUCATopHatPlot(fhicl::ParameterSet const& p)
   fWaveformsModuleLabel = p.get<art::InputTag>("waveforms_module_label", "xarapucadecoder:XARAPUCAChannels");
   fTimingReferenceModuleLabel = p.get<art::InputTag>("timing_reference_module_label", "xarapucadecoder");
   fVerbose = p.get<bool> ("verbose", false);
+  fSaveJittering = p.get<bool> ("save_jittering", false);
   fDebugWaveforms = p.get<bool> ("debug_waveforms", false);
   fDebugTDC = p.get<bool> ("debug_TDC", false);
   fDebugRisingEdgeFit = p.get<bool> ("debug_rising_edge_fit", false);
@@ -280,15 +282,16 @@ void thp::XARAPUCATopHatPlot::analyze(art::Event const& e)
 
     std::map <float, std::vector<int> > summed_wvfms_map;
     std::map <float, std::vector<int> > summed_wvfm_rm_baselines_map;
-    
-    /*
+  
+    // ====== Jittering variables ======
     float t_1 = 0.0;                // us.
     int32_t wvfm_length_1 = 0;      // ns.
     float t_2 = 0.0;                // us.
     int32_t wvfm_length_2 = 0;      // ns.
     int32_t jitt = 0;               // ns.
     int32_t t_diff = 0;             // ns.
-    */
+    // ===== End jittering variables ======
+    
     // Navigates over all the waveforms of this event.
     for (size_t w = 0; w < num_opdetwvfm; w++) {
       const raw::OpDetWaveform wvfm = waveforms_handle->at(w);
@@ -301,31 +304,33 @@ void thp::XARAPUCATopHatPlot::analyze(art::Event const& e)
         
         if (fDebugWaveforms | (fDebugJittering && channel_number == 700)) std::cout << "[WVFM_ID: " << w << "]\tChannel number: " << channel_number << "\tTimeStamp: " << time_stamp << " us\tBoard slot: " << board_slot << std::endl;
         
-        // Jittering computation.
-    /*    if (channel_number == 700) {
-          t_2 = time_stamp;
-          wvfm_length_2 = static_cast<int32_t>(wvfm.size() * NS_PER_SAMPLE);   // ns.
+        // Jittering computation (for APSAIA only).
+        if (fSaveJittering) {
+          if (channel_number == 700) {
+            t_2 = time_stamp;
+            wvfm_length_2 = static_cast<int32_t>(wvfm.size() * NS_PER_SAMPLE);   // ns.
 
-          if (wvfm_length_1 == 0) {
-            t_diff = DEFAULT_INT;
-            jitt = DEFAULT_INT;
-          } else {
-            t_diff = static_cast<int32_t>(std::lround((t_2 - t_1) * US_TO_NS));
-            jitt = t_diff - wvfm_length_1; // ns.
+            if (wvfm_length_1 == 0) {
+              t_diff = DEFAULT_INT;
+              jitt = DEFAULT_INT;
+            } else {
+              t_diff = static_cast<int32_t>(std::lround((t_2 - t_1) * US_TO_NS));
+              jitt = t_diff - wvfm_length_1; // ns.
+            }
+
+            fJittering.push_back(jitt);
+            fTDiff.push_back(t_diff);
+            fWvfmLengths.push_back(wvfm_length_2);
+            fPrevWvfmLengths.push_back(wvfm_length_1);
+
+            if (fDebugJittering) {
+              std::cout << "\t\t JITTERING COMPUTATION: t_1 = " << t_1 << " us, t_2 = " << t_2 << " us --> t_diff = " << t_diff << " ns, wvfm_length_1 = " << wvfm_length_1 << " ns, wvfm_length_2 = " << wvfm_length_2 << " ns --> jitt = " << jitt << " ns." << std::endl;
+            }
+            t_1 = t_2;
+            wvfm_length_1 = wvfm_length_2;
           }
-
-          fJittering.push_back(jitt);
-          fTDiff.push_back(t_diff);
-          fWvfmLengths.push_back(wvfm_length_2);
-          fPrevWvfmLengths.push_back(wvfm_length_1);
-
-          if (fDebugJittering) {
-            std::cout << "\t\t JITTERING COMPUTATION: t_1 = " << t_1 << " us, t_2 = " << t_2 << " us --> t_diff = " << t_diff << " ns, wvfm_length_1 = " << wvfm_length_1 << " ns, wvfm_length_2 = " << wvfm_length_2 << " ns --> jitt = " << jitt << " ns." << std::endl;
-          }
-          t_1 = t_2;
-          wvfm_length_1 = wvfm_length_2;
         }
-*/
+
         // End jittering computation.
 
         if (summed_wvfms_map.find(time_stamp) == summed_wvfms_map.end()) {
