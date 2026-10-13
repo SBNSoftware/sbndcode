@@ -25,6 +25,9 @@ add_subdirectory(Trigger)
 add_subdirectory(Timing)
 add_subdirectory(PTBAna)
 
+# For xa top-hat plot
+add_subdirectory(TopHatPlots)
+
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
 

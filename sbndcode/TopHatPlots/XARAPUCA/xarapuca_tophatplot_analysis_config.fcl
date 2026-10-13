@@ -1,0 +1,19 @@
+BEGIN_PROLOG
+
+tophatplot:
+{
+    module_type: "XARAPUCATopHatPlotAnalyzer"
+
+    spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products.
+    waveforms_module_label: "xarapucadecoder:XARAPUCAChannels"
+    timing_reference_module_label: "xarapucadecoder"
+
+    debug_rising_edge_fit: false
+    debug_waveforms: false
+    debug_TDC: false
+    debug_jittering: false
+    verbose: false
+    
+}
+
+END_PROLOG

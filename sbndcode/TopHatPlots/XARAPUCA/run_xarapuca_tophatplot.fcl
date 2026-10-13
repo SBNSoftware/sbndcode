@@ -1,0 +1,33 @@
+#include "xarapuca_tophatplot_analysis_config.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+
+process_name: XARAPUCATopHatPlotAnalyzer # The process name must NOT contain underscores
+
+source:
+{
+    module_type: RootInput # Telling art we want a ROOT input
+    maxEvents: -1
+}
+
+services:
+{
+    TFileService: { fileName: "xarapuca_thp.root" }
+    @table::sbnd_services
+}
+
+physics:
+{
+    producers: {
+        tdcdecoder: @local::spec_tdc_decoder_sbnd
+    }
+    analyzers:
+    {
+        ana: @local::tophatplot 
+    }
+    reco: [tdcdecoder]
+    trigger_paths: [reco]
+
+    path0: [ana]
+    end_paths: [path0]
+}
