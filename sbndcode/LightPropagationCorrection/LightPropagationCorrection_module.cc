@@ -13,7 +13,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fOpFlashLabel_tpc1 ( p.get<std::string>("OpFlashLabel_tpc1") ),
     fSpacePointLabel( p.get<std::string>("SpacePointLabel") ),
     fOpHitsModuleLabel( p.get<std::string>("OpHitsModuleLabel") ),
-    fSPECTDCLabel( p.get<std::string>("SPECTDCLabel") ),
+    fFrameShiftInfoLabel( p.get<std::string>("FrameShiftInfoLabel") ),
     fFlashMatchingTool( p.get<std::string>("FlashMatchingTool") ),
     fSaveCorrectionTree( p.get<bool>("SaveCorrectionTree") ),
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
@@ -128,10 +128,27 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     std::vector< art::Ptr<recob::Slice> > sliceVect;
     art::fill_ptr_vector(sliceVect, sliceHandle);
 
+    // Get the FrameShiftInfo product required to go to the RWM/gate reference frame
+    bool haveFrameShiftInfo = true;
+    if(!fIsMC)
+    {
+        // Data: stream-agnostic -- FrameApplyAtCaf is already resolved per-stream (BNB/Offbeam/Xmuon) by FrameShift_module
+        art::Handle<sbnd::timing::FrameShiftInfo> frameShiftHandle;
+        e.getByLabel(fFrameShiftInfoLabel, frameShiftHandle);
+        if (!frameShiftHandle.isValid()){
+            std::cout << "No FrameShiftInfo product found. Skip this event." << std::endl;
+            haveFrameShiftInfo = false;
+        }
+        else{
+            fFrameApplyAtCaf = frameShiftHandle->FrameApplyAtCaf();
+        }
+    }
+    // MC: block above is skipped, fFrameApplyAtCaf stays 0 -- no shift applied
+
     //Vector for recob PFParticles
     std::vector<art::Ptr<recob::PFParticle>> pfpVect;
     // --- Get the candidate slices
-    for(size_t ix=0; ix<sliceVect.size(); ix++){
+    for(size_t ix=0; ix<sliceVect.size() && haveFrameShiftInfo; ix++){
         ResetSliceInfo();
         // --- Get the slice
         auto & slice = sliceVect[ix];
@@ -200,29 +217,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             continue; // Skip to the next slice if the nu score is below threshold
         }
         this->GetPropagationTimeCorrectionPerChannel();
-        
-        // Get the SPECTDC product required to go to the RWM reference frame
 
-        if(!fIsMC)
-        {
-            art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-            e.getByLabel(fSPECTDCLabel, tdcHandle);
-            if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-                std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-                ResetSliceInfo();
-                continue;
-            }
-            else{
-                const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-                for (size_t i=0; i<tdc_v.size(); i++){
-                    auto tdc = tdc_v[i];
-                    const uint32_t  ch = tdc.Channel();
-                    const uint64_t  ts = tdc.Timestamp();
-                    if(ch == 2) fRWMTime = ts%uint64_t(1e9);
-                    if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
-                }
-            }
-        }
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
         if(fFlashMatchingTool == "OpT0Finder" ){
@@ -282,8 +277,6 @@ void sbnd::LightPropagationCorrection::beginJob()
         fTree->Branch("eventID", &fEvent, "eventID/i");
         fTree->Branch("runID", &fRun, "runID/i");
         fTree->Branch("subrunID", &fSubrun, "subrunID/i");
-        fTree->Branch("RWMTime", &fRWMTime);
-        fTree->Branch("EventTriggerTime", &fEventTriggerTime);
         fTree->Branch("NuScore", &fNuScore);
         fTree->Branch("FMScore", &fFMScore);
         fTree->Branch("OpFlashTimeOld", &fOpFlashTimeOld);
@@ -317,8 +310,7 @@ void sbnd::LightPropagationCorrection::ResetEventVars()
         fRun = 0;
         fSubrun = 0;
         _fNuScore = 0.0;
-        fRWMTime=0.;
-        fEventTriggerTime=0.;
+        fFrameApplyAtCaf=0.;
         fNuScore.clear();
         fFMScore.clear();
         fOpFlashTimeOld.clear();
@@ -630,10 +622,11 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         newFlashTime = flasht0;
         particlePropTime = GetAverageParticlePropagationTime()/1000;
         photonPropTime = GetAveragePhotonPropagationTime()/1000;
-        correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+        double const frameShift_us = fFrameApplyAtCaf/1000.;
+        correctedOpFlashTiming.OpFlashT0 = originalFlashTime + frameShift_us;
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
         correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
-        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;;
+        correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + frameShift_us;
         correctedOpFlashTiming.ParticlePropagationTime = particlePropTime;
         correctedOpFlashTiming.PhotonPropagationTime = photonPropTime;
     }
