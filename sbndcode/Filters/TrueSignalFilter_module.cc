@@ -59,8 +59,8 @@ struct FilterBlockConfig {
 
     fhicl::OptionalSequence<float, 2> GENIEWRange {
         fhicl::Name("GENIEWRange"),
-        fhicl::Comment("Range of allowed GENIE hadronic invariant mass (GTruth::fgWrun, falling back to GTruth::fgW if unset) as (min, max). "
-                       "This is the W GENIE uses to choose between the KNO and PYTHIA hadronizers in DIS, unlike WRange which uses the "
+        fhicl::Comment("Range of allowed GENIE hadronic invariant mass (GTruth::fgW, the selected W) as (min, max). "
+                       "For DIS this equals the W GENIE uses to choose between the KNO and PYTHIA hadronizers, unlike WRange which uses the "
                        "MCNeutrino W computed from the lepton kinematics with the struck nucleon at rest. Use -1 for min or max to indicate "
                        "one-sided bound. Requires the MCTruth-GTruth association from GENIELabel; MCTruths without a GTruth fail this check.")
     };
@@ -316,9 +316,8 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const simb::
             debug_log << "(no associated GTruth)... ";
             return false;
         }
-        // fgWrun is the hadronic system invariant mass set by GENIE right
-        // before hadronization; fgW (selected kinematics) as fallback
-        float w = gtruth->fgWrun >= 0. ? gtruth->fgWrun : gtruth->fgW;
+        // selected W from GENIE's kinematics
+        float w = gtruth->fgW;
         debug_log << "(W=" << w << ")... ";
         if (block.genie_wmin >= 0. && w < block.genie_wmin) return false;
         if (block.genie_wmax >= 0. && w > block.genie_wmax) return false;

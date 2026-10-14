@@ -225,9 +225,9 @@ sbnd_antinumu_hyperon_filter:
 # GENIE (AGKY) starts hadronizing DIS events with PYTHIA8 above W = 2.3 GeV,
 # so these are the events affected by the PYTHIA8 seeding bug fixed in
 # GENIE-MC/Generator#515. Used to make a replacement sample for that region.
-# The cut uses GENIE's own W (GTruth::fgWrun, the one that selects the
-# hadronizer), not MCNeutrino::W() / CAF w, which is computed from the lepton
-# with the struck nucleon at rest and misses ~10% of these events.
+# The cut uses GENIE's own (selected) W, GTruth::fgW, not MCNeutrino::W() /
+# CAF w, which is computed from the lepton with the struck nucleon at rest
+# and misses ~10% of these events.
 sbnd_dis_highw_filter:
 {
     module_type: TrueSignalFilter
