@@ -23,6 +23,7 @@ physics: {
         etafilter: @local::sbnd_eta_nopi0_filter
         nueccfilter: @local::sbnd_ccnue_filter
         kaonfilter: @local::sbnd_kaon_filter
+        qehyperonfilter: @local::sbnd_qe_hyperon_filter
 	      numuhyperonfilter: @local::sbnd_numu_hyperon_filter
         antinumuhyperonfilter: @local::sbnd_antinumu_hyperon_filter
         CCDeltaRadFilter: {
@@ -40,10 +41,11 @@ physics: {
     kaon: [ "kaonfilter" ]
     ccdeltarad: [ "CCDeltaRadFilter" ]
     ncdeltarad: [ "NCDeltaRadFilter" ]
+    qehyperon: [ "qehyperonfilter" ]
     numuhyperon: [ "numuhyperonfilter" ]
     antinumuhyperon: [ "antinumuhyperonfilter" ]
 
-    trigger_paths: [ "ccpi0", "ncpi0", "eta", "nuecc", "kaon", "ccdeltarad", "ncdeltarad", "numuhyperon", "antinumuhyperon" ]
+    trigger_paths: [ "ccpi0", "ncpi0", "eta", "nuecc", "kaon", "ccdeltarad", "ncdeltarad", "numuhyperon", "antinumuhyperon", "qehyperon" ]
 
     streamccpi0: [ outccpi0 ]
     streamncpi0: [ outncpi0 ]
@@ -52,9 +54,11 @@ physics: {
     streamkaon: [ outkaon ]
     streamccdeltarad: [ outccdeltarad ]
     streamncdeltarad: [ outncdeltarad ]
+    streamqehyperon: [ outqehyperon ]
     streamnumuhyperon: [ outnumuhyperon ]
     streamantinumuhyperon: [ outantinumuhyperon ]
-    end_paths: [ streamccpi0, streamncpi0, streameta, streamnuecc, streamkaon, streamnumuhyperon, streamantinumuhyperon, streamccdeltarad, streamncdeltarad ]
+    
+    end_paths: [ streamccpi0, streamncpi0, streameta, streamnuecc, streamkaon, streamnumuhyperon, streamantinumuhyperon, streamqehyperon, streamccdeltarad, streamncdeltarad ]
 
 }
 
@@ -112,5 +116,11 @@ outputs: {
     module_type: "RootOutput"
     fileName: "output_antinumuhyperon.root"
     SelectEvents: [ "antinumuhyperon" ]
+  }
+
+  outqehyperon: {
+    module_type: "RootOutput"
+    fileName: "output_qehyperon.root"
+    SelectEvents: [ "qehyperon" ]
   }
 }

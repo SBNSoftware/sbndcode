@@ -1,0 +1,39 @@
+# run_sbnd_g4_lambda_decay_filter.fcl
+# Select events containing a Lambda hyperon decaying into a proton and pion
+# Must be run after Geant4 stage
+
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "g4_decay_filters.fcl"
+
+services: {
+    TFileService: { fileName: "hists_g4filter.root" }
+    @table::services
+    @table::sbnd_random_services
+    @table::sbnd_g4_services
+}
+
+process_name: g4LambdaDecayFilter
+
+
+physics: {
+    filters: {
+        lambdaChargedDecayFilter: @local::sbnd_lambda_charged_decay_filter
+    }
+
+    lambdaChargedDecay: [ "lambdaChargedDecayFilter" ]
+
+    trigger_paths: [ "lambdaChargedDecay" ]
+
+    streamlambdadecay: [ outlambdadecay ]
+
+    end_paths: [ streamlambdadecay ]
+}
+
+outputs: {
+    outlambdadecay : {
+        module_type: "RootOutput"
+        fileName: "%ifb_lambdaChargedDecay.root"
+        SelectEvents: [ "lambdaChargedDecay" ]
+    }
+}
