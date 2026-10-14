@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+SBNDPTBGateCountFilterConfig: {
+      module_type: SBNDPTBGateCountFilter
+      PTBInputLabel: "ptbdecoder"
+      Verbose: 0
+}
+
+END_PROLOG
+
