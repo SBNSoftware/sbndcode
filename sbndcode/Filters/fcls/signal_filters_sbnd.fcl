@@ -191,6 +191,28 @@ sbnd_numu_hyperon_filter:
     ]
 }
 
+# Lambda or Sigma0 hyperon produced by muon anti-neutrino quasielastic interaction
+sbnd_qe_hyperon_filter:
+{
+    module_type: "TrueSignalFilter"
+    GENIELabel: "generator"
+
+    Filters: [
+        {
+            NuPDGs:      [ -14 ]
+            Modes:       [0]
+            RequiredPDGs:[ 3122 ]
+            InTPC:       true
+        },
+        {
+            NuPDGs:      [ -14 ]
+            Modes:       [0]
+            RequiredPDGs:[ 3212 ]
+            InTPC:       true
+        }
+    ]
+}
+
 
 # Any hyperon (Lambda or Sigma) + anything, produced by anti-numu
 sbnd_antinumu_hyperon_filter:
