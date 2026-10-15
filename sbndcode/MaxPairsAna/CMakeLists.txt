@@ -1,0 +1,11 @@
+art_make(
+  MODULE_LIBRARIES
+  ROOT::Tree
+  ROOT::Hist
+  ROOT::Gpad
+  ROOT::Graf
+  lardataobj::RawData
+  art_root_io::tfile_support
+  art_root_io::TFileService_service
+)
+install_fhicl()

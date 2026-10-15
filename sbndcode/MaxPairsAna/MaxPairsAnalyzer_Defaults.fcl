@@ -1,0 +1,60 @@
+BEGIN_PROLOG
+
+MaxPairsAnalyzer: {
+  module_type: "MaxPairsAnalyzer"
+  PMTInputTag: "pmtdecoder:PMTChannels:TriggerEffDecoder"
+  TimingInputTag: "pmtdecoder:TimingChannels:TriggerEffDecoder"
+  PTBModuleLabel: "ptbdecoder"
+  PairThreshold: 14200
+  MTCAChannelIndex: 3
+  MTCA1NHITAmplitude: 22.0
+  # Fill baseline-sub MTCA ADC hist only where digital mon-pulse (pairs) > this
+  DigMonPulseNHitCut: 0
+  # X-axis zoom for MTCA ADC canvas/PNG (full hist still filled +/-10000)
+  ADCPlotXMin: -10.
+  ADCPlotXMax: 200.
+  # Y-axis limits for raw PMT overlay (min >= max => auto-scale)
+  RawPMTPlotYMin: 14000.
+  RawPMTPlotYMax: 14500.
+  # 1-based index among mon-pulse debug events for raw PMT overlay (0 = off)
+  # e.g. NDebugEvents: 10 and RawPMTDebugIndex: 2 => raw overlay for the 2nd debug
+  RawPMTDebugIndex: 4
+  # -1 = any event; >=0 = only that event number
+  DebugEvent: -1
+  # Save first N qualifying digital/MTCA overlay PNGs (HLT2 events)
+  NDebugEvents: 10
+  # Same overlays for inefficiency: peak in window, maxPairs > cut, no HLT2
+  NDebugIneffEvents: 10
+  DebugIneffMaxPairsMin: 10
+  # HLT bit for efficiency plots (2 = BNB light + beam)
+  HLTEffBit: 2
+  # X-axis (and fill range) for HLT2-since-HLT1 timing hist
+  HLT2SinceHLT1XMin: -50.
+  HLT2SinceHLT1XMax: 200.
+  HLT2SinceHLT1NBins: 250
+  # X-axis (and fill range) for sample-of-max-digital-mon-pulse hist
+  MaxPairsSampleXMin: 0.
+  MaxPairsSampleXMax: 7000.
+  MaxPairsSampleNBins: 700
+  # Per-event flash-TS debug axis (us); 0 = ETRIG ~ ZB
+  FlashTsXMin: -10.
+  FlashTsXMax: 10.
+  FlashTsNBins: 40
+  # Job-level peak-time hist axis (us vs ETRIG/ZB)
+  FlashTsJobXMin: -10.
+  FlashTsJobXMax: 10.
+  FlashTsJobNBins: 200
+  # Efficiency: brightest digital maxPairs peak with time in this window (us vs ZB)
+  # Events with no maxPairs > 0 peak in this window are excluded from efficiency.
+  EffPeakTsMin: 0.
+  EffPeakTsMax: 2.5
+  # Min digital pairs to count as a local-max peak (bias diagnostic)
+  PeakMinHeight: 1
+  # Per-event flash-TS debug PNGs (HLT2 and inefficiency samples)
+  NFlashTsDebugEvents: 10
+  NFlashTsDebugIneffEvents: 10
+  SavePlotPNGs: true
+  PlotOutputPrefix: "maxpairs"
+}
+
+END_PROLOG

@@ -1,0 +1,25 @@
+#include "MaxPairsAnalyzer_Defaults.fcl"
+
+process_name: MaxPairsAna
+
+services:
+{
+  TFileService: { fileName: "maxpairs.root" }
+}
+
+source:
+{
+  module_type: RootInput
+  # Prefer: lar -c run_maxpairs.fcl -S artfile.list
+  # fileNames: [ "one_decodereff.root" ]
+}
+
+physics:
+{
+  analyzers:
+  {
+    maxpairs: @local::MaxPairsAnalyzer
+  }
+  ana: [ maxpairs ]
+  end_paths: [ ana ]
+}
