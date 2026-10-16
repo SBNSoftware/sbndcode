@@ -162,27 +162,102 @@ sbnd_kaon_filter:
     ]
 }
 
-# Any hyperon (Lambda or Sigma) + anything
-sbnd_hyperon_filter:
+# Any hyperon (Lambda or Sigma) + anything, produced by numu
+sbnd_numu_hyperon_filter:
 {
     module_type: TrueSignalFilter
     GENIELabel: "generator"
     Filters: [
         {
+            NuPDGs: [ 14 ]
             RequiredPDGs: [ 3122 ]
             InTPC: true
         },
         {
+            NuPDGs: [ 14 ]
             RequiredPDGs: [ 3212 ]
             InTPC: true
         },
-	{
+	    {
+            NuPDGs: [ 14 ]   
             RequiredPDGs: [ 3112 ]
             InTPC: true
         },
         {
+            NuPDGs: [ 14 ]
             RequiredPDGs: [ 3222 ]
             InTPC: true
+        }
+    ]
+}
+
+# Lambda or Sigma0 hyperon produced by muon anti-neutrino quasielastic interaction
+sbnd_qe_hyperon_filter:
+{
+    module_type: "TrueSignalFilter"
+    GENIELabel: "generator"
+
+    Filters: [
+        {
+            NuPDGs:      [ -14 ]
+            Modes:       [0]
+            RequiredPDGs:[ 3122 ]
+            InTPC:       true
+        },
+        {
+            NuPDGs:      [ -14 ]
+            Modes:       [0]
+            RequiredPDGs:[ 3212 ]
+            InTPC:       true
+        }
+    ]
+}
+
+
+# Any hyperon (Lambda or Sigma) + anything, produced by anti-numu
+sbnd_antinumu_hyperon_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            NuPDGs: [ -14 ]
+            RequiredPDGs: [ 3122 ]
+            InTPC: true
+        },
+        {
+            NuPDGs: [ -14 ]
+            RequiredPDGs: [ 3212 ]
+            InTPC: true
+        },
+	    {
+            NuPDGs: [ -14 ]   
+            RequiredPDGs: [ 3112 ]
+            InTPC: true
+        },
+        {
+            NuPDGs: [ -14 ]
+            RequiredPDGs: [ 3222 ]
+            InTPC: true
+        }
+    ]
+}
+
+# DIS with GENIE hadronic W > 2.3 GeV, any flavor, CC or NC.
+# GENIE (AGKY) starts hadronizing DIS events with PYTHIA8 above W = 2.3 GeV,
+# so these are the events affected by the PYTHIA8 seeding bug fixed in
+# GENIE-MC/Generator#515. Used to make a replacement sample for that region.
+# The cut uses GENIE's own (selected) W, GTruth::fgW, not MCNeutrino::W() /
+# CAF w, which is computed from the lepton with the struck nucleon at rest
+# and misses ~10% of these events.
+sbnd_dis_highw_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            Modes: [ 2 ] # simb::kDIS
+            GENIEWRange: [ 2.3, -1 ]
         }
     ]
 }

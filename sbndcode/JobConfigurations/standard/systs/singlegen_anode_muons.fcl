@@ -1,0 +1,135 @@
+#
+# File:    singlegen_anode_muons.fcl
+# Purpose: SBND gen-stage job. Particle-gun (SingleGen) configuration tuned to
+#          reproduce the position / angle / momentum COVERAGE of the CORSIKA
+#          double-anode-crossing cosmic muons (see corsika_anode_muons.txt).
+#
+#          BROAD-COVERAGE, BOTH-DIRECTIONS variant: the start box and angle
+#          ranges span the FULL active-volume footprint and the FULL CORSIKA
+#          angular range, so an individual muon only has a ~29% chance of
+#          crossing both anodes. 6 muons are generated per event -- 3 drifting
+#          TPC0->TPC1 (+x) and 3 drifting TPC1->TPC0 (-x), an exact 50/50
+#          direction split -- so ~1.7 muons/event are expected to cross both
+#          anodes (~87% of events get at least one).
+#
+# Usage:   lar -c singlegen_anode_muons.fcl              # all maxEvents
+#          lar -c singlegen_anode_muons.fcl -n 10        # 10 events
+#          lar --debug-config cfg.out -c singlegen_anode_muons.fcl   # parse check
+#
+# Coverage / configuration
+# ------------------------
+# The CORSIKA double-anode crossers live on a thin, CORRELATED manifold in
+# (position x angle) space (steeply downgoing muons must also start high in y).
+# A particle gun samples position and angle INDEPENDENTLY, so wide marginal
+# coverage and a high crossing rate trade off against each other. This variant
+# favours COVERAGE:
+#
+#   start y  :    0 +/- 200 cm  -> [-200, 200]   full active-volume height
+#   start z  :  250 +/- 250 cm  -> [   0, 500]   full active-volume length
+#   ThetaYZ  : centred -24.5 +/- 20.5 deg -> [-45, -4]  full CORSIKA polar range
+#   momentum :   21 +/-  19 GeV/c -> uniform [2, 40]    CORSIKA p5-p95 range
+#
+#   +x muons (TPC0->TPC1):  start x = -203 cm,  ThetaXZ =  90 +/- 51 -> [ 39, 141]
+#   -x muons (TPC1->TPC0):  start x = +203 cm,  ThetaXZ = 270 +/- 51 -> [219, 321]
+#
+# BOTH DIRECTIONS IN ONE GUN
+# --------------------------
+# SingleGen treats every numeric parameter as a per-particle VECTOR. With
+# ParticleSelectionMode "all" and a 6-entry PDG list it fires 6 muons/event,
+# muon i using X0[i], Theta0XZ[i], etc. Length-1 vectors are padded out to 6
+# by PadOutVectors. Giving X0 and Theta0XZ full 6-entry vectors -- the first 3
+# entries the +x sense, the last 3 the -x sense -- yields the exact 50/50
+# split with a single producer. All other parameters stay length-1, so every
+# muon shares the same y / z / ThetaYZ / momentum coverage.
+#
+# Measured single-muon double-anode crossing rate: ~29% in each direction
+# (emulate_singlegen_anode_muons.py).
+#
+# For a GUARANTEED-crossing (100%, narrower coverage) gun, shrink SigmaY/SigmaZ
+# and the Theta sigmas; for the full correlated coverage use the CORSIKA list
+# (run_corsika_anode_muons_gen.fcl).
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "singles_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: AnodeMuonGun
+
+services:
+{
+  TFileService: { fileName: "hists_singlegen_anode_muons_%p-%tc.root" }
+  @table::sbnd_simulation_services
+}
+services.message: @local::sbnd_message_services_interactive
+
+source:
+{
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:       10000     # number of events; 6 muons are made per event
+  firstRun:        1
+  firstEvent:      1
+}
+
+physics:
+{
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    generator: @local::sbnd_singlep
+  }
+
+  simulate:  [ rns, generator ]
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    fileName: "singlegen_anode_muons_gen_%p-%tc.root"
+    dataTier: "generated"
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Particle-gun configuration (overrides sbnd_singlep).
+# ParticleSelectionMode "all" with a 6-entry PDG list -> 6 muons per event.
+# X0 and Theta0XZ are 6-entry vectors: entries 0-2 fire +x (TPC0->TPC1),
+# entries 3-5 fire -x (TPC1->TPC0) -> an exact 50/50 direction split.
+# All other numeric parameters are length-1 and padded out to 6 by
+# PadOutVectors, so every muon shares the same y/z/ThetaYZ/momentum coverage.
+# ---------------------------------------------------------------------------
+physics.producers.generator.ParticleSelectionMode: "all"          # use the whole PDG list
+physics.producers.generator.PadOutVectors:         true           # pad length-1 vectors to 6
+physics.producers.generator.PDG:                   [ 13, -13, 13, -13, 13, -13 ]  # 6 muons/event
+
+# momentum: uniform [P0-SigmaP, P0+SigmaP] = [2, 40] GeV/c
+physics.producers.generator.PDist:                 "uniform"
+physics.producers.generator.P0:                    [ 21.0 ]
+physics.producers.generator.SigmaP:                [ 19.0 ]
+
+# start position: uniform box. X0 per-muon: -203 (+x sense, entries 0-2) /
+# +203 (-x sense, entries 3-5); y,z span the full active-volume footprint.
+physics.producers.generator.PosDist:               "uniform"
+physics.producers.generator.X0:                    [ -203.0, -203.0, -203.0, 203.0, 203.0, 203.0 ]
+physics.producers.generator.Y0:                    [    0.0 ]
+physics.producers.generator.Z0:                    [  250.0 ]
+physics.producers.generator.SigmaX:                [    0.0 ]
+physics.producers.generator.SigmaY:                [  200.0 ]
+physics.producers.generator.SigmaZ:                [  250.0 ]
+physics.producers.generator.T0:                    [    0.0 ]
+physics.producers.generator.SigmaT:                [    0.0 ]
+physics.producers.generator.TDist:                 "uniform"
+
+# direction: uniform in ThetaXZ, uniform-in-sine in ThetaYZ.
+# Theta0XZ per-muon: 90 deg (+x drift, entries 0-2) / 270 deg (-x drift, 3-5).
+physics.producers.generator.AngleDist:             "uniform"
+physics.producers.generator.Theta0XZ:              [ 90.0, 90.0, 90.0, 270.0, 270.0, 270.0 ]
+physics.producers.generator.Theta0YZ:              [ -24.5 ]   # downward
+physics.producers.generator.SigmaThetaXZ:          [  51.0 ]
+physics.producers.generator.SigmaThetaYZ:          [  20.5 ]
