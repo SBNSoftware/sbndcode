@@ -19,6 +19,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
     fVGroupVIS( p.get<double>("VGroupVIS") ),
     fVGroupVUV( p.get<double>("VGroupVUV") ),
+    fUseMCVIS( p.get<bool>("UseMCVIS") ),
     fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
     fMinHitPE ( p.get<int>("MinHitPE") ),
@@ -147,14 +148,15 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                     if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
                     if(_fNuScore>_sliceMaxNuScore) _sliceMaxNuScore = _fNuScore;
                 }
+                std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
+                for(const art::Ptr<recob::Vertex> &ver : vertexVec){
+                    geo::Point_t xyz_vertex = ver->position();
+                    fRecoVx= xyz_vertex.X();
+                    fRecoVy= xyz_vertex.Y();
+                    fRecoVz= xyz_vertex.Z();
+                }
             }
-            std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
-            for(const art::Ptr<recob::Vertex> &ver : vertexVec){
-                geo::Point_t xyz_vertex = ver->position();
-                fRecoVx= xyz_vertex.X();
-                fRecoVy= xyz_vertex.Y();
-                fRecoVz= xyz_vertex.Z();
-            }
+
             //Get the spacepoints associated to the PFParticle
             std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
             //Get the SP Hit assns    
@@ -408,9 +410,16 @@ for(size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
-            double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
-            double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
-
+            double spToCathode;
+            double cathodeToOpDet;
+            if(fUseMCVIS){ // Correct VIS light as is simulated in MC.
+                spToCathode = std::sqrt(fSpacePointX[sp]*fSpacePointX[sp]); // Distance from space point to cathode in mm
+                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy)*(dy) + (dz)*(dz)); // Distance from cathode to OpDet in mm
+            }
+            else{ // Correct VIS light ot minimise bias in data.
+                spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
+                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
+            }
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
