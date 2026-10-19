@@ -22,8 +22,22 @@
     <NuSettingsFile>PandoraSettings_Neutrino_SBND.xml</NuSettingsFile>
     <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
     <StitchingTools>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>false</ThreeDStitchingMode></tool>
+      <!-- End directions of the stitching candidates from a 133-layer (~40 cm) sliding fit instead of the default 30 layers (~9 cm):
+           the short fit misjudges the direction of tracks nearly parallel to the cathode -->
+      <tool type = "LArStitchingCosmicRayMerging">
+        <ThreeDStitchingMode>true</ThreeDStitchingMode>
+        <MinLongitudinalDisplacementX>-4.0</MinLongitudinalDisplacementX>
+        <LooserMaxTransverseDisplacement>4.0</LooserMaxTransverseDisplacement>
+        <HalfWindowLayers>133</HalfWindowLayers>
+        <UseYZFallbackForClosestVertices>true</UseYZFallbackForClosestVertices>
+      </tool>
+      <tool type = "LArStitchingCosmicRayMerging">
+        <ThreeDStitchingMode>false</ThreeDStitchingMode>
+        <MinLongitudinalDisplacementX>-5.0</MinLongitudinalDisplacementX>
+        <LooserMaxTransverseDisplacement>4.0</LooserMaxTransverseDisplacement>
+        <HalfWindowLayers>133</HalfWindowLayers>
+        <UseYZFallbackForClosestVertices>true</UseYZFallbackForClosestVertices>
+      </tool>
     </StitchingTools>
     <CosmicRayTaggingTools>
       <tool type = "LArCosmicRayTagging"/>
@@ -43,6 +57,7 @@
     <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
     <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
     <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
+    <InTimeMaxX0>2.5</InTimeMaxX0>
   </algorithm>
 
   <algorithm type = "LArVisualMonitoring">

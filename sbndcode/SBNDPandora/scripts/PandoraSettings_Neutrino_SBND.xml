@@ -27,7 +27,11 @@
   <algorithm type = "LArTransverseAssociation"/>
   <algorithm type = "LArLongitudinalExtension"/>
   <algorithm type = "LArTransverseExtension"/>
-  <algorithm type = "LArCrossGapsAssociation"/>
+  <algorithm type = "LArCrossGapsAssociation">
+    <GapTolerance>2.5</GapTolerance>
+    <MaxOnClusterDistance>2.0</MaxOnClusterDistance>
+    <SlidingFitWindow>30</SlidingFitWindow>
+  </algorithm>
   <algorithm type = "LArCrossGapsExtension"/>
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
@@ -49,7 +53,11 @@
   <algorithm type = "LArTransverseAssociation"/>
   <algorithm type = "LArLongitudinalExtension"/>
   <algorithm type = "LArTransverseExtension"/>
-  <algorithm type = "LArCrossGapsAssociation"/>
+  <algorithm type = "LArCrossGapsAssociation">
+    <GapTolerance>2.5</GapTolerance>
+    <MaxOnClusterDistance>2.0</MaxOnClusterDistance>
+    <SlidingFitWindow>30</SlidingFitWindow>
+  </algorithm>
   <algorithm type = "LArCrossGapsExtension"/>
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
@@ -71,7 +79,11 @@
   <algorithm type = "LArTransverseAssociation"/>
   <algorithm type = "LArLongitudinalExtension"/>
   <algorithm type = "LArTransverseExtension"/>
-  <algorithm type = "LArCrossGapsAssociation"/>
+  <algorithm type = "LArCrossGapsAssociation">
+    <GapTolerance>2.5</GapTolerance>
+    <MaxOnClusterDistance>2.0</MaxOnClusterDistance>
+    <SlidingFitWindow>30</SlidingFitWindow>
+  </algorithm>
   <algorithm type = "LArCrossGapsExtension"/>
   <algorithm type = "LArOvershootSplitting"/>
   <algorithm type = "LArBranchSplitting"/>
