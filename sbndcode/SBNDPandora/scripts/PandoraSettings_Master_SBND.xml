@@ -25,9 +25,11 @@
     <CRSettingsFile>PandoraSettings_Cosmic_SBND.xml</CRSettingsFile>
     <NuSettingsFile>PandoraSettings_Neutrino_SBND.xml</NuSettingsFile>
     <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
+    <!-- End directions of the stitching candidates from a 133-layer (~40 cm) sliding fit instead of the default 30 layers (~9 cm):
+         the short fit misjudges the direction of tracks nearly parallel to the cathode -->
     <StitchingTools>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
-      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>false</ThreeDStitchingMode></tool>
+      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode><HalfWindowLayers>133</HalfWindowLayers></tool>
+      <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>false</ThreeDStitchingMode><HalfWindowLayers>133</HalfWindowLayers></tool>
     </StitchingTools>
     <CosmicRayTaggingTools>
       <tool type = "LArCosmicRayTagging"/>
