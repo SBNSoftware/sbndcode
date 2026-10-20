@@ -209,7 +209,6 @@ private:
     double fVGroupVUV_I;
     double fVGroupVIS;
     double fVGroupVUV; // Speed of light in vacuum in mm/ns
-    bool fUseMCVIS; // Flag to indicate if MC VIS light propagation should be used
 
     double fNuScoreThreshold;
     double fFMScoreThreshold;

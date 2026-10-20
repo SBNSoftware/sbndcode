@@ -19,7 +19,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
     fVGroupVIS( p.get<double>("VGroupVIS") ),
     fVGroupVUV( p.get<double>("VGroupVUV") ),
-    fUseMCVIS( p.get<bool>("UseMCVIS") ),
     fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
     fMinHitPE ( p.get<int>("MinHitPE") ),
@@ -410,16 +409,9 @@ for(size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
-            double spToCathode;
-            double cathodeToOpDet;
-            if(fUseMCVIS){ // Correct VIS light as is simulated in MC.
-                spToCathode = std::sqrt(fSpacePointX[sp]*fSpacePointX[sp]); // Distance from space point to cathode in mm
-                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy)*(dy) + (dz)*(dz)); // Distance from cathode to OpDet in mm
-            }
-            else{ // Correct VIS light ot minimise bias in data.
-                spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
-                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
-            }
+            double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
+            double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
+
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = 0;
