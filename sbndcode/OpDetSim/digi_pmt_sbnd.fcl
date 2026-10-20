@@ -20,7 +20,7 @@ sbnd_digipmt_alg:
   
   # Time delays
   TTS:                   2.4        #Transit Time Spread in ns
-  CableTime:             135        #time delay of the 30 m long readout cable in ns
+  CableTime:             0        #time delay of the 30 m long readout cable in ns (not simulated not corrected)
 
   # Digitizer simulation
   PMTADCDynamicRange:    14250      #in ADC values
