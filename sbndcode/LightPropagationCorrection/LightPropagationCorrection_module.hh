@@ -29,6 +29,7 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/WireReadout.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "lardata/Utilities/AssociationUtil.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 
@@ -151,6 +152,7 @@ private:
     size_t HighestBFMScoreIdx(const std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > );
 
     void GetPropagationTimeCorrectionPerChannel();
+    void GetPropagationTimeCorrectionPerChannelCherenkov();
     void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
@@ -163,14 +165,14 @@ private:
     void GetParticlePropagationTimeLite(int, std::vector<art::Ptr<recob::SpacePoint>>, art::FindManyP<recob::Hit>);
     void GetParticlePropagationTimeMC(art::Event const& , const std::vector<art::Ptr<recob::Hit> >& , int );
     void GetTruthMatchedID(art::Event const& , const std::vector<art::Ptr<recob::Hit> >& );
+    void FillFirstOpHit(double , ::lightana::LiteOpHitArray_t );
 
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
-
     trkf::TrackMomentumCalculator tmc;
-
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
     opdet::sbndPDMapAlg fPDSMap;
+    geo::GeometryCore const& fGeom;
     //Flash finder manager
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
@@ -216,10 +218,13 @@ private:
     bool fSaveCorrectionTree;
 
     std::vector<double> fTimeCorrectionPerChannel;
+    std::vector<double> fTimeCorrectionPerChannelCherenkov;
     std::vector<double> fParticlePropagationTimePerChannel;
     std::vector<double> fPhotonPropagationTimePerChannel;
     std::vector<double> fPhotonPropagationDistancePerChannel;
     std::vector<size_t> fSelectedChannelList;
+    std::vector<double> fFirstOpHitTimePerChannel;
+    std::vector<double> fFirstOpHitPEPerChannel;
 
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
@@ -249,6 +254,7 @@ private:
     std::vector<double> fTruthMatchedID;
     std::vector<double> fTruthMatchedE;
 
+    
     //Charge Barycenter 
     std::vector<double> fChargeBarycenterX{0.,0.};
     std::vector<double> fChargeBarycenterY{0.,0.};
@@ -271,6 +277,9 @@ private:
     double fNuScoreThreshold;
     double fFMScoreThreshold;
 
+    double fCherenkovRefractiveIndex;
+    double fCherenkovCosineTolerance;
+    double fOpDetXOffset;
 
     bool fDebug;
 

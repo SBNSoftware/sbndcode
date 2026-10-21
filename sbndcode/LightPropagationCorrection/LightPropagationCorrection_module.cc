@@ -8,6 +8,7 @@ namespace sbnd {
 
 sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet const& p)
     : EDProducer{p},
+    fGeom(*(lar::providerFrom<geo::Geometry>())),
     fReco2Label( p.get<std::string>("Reco2Label") ),
     fOpT0FinderModuleLabel( p.get<std::string>("OpT0FinderModuleLabel") ),
     fTPCPMTBarycenterFMModuleLabel( p.get<std::string>("TPCPMTBarycenterFMModuleLabel") ),
@@ -36,8 +37,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fVGroupVUV( p.get<double>("VGroupVUV") ),
     fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
+    fCherenkovRefractiveIndex( p.get<double>("CherenkovRefractiveIndex")),
+    fCherenkovCosineTolerance( p.get<double>("CherenkovCosineTolerance") ),
+    fOpDetXOffset( p.get<double>("OpDetXOffset") ),
     fDebug( p.get<bool>("Debug", false) )
-    // 
+    //
     // More initializers here.
 {
     fNOpChannels = fWireReadout.NOpChannels();
@@ -88,7 +92,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fSubrun = e.id().subRun();
     _flashgeo->InitializeFlashGeoAlgo();
 
-    if(fSaveCorrectionTree && fUseCheatMC)
+    if(fSaveCorrectionTree && fUseMCVIS)
     {
         SaveTrueTrajectory(e);
     }
@@ -226,14 +230,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             bool pfpistrack = ::lar_pandora::LArPandoraHelper::IsTrack(pfp);
             //bool pfpisshower = ::lar_pandora::LArPandoraHelper::IsShower(pfp);
             // Neutrino daughter particles
-            for (auto const pfpMeta : pfpMetaVec) {
-                larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
-                if(propertiesMap.count("TrackScore")){
-                    double track_score=propertiesMap.at("TrackScore");
-                    std::cout << " track_score " << track_score << std::endl;
-                }
-            }
-
             // For every PFP look for the true MC Particle 
             std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
             //Get the SP Hit assns
@@ -247,7 +243,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 std::vector<art::Ptr<recob::Hit>> hits = SPToHitAssoc.at(sp.key());
                 PFPhits.insert(PFPhits.end(), hits.begin(), hits.end());
             }
-            if(fUseCheatMC) GetTruthMatchedID(e, PFPhits);
+            if(fUseMCVIS) GetTruthMatchedID(e, PFPhits);
 
             if(!fUseCheatMC)
             {
@@ -266,8 +262,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                         }
                     }
                 }
-                if(!tracksuccess)
-                {
+                if(!tracksuccess){
                     fAllPFPsCorrected=false;
                     // If it's a shower jsut assume speed of light propagation
                     std::vector<art::Ptr<recob::SpacePoint>> PFPSpacePointsVect = pfp_sp_assns.at(pfp.key());
@@ -297,6 +292,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         }
         
         this->GetPropagationTimeCorrectionPerChannel();
+        this->GetPropagationTimeCorrectionPerChannelCherenkov();
         
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
@@ -576,6 +572,8 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fParticlePropagationTimePerChannel.assign(fNOpChannels, 0.0); // Reset the particle propagation time vector for each channel
     fPhotonPropagationTimePerChannel.assign(fNOpChannels, 0.0); // Reset the photon propagation time vector for each channel
     fPhotonPropagationDistancePerChannel.assign(fNOpChannels, 0.0); // Reset the photon propagation distance vector for each channel
+    fFirstOpHitTimePerChannel.assign(fNOpChannels, 0.0); // Reset the first OpHit time vector for each channel
+    fFirstOpHitPEPerChannel.assign(fNOpChannels, 0.0); // Reset the first OpHit PE vector for each channel
     fAllPFPsCorrected = true;
 }
 
@@ -583,15 +581,21 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
 {
     // Implementation
     for(size_t opdet = 0; opdet < fOpDetID.size(); opdet++) {
-        double _opDetX = fOpDetX[opdet];
+        double _opDetX;
+        if(fOpDetX[opdet]<0){
+            _opDetX = fOpDetX[opdet] + fOpDetXOffset;
+        }
+        else{
+            _opDetX = fOpDetX[opdet] - fOpDetXOffset;
+        }
+        //double _opDetX = fOpDetX[opdet];
         double _opDetY = fOpDetY[opdet];
         double _opDetZ = fOpDetZ[opdet];
-        float minPropTime = 999999999.;
-        float minPartPropTime = 999999999.;
-        float minLightPropTime = 999999999.;
-        float minPropDistance = 999999999.;
+        double minPropTime = 999999999.;
+        double minPartPropTime = 999999999.;
+        double minLightPropTime = 999999999.;
+        double minPropDistance = 999999999.;
         bool foundSP = false;
-
         for(size_t sp=0; sp<fSpacePointX.size(); sp++)
         {
             bool isInSameTPC = (fSpacePointX[sp] * _opDetX) > 0;
@@ -603,7 +607,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double spToCathode;
             double cathodeToOpDet;
             if(fUseMCVIS){
-                spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp]); // Distance from space point to cathode in mm
+                spToCathode = std::sqrt(fSpacePointX[sp]*fSpacePointX[sp]); // Distance from space point to cathode in mm
                 cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy)*(dy) + (dz)*(dz)); // Distance from cathode to OpDet in mm
             }
             else{
@@ -611,10 +615,10 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
                 cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
             }
 
-            float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
-            float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
-            float lightPropTime = 0;
-            float lightPropDistance = 0;
+            double lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
+            double lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
+            double lightPropTime = 0;
+            double lightPropDistance = 0;
             const std::string pdType = fPDSMap.pdType(opdet);
             if(pdType=="pmt_coated" || pdType=="xarapuca_vuv")
                 lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
@@ -625,8 +629,8 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
 
             lightPropDistance = distanceToOpDet;
             //float fastest_partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
-            float partPropTime = fSpacePointPropagationTime[sp];
-            float PropTime = lightPropTime + partPropTime;
+            double partPropTime = fSpacePointPropagationTime[sp];
+            double PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) {
                 minPropTime = PropTime;
                 minPartPropTime = partPropTime;    
@@ -642,7 +646,13 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             fPhotonPropagationDistancePerChannel[opdet] = 0.0;
             continue;
         }
-
+        const std::string pdType = fPDSMap.pdType(opdet);
+        if(pdType=="pmt_coated" || pdType=="xarapuca_vuv"){
+            geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(opdet);
+            geo::Point_t opDetCenter;
+            opDetCenter = opDet.GetCenter();
+            std::cout << " The center of the opdet X: " << opDetCenter.X() << " Y: " << opDetCenter.Y() << " Z: " << opDetCenter.Z() << " and position from opdet X: " << _opDetX << " Y: " << _opDetY << " Z: " << _opDetZ << " " <<  std::endl;
+        }
         fTimeCorrectionPerChannel[opdet] = -minPropTime;
         fParticlePropagationTimePerChannel[opdet] = minPartPropTime;
         fPhotonPropagationTimePerChannel[opdet] = minLightPropTime;
@@ -787,6 +797,7 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         double flasht0 = lflash.time;
         // Refine t0 calculation
         flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
+        this->FillFirstOpHit(lflash.time, GetAssociatedLiteHits(lflash, ophits));
         recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
                             ( flasht0) / 1600., lflash.channel_pe,
                             0, 0, 1, // this are just default values
@@ -812,6 +823,12 @@ void sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         correctedOpFlashTiming.NCoatedPMTs = NCoatedPMTs;
         correctedOpFlashTiming.NUncoatedPMTs = NUncoatedPMTs;
         correctedOpFlashTiming.AllPFPsCorrected = fAllPFPsCorrected;
+        correctedOpFlashTiming.FirstOpHitTimePerChannel = fFirstOpHitTimePerChannel;
+        correctedOpFlashTiming.FirstOpHitPEPerChannel = fFirstOpHitPEPerChannel;
+        correctedOpFlashTiming.ParticlePropagationTimePerChannel = fParticlePropagationTimePerChannel;
+        correctedOpFlashTiming.PhotonPropagationTimePerChannel = fPhotonPropagationTimePerChannel;
+        correctedOpFlashTiming.PropagationTimePerChannelCherenkov = fTimeCorrectionPerChannelCherenkov;
+        
     }
     if(fSaveCorrectionTree){
         this->FillCorrectionTree(newFlashTime, *flash, oldOpHitList, newOpHitList);
@@ -883,8 +900,7 @@ double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindMany
 
     isContained= (abs(track_end_x)<200 && abs(track_end_y)<200 && (track_end_z>0 && track_end_z<500));
 
-    if(isContained)
-    {
+    if(isContained){
         auto const& muonRange = track_rangeP_assns_muon.at(track.key());
         if (!muonRange.empty()){
             p_muon = muonRange[0]->range_p;
@@ -894,8 +910,7 @@ double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindMany
             p_proton = protonRange[0]->range_p;
         }
     }
-    else
-    {
+    else{
         auto const& muonMCS = track_MCS_assns_muon.at(track.key());
         if (!muonMCS.empty())
           p_muon = muonMCS[0]->fwdMomentum();
@@ -985,7 +1000,6 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime(
 
         // Accumulated distance along the track
         double ds = 0.0;
-        double accumulated_ds = 0.0;
 
         double kinetic_energy;
         double momentum;
@@ -1081,11 +1095,10 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime(
 
                     size_t prev_idx = indices[i - 1];
                     ds = std::abs(rr[idx] - rr[prev_idx]);
-                    accumulated_ds+=ds;
-                        momentum = tmc.GetTrackMomentum(rr[idx], pdg);        
-                        kinetic_energy = std::sqrt(momentum * momentum + mass * mass) - mass;
-                        total_energy = kinetic_energy + mass;
-                        beta = momentum / total_energy;
+                    momentum = tmc.GetTrackMomentum(rr[idx], pdg);        
+                    kinetic_energy = std::sqrt(momentum * momentum + mass * mass) - mass;
+                    total_energy = kinetic_energy + mass;
+                    beta = momentum / total_energy;
                     // Avoid negative kinetic energy
 
                     dt = ds / (beta * fSpeedOfLight);
@@ -1097,45 +1110,21 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime(
                     fSpacePointPropagationTime.push_back(total_time);
                     fSpacePointPFPID.push_back(PFPID);
                     fSpacePointTMID.push_back(fTruthMatchedTrackID);
-
-                    /*
-                    std::cout << " Space point at position X: " << xyz[idx].x()
-                            << " Y: " << xyz[idx].y()
-                            << " Z: " << xyz[idx].z()
-                            << " t: " << total_time
-                            << " momentum " << momentum
-                            << " kinetic_energy " << kinetic_energy
-                            << std::endl;                    
-                    */       
-
-                    
-                    /*
-                    std::cout << "Point " << i
-                    << " ds = " << ds
-                    << " dEdx = " << dedx[prev_idx]
-                    << " momentum = " << momentum
-                    << " beta = " << beta
-                    << " dt = " << dt
-                    << " accumulated time = " << total_time
-                    << " acccumulated ds = " << accumulated_ds
-                    << std::endl;
-                    */
                 }
             }
         }
-        else //If not contained, assume a constant dedX through the trajectory based on pid information
+        else //If not contained, assume a constant dEdX through the trajectory based on pid information
         {
             for (size_t i = 0; i < indices.size(); ++i) {
                 size_t idx = indices[i];
 
                 // First point: no previous calorimetry point
                 if (i > 0) {
-
                     size_t prev_idx = indices[i - 1];
                     ds = std::abs(rr[idx] - rr[prev_idx]);
                     
                     double dE = constant_dedx * ds / 1000;
-                    kinetic_energy -= dE;
+                    kinetic_energy = std::max(0.0, kinetic_energy - dE);
                     total_energy = kinetic_energy + mass;
                     momentum = std::sqrt(total_energy * total_energy - mass * mass);
                     beta = momentum / total_energy;
@@ -1148,20 +1137,8 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime(
                     fSpacePointPropagationTime.push_back(total_time);
                     fSpacePointPFPID.push_back(PFPID);
                     fSpacePointTMID.push_back(fTruthMatchedTrackID);
-                    /*
-                    std::cout << " Space point at position X: " << xyz[idx].x()
-                            << " Y: " << xyz[idx].y()
-                            << " Z: " << xyz[idx].z()
-                            << " t: " << total_time
-                            << " momentum " << momentum
-                            << " kinetic_energy " << kinetic_energy
-                            << std::endl;                    
-                    */                 
-
-                    
                 }
             }
-        
         }
 
         success=true;
@@ -1194,7 +1171,6 @@ void sbnd::LightPropagationCorrection::GetParticlePropagationTimeLite(int pfpID,
 void sbnd::LightPropagationCorrection::SaveTrueTrajectory(art::Event const& e)
 {
     art::ServiceHandle<cheat::BackTrackerService> bt_serv;
-
     art::Handle< std::vector<simb::MCParticle> > mclistLARG4;
     e.getByLabel(fMCModuleLabel,mclistLARG4);
     if(!mclistLARG4.isValid()){
@@ -1206,29 +1182,14 @@ void sbnd::LightPropagationCorrection::SaveTrueTrajectory(art::Event const& e)
     
     for(size_t i_p=0; i_p < mcpartVec.size(); i_p++){
         const simb::MCParticle pPart = mcpartVec[i_p];
-        double x = pPart.Position().X();
-        double y = pPart.Position().Y();
-        double z = pPart.Position().Z();
-        double initial_momentum = pPart.Momentum().P();
-        int pdg = pPart.PdgCode();
-        if(pPart.EndT()>-10000 && pPart.EndT()<12000 && abs(x)<200 && abs(y)<200 && z<500 && z>0)
-        {
-            fTrueMomentum.push_back(initial_momentum);
-            fTruePID.push_back(pdg);
-        }
-
-
         const simb::MCTrajectory truetrack = pPart.Trajectory();
         for(size_t i_s=0; i_s < truetrack.size(); i_s++){
-            //double t = pPart.Position(i_s).T();
             double x = truetrack.X(i_s);
             double y = truetrack.Y(i_s);
             double z = truetrack.Z(i_s);
             double t = truetrack.T(i_s);
             double e = truetrack.E(i_s);
-            //double mom = truetrack.Momentum(i_s).P();
-            if(pPart.EndT()>-10000 && pPart.EndT()<12000 && abs(x)<200 && abs(y)<200 && z<500 && z>0)
-            {
+            if(pPart.EndT()>-10000 && pPart.EndT()<12000 && abs(x)<200 && abs(y)<200 && z<500 && z>0){
                 fTruthMatchedX.push_back(x);
                 fTruthMatchedY.push_back(y);
                 fTruthMatchedZ.push_back(z);
@@ -1243,7 +1204,7 @@ void sbnd::LightPropagationCorrection::SaveTrueTrajectory(art::Event const& e)
     art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
     if (e.getByLabel(fSimDepProducer, "priorSCE" ,sedHandle)){
-    art::fill_ptr_vector(sedlist, sedHandle);
+        art::fill_ptr_vector(sedlist, sedHandle);
     }
 
     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
@@ -1263,18 +1224,6 @@ void sbnd::LightPropagationCorrection::SaveTrueTrajectory(art::Event const& e)
             truedE_vecZ.push_back(z);
             truedE_vecID.push_back(sed->TrackID());
             truedE_vecT.push_back(time);
-            
-                  // Check if the MCParticle is a cosmic in time coincidence with the G4BeamTimeWindow specified in the fhicl file
-
-            /*
-            std::cout << " Energy deposition: " << sed->Energy()
-            << " at time " << sed->StartT() << " propagation time: " << (sed->StartT() - fTrueVt)
-            << " and position X: " << sed->MidPointX()
-            << " Y: " << sed->MidPointY()
-            << " Z: " << sed->MidPointZ()
-            << std::endl;            
-            */
-
         }
     }
 }
@@ -1350,7 +1299,6 @@ void sbnd::LightPropagationCorrection::GetMCNeutrino(art::Event const& e)
         std::cout <<"Saving MCTruth from "<<fMCTruthModuleLabel[s]<<" with instance "<<fMCTruthInstanceLabel[s];
         std::cout << " with " << mctruth_v.size() << " MCTruths." << std::endl;
 
-
         for (size_t n = 0; n < mctruth_v.size(); n++) {
 
             art::Ptr<simb::MCTruth> evtTruth = mctruth_v[n];    
@@ -1374,18 +1322,18 @@ void sbnd::LightPropagationCorrection::GetMCNeutrino(art::Event const& e)
                 
                 // Only save vertex if the PDG is specified in the fhicl list
                 if( find (fMCTruthPDG.begin(), fMCTruthPDG.end(), par.PdgCode() ) != fMCTruthPDG.end() ){
-                // For BNB neutinos
-                if(par.StatusCode()==0 && evtTruth->Origin()==1 && abs(par.Vx())<200 && abs(par.Vy())<200 && par.Vz()>0 && par.Vz()<500){
-                    fTrueVx=par.Vx();
-                    nu_x = par.Vx();
-                    fTrueVy=par.Vy();
-                    nu_y = par.Vy();
-                    fTrueVz=par.Vz();
-                    nu_z = par.Vz();
-                    fTrueVt=par.T();
-                    nu_t = par.T();
-                    nu_E = par.E();
-                }
+                    // For BNB neutinos
+                    if(par.StatusCode()==0 && evtTruth->Origin()==1 && abs(par.Vx())<200 && abs(par.Vy())<200 && par.Vz()>0 && par.Vz()<500){
+                        fTrueVx=par.Vx();
+                        nu_x = par.Vx();
+                        fTrueVy=par.Vy();
+                        nu_y = par.Vy();
+                        fTrueVz=par.Vz();
+                        nu_z = par.Vz();
+                        fTrueVt=par.T();
+                        nu_t = par.T();
+                        nu_E = par.E();
+                    }
                 }
 
             }
@@ -1407,5 +1355,219 @@ void sbnd::LightPropagationCorrection::GetTruthMatchedID(art::Event const& e, co
     fTruthMatchedTrackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,recoHits,true);
 }
 
+void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, ::lightana::LiteOpHitArray_t ophits)
+{
+    fFirstOpHitTimePerChannel.assign(fNOpChannels, 0.0);
+    fFirstOpHitPEPerChannel.assign(fNOpChannels, 0.0);
+
+    for (auto const& hit : ophits) {
+        if (hit.peak_time < flash_time + 0.01 &&
+            hit.peak_time > flash_time - 0.02 &&
+            hit.pe > 20) {
+
+            const auto channel = hit.channel;
+
+            if (channel >= fNOpChannels) continue;
+
+            if (fFirstOpHitTimePerChannel[channel] == 0.0 ||
+                hit.peak_time < fFirstOpHitTimePerChannel[channel]) {
+
+                fFirstOpHitTimePerChannel[channel] = hit.peak_time;
+                fFirstOpHitPEPerChannel[channel] = hit.pe;
+            }
+        }
+    }
+}
+
+void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelCherenkov()
+{
+    // Reset the Cherenkov correction for all optical channels.
+    fTimeCorrectionPerChannelCherenkov.assign(fNOpChannels, 0.0);
+
+    if (fCherenkovRefractiveIndex <= 0.0 ||
+        fVGroupVIS <= 0.0 ||
+        fSpeedOfLight <= 0.0) {
+        throw std::runtime_error(
+            "GetPropagationTimeCorrectionPerChannelCherenkov: "
+            "invalid refractive index or propagation velocity."
+        );
+    }
 
 
+    const double noTime = std::numeric_limits<double>::infinity();
+
+    // Sort the spacepoints by PFP and then by particle propagation time.
+    std::vector<size_t> pointIndices(fSpacePointX.size());
+
+    for (size_t i = 0; i < pointIndices.size(); ++i) {
+        pointIndices[i] = i;
+    }
+
+    std::stable_sort(
+        pointIndices.begin(),
+        pointIndices.end(),
+        [this](size_t a, size_t b) {
+            if (fSpacePointPFPID[a] != fSpacePointPFPID[b]) {
+                return fSpacePointPFPID[a] < fSpacePointPFPID[b];
+            }
+
+            return fSpacePointPropagationTime[a] <
+                   fSpacePointPropagationTime[b];
+        }
+    );
+
+    // Loop over optical detectors.
+    for (size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
+
+        const double opX = fOpDetX[opdet];
+        const double opY = fOpDetY[opdet];
+        const double opZ = fOpDetZ[opdet];
+
+        double minTotalTime = noTime;
+        bool foundEmissionPoint = false;
+
+        // Loop over existing spacepoints only.
+        for (const size_t sp : pointIndices) {
+
+            const double x = fSpacePointX[sp];
+            const double y = fSpacePointY[sp];
+            const double z = fSpacePointZ[sp];
+
+            const double particleTime =
+                fSpacePointPropagationTime[sp];
+
+            // Ignore spacepoints that are not in the same TPC as the PMT.
+            if ((x * opX) <= 0.0) {
+                continue;
+            }
+
+            // Find the nearest spacepoint in time belonging to the
+            // same PFP, before or after this point, to estimate the
+            // local particle direction and beta.
+            //
+            // Use consecutive points from the same PFP only.
+            size_t previousSP = fSpacePointX.size();
+            size_t nextSP = fSpacePointX.size();
+
+            for (size_t j = 0; j < pointIndices.size(); ++j) {
+                if (pointIndices[j] != sp) {
+                    continue;
+                }
+
+                if (j > 0) {
+                    const size_t candidate = pointIndices[j - 1];
+
+                    if (fSpacePointPFPID[candidate] ==
+                        fSpacePointPFPID[sp]) {
+                        previousSP = candidate;
+                    }
+                }
+
+                if (j + 1 < pointIndices.size()) {
+                    const size_t candidate = pointIndices[j + 1];
+
+                    if (fSpacePointPFPID[candidate] ==
+                        fSpacePointPFPID[sp]) {
+                        nextSP = candidate;
+                    }
+                }
+
+                break;
+            }
+
+            // Prefer a forward segment; otherwise use the previous segment.
+            size_t i0;
+            size_t i1;
+
+            if (nextSP != fSpacePointX.size()) {
+                i0 = sp;
+                i1 = nextSP;
+            }
+            else if (previousSP != fSpacePointX.size()) {
+                i0 = previousSP;
+                i1 = sp;
+            }
+            else {
+                // A single point cannot define a local direction.
+                continue;
+            }
+
+            const double sx =
+                fSpacePointX[i1] - fSpacePointX[i0];
+            const double sy =
+                fSpacePointY[i1] - fSpacePointY[i0];
+            const double sz =
+                fSpacePointZ[i1] - fSpacePointZ[i0];
+
+            const double segmentLength =
+                std::sqrt(sx*sx + sy*sy + sz*sz);
+
+            const double deltaTime =
+                fSpacePointPropagationTime[i1] -
+                fSpacePointPropagationTime[i0];
+
+            if (segmentLength <= 1.0e-6 || deltaTime <= 0.0) {
+                continue;
+            }
+
+            // Estimate beta from the propagation time between adjacent
+            // spacepoints.
+            double beta = segmentLength / (fSpeedOfLight * deltaTime);
+
+            beta = std::min(beta, 1.0);
+
+            // No Cherenkov emission below threshold.
+            if (beta * fCherenkovRefractiveIndex <= 1.0) {
+                continue;
+            }
+
+            const double cosCherenkov =
+                1.0 / (beta * fCherenkovRefractiveIndex);
+
+            // Unit vector along the local particle trajectory.
+            const double ux = sx / segmentLength;
+            const double uy = sy / segmentLength;
+            const double uz = sz / segmentLength;
+
+            // Vector from this existing spacepoint to the PMT.
+            const double rx = opX - x;
+            const double ry = opY - y;
+            const double rz = opZ - z;
+
+            const double photonDistance =
+                std::sqrt(rx*rx + ry*ry + rz*rz);
+
+            if (photonDistance <= 1.0e-6) {
+                continue;
+            }
+
+            // Cosine of the angle between the particle direction
+            // and the direction towards the PMT.
+            const double cosTheta =
+                (ux*rx + uy*ry + uz*rz) / photonDistance;
+            // Keep only spacepoints compatible with the Cherenkov cone.
+            if (std::abs(cosTheta - cosCherenkov) >= fCherenkovCosineTolerance) {
+                continue;
+            }
+
+            // Photon propagation time from this spacepoint to the PMT.
+            const double photonTime =
+                photonDistance / fVGroupVIS;
+
+            const double totalTime =
+                particleTime + photonTime;
+
+            if (std::isfinite(totalTime) &&
+                totalTime < minTotalTime) {
+
+                minTotalTime = totalTime;
+                foundEmissionPoint = true;
+            }
+        }
+
+        // Keep the same sign convention as the existing correction.
+        if (foundEmissionPoint) {
+            fTimeCorrectionPerChannelCherenkov[opdet] = -minTotalTime;
+        }
+    }
+}
