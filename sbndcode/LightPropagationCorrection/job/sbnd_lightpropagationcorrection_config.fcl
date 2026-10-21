@@ -49,7 +49,12 @@ LightPropagationCorrection:
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
 
+    CherenkovRefractiveIndex: 1.23
+    CherenkovCosineTolerance: 5.0e-2
+
     DoPIDCorrection: true
+
+    OpDetXOffset: 0
 
     FlashMatchingTool: "BarycenterFM"
 }
