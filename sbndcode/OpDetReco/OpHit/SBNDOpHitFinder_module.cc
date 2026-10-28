@@ -41,8 +41,8 @@
 #include "canvas/Utilities/Exception.h"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-// #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
-
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 // ROOT includes
 
@@ -87,7 +87,6 @@ namespace opdet {
     std::string fInputModule; // Input tag for OpDetWaveform collection
     std::string fGenModule;
     std::vector< std::string > fInputLabels;
-    std::set< unsigned int > fChannelMasks;
     std::vector<std::string> _pd_to_use; ///< PDS to use (ex: "pmt", "barepmt")
     std::string fElectronics; ///< PDS readouts to use (ex: "CAEN", "Daphne")
     std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _pd_to_use)
@@ -102,6 +101,8 @@ namespace opdet {
     unsigned int fMaxOpChannel;
 
     calib::IPhotonCalibrator const* fCalib = nullptr;
+
+    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
 
     opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
   };
@@ -124,10 +125,6 @@ namespace opdet {
     fInputModule   = pset.get< std::string >("InputModule");
     fGenModule     = pset.get< std::string >("GenModule");
     fInputLabels   = pset.get< std::vector< std::string > >("InputLabels");
-
-    for (auto const& ch : pset.get< std::vector< unsigned int > >
-      ("ChannelMasks", std::vector< unsigned int >()))
-      fChannelMasks.insert(ch);
 
     _pd_to_use   = pset.get< std::vector< std::string > >("PD", _pd_to_use);
     fElectronics = pset.get< std::string >("Electronics");
@@ -160,6 +157,10 @@ namespace opdet {
 
       fCalib = new calib::PhotonCalibratorStandard(SPEArea, SPEShift, areaToPE);
     }
+
+    // Initialize calibration database
+    fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+
 
     // Initialize the rise time calculator tool
     auto const rise_alg_pset = pset.get_if_present<fhicl::ParameterSet>("RiseTimeCalculator");
@@ -257,67 +258,49 @@ namespace opdet {
 
     // Load pulses into WaveformVector
     geo::WireReadoutGeom const& channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
-    if(fChannelMasks.empty() && _opch_to_use.empty() && fInputLabels.size()<2) {
+
+    // Reserve a large enough array
+    int totalsize = 0;
+    for (auto label : fInputLabels)
+    {
       art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
-      if(fInputLabels.empty())
-        evt.getByLabel(fInputModule, wfHandle);
-      else
-        evt.getByLabel(fInputModule, fInputLabels.front(), wfHandle);
-      assert(wfHandle.isValid());
-      RunHitFinder(*wfHandle,
-                   *HitPtr,
-                   fPulseRecoMgr,
-                   *fThreshAlg,
-                   channelMapAlg,
-                   fHitThreshold,
-                   clockData,
-                   calibrator);
-    } else {
+      evt.getByLabel(fInputModule, label, wfHandle);
+      if (!wfHandle.isValid()) continue; // Skip non-existent collections
+      totalsize += wfHandle->size();
+    }
 
-      // Reserve a large enough array
-      int totalsize = 0;
-      for (auto label : fInputLabels)
-      {
-        art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
-        evt.getByLabel(fInputModule, label, wfHandle);
-        if (!wfHandle.isValid()) continue; // Skip non-existent collections
-        totalsize += wfHandle->size();
+    std::vector< raw::OpDetWaveform > WaveformVector;
+    WaveformVector.reserve(totalsize);
+
+    for (auto label : fInputLabels)
+    {
+      art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
+      evt.getByLabel(fInputModule, label, wfHandle);
+      if (!wfHandle.isValid()) continue; // Skip non-existent collections
+      for(auto const& wf : *wfHandle){
+        int channelNumber = wf.ChannelNumber();
+        // If this channel is not to be reconstructed, ingore it
+        if(!fPMTCalibrationDatabaseService->getReconstructChannel(channelNumber)) continue;
+        // If this PDS in not in the list of PDS to use, ingore it
+        if ( std::find(_opch_to_use.begin(), _opch_to_use.end(), channelNumber) == _opch_to_use.end() ) continue;
+        WaveformVector.push_back(wf);
       }
+    }
 
-      std::vector< raw::OpDetWaveform > WaveformVector;
-      WaveformVector.reserve(totalsize);
-
-      for (auto label : fInputLabels)
-      {
-        art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
-        evt.getByLabel(fInputModule, label, wfHandle);
-        if (!wfHandle.isValid()) continue; // Skip non-existent collections
-
-        for(auto const& wf : *wfHandle)
-        {
-          // If this channel is in the channel mask, ingore it
-          if ( fChannelMasks.find(wf.ChannelNumber()) != fChannelMasks.end() ) continue;
-          // If this PDS in not in the list of PDS to use, ingore it
-          if ( std::find(_opch_to_use.begin(), _opch_to_use.end(), wf.ChannelNumber()) == _opch_to_use.end() ) continue;
-
-          WaveformVector.push_back(wf);
-        }
-      }
-
-      RunHitFinder(WaveformVector,
-                   *HitPtr,
-                   fPulseRecoMgr,
-                   *fThreshAlg,
-                   channelMapAlg,
-                   fHitThreshold,
-                   clockData,
-                   calibrator);
+    RunHitFinder(WaveformVector,
+                  *HitPtr,
+                  fPulseRecoMgr,
+                  *fThreshAlg,
+                  channelMapAlg,
+                  fHitThreshold,
+                  clockData,
+                  calibrator);
       // for (auto h : *HitPtr)
       //   std::cout << "> ophit time " << h.PeakTime()
       //             << ", corrected " << h.PeakTime() - clockData.TriggerTime()
       //             << ", area " << h.Area()
       //             << ", pe " << h.PE() << std::endl;
-    }
+    
 
     // Now correct the time. Unfortunately, there are no setter methods for OpHits,
     // so we have to make a new OpHit vector.
