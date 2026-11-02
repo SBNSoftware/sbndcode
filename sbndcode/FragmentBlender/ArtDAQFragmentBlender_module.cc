@@ -53,6 +53,7 @@ private:
   int fNumberNoiseFiles;
   TRandom randDraws;
   int TotalNoiseEvents;
+  int fPlaneToScramble;
   std::unique_ptr<gallery::Event> noiseGalleryEvent;
 };
 
@@ -65,6 +66,7 @@ ArtDAQFragmentBlender::ArtDAQFragmentBlender(fhicl::ParameterSet const& p)
   fNoiseFileList = p.get<std::vector<std::string>>("NoiseFileList");
   fNumberNoiseFiles = p.get<int>("NumberNoiseFiles");
   fTPCDAQLabel = p.get<std::string>("TPCDAQLabel", "::");
+  fPlaneToScramble = p.get<int>("PlaneToScramble", 2); //If 2 then both induction planes are scrabmled. If 0 or 1 just that plane is scrabmled
   produces<std::vector<raw::RawDigit>>();
   produces<std::vector<raw::RDTimeStamp>>();
   // Call appropriate produces<>() functions here.
@@ -109,10 +111,19 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   std::unique_ptr<std::vector<raw::RawDigit>> NoiseFragments = tpcDecoderBusiness.produce2(NoiseTPCfragmentList, rdpm, tspm);
   //Loop through fragments and find the right IDs to add in 
   //Should update this logic to use ranges of channel IDs
+  int InductionWires=1984;
+  int CollectionWires=1664;
   for(int i=0; i<int(NominalFragments->size()); i++)
   {
     int ChannelID = (*NominalFragments)[i].Channel();
-    if(   (ChannelID>=3968 && ChannelID<5632) || (ChannelID>=9600 && ChannelID<11264)  ) //grab collection clusters
+    if(   (ChannelID>=(2*InductionWires) && ChannelID<(2*InductionWires+CollectionWires)) || //grab collection 1
+	  (ChannelID>=(4*InductionWires+CollectionWires) && ChannelID<(4*InductionWires+2*CollectionWires)) || //grab collection 2  
+	  (fPlaneToScramble==0 && ( (ChannelID>=(InductionWires)&&(ChannelID<2*InductionWires)) 
+				    || (ChannelID>=(3*InductionWires+CollectionWires)&&(ChannelID<4*InductionWires+CollectionWires) ) ) ) || //Just scramble plane 0 so plane 1 can stay
+	  (fPlaneToScramble==1 && ( ((ChannelID>=0) && (ChannelID<InductionWires))
+				    || (ChannelID>=(2*InductionWires+CollectionWires)&&(ChannelID<3*InductionWires+CollectionWires) ) )) 
+	  ) //Just scramble plane 1 so plane 0 can stay
+      
     {
       ScrambledFragments->push_back((*NominalFragments)[i]);
     }
@@ -120,7 +131,13 @@ void ArtDAQFragmentBlender::produce(art::Event& e)
   for(int i=0; i<int(NoiseFragments->size()); i++)
     {
       int ChannelID = (*NoiseFragments)[i].Channel();
-      if(   (ChannelID>=3968 && ChannelID<5632) || (ChannelID>=9600 && ChannelID<11264)  ) //grab collection clusters
+      if(   (ChannelID>=(2*InductionWires) && ChannelID<(2*InductionWires+CollectionWires)) || //collection 1       
+	    (ChannelID>=(4*InductionWires+CollectionWires) && ChannelID<(4*InductionWires+2*CollectionWires)) || //collection 2                     
+	    (fPlaneToScramble==0 && ( (ChannelID>=(InductionWires)&&(ChannelID<2*InductionWires))
+				      || (ChannelID>=(3*InductionWires+CollectionWires)&&(ChannelID<4*InductionWires+CollectionWires) ) ) ) || //Plane 1 Scramble 0
+	    (fPlaneToScramble==1 && ( ((ChannelID>=0) && (ChannelID<InductionWires))
+				      || (ChannelID>=(2*InductionWires+CollectionWires)&&(ChannelID<3*InductionWires+CollectionWires) ) )) //Plane0, scramble 1
+	    )
 	{
 	  continue;
 	}

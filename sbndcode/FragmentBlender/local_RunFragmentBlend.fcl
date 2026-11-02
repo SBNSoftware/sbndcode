@@ -1,0 +1,38 @@
+#include "TPCChannelMapService.fcl"
+#include "SBNDTPCDecoderDefaults.fcl"
+
+services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+physics:
+{
+  // now also have something produce the digits and headers
+  producers:
+  {
+    FragmentScramble: {
+    module_type: FragmentScrambler
+    NumberNoiseFiles: 21000
+    TPCDAQLabel: "daq:NEVISTPC"
+    }
+    daq: @local::SBNDTPCDecoderDefaults
+
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [FragmentScramble]
+  trigger_paths: [my_producer_modules]
+  a: [commissioning]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  commissioning: {
+    module_type: "RootOutput"
+    fileName: "%ifb_ScrambledFragments.root"
+    dataTier: "reconstructed"
+  }
+}
+
+#include "pnfs_noiseFileList.fcl"
+process_name: TPCDECODER
