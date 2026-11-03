@@ -50,11 +50,15 @@ LightPropagationCorrection:
     FMScoreThreshold: 0.001
 
     CherenkovRefractiveIndex: 1.23
-    CherenkovCosineTolerance: 5.0e-2
+    CherenkovCosineTolerance: 5.0e-3
+    CherenkovPMTRadius: 10
+    CherenkovPMTRings: 4
+    CherenkovPMTAzimuthSteps: 32
 
     DoPIDCorrection: true
 
     OpDetXOffset: 0
+    CorrectOnlyVUV: false
 
     FlashMatchingTool: "BarycenterFM"
 }
