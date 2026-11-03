@@ -264,11 +264,7 @@ private:
 
     bool fDoPIDCorrection;
 
-    double fDriftDistance; // Total Drift Distance
     double fSpeedOfLight; // Speed of light in mm/ns
-    double fVISLightPropTime;
-    double fKinkDistance;
-    double fVGroupVUV_I;
     double fVGroupVIS;
     double fVGroupVUV; // Speed of light in vacuum in mm/ns
 
@@ -277,7 +273,12 @@ private:
 
     double fCherenkovRefractiveIndex;
     double fCherenkovCosineTolerance;
+    double fCherenkovPMTRadius;
+    unsigned int fCherenkovPMTRings;
+    unsigned int fCherenkovPMTAzimuthSteps;
+
     double fOpDetXOffset;
+    bool fCorrectOnlyVUV;
 
     bool fDebug;
 

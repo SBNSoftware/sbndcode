@@ -39,7 +39,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
     fCherenkovRefractiveIndex( p.get<double>("CherenkovRefractiveIndex")),
     fCherenkovCosineTolerance( p.get<double>("CherenkovCosineTolerance") ),
+    fCherenkovPMTRadius(p.get<double>("CherenkovPMTRadius")),
+    fCherenkovPMTRings(p.get<unsigned int>("CherenkovPMTRings")),
+    fCherenkovPMTAzimuthSteps( p.get<unsigned int>("CherenkovPMTAzimuthSteps")),
     fOpDetXOffset( p.get<double>("OpDetXOffset") ),
+    fCorrectOnlyVUV( p.get<bool>("CorrectOnlyVUV") ),
     fDebug( p.get<bool>("Debug", false) )
     //
     // More initializers here.
@@ -55,12 +59,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
         fOpDetY.push_back(pdCenter.Y());
         fOpDetZ.push_back(pdCenter.Z());
     }
-
-    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
-    fDriftDistance = tpc.DriftDistance();
-    fKinkDistance = 0.5*fDriftDistance*(1-fVGroupVUV/fVGroupVIS);
-    fVGroupVUV_I = 1./fVGroupVUV;
-    fVISLightPropTime = fDriftDistance/fVGroupVIS;
 
     // Initialize flash algo for both TPCs 
     auto const flash_algo  = p.get<std::string>("FlashFinderAlgo");
@@ -576,14 +574,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
 {
     // Implementation
     for(size_t opdet = 0; opdet < fOpDetID.size(); opdet++) {
-        double _opDetX;
-        if(fOpDetX[opdet]<0){
-            _opDetX = fOpDetX[opdet] + fOpDetXOffset;
-        }
-        else{
-            _opDetX = fOpDetX[opdet] - fOpDetXOffset;
-        }
-        //double _opDetX = fOpDetX[opdet];
+        double _opDetX = fOpDetX[opdet];
         double _opDetY = fOpDetY[opdet];
         double _opDetZ = fOpDetZ[opdet];
         double minPropTime = 999999999.;
@@ -596,12 +587,12 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double dx = fSpacePointX[sp] - _opDetX;
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
-            double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
+            double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz)-fOpDetXOffset;
             double spToCathode;
             double cathodeToOpDet;
             if(fUseMCVIS){
                 spToCathode = std::sqrt(fSpacePointX[sp]*fSpacePointX[sp]); // Distance from space point to cathode in mm
-                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy)*(dy) + (dz)*(dz)); // Distance from cathode to OpDet in mm
+                cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy)*(dy) + (dz)*(dz))-fOpDetXOffset; // Distance from cathode to OpDet in mm
             }
             else{
                 spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
@@ -619,6 +610,10 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
                 lightPropTime = lightPropTimeVIS;
             else
                 throw std::runtime_error("LightPropagationCorrection: unexpected pdType '" + pdType + "' for opdet " + std::to_string(opdet));
+            
+            if(fCorrectOnlyVUV) {
+                lightPropTime = lightPropTimeVUV;
+            }
 
             lightPropDistance = distanceToOpDet;
             //float fastest_partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
@@ -641,12 +636,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             continue;
         }
         const std::string pdType = fPDSMap.pdType(opdet);
-        if(pdType=="pmt_coated" || pdType=="xarapuca_vuv"){
-            geo::OpDetGeo const& opDet = fGeom.OpDetGeoFromOpDet(opdet);
-            geo::Point_t opDetCenter;
-            opDetCenter = opDet.GetCenter();
-            std::cout << " The center of the opdet X: " << opDetCenter.X() << " Y: " << opDetCenter.Y() << " Z: " << opDetCenter.Z() << " and position from opdet X: " << _opDetX << " Y: " << _opDetY << " Z: " << _opDetZ << " " <<  std::endl;
-        }
         fTimeCorrectionPerChannel[opdet] = -minPropTime;
     }
 }
@@ -997,8 +986,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime(
         double last_beta;
         double dt;
 
-        kinetic_energy = std::sqrt(initial_momentum * initial_momentum +
-                                mass * mass) - mass;
+        kinetic_energy = std::sqrt(initial_momentum * initial_momentum + mass * mass) - mass;
 
         total_energy = kinetic_energy + mass;
 
@@ -1368,7 +1356,234 @@ void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, ::light
     }
 }
 
+
 void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelCherenkov()
+{
+    // Reset the Cherenkov correction for all optical channels.
+    fTimeCorrectionPerChannelCherenkov.assign(fNOpChannels, 0.0);
+
+    if (fCherenkovRefractiveIndex <= 0.0 ||
+        fVGroupVIS <= 0.0 ||
+        fSpeedOfLight <= 0.0 ||
+        fCherenkovPMTRadius <= 0.0 ||
+        fCherenkovPMTRings == 0 ||
+        fCherenkovPMTAzimuthSteps == 0) {
+        throw std::runtime_error(
+            "GetPropagationTimeCorrectionPerChannelCherenkov: "
+            "invalid Cherenkov or PMT geometry parameters."
+        );
+    }
+
+    const double noTime =
+        std::numeric_limits<double>::infinity();
+
+    const size_t nPoints = fSpacePointX.size();
+
+    // Check that all spacepoint arrays have matching sizes.
+    if (fSpacePointY.size() != nPoints ||
+        fSpacePointZ.size() != nPoints ||
+        fSpacePointPFPID.size() != nPoints ||
+        fSpacePointPropagationTime.size() != nPoints) {
+        throw std::runtime_error(
+            "GetPropagationTimeCorrectionPerChannelCherenkov: "
+            "spacepoint arrays have inconsistent sizes."
+        );
+    }
+
+    // Sort spacepoints by PFP and then by particle propagation time.
+    std::vector<size_t> pointIndices(nPoints);
+
+    for (size_t i = 0; i < nPoints; ++i) {
+        pointIndices[i] = i;
+    }
+
+    std::stable_sort(
+        pointIndices.begin(),
+        pointIndices.end(),
+        [this](size_t a, size_t b) {
+            if (fSpacePointPFPID[a] != fSpacePointPFPID[b]) {
+                return fSpacePointPFPID[a] < fSpacePointPFPID[b];
+            }
+
+            return fSpacePointPropagationTime[a] <
+                   fSpacePointPropagationTime[b];
+        }
+    );
+
+    // Loop over optical detectors.
+    for (size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
+
+        const double opX = fOpDetX[opdet];
+        const double opY = fOpDetY[opdet];
+        const double opZ = fOpDetZ[opdet];
+
+        double minTotalTime = noTime;
+        bool foundEmissionPoint = false;
+
+        // Loop over spacepoints in sorted order.
+        for (size_t j = 0; j < pointIndices.size(); ++j) {
+
+            const size_t sp = pointIndices[j];
+
+            const double x = fSpacePointX[sp];
+            const double y = fSpacePointY[sp];
+            const double z = fSpacePointZ[sp];
+
+            const double particleTime =
+                fSpacePointPropagationTime[sp];
+
+            // Ignore spacepoints outside the PMT's TPC.
+            if (x * opX <= 0.0) {
+                continue;
+            }
+
+            // Find an adjacent spacepoint belonging to the same PFP.
+            size_t i0 = nPoints;
+            size_t i1 = nPoints;
+
+            if (j + 1 < pointIndices.size()) {
+                const size_t next = pointIndices[j + 1];
+
+                if (fSpacePointPFPID[next] ==
+                    fSpacePointPFPID[sp]) {
+                    i0 = sp;
+                    i1 = next;
+                }
+            }
+
+            // At the end of a PFP, use the preceding segment.
+            if (i0 == nPoints && j > 0) {
+                const size_t previous = pointIndices[j - 1];
+
+                if (fSpacePointPFPID[previous] ==
+                    fSpacePointPFPID[sp]) {
+                    i0 = previous;
+                    i1 = sp;
+                }
+            }
+
+            // A single point cannot define a local direction.
+            if (i0 == nPoints || i1 == nPoints) {
+                continue;
+            }
+
+            const double sx =
+                fSpacePointX[i1] - fSpacePointX[i0];
+            const double sy =
+                fSpacePointY[i1] - fSpacePointY[i0];
+            const double sz =
+                fSpacePointZ[i1] - fSpacePointZ[i0];
+
+            const double segmentLength =
+                std::sqrt(sx*sx + sy*sy + sz*sz);
+
+            const double deltaTime =
+                fSpacePointPropagationTime[i1] -
+                fSpacePointPropagationTime[i0];
+
+            if (segmentLength <= 1.0e-6 || deltaTime <= 0.0) {
+                continue;
+            }
+
+            // Estimate beta from the time between adjacent spacepoints.
+            double beta =
+                segmentLength / (fSpeedOfLight * deltaTime);
+
+            beta = std::min(beta, 1.0);
+
+            // No Cherenkov emission below threshold.
+            if (beta * fCherenkovRefractiveIndex <= 1.0) {
+                continue;
+            }
+
+            const double cosCherenkov =
+                1.0 / (beta * fCherenkovRefractiveIndex);
+
+            // Unit vector along the local particle trajectory.
+            const double ux = sx / segmentLength;
+            const double uy = sy / segmentLength;
+            const double uz = sz / segmentLength;
+
+            // Test the center and concentric rings of the PMT disk.
+            // Assumption: the PMT face lies in the YZ plane.
+            auto testPMTPosition = [&](double qy, double qz) {
+
+                const double rx = opX - x;
+                const double ry = qy - y;
+                const double rz = qz - z;
+
+                const double photonDistance =
+                    std::sqrt(rx*rx + ry*ry + rz*rz);
+
+                if (photonDistance <= 1.0e-6) {
+                    return;
+                }
+
+                const double cosTheta =
+                    (ux*rx + uy*ry + uz*rz) / photonDistance;
+
+                // Require compatibility with the Cherenkov cone.
+                if (std::abs(cosTheta - cosCherenkov) >=
+                    fCherenkovCosineTolerance) {
+                    return;
+                }
+
+                // Calculate arrival time at this position on the PMT.
+                const double photonTime =
+                    photonDistance / fVGroupVIS;
+
+                const double totalTime =
+                    particleTime + photonTime;
+
+                if (std::isfinite(totalTime) &&
+                    totalTime < minTotalTime) {
+                    minTotalTime = totalTime;
+                    foundEmissionPoint = true;
+                }
+            };
+
+            // Test the center of the PMT.
+            testPMTPosition(opY, opZ);
+
+            // Test concentric rings across the disk.
+            for (unsigned int ir = 1;
+                 ir <= fCherenkovPMTRings;
+                 ++ir) {
+
+                const double radius =
+                    fCherenkovPMTRadius *
+                    static_cast<double>(ir) /
+                    fCherenkovPMTRings;
+
+                for (unsigned int ia = 0;
+                     ia < fCherenkovPMTAzimuthSteps;
+                     ++ia) {
+
+                    const double phi =
+                        2.0 * M_PI *
+                        static_cast<double>(ia) /
+                        fCherenkovPMTAzimuthSteps;
+
+                    const double qy =
+                        opY + radius * std::cos(phi);
+                    const double qz =
+                        opZ + radius * std::sin(phi);
+
+                    testPMTPosition(qy, qz);
+                }
+            }
+        }
+
+        // Preserve the sign convention of the existing correction.
+        if (foundEmissionPoint) {
+            fTimeCorrectionPerChannelCherenkov[opdet] =
+                -minTotalTime;
+        }
+    }
+}
+
+
+/*void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelCherenkov()
 {
     // Reset the Cherenkov correction for all optical channels.
     fTimeCorrectionPerChannelCherenkov.assign(fNOpChannels, 0.0);
@@ -1559,4 +1774,5 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             fTimeCorrectionPerChannelCherenkov[opdet] = -minTotalTime;
         }
     }
-}
+}*/
+
