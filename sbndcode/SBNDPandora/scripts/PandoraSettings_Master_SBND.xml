@@ -20,7 +20,7 @@
   <algorithm type = "LArMaster">
     <CRSettingsFile>PandoraSettings_Cosmic_SBND.xml</CRSettingsFile>
     <NuSettingsFile>PandoraSettings_Neutrino_SBND.xml</NuSettingsFile>
-    <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
+    <SlicingSettingsFile>PandoraSettings_Slicing_SBND.xml</SlicingSettingsFile>
     <StitchingTools>
       <!-- End directions of the stitching candidates from a 133-layer (~40 cm) sliding fit instead of the default 30 layers (~9 cm):
            the short fit misjudges the direction of tracks nearly parallel to the cathode -->
