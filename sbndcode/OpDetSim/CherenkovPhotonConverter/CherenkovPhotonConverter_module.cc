@@ -102,8 +102,8 @@ sim::CherenkovPhotonConverter::CherenkovPhotonConverter(fhicl::ParameterSet cons
     produces<std::vector<sim::SimPhotons>>("Reflected");
   }
   this->initRand(fScintTimeEngine);
-  auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
-  fScintPreScale = lar_prop->ScintPreScale();
+  //auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
+  fScintPreScale = 0.99;
 
   if (fAbsSpectrum.size() != fAbsEnergy.size()) {
   throw art::Exception(art::errors::Configuration)

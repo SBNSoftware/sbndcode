@@ -1,9 +1,5 @@
 #include "standard_g4_sbnd.fcl"
 
-outputs.out1.outputCommands: [
-         "keep *_*_*_*",
-         "drop sim::SimEnergyDeposits_largeant_*_*"]
-
 services.PhysicsList.enableOptical: true
 services.PhysicsList.enableScintillation: false
 services.PhysicsList.ScintillationStackPhotons: false
@@ -11,7 +7,7 @@ services.PhysicsList.ScintillationTrackSecondariesFirst: false
 services.PhysicsList.ScintillationTrackInfo: false
 services.PhysicsList.enableCerenkov: true
 services.PhysicsList.CerenkovStackPhotons: true
-services.PhysicsList.CerenkovTrackSecondariesFirst: true
+services.PhysicsList.CerenkovTrackSecondariesFirst: false
 services.PhysicsList.enableRayleigh: true
 services.PhysicsList.enableBoundary: true
 services.PhysicsList.enableAbsorption: true
@@ -19,33 +15,9 @@ services.PhysicsList.enableWLS: true
 services.PhysicsList.Verbosity: 0
 services.PhysicsList.BoundaryInvokeSD: true
 
-services.PhysicsList.enableOptical: true
-
-
 services.LArG4Parameters.OpticalParamModels: ["TransparentPlaneAction"]
-
 services.Geometry.DisableWiresInG4: false
-
 services.LArG4Detector.gdmlFileName_: "sbnd_v02_00_full_simulation.gdml"
-
-
-physics.simulate: [
-      "rns",
-      "loader",
-      "largeant",
-      "ionandscint",
-      "ionandscintout",
-      "pdfastsim",
-      "pdfastsimout",
-      "simdrift",
-      "mcreco",
-      "genericcrt"
-   ]
-
-outputs.out1.outputCommands: [
-         "keep *_*_*_*",
-         "drop sim::SimEnergyDeposits_largeant_*_*"]
-
 services.LArG4Detector.stepLimits: [3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1]
 services.LArG4Detector.volumeNames: [
      "volTPCActive", 
@@ -57,3 +29,20 @@ services.LArG4Detector.volumeNames: [
      "volPDSstructure0","volPDSstructure1","volPDSstructure2","volPDSstructure3","volPDSstructure4","volPDSstructure5","volPDSstructure6","volPDSstructure7","volPDSstructure8","volPDSstructure9","volPDSstructure10","volPDSstructure11","volPDSstructure12","volPDSstructure13","volPDSstructure14","volPDSstructure15","volPDSstructure16","volPDSstructure17","volPDSstructure18","volPDSstructure19","volPDSstructure20","volPDSstructure21","volPDSstructure22","volPDSstructure23"
    ]
 
+services.ParticleListAction.KeepDroppedParticlesInVolumes: ["volTPCActive"]
+
+services.ParticleListAction.NotStoredPhysics: ["conv",
+                             "LowEnConversion",
+                             "Pair",
+                             "compt",
+                             "Compt",
+                             "Brem",
+                             "phot",
+                             "Photo",
+                             "Ion",
+                             "annihil",
+                             "ceren",
+                             "cheren",
+                             "Cheren",
+                             "Ceren",
+                             "OpWLS"]
