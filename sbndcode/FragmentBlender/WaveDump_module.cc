@@ -91,7 +91,7 @@ void sbnd::WaveDump::analyze(art::Event const& e)
     //Read in the waveforms (assuming raw::Digits)
     art::Handle< std::vector<raw::RawDigit> > digitHandle;
     //Loop over every raw digit and record appropriate info
-    for(int i=0; i<int((*digitHandle)->size()); i++)
+    for(int i=0; i<int((*digitHandle).size()); i++)
     {
         auto ThisDigit = (*digitHandle)[i];
         int Channel = ThisDigit.Channel();
