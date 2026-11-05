@@ -1,0 +1,32 @@
+physics:
+{
+  // now also have something produce the digits and headers
+  analyzers:
+  {
+    WaveDumper: {
+    module_type: WaveDump
+    DataLabel: "NEVISTPC"
+    }
+
+  }
+
+  producers: {}
+
+  my_analyzer_modules: [WaveDumper]
+  trigger_paths: []
+  a: [my_analyzer_modules]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  commissioning: {
+    module_type: "RootOutput"
+    fileName: "%ifb_WaveDump.root"
+    dataTier: "reconstructed"
+  }
+}
+
+
+process_name: WaveDump
