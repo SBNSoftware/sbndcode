@@ -6,7 +6,8 @@
 // Generated at Thu Nov  5 13:45:51 2026 by Jacob McLaughlin using cetskelgen
 // from cetlib version 3.18.02.
 ////////////////////////////////////////////////////////////////////////
-
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -17,6 +18,8 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+
+#include "lardataobj/RawData/RawDigit.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -88,7 +91,7 @@ void sbnd::WaveDump::analyze(art::Event const& e)
     //Read in the waveforms (assuming raw::Digits)
     art::Handle< std::vector<raw::RawDigits> > digitHandle;
     std::vector<art::Ptr<raw::RawDigits> > digitList;
-    if (evt.getByLabel(fDataLabel,digitHandle))
+    if (e.getByLabel(fDataLabel,digitHandle))
         art::fill_ptr_vector(digitList, digitHandle);
     //Loop over every raw digit and record appropriate info
     for(int i=0; i<int(digitList.size()); i++)
@@ -108,13 +111,13 @@ void sbnd::WaveDump::analyze(art::Event const& e)
         else if(TempChannel<2*InductionWires) Plane=1;
         else Plane=2;
         if(Plane==1) TempChannel=TempChannel-InductionWires;
-        if(Plane==2) TempChannel=TempChannel-2*InductionWires
+        if(Plane==2) TempChannel=TempChannel-2*InductionWires;
         WirePlane.push_back(Plane);
         WireTPC.push_back(TPC);
         WireWireNum.push_back(TempChannel);
         //loop over ADCs
         auto TempADCs = ThisDigit.ADCs();
-        WireADC.push_back({})
+        WireADC.push_back({});
         for(int j=0; j<int(TempADCs.size()); j++)
         {
             WireADC[WireADC.size()-1].push_back(TempADCs[j]);
