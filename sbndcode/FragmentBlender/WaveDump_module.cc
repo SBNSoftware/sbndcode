@@ -89,8 +89,8 @@ void sbnd::WaveDump::analyze(art::Event const& e)
 {
     Clear();
     //Read in the waveforms (assuming raw::Digits)
-    art::Handle< std::vector<raw::RawDigits> > digitHandle;
-    std::vector<art::Ptr<raw::RawDigits> > digitList;
+    art::Handle< std::vector<raw::RawDigit> > digitHandle;
+    std::vector<art::Ptr<raw::RawDigit> > digitList;
     if (e.getByLabel(fDataLabel,digitHandle))
         art::fill_ptr_vector(digitList, digitHandle);
     //Loop over every raw digit and record appropriate info
@@ -102,7 +102,7 @@ void sbnd::WaveDump::analyze(art::Event const& e)
         int InductionWires=1984;
         int CollectionWires=1664;
         //Construct map to plane/tpc 
-        int TPC=0
+        int TPC=0;
         if(Channel>= 2*InductionWires + CollectionWires) TPC=1;
         int TempChannel=Channel;
         if(TPC==1) TempChannel = TempChannel - (2*InductionWires + CollectionWires);
