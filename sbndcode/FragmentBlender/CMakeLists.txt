@@ -32,6 +32,9 @@ cet_build_plugin( WaveDump art::module
   fhiclcpp::fhiclcpp
   messagefacility::MF_MessageLogger
   art::Framework_Core
+  art_root_io::tfile_support
+  art_root_io::TFileService_service
+  art_root_io::tfile_support ROOT::Core
   ROOT::Core
   ROOT::Tree
   sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
