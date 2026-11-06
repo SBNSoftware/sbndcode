@@ -8,13 +8,15 @@
 // Iterface to run Tensorflow graph saved to a file. First attempts, quite functional.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include "tf_graph.h"
 
 #include "tensorflow/cc/saved_model/loader.h"
 #include "tensorflow/core/platform/env.h"
 
 #include "tensorflow/core/public/session_options.h"
+#pragma GCC diagnostic pop
 
 // -------------------------------------------------------------------
 tf::Graph::Graph(const char* graph_file_name,
