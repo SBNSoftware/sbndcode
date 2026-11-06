@@ -21,6 +21,7 @@
 #include "SBNDCVNMapper.fcl"
 #include "blipreco_configs.fcl"
 #include "lightcalo_sbnd.fcl"
+#include "sbnd_lightpropagationcorrection_config.fcl"
 
 BEGIN_PROLOG
 
@@ -82,6 +83,7 @@ sbnd_reco2_producers:{
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducerMC
     tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCEMC
+    lightpropagationcorrectionSCE: @local::LightPropagationCorrectionSCE
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -136,6 +138,7 @@ sbnd_reco2_producer_sequence: [
     #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
+    , lightpropagationcorrectionSCE
     , cvn
     , cvnSCE
     , blipreco

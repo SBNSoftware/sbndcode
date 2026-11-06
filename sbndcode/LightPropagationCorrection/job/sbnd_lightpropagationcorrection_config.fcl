@@ -35,6 +35,11 @@ LightPropagationCorrection:
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
 
+    MinHitPE: @local::FlashT0SelectedChannels.MinHitPE
+    PreWindow: @local::FlashT0SelectedChannels.PreWindow
+    PostWindow: @local::FlashT0SelectedChannels.PostWindow
+    PDFraction: @local::FlashT0SelectedChannels.PDFraction
+
     FlashMatchingTool: "BarycenterFM"
 }
 
