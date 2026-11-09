@@ -1,11 +1,27 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+#include "calorimetry_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+process_name: WaveDumping
+
+services: 
+{
+  FileCatalogMetadata:      @local::sbnd_file_catalog_mc
+  TFileService:            { fileName: "hist_%p.root" }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+                            @table::sbnd_services
+}
+
+
 physics:
 {
   // now also have something produce the digits and headers
   analyzers:
   {
     WaveDumper: {
-    module_type: WaveDump
-    DataLabel: "NEVISTPC"
+    module_type: "WaveDump"
+    DataLabel: "daq::DECODE"
     }
 
   }
@@ -14,11 +30,10 @@ physics:
 
   my_analyzer_modules: [WaveDumper]
   trigger_paths: []
-  a: [my_analyzer_modules]
-  end_paths: [a]
+  end_paths: [my_analyzer_modules]
 }
 
-source: {}
+source: {  module_type: RootInput }
 
 outputs: {
   commissioning: {
@@ -27,6 +42,3 @@ outputs: {
     dataTier: "reconstructed"
   }
 }
-
-
-process_name: WaveDump

@@ -90,6 +90,7 @@ void sbnd::WaveDump::analyze(art::Event const& e)
     Clear();
     //Read in the waveforms (assuming raw::Digits)
     art::Handle< std::vector<raw::RawDigit> > digitHandle;
+    e.getByLabel(fDataLabel, digitHandle);
     //Loop over every raw digit and record appropriate info
     for(int i=0; i<int((*digitHandle).size()); i++)
     {
