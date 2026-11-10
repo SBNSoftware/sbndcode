@@ -1,4 +1,5 @@
 #include "BlipUtils.h"
+#include <cstdlib>
 
 namespace BlipUtils {
 
@@ -66,6 +67,36 @@ void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, 
         pinfo.depEnergy     += sed->Energy();
         pinfo.depElectrons  += sed->NumElectrons();
       }
+    }
+    return;
+  }
+  //===========================================================================
+  // Sum the deposits of each track once (same accumulation order and types as the
+  // per-particle loops above, so the sums are identical), then look them up.
+  TrackDepositMap_t MakeTrackDepositMap(SEDVec_t const& sedvec){
+    TrackDepositMap_t depmap;
+    for(auto const& sed : sedvec ) {
+      auto& dep = depmap[std::abs(sed->TrackID())];
+      dep.energy    += sed->Energy();
+      dep.electrons += sed->NumElectrons();
+    }
+    return depmap;
+  }
+  TrackDepositMap_t MakeTrackDepositMap(SIDEVec_t const& sIDEvec){
+    TrackDepositMap_t depmap;
+    for(auto const& sed : sIDEvec ) {
+      auto& dep = depmap[std::abs(sed.trackID)];
+      dep.energy    += sed.energy;
+      dep.electrons += sed.numElectrons;
+    }
+    return depmap;
+  }
+  void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, TrackDepositMap_t const& depmap){
+    FillParticleInfo( part, pinfo);
+    auto const it = depmap.find(std::abs(part.TrackId()));
+    if( it != depmap.end() ) {
+      pinfo.depEnergy     = it->second.energy;
+      pinfo.depElectrons  = it->second.electrons;
     }
     return;
   }

@@ -33,12 +33,18 @@
 // c++
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 #include "sbnobj/SBND/Blip/BlipDataTypes.h"
 #include "TH1D.h"
 
 typedef std::vector<art::Ptr<sim::SimEnergyDeposit>> SEDVec_t;
 typedef std::vector<sim::IDE> SIDEVec_t;
+
+// Energy and charge deposited per G4 track (keyed on |trackID|), summed once per event
+// so that FillParticleInfo does not have to scan every deposit for every particle.
+struct TrackDeposit_t { double energy = 0; int electrons = 0; };
+typedef std::unordered_map<int, TrackDeposit_t> TrackDepositMap_t;
 
 geo::View_t kViews[3]={geo::kU, geo::kV, geo::kW};
 
@@ -51,6 +57,9 @@ namespace BlipUtils {
   void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane);
   void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SIDEVec_t&, int plane);
   void      FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo);
+  TrackDepositMap_t MakeTrackDepositMap(SEDVec_t const&);
+  TrackDepositMap_t MakeTrackDepositMap(SIDEVec_t const&);
+  void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, TrackDepositMap_t const&);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
   void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&); 
