@@ -21,6 +21,8 @@ set(
 
 cet_build_plugin(GENIEOscPileup art::module SOURCE GENIEOscPileup_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GENIEFirst art::module SOURCE GENIEFirst_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(FullOscNuFilter art::module SOURCE FullOscNuFilter_module.cc
+  LIBRARIES ${MODULE_LIBRARIES} sbndcode_RecoUtils)
 
 install_headers()
 install_fhicl()
