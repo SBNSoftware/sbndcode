@@ -21,3 +21,10 @@ physics.simulate: [ rns
 physics.producers.loader: @erase
 physics.producers.largeant: @erase
 
+
+# Slim the output: the raw largeant energy deposits and the out-of-active-volume ones are consumed
+# only inside this job (sedlite, ionandscint, ionandscintout, pdfastsimout); detsim drops them anyway.
+outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands
+                             , "drop sim::SimEnergyDeposits_largeant_*_*"
+                             , "drop sim::SimEnergyDeposits_ionandscintout__*"
+                             ]
