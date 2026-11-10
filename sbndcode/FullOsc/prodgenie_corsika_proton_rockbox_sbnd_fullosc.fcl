@@ -26,14 +26,15 @@ physics.producers.generator:
   UnOscTag:  unOscGen
 }
 
+physics.filters.tpcfilter.module_type: "FullOscNuFilter"
 physics.filters.tpcfilter.OscOnly: true                     #only place filters on the first/oscillated neutrino
 physics.filters.tpcfilter.GenieModuleLabel: "generator"
 
 physics.filters.nuefilter:
 {
-  module_type:              "GenNuFilter"
+  module_type:              "FullOscNuFilter"
   VtxInTPC:                 false
-  LepPDGs:                  [12, -12]                       #only take neutrinos oscillated from (anti)numu to (anti)nue
+  LepPDGs:                  [-11, 11, 12, -12]                       #only take neutrinos oscillated from (anti)numu to (anti)nue
   CC:                       true
   NC:                       true 
   OscOnly:                  true                            #only place filters on the first/oscillated neutrino
