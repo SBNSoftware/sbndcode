@@ -218,7 +218,8 @@ namespace lightana{
         // resize static vectors to size = number of bins. Fill them with value 0
         if(_pesum_v.size() < nbins_pesum_v) _pesum_v.resize(nbins_pesum_v,0);
         if(mult_v.size()   < nbins_pesum_v) mult_v.resize(nbins_pesum_v,0);
-        if(pespec_v.size() < nbins_pesum_v) pespec_v.resize(nbins_pesum_v,std::vector<double>(_nopdet_maxsize));
+        // rows of pespec_v stay empty until a hit lands in that time bin (see the filling loop below)
+        if(pespec_v.size() < nbins_pesum_v) pespec_v.resize(nbins_pesum_v);
         if(hitidx_v.size() < nbins_pesum_v) hitidx_v.resize(nbins_pesum_v,std::vector<unsigned int>());
         // reset pe_sum_v, set to 0
         for(size_t i=0; i<_pesum_v.size(); ++i) {
@@ -228,7 +229,7 @@ namespace lightana{
         for(size_t i=0; i<mult_v.size(); ++i) {
             mult_v[i]  = 0;
             hitidx_v[i].clear();
-            for(auto& v : pespec_v[i]) v=0;
+            if(!pespec_v[i].empty()) std::vector<double>().swap(pespec_v[i]);
         }
 
         // Fill _pesum_v: number of PE in each time bin
@@ -251,6 +252,7 @@ namespace lightana{
             // Fill _pesum_v, mult_v, pespec_v, hitidx_v
             _pesum_v[index] += oph.pe;
             mult_v[index] += 1;
+            if(pespec_v[index].empty()) pespec_v[index].resize(_nopdet_maxsize, 0.);
             pespec_v[index][_opch_to_index_v[oph.channel]] += oph.pe;
             hitidx_v[index].push_back(hitidx);
         }
@@ -404,6 +406,7 @@ namespace lightana{
             // Sum the PE in the integration window for each PMT
             // loop over time bins inside the integration window
             for(size_t index=start; index<(start+period) && index<pespec_v.size(); ++index) {
+                if(pespec_v[index].empty()) continue;   // no hits in this time bin
                 // Loop over the PMTs
                 for(size_t pmt_index=0; pmt_index<NOpDet; ++pmt_index)
                     // Sum the PE in each PMT
