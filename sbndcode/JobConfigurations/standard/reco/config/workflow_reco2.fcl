@@ -238,7 +238,7 @@ sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtana
-    , blipana
+    #, blipana   # not run by default: it re-runs the whole blip reconstruction (~6.5 s/event); add it back for blip ntuples
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
