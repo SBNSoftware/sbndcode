@@ -363,6 +363,21 @@ local chsel_pipes = [
 ];
 
 
+// The frame out of OmnibusSigProc also carries the dense DNN ROI inputs (loose_lf, decon_charge and the
+// mp2/mp3 ROI traces). The traditional branch only saves gauss and wiener, so select those before the
+// fan-in: otherwise the fan-in and the frame saver keep the DNN ROI inputs of both anodes alive.
+local sp_sels = [
+  g.pnode({
+    type: 'ChannelSelector',
+    name: 'spsel%d' % n,
+    data: {
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
+      tags: ['gauss%d' % n, 'wiener%d' % n],
+    },
+  }, nin=1, nout=1)
+  for n in anode_iota
+];
+
 local nfsp_pipes = 
 if roi == "dnn" then
 // oports: 0: dnnroi, 1: traditional sp
@@ -388,16 +403,17 @@ else if roi == "both" then
 [
   g.intern(
     innodes=[chsel_pipes[n]],
-    outnodes=[dnnroi_pipes[n],sp_fans[n]],
+    outnodes=[dnnroi_pipes[n],sp_sels[n]],
     centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
     edges=[
       g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
       g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
       g.edge(sp_pipes[n], sp_fans[n], 0, 0),
       g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
+      g.edge(sp_fans[n], sp_sels[n], 1, 0),
     ],
     iports=chsel_pipes[n].iports,
-    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
+    oports=dnnroi_pipes[n].oports+[sp_sels[n].oports[0]],
     name='nfsp_pipe_%d' % n,
   )
   for n in std.range(0, std.length(tools.anodes) - 1)
@@ -524,14 +540,23 @@ wcls_depoflux_writer,           //sim
 bi_manifold1,                   //sim
 ]);
 
+// The wclsFrameSaver for the simulated digits converts and holds the whole ADC frame (155 MB of floats plus its
+// own RawDigit copy) until the end of the event, also when nothing asks for it. Only put it in the graph when the
+// digits are saved.
+local keep_simdigits = std.extVar('save_simdigits') == "true";
+local simdigit_nodes = if keep_simdigits then [wcls_output_sim.sim_digits] else [];
+
 local graph_sp_dnn = 
 g.intern(
   innodes=[retagger_sim],
   outnodes=[],
-  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
-  edges=[
+  centernodes=nfsp_pipes+simdigit_nodes+[fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
+  edges=(if keep_simdigits then [
     g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
     g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
+  ] else [
+    g.edge(retagger_sim, fanout_apa, 0, 0),
+  ]) + [
     g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
     g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
     g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
@@ -550,10 +575,13 @@ local graph_sp_both =
 g.intern(
   innodes=[retagger_sim],
   outnodes=[],
-  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.sp_signals, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
-  edges=[
+  centernodes=nfsp_pipes+simdigit_nodes+[fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.sp_signals, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
+  edges=(if keep_simdigits then [
     g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
     g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
+  ] else [
+    g.edge(retagger_sim, fanout_apa, 0, 0),
+  ]) + [
     g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
     g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
     g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
