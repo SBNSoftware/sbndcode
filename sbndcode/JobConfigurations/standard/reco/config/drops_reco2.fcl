@@ -6,6 +6,11 @@ BEGIN_PROLOG
 
 sbnd_reco2_drops: [
     @sequence::sbnd_reco1_drops
+    # Products below have no consumer after reco2 (checked: the CAF is unchanged without them).
+    # Do not drop sim::SimEnergyDeposits_ionandscint_priorSCE here: CAFMaker fills rec.mc.dep from it.
+  , "drop sim::SimPhotonsLites_*_*_*"
+  , "drop *_blipPandoraCopy_*_*"
+  , "drop *_blipPandoraTrackCopy_*_*"
 ]
 
 END_PROLOG
