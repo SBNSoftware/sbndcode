@@ -158,8 +158,8 @@ namespace opdet {
 
     // Required functions.
     void produce(art::Event & e) override;
-    std::vector<raw::OpDetWaveform> sliceWaveforms(std::vector<raw::OpDetWaveform> fWaveforms,
-                                                        std::vector<int> fPMT_Channels,
+    std::vector<raw::OpDetWaveform> sliceWaveforms(const std::vector<raw::OpDetWaveform>& fWaveforms,
+                                                        const std::vector<int>& fPMT_Channels,
                                                         std::vector<int> *MonPulse,
                                                         int PairMultiplicityThreshold,
                                                         double tickPeriod,
@@ -576,8 +576,8 @@ namespace opdet {
 
   // sliceWaveforms function
   std::vector<raw::OpDetWaveform> opDetDigitizerSBND::sliceWaveforms(
-                                   std::vector<raw::OpDetWaveform> fWaveforms,
-                                   std::vector<int> fPMT_Channels,
+                                   const std::vector<raw::OpDetWaveform>& fWaveforms,
+                                   const std::vector<int>& fPMT_Channels,
                                    std::vector<int>* MonPulse,
                                    int PairMultiplicityThreshold,
                                    double tickPeriod,
