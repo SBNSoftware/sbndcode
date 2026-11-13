@@ -136,8 +136,10 @@ sbnd_reco2_producer_sequence: [
     #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
-    , cvn
-    , cvnSCE
+    # CVN is not run in production (proposal, Nov 2026): cvn + cvnSCE were ~13 s/event and ~700 MB.
+    # The CAF rec.slc.cvn scores are then left at their defaults. Uncomment to restore.
+    #, cvn
+    #, cvnSCE
     , blipreco
     , lightcaloSCE
 ]
