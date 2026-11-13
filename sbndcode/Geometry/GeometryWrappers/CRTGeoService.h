@@ -394,17 +394,17 @@ namespace sbnd::crt {
 
     size_t ChannelToOrientation(const uint16_t channel) const;
 
-    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
+    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex) const;
 
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
-                                             const double y, const double z);
+                                             const double y, const double z) const;
 
     std::vector<double> StripWorldToLocalPos(const uint16_t channel, const double x,
-                                             const double y, const double z);
+                                             const double y, const double z) const;
 
-    std::array<double, 6> FEBWorldPos(const CRTModuleGeo &module);
+    std::array<double, 6> FEBWorldPos(const CRTModuleGeo &module) const;
 
-    std::array<double, 6> FEBChannel0WorldPos(const CRTModuleGeo &module);
+    std::array<double, 6> FEBChannel0WorldPos(const CRTModuleGeo &module) const;
 
     geo::Point_t ChannelToSipmPosition(const uint16_t channel) const;
 
@@ -414,25 +414,25 @@ namespace sbnd::crt {
 
     double DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const;
 
-    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.);
+    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.) const;
 
-    bool CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.);
+    bool CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.) const;
 
-    bool AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.1);
+    bool AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.1) const;
 
-    bool AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.1);
+    bool AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.1) const;
 
-    bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
+    bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2) const;
 
-    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z, const double &buffer = 1);
+    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z, const double &buffer = 1) const;
 
-    enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel);
+    enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel) const;
 
-    bool IsPointInsideCRTLimits(const geo::Point_t &point);
+    bool IsPointInsideCRTLimits(const geo::Point_t &point) const;
 
-    double StripArea(const uint16_t channel);
+    double StripArea(const uint16_t channel) const;
 
-    double StripAverageY(const uint16_t channel);
+    double StripAverageY(const uint16_t channel) const;
 
   private:
 
@@ -451,6 +451,9 @@ namespace sbnd::crt {
   };
 }
 
-DECLARE_ART_SERVICE(sbnd::crt::CRTGeoService, LEGACY)
+// SHARED: every lookup is const and only reads the maps filled in the constructor. The one writer is the
+// preBeginRun callback (data only, calibration constants), and art runs run transitions with no events in
+// flight, so it cannot overlap a read from another thread.
+DECLARE_ART_SERVICE(sbnd::crt::CRTGeoService, SHARED)
 
 #endif

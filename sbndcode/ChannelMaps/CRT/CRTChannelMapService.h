@@ -29,41 +29,41 @@ public:
 
   CRTChannelMapService(fhicl::ParameterSet const& pset);
 
-  unsigned int ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(const unsigned int offline_module_id, const unsigned int strip_number);
+  unsigned int ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(const unsigned int offline_module_id, const unsigned int strip_number) const;
 
-  unsigned int ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(const unsigned int offline_module_id, const unsigned int local_offline_channel);
+  unsigned int ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(const unsigned int offline_module_id, const unsigned int local_offline_channel) const;
 
-  unsigned int ConstructOnlineChannelIDFromMAC5AndLocalOnlineChannel(const unsigned int mac5, const unsigned int local_online_channel);
+  unsigned int ConstructOnlineChannelIDFromMAC5AndLocalOnlineChannel(const unsigned int mac5, const unsigned int local_online_channel) const;
 
-  unsigned int GetOfflineModuleIDFromOfflineChannelID(const unsigned int offline_channel_id);
+  unsigned int GetOfflineModuleIDFromOfflineChannelID(const unsigned int offline_channel_id) const;
 
-  unsigned int GetLocalOfflineChannelFromOfflineChannelID(const unsigned int offline_channel_id);
+  unsigned int GetLocalOfflineChannelFromOfflineChannelID(const unsigned int offline_channel_id) const;
 
-  unsigned int GetMAC5FromOnlineChannelID(const unsigned int online_channel_id);
+  unsigned int GetMAC5FromOnlineChannelID(const unsigned int online_channel_id) const;
 
-  unsigned int GetLocalOnlineChannelFromOnlineChannelID(const unsigned int online_channel_id);
+  unsigned int GetLocalOnlineChannelFromOnlineChannelID(const unsigned int online_channel_id) const;
 
-  bool MAC5IsValid(const unsigned int mac5);
+  bool MAC5IsValid(const unsigned int mac5) const;
 
-  bool OfflineModuleIDIsValid(const unsigned int offline_module_id);
+  bool OfflineModuleIDIsValid(const unsigned int offline_module_id) const;
 
-  unsigned int GetOfflineModuleIDFromMAC5(const unsigned int mac5);
+  unsigned int GetOfflineModuleIDFromMAC5(const unsigned int mac5) const;
 
-  unsigned int GetMAC5FromOfflineModuleID(const unsigned int offline_module_id);
+  unsigned int GetMAC5FromOfflineModuleID(const unsigned int offline_module_id) const;
 
-  unsigned int GetOfflineChannelIDFromOnlineChannelID(const unsigned int online_channel_id);
+  unsigned int GetOfflineChannelIDFromOnlineChannelID(const unsigned int online_channel_id) const;
 
-  unsigned int GetOnlineChannelIDFromOfflineChannelID(const unsigned int offline_channel_id);
+  unsigned int GetOnlineChannelIDFromOfflineChannelID(const unsigned int offline_channel_id) const;
 
-  bool GetInversionFromOfflineModuleID(const unsigned int offline_module_id);
+  bool GetInversionFromOfflineModuleID(const unsigned int offline_module_id) const;
 
-  unsigned int GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id);
+  unsigned int GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id) const;
 
-  unsigned int GetTimingChainFromOfflineModuleID(unsigned int offline_module_id);
+  unsigned int GetTimingChainFromOfflineModuleID(unsigned int offline_module_id) const;
 
-  unsigned int GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id);
+  unsigned int GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id) const;
 
-  unsigned int GetTimingChainFromMAC5(unsigned int mac5);
+  unsigned int GetTimingChainFromMAC5(unsigned int mac5) const;
 
 private:
 
@@ -89,6 +89,8 @@ private:
   std::unordered_map<unsigned int, unsigned int> fTimingChainFromMAC5;
 };
 
-DECLARE_ART_SERVICE(SBND::CRTChannelMapService, LEGACY)
+// The maps are filled once in the constructor and only read afterwards, so the service can be shared
+// between threads: every lookup is const and none of them modifies the maps.
+DECLARE_ART_SERVICE(SBND::CRTChannelMapService, SHARED)
 
 #endif
