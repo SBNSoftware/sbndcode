@@ -1,0 +1,39 @@
+# run_sbnd_gen2_dis_highw_filter.fcl
+# Keep only events with a DIS interaction with W > 2.3 GeV (see
+# sbnd_dis_highw_filter in signal_filters_sbnd.fcl). Run right after the
+# generator stage so only the selected events go through g4 and downstream.
+
+#include "services_sbnd.fcl"
+#include "signal_filters_sbnd.fcl"
+
+process_name: DISHighWFilter
+
+services: {
+    @table::sbnd_services
+}
+
+source: {
+    module_type: RootInput
+}
+
+physics: {
+    filters: {
+        dishighwfilter: @local::sbnd_dis_highw_filter
+    }
+
+    filter: [ dishighwfilter ]
+    trigger_paths: [ filter ]
+
+    stream1: [ out1 ]
+    end_paths: [ stream1 ]
+}
+
+outputs: {
+    out1: {
+        module_type: RootOutput
+        fileName: "%ifb_dishighw.root"
+        SelectEvents: [ filter ]
+        dataTier: "generated"
+        compressionLevel: 1
+    }
+}

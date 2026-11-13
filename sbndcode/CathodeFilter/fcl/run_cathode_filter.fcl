@@ -1,0 +1,35 @@
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "cathode_simenergydeposit_filter.fcl"
+
+process_name: CathodeFilter
+
+services: {
+  TFileService: { fileName: "cathode_filter_hist.root" }
+  message:      @local::sbnd_message_services
+  @table::sbnd_services
+}
+
+source: {
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics: {
+  producers: {
+    cathodefilter: @local::cathode_simenergydeposit_filter_default
+  }
+  reco:          [ cathodefilter ]
+  stream1:       [ out1 ]
+  trigger_paths: [ reco ]
+  end_paths:     [ stream1 ]
+}
+
+outputs: {
+  out1: {
+    module_type: RootOutput
+    fileName:    "%ifb_cathodefilt.root"
+    dataTier:    "simulated"
+    compressionLevel: 1
+  }
+}
