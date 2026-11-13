@@ -54,7 +54,7 @@ namespace lightana
         fhicl::Comment("Group velocity for VIS photons")
       };
 
-      fhicl::Atom<bool> fDataCalibration {
+      fhicl::Atom<bool> DataCalibration {
         fhicl::Name("DataCalibration"),
         fhicl::Comment("Running on data")
       };
@@ -108,7 +108,8 @@ namespace lightana
   DriftEstimatorPMTRatio::DriftEstimatorPMTRatio(art::ToolConfigTable<Config> const& config)
     : fCalibrationFile { config().CalibrationFile() },
     fVGroupVUV { config().VGroupVUV() },
-    fVGroupVIS { config().VGroupVIS() }
+    fVGroupVIS { config().VGroupVIS() },
+    fDataCalibration { config().DataCalibration() }
   {
 
     // Open input file
