@@ -493,16 +493,13 @@ namespace blip {
     //==================================================
     if( plist.size() ) {
       pinfo.resize(plist.size());
+      //use sim::EnergyDeposits by default. This is heavy and may be dropped
+      //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
+      // Deposits are summed per track once here instead of once per particle.
+      const TrackDepositMap_t depmap = (sedlist.size()>0) ? BlipUtils::MakeTrackDepositMap(sedlist)
+                                                          : BlipUtils::MakeTrackDepositMap(sIDElist);
       for(size_t i = 0; i<plist.size(); i++){
-        //use sim::EnergyDeposits by default. This is heavy and may be dropped
-        if(sedlist.size()>0)
-        {
-          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
-        }
-        else //use sim::Channel -> IDE otherwise. This is usually kept but results in strange bugs.
-        {
-          BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sIDElist, fCaloPlane);
-        }
+        BlipUtils::FillParticleInfo( *plist[i], pinfo[i], depmap);
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
         else pinfo[i].numElectrons = pinfo[i].depElectrons; // JACOB ADDITION Jan22, 2026 for strange channel IDE results
         pinfo[i].index = i;
