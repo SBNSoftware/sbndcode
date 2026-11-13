@@ -12,7 +12,11 @@
 #include <sstream>
 #include <stdlib.h>
 
+#include <limits>
+
 #include "CRTChannelMapService.h"
+#include "cetlib/search_path.h"
+#include "cetlib_except/exception.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
   
 SBND::CRTChannelMapService::CRTChannelMapService(fhicl::ParameterSet const& pset)
@@ -121,56 +125,56 @@ SBND::CRTChannelMapService::ModuleInfo_t SBND::CRTChannelMapService::GetModuleIn
   return moduleIter->second;
 }
 
-unsigned int SBND::CRTChannelMapService::ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(const unsigned int offline_module_id, const unsigned int strip_number)
+unsigned int SBND::CRTChannelMapService::ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(const unsigned int offline_module_id, const unsigned int strip_number) const
 {
   return 32 * offline_module_id + 2 * strip_number;
 }
 
-unsigned int SBND::CRTChannelMapService::ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(const unsigned int offline_module_id, const unsigned int local_offline_channel)
+unsigned int SBND::CRTChannelMapService::ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(const unsigned int offline_module_id, const unsigned int local_offline_channel) const
 {
   return 32 * offline_module_id + local_offline_channel;
 }
 
-unsigned int SBND::CRTChannelMapService::ConstructOnlineChannelIDFromMAC5AndLocalOnlineChannel(const unsigned int mac5, const unsigned int local_online_channel)
+unsigned int SBND::CRTChannelMapService::ConstructOnlineChannelIDFromMAC5AndLocalOnlineChannel(const unsigned int mac5, const unsigned int local_online_channel) const
 {
   return 100 * mac5 + local_online_channel;
 }
 
-unsigned int SBND::CRTChannelMapService::GetOfflineModuleIDFromOfflineChannelID(const unsigned int offline_channel_id)
+unsigned int SBND::CRTChannelMapService::GetOfflineModuleIDFromOfflineChannelID(const unsigned int offline_channel_id) const
 {
   return offline_channel_id / 32;
 }
 
-unsigned int SBND::CRTChannelMapService::GetLocalOfflineChannelFromOfflineChannelID(const unsigned int offline_channel_id)
+unsigned int SBND::CRTChannelMapService::GetLocalOfflineChannelFromOfflineChannelID(const unsigned int offline_channel_id) const
 {
   return offline_channel_id % 32;
 }
 
-unsigned int SBND::CRTChannelMapService::GetMAC5FromOnlineChannelID(const unsigned int online_channel_id)
+unsigned int SBND::CRTChannelMapService::GetMAC5FromOnlineChannelID(const unsigned int online_channel_id) const
 {
   return online_channel_id / 100;
 }
 
-unsigned int SBND::CRTChannelMapService::GetLocalOnlineChannelFromOnlineChannelID(const unsigned int online_channel_id)
+unsigned int SBND::CRTChannelMapService::GetLocalOnlineChannelFromOnlineChannelID(const unsigned int online_channel_id) const
 {
   return online_channel_id % 100;
 }
 
-bool SBND::CRTChannelMapService::MAC5IsValid(const unsigned int mac5)
+bool SBND::CRTChannelMapService::MAC5IsValid(const unsigned int mac5) const
 {
   ModuleInfo_t moduleinfo = GetModuleInfoFromMAC5(mac5);
 
   return moduleinfo.valid;
 }
 
-bool SBND::CRTChannelMapService::OfflineModuleIDIsValid(const unsigned int offline_module_id)
+bool SBND::CRTChannelMapService::OfflineModuleIDIsValid(const unsigned int offline_module_id) const
 {
   ModuleInfo_t moduleinfo = GetModuleInfoFromOfflineModuleID(offline_module_id);
 
   return moduleinfo.valid;
 }
 
-unsigned int SBND::CRTChannelMapService::GetOfflineModuleIDFromMAC5(const unsigned int mac5)
+unsigned int SBND::CRTChannelMapService::GetOfflineModuleIDFromMAC5(const unsigned int mac5) const
 {
   ModuleInfo_t moduleinfo = GetModuleInfoFromMAC5(mac5);
 
@@ -180,7 +184,7 @@ unsigned int SBND::CRTChannelMapService::GetOfflineModuleIDFromMAC5(const unsign
   return moduleinfo.offline_module_id;
 }
 
-unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineModuleID(const unsigned int offline_module_id)
+unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineModuleID(const unsigned int offline_module_id) const
 {
   ModuleInfo_t moduleinfo = GetModuleInfoFromOfflineModuleID(offline_module_id);
 
@@ -190,7 +194,7 @@ unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineModuleID(const unsign
   return moduleinfo.mac5;
 }
 
-unsigned int SBND::CRTChannelMapService::GetOfflineChannelIDFromOnlineChannelID(const unsigned int online_channel_id)
+unsigned int SBND::CRTChannelMapService::GetOfflineChannelIDFromOnlineChannelID(const unsigned int online_channel_id) const
 {
   const unsigned int mac5                 = GetMAC5FromOnlineChannelID(online_channel_id);
   const unsigned int local_online_channel = GetLocalOnlineChannelFromOnlineChannelID(online_channel_id);
@@ -205,7 +209,7 @@ unsigned int SBND::CRTChannelMapService::GetOfflineChannelIDFromOnlineChannelID(
   return ConstructOfflineChannelIDFromOfflineModuleIDAndOfflineLocalChannel(moduleinfo.offline_module_id, local_offline_channel);
 }
 
-unsigned int SBND::CRTChannelMapService::GetOnlineChannelIDFromOfflineChannelID(const unsigned int offline_channel_id)
+unsigned int SBND::CRTChannelMapService::GetOnlineChannelIDFromOfflineChannelID(const unsigned int offline_channel_id) const
 {
   const unsigned int offline_module_id     = GetOfflineModuleIDFromOfflineChannelID(offline_channel_id);
   const unsigned int local_offline_channel = GetLocalOfflineChannelFromOfflineChannelID(offline_channel_id);
@@ -220,7 +224,7 @@ unsigned int SBND::CRTChannelMapService::GetOnlineChannelIDFromOfflineChannelID(
   return ConstructOnlineChannelIDFromMAC5AndLocalOnlineChannel(moduleinfo.mac5, local_online_channel);
 }
 
-bool SBND::CRTChannelMapService::GetInversionFromOfflineModuleID(const unsigned int offline_module_id)
+bool SBND::CRTChannelMapService::GetInversionFromOfflineModuleID(const unsigned int offline_module_id) const
 {
   ModuleInfo_t moduleinfo = GetModuleInfoFromOfflineModuleID(offline_module_id);
 
@@ -230,24 +234,30 @@ bool SBND::CRTChannelMapService::GetInversionFromOfflineModuleID(const unsigned 
   return moduleinfo.channel_order_swapped;
 }
 
-unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id)
+unsigned int SBND::CRTChannelMapService::GetMAC5FromOfflineChannelID(const unsigned int offline_channel_id) const
 {
   return GetMAC5FromOfflineModuleID(GetOfflineModuleIDFromOfflineChannelID(offline_channel_id));
 }
 
-unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineModuleID(unsigned int offline_module_id)
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineModuleID(unsigned int offline_module_id) const
 {
-  return fTimingChainFromOfflineID[offline_module_id];
+  // find(), not operator[]: operator[] inserts on a miss, which is a write and races between threads.
+  // A module that is not in the timing chain map still gives 0, as before.
+  auto const it = fTimingChainFromOfflineID.find(offline_module_id);
+  return it == fTimingChainFromOfflineID.end() ? 0 : it->second;
 }
 
-unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id)
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromOfflineChannelID(unsigned int offline_channel_id) const
 {
   return GetTimingChainFromOfflineModuleID(GetOfflineModuleIDFromOfflineChannelID(offline_channel_id));
 }
 
-unsigned int SBND::CRTChannelMapService::GetTimingChainFromMAC5(unsigned int mac5)
+unsigned int SBND::CRTChannelMapService::GetTimingChainFromMAC5(unsigned int mac5) const
 {
-  return fTimingChainFromMAC5[mac5];
+  // find(), not operator[]: operator[] inserts on a miss, which is a write and races between threads.
+  // A module that is not in the timing chain map still gives 0, as before.
+  auto const it = fTimingChainFromMAC5.find(mac5);
+  return it == fTimingChainFromMAC5.end() ? 0 : it->second;
 }
 
 DEFINE_ART_SERVICE(SBND::CRTChannelMapService)
