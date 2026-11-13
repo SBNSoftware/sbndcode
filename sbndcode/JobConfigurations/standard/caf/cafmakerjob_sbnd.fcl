@@ -136,6 +136,8 @@ physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.cafmaker.BlipTag: "blipreco"
+# SBND does not run NuGraph: without this CAFMaker does a strict lookup of the (empty) NuGraphSlicesLabel and throws
+physics.producers.cafmaker.UsePandoraAfterNuGraph: true
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
