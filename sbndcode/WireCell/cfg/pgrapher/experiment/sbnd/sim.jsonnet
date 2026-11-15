@@ -16,7 +16,35 @@ function(params, tools) {
 
     local zippers = [sim.make_depozipper("depozipper-"+tools.anodes[n].name, tools.anodes[n], tools.pirs[0])
                      for n in std.range(0, nanodes-1)],
-    local transforms = [sim.make_depotransform("depotransform-"+tools.anodes[n].name, tools.anodes[n], tools.pirs[0])
+    // One pRNG per anode.  The anode pipelines run concurrently under TbbFlow, so a pRNG shared between them
+    // hands out its sequence in an order that depends on thread timing and the job is not reproducible.
+    local rngs = [{
+        type: "Random",
+        name: "rng-" + tools.anodes[n].name,
+        data: {
+            generator: "default",
+            seeds: [0, 1, 2, 3, 4, n + 1],
+        },
+    } for n in std.range(0, nanodes-1)],
+
+    // As sim.make_depotransform, with the anode's own pRNG.
+    local transforms = [g.pnode({
+        type: 'DepoTransform',
+        name: "depotransform-"+tools.anodes[n].name,
+        data: {
+            rng: wc.tn(rngs[n]),
+            dft: wc.tn(tools.dft),
+            anode: wc.tn(tools.anodes[n]),
+            pirs: std.map(function(pir) wc.tn(pir), tools.pirs[0]),
+            fluctuate: params.sim.fluctuate,
+            drift_speed: params.lar.drift_speed,
+            first_frame_number: params.daq.first_frame_number,
+            readout_time: params.sim.ductor.readout_time,
+            start_time: params.sim.ductor.start_time,
+            tick: params.daq.tick,
+            nsigma: 3,
+        },
+    }, nin=1, nout=1, uses=[tools.anodes[n], rngs[n], tools.dft] + tools.pirs[0])
                         for n in std.range(0, nanodes-1)],
     local depos2traces = transforms,
     //local depos2traces = zippers,
@@ -58,18 +86,18 @@ function(params, tools) {
     local noise_models = [make_noise_model(anode) for anode in tools.anodes],
 
 
-    local add_noise = function(model) g.pnode({
+    local add_noise = function(model, rng) g.pnode({
         type: "AddNoise",
         name: "addnoise-" + model.name,
         data: {
-            rng: wc.tn(tools.random),
+            rng: wc.tn(rng),
             dft: wc.tn(tools.dft),
             model: wc.tn(model),
 	    nsamples: params.daq.nticks,
             replacement_percentage: 0.02, // random optimization
-        }}, nin=1, nout=1, uses=[tools.random, tools.dft, model]),
+        }}, nin=1, nout=1, uses=[rng, tools.dft, model]),
 
-    local noises = [add_noise(model) for model in noise_models],
+    local noises = [add_noise(noise_models[n], rngs[n]) for n in std.range(0, nanodes-1)],
     
     local outtags = ["orig%d"%n for n in std.range(0, nanodes-1)],
 
