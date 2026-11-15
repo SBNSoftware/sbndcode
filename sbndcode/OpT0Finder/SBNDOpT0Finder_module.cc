@@ -437,8 +437,11 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         f.pe_err_v[op_ch] = 0.;
       }
       else {
-        f.pe_v[op_ch] = flash.PE(op_ch);
-        f.pe_err_v[op_ch] = sqrt(flash.PE(op_ch));
+        // The flash's PE vector stops at the highest channel its flash finder uses (304 for TPC 0),
+        // so higher channels have no entry and reading them is out of bounds.
+        const double pe = (op_ch < flash.PEs().size()) ? flash.PE(op_ch) : 0.;
+        f.pe_v[op_ch] = pe;
+        f.pe_err_v[op_ch] = sqrt(pe);
       }
     }
     f.y = flash.YCenter();
