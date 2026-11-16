@@ -1,0 +1,24 @@
+# Simulates GENIE neutrino interactions from the BNB beam, forcing one
+# interaction per event inside the TPC volume (with padding), then decays
+# pi0s at generator level, deletes one photon at random and keeps events
+# with exactly one final-state photon (single-photon training sample).
+#
+# The standard GENIE module is relabelled "rawgenerator" and the
+# DeletePi0Photon filter takes the "generator" label, so the stock SBND
+# g4/detsim/reco/caf configurations work unchanged on the output.
+
+#include "deletepi0photon_sbn.fcl"
+
+#include "prodgenie_nu_singleinteraction_tpc_sbnd.fcl"
+
+physics.producers.rawgenerator: @local::physics.producers.generator
+physics.producers.generator:    @erase
+
+physics.filters.generator: @local::sbn_deletepi0photon
+physics.filters.generator.ForwardDk2Nu: true   # SBND BNB flux is dk2nu (sbnd_flux_g4bnb_*); CAFMaker needs Dk2Nu
+
+physics.simulate: [ rns, rawgenerator, generator ]
+
+outputs.out1.fileName:       "prodgenie_nu_singleinteraction_tpc_del1g_sbnd_%p-%tc.root"
+outputs.out1.SelectEvents:   [ "simulate" ]
+outputs.out1.outputCommands: [ "keep *_*_*_*", "drop *_rawgenerator_*_*" ]
