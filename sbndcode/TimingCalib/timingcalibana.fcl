@@ -1,0 +1,47 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: TimingCalibAna
+
+services:
+{
+  TFileService: { fileName: "timing_calib_ana.root" }
+  @table::services
+  @table::sbnd_basic_services
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  DetectorClocksService:     @local::sbnd_detectorclocks
+  LArPropertiesService:      @local::sbnd_properties
+  DetectorPropertiesService: @local::sbnd_detproperties
+}
+
+physics:
+{
+  analyzers:
+  {
+    // Labels below follow the "SCE" (space-charge-corrected) reco pass,
+    // since lightpropagationcorrectionSCE (the CorrectedOpFlashTiming
+    // producer) is associated to pandoraSCE slices.
+    timingcalib:
+    {
+      module_type:           "TimingCalibAna"
+      SliceLabel:            "pandoraSCE"
+      PFParticleLabel:       "pandoraSCE"
+      CorrectedOpFlashLabel: "lightpropagationcorrectionSCE"
+      BarycenterFMLabel:     "tpcpmtbarycentermatchingSCE"
+      OpFlashLabels:         [ "opflashtpc0", "opflashtpc1" ]
+      GeneratorLabel:        "generator"  // MC only: MCTruth + subrunTree POT (POTSummary)
+      SimChannelLabel:       "simtpc2d:simpleSC" // MC only: truth-match completeness denominator (as CAFMaker SimChannelLabel)
+      SPECTDCLabel:          "tdcdecoder" // data only: RWM (ch 2) presence -> corr_flash_status 2
+      FrameShiftLabel:       "frameshift" // data only: frame branches + FrameApplyAtCaf (CAFMaker PMT shift)
+      TimingInfoLabel:       "frameshift" // data only
+      BNBPOTDataLabel:          "bnbinfo"    // on-beam data: subrunTree POT + gates (CAFMaker BNBPOTDataLabel)
+      OffbeamBNBCountDataLabel: "bnbextinfo" // off-beam data: subrunTree gates (CAFMaker OffbeamBNBCountDataLabel); MC POT from GeneratorLabel POTSummary
+      NuScoreThreshold:      0.1   // must match LightPropagationCorrectionSCE's NuScoreThreshold fhicl value
+      FMScoreThreshold:      0.001 // must match LightPropagationCorrectionSCE's FMScoreThreshold fhicl value
+    }
+  }
+
+  ana: [ timingcalib ]
+  end_paths: [ ana ]
+}
