@@ -231,6 +231,7 @@ namespace blip {
     fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
     fHitTruthMatcher    = pset.get<std::string>   ("HitTruthMatcher",   "blipgaushitTruthMatch");
     fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
+    fPandoraProducer    = pset.get<std::string>   ("PandoraProducer",   "pandora");
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
     fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
     fSimChanProducer    = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
@@ -393,6 +394,7 @@ namespace blip {
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandle,evt,fTrkProducer);
     art::FindMany<simb::MCParticle, anab::BackTrackerHitMatchingData> fmhh(hitHandle,evt,fHitTruthMatcher);
+
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -412,6 +414,126 @@ namespace blip {
       }
     }
     */
+
+    //====================================================
+    // Get PFParticles and slices from Pandora for this event
+    //====================================================
+    // -- slices
+    art::Handle< std::vector<recob::Slice> > sliceHandle;
+    std::vector<art::Ptr<recob::Slice> > slicelist;
+    if (evt.getByLabel(fPandoraProducer,sliceHandle))
+      art::fill_ptr_vector(slicelist, sliceHandle);
+    // slices to PFParticles
+    art::FindManyP<recob::PFParticle> fmslice(sliceHandle,evt,fPandoraProducer);
+
+    // -- pfparticles
+    art::Handle< std::vector<recob::PFParticle> > pfparticleHandle;
+    std::vector<art::Ptr<recob::PFParticle> > pfparticlelist;
+    if (evt.getByLabel(fPandoraProducer,pfparticleHandle))
+      art::fill_ptr_vector(pfparticlelist, pfparticleHandle);
+    // PFParticles to tracks
+    art::FindManyP<recob::Track> fmPFTrk(pfparticleHandle,evt,fTrkProducer);
+    // PFParticles to vertex
+    art::FindManyP<recob::Vertex> fmPFVtx(pfparticleHandle,evt,fPandoraProducer);
+
+    // Vectors to store tracks and vertices
+    // tracks associated to neutrino slices
+    std::vector<art::Ptr<recob::Track>> neutrinoTrackList;
+    // vertices associated to neutrino slices
+    std::vector<art::Ptr<recob::Vertex>> neutrinoVertexList;
+    // vertices associated to tracks in neutrino slices
+    std::vector<art::Ptr<recob::Vertex>> neutrinoTrackVertexList;
+    // all slices primary vertices
+    std::vector<art::Ptr<recob::Vertex>> slicePrimaryVertexList;
+    // all slices PFP associated vertices
+    std::vector<art::Ptr<recob::Vertex>> sliceVertexList;
+
+
+    // loop over slices
+    for(auto& slc : slicelist ) {
+
+      // get associated PFParticles
+      std::vector<art::Ptr<recob::PFParticle>> pfps = fmslice.at(slc.key());
+
+      // check if the slice is associated with a neutrino
+      bool isNeutrinoSlice = false;
+      bool sliceSmallerThanMaxHitTrkLength = true;
+      for(auto& pfp : pfps ) {
+        if(pfp->IsPrimary() && ( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 )  ){
+          isNeutrinoSlice = true;
+        }
+
+        // check if the slice has a track longer than fMaxHitTrkLength
+        std::vector<art::Ptr<recob::Track>> trks = fmPFTrk.at(pfp.key());
+        for(auto& trk : trks ) {
+          if(trk->Length() > fMaxHitTrkLength){
+            sliceSmallerThanMaxHitTrkLength = false;
+          }
+        }
+      }
+
+      std::cout<<"Slice "<<slc.key()<<" has "<<pfps.size()<<" PFParticles, isNeutrinoSlice = "<<isNeutrinoSlice<<", sliceSmallerThanMaxHitTrkLength = "<<sliceSmallerThanMaxHitTrkLength<<"\n";
+
+      if(sliceSmallerThanMaxHitTrkLength){
+        std::cout<<"  Skipping slice "<<slc.key()<<" because it has a track longer than "<<fMaxHitTrkLength<<" cm\n";
+        continue;
+      }
+
+      // loop over PFParticles and calculate distance to blip
+      for(auto& pfp : pfps ) {
+        
+        // get the associated track and vertex
+        std::vector<art::Ptr<recob::Track>> trks = fmPFTrk.at(pfp.key());
+        std::vector<art::Ptr<recob::Vertex>> vtxs = fmPFVtx.at(pfp.key());
+
+        std::cout<<"  PFParticle "<<pfp.key()<<" has "<<trks.size()<<" tracks and "<<vtxs.size()<<" vertices\n";
+
+        if(isNeutrinoSlice){
+
+          // If neutrino slice and PFP is primary with PDG 12 or PDG 14, update the neutrino primary vertex list
+          if(pfp->IsPrimary() && ( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 )  ){
+            if(vtxs.size() > 0){
+              neutrinoVertexList.push_back(vtxs[0]);
+              std::cout<<"    Added vertex "<<vtxs[0].key()<<" to neutrinoVertexList\n";
+            }
+          }
+          else{
+            
+            // Update track list
+            if(trks.size() > 0){
+              if( trks[0]->Length() < fMaxHitTrkLength){
+                std::cout<<"    Skipping track "<<trks[0].key()<<" because it is longer than "<<fMaxHitTrkLength<<" cm\n";
+                continue;
+              }
+              neutrinoTrackList.push_back(trks[0]);
+              std::cout<<"    Added track "<<trks[0].key()<<" to neutrinoTrackList\n";
+            }
+            // Update track vertex list
+            if(vtxs.size() > 0){
+              neutrinoTrackVertexList.push_back(vtxs[0]);
+              std::cout<<"    Added vertex "<<vtxs[0].key()<<" to neutrinoTrackVertexList\n";
+            }
+          }
+
+        }
+        else{
+          // If not a neutrino slice, update the vertex list
+          if(vtxs.size() > 0){
+            sliceVertexList.push_back(vtxs[0]);
+            std::cout<<"    Added vertex "<<vtxs[0].key()<<" to sliceVertexList\n";
+            
+            // If the PFP is primary, also add to the slice primary vertex list
+            if(pfp->IsPrimary()){
+              slicePrimaryVertexList.push_back(vtxs[0]);
+              std::cout<<"    Added vertex "<<vtxs[0].key()<<" to slicePrimaryVertexList\n";
+            }
+          }
+          
+        }
+
+      } // end loop over PFParticles
+    
+    } // end loop over slices
    
     //====================================================
     // Prep the particle inventory service for MC+overlay
@@ -1060,6 +1182,68 @@ namespace blip {
               }
             }//endloop over trks
            
+
+            // ----------------------------------------
+            // calculate blip-Pandora topological variables
+            // variable ProxNuVtxDist - distance to closest neutrino vertex
+            for(auto& vtx : neutrinoVertexList ) {
+              TVector3 vtx3(vtx->position().X(),vtx->position().Y(),vtx->position().Z());
+              float d = (vtx3 - geo::vect::convertTo<TVector3>(newBlip.Position)).Mag();
+              if( newBlip.ProxNuVtxDist < 0 || d < newBlip.ProxNuVtxDist ) {
+                newBlip.ProxNuVtxDist = d;
+                newBlip.ProxNuVtxID = vtx->ID();
+              }
+            }
+
+            // variable ProxNuPFPVtxDist - distance to closest PFP vertex in the neutrino hierarchy
+            for(auto& vtx : neutrinoTrackVertexList ) {
+              TVector3 vtx3(vtx->position().X(),vtx->position().Y(),vtx->position().Z());
+              float d = (vtx3 - geo::vect::convertTo<TVector3>(newBlip.Position)).Mag();
+              if( newBlip.ProxNuPFPVtxDist < 0 || d < newBlip.ProxNuPFPVtxDist ) {
+                newBlip.ProxNuPFPVtxDist = d;
+                newBlip.ProxNuPFPID = vtx->ID();
+              }
+            }
+
+            // variables ProxNuTrkDist and inNuCylinder - distance to closest track in the neutrino slice, and whether the blip is within a cylinder around that track
+            for(auto& trk : neutrinoTrackList ) {
+              TVector3 p1(trk->Vertex().X(), trk->Vertex().Y(), trk->Vertex().Z() );
+              TVector3 p2(trk->End().X(), trk->End().Y(), trk->End().Z() );
+              TVector3 bp = geo::vect::convertTo<TVector3>(newBlip.Position);
+              float d = BlipUtils::DistToLine(p1,p2,bp);
+              if( newBlip.ProxNuTrkDist < 0 || d < newBlip.ProxNuTrkDist ) {
+                newBlip.ProxNuTrkDist = d;
+                newBlip.ProxNuTrkID = trk->ID();
+              }
+              if( !newBlip.inNuCylinder && d < fCylinderRadius ) {
+                float angle1 = asin( d / (p1-bp).Mag() ) * 180./3.14159;
+                float angle2 = asin( d / (p2-bp).Mag() ) * 180./3.14159;
+                if( angle1 < 45. && angle2 < 45. ) newBlip.inNuCylinder = true;
+              }
+            }
+
+            // variable ProxPrimVtxDist - distance to closest primary vertex (neutrino or cosmic)
+            for(auto& vtx : slicePrimaryVertexList ) {
+              TVector3 vtx3(vtx->position().X(),vtx->position().Y(),vtx->position().Z());
+              float d = (vtx3 - geo::vect::convertTo<TVector3>(newBlip.Position)).Mag();
+              if( newBlip.ProxPrimVtxDist < 0 || d < newBlip.ProxPrimVtxDist ) {
+                newBlip.ProxPrimVtxDist = d;
+                newBlip.ProxPrimVtxID = vtx->ID();
+              }
+            }
+
+            // variable ProxVtxDist - distance to closest vertex (neutrino or cosmic), not necessarily a primary PFP
+            for(auto& vtx : sliceVertexList ) {
+              TVector3 vtx3(vtx->position().X(),vtx->position().Y(),vtx->position().Z());
+              float d = (vtx3 - geo::vect::convertTo<TVector3>(newBlip.Position)).Mag();
+              if( newBlip.ProxVtxDist < 0 || d < newBlip.ProxVtxDist ) {
+                newBlip.ProxVtxDist = d;
+                newBlip.ProxVtxID = vtx->ID();
+              }
+            }
+
+            
+
             if( fApplyTrkCylinderCut && newBlip.inCylinder ) continue;
             
             // ----------------------------------------

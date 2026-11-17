@@ -32,6 +32,9 @@
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Slice.h"
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/Vertex.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -136,6 +139,7 @@ namespace blip {
     std::string         fHitProducer;
     std::string         fHitTruthMatcher;
     std::string         fTrkProducer;
+    std::string         fPandoraProducer;
     std::string         fGeantProducer;
     std::string         fSimDepProducer;
     std::string         fSimChanProducer;
