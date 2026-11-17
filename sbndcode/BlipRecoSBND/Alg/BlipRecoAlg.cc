@@ -218,7 +218,8 @@ namespace blip {
   //Destructor
   BlipRecoAlg::~BlipRecoAlg()
   {
-    delete fCaloAlg;
+    //delete fCaloAlg;
+    //delete ElifetimeTool;
   }
   
   
@@ -267,12 +268,13 @@ namespace blip {
     fApplyTrkCylinderCut= pset.get<bool>          ("ApplyTrkCylinderCut", false);
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
-    fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    fCaloAlg            = std::make_unique<calo::CalorimetryAlg>( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    ElifetimeTool       = std::make_unique<sbnd::calo::NormalizeDriftSQLite>( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
     fESTAR_p1           = pset.get<float>         ("ESTAR_p1",            0.00003479);
-    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  false);
+    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  true);
     fSCECorr            = pset.get<bool>          ("SCECorrection",       false);
     fYZUniformityCorr   = pset.get<bool>          ("YZUniformityCorrection",true);
     fModBoxA            = pset.get<float>         ("ModBoxA",             0.93);
@@ -311,7 +313,6 @@ namespace blip {
     std::cout<<"\n"
     <<"=========== BlipRecoAlg =========================\n"
     <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
-
     //=======================================
     // Reset things
     //=======================================
@@ -337,6 +338,8 @@ namespace blip {
     //auto const& detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     //auto const& lifetime_provider   = art::ServiceHandle<lariov::UBElectronLifetimeService>()->GetProvider();
     //auto const& tpcCalib_provider   = art::ServiceHandle<lariov::TPCEnergyCalibService>()->GetProvider();
+    //Elifetime
+    ElifetimeTool->setup(evt);
     
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
@@ -1141,13 +1144,24 @@ namespace blip {
       // ================================================================================
       float depEl   = std::max(0.0,(double)blip.Charge);
       float Efield  = kNominalEfield;
-
+      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
+      blip.EnergyNoDriftCorrection   = depEl/recomb * kWion;
+      // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
+      blip.EnergyESTARNoDriftCorrection  = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTARNoDriftCorrection  = Q_to_E_PSTAR(depEl);
       // --- Lifetime correction ---
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
-
+      double tau = 0;
+      if(plist.size()==0) //Data and should use calibration db
+      {
+        EventTPCLifetimes = ElifetimeTool->GetRunInfo(evt.id().run());
+        if(blip.TPC==0) tau = EventTPCLifetimes.tau_E;
+        else tau = EventTPCLifetimes.tau_W; //west
+      }
+      else tau = detProp.ElectronLifetime();
+      if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/tau);
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
@@ -1178,14 +1192,10 @@ namespace blip {
       }
       
       // METHOD 1: recombination factor from Mod Box model with a fixed dE/dx (fCalodEdx)
-      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
-      blip.Energy   = depEl * (1./recomb) * kWion;
-      
+      blip.Energy   = depEl/recomb * kWion;
       // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
-      float energy_estar = Q_to_E_ESTAR(depEl);
-      float energy_pstar = Q_to_E_PSTAR(depEl);
-      blip.EnergyESTAR = energy_estar;
-      blip.EnergyPSTAR = energy_pstar;
+      blip.EnergyESTAR = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTAR = Q_to_E_PSTAR(depEl);
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
       //blips[i].EnergyESTAR = ESTAR->Interpolate(depEl, Efield); 
       
@@ -1285,5 +1295,4 @@ namespace blip {
     printf("\n");
     
   }
-  
 }
