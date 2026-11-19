@@ -218,7 +218,8 @@ namespace blip {
   //Destructor
   BlipRecoAlg::~BlipRecoAlg()
   {
-    delete fCaloAlg;
+    //delete fCaloAlg;
+    //delete ElifetimeTool;
   }
   
   
@@ -267,12 +268,13 @@ namespace blip {
     fApplyTrkCylinderCut= pset.get<bool>          ("ApplyTrkCylinderCut", false);
     fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
     
-    fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    fCaloAlg            = std::make_unique<calo::CalorimetryAlg>( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    ElifetimeTool       = std::make_unique<sbnd::calo::NormalizeDriftSQLite>( pset.get<fhicl::ParameterSet>("NormalizeDrift"));
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
     fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
     fESTAR_p1           = pset.get<float>         ("ESTAR_p1",            0.00003479);
-    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  false);
+    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  true);
     fSCECorr            = pset.get<bool>          ("SCECorrection",       false);
     fYZUniformityCorr   = pset.get<bool>          ("YZUniformityCorrection",true);
     fModBoxA            = pset.get<float>         ("ModBoxA",             0.93);
@@ -311,7 +313,6 @@ namespace blip {
     std::cout<<"\n"
     <<"=========== BlipRecoAlg =========================\n"
     <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
-
     //=======================================
     // Reset things
     //=======================================
@@ -337,6 +338,8 @@ namespace blip {
     //auto const& detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     //auto const& lifetime_provider   = art::ServiceHandle<lariov::UBElectronLifetimeService>()->GetProvider();
     //auto const& tpcCalib_provider   = art::ServiceHandle<lariov::TPCEnergyCalibService>()->GetProvider();
+    //Elifetime
+    ElifetimeTool->setup(evt);
     
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
@@ -1141,13 +1144,24 @@ namespace blip {
       // ================================================================================
       float depEl   = std::max(0.0,(double)blip.Charge);
       float Efield  = kNominalEfield;
-
+      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
+      blip.EnergyNoDriftCorrection   = depEl/recomb * kWion;
+      // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
+      blip.EnergyESTARNoDriftCorrection  = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTARNoDriftCorrection  = Q_to_E_PSTAR(depEl);
       // --- Lifetime correction ---
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
-
+      double tau = 0;
+      if(plist.size()==0) //Data and should use calibration db
+      {
+        EventTPCLifetimes = ElifetimeTool->GetRunInfo(evt.id().run());
+        if(blip.TPC==0) tau = EventTPCLifetimes.tau_E;
+        else tau = EventTPCLifetimes.tau_W; //west
+      }
+      else tau = detProp.ElectronLifetime();
+      if( fLifetimeCorr ) depEl *= exp( 1e-3*blip.Time/tau);
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
@@ -1178,14 +1192,10 @@ namespace blip {
       }
       
       // METHOD 1: recombination factor from Mod Box model with a fixed dE/dx (fCalodEdx)
-      float recomb  = ModBoxRecomb(fCalodEdx,Efield);
-      blip.Energy   = depEl * (1./recomb) * kWion;
-      
+      blip.Energy   = depEl/recomb * kWion;
       // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
-      float energy_estar = Q_to_E_ESTAR(depEl);
-      float energy_pstar = Q_to_E_PSTAR(depEl);
-      blip.EnergyESTAR = energy_estar;
-      blip.EnergyPSTAR = energy_pstar;
+      blip.EnergyESTAR = Q_to_E_ESTAR(depEl);
+      blip.EnergyPSTAR = Q_to_E_PSTAR(depEl);
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
       //blips[i].EnergyESTAR = ESTAR->Interpolate(depEl, Efield); 
       
@@ -1235,9 +1245,9 @@ namespace blip {
   }
 
   TSpline3* BlipRecoAlg::CreateSplinePSTAR() {
-    const int n = 88;
-    double x[n] = {5.62012, 7.5217, 9.22644, 10.7891, 12.2458, 14.9232, 17.364, 19.6304, 21.7613, 23.7802, 25.7044, 27.5476, 31.8909, 35.949, 39.788, 43.4516, 46.9648, 50.3587, 53.6611, 56.8741, 63.0742, 69.0801, 74.8993, 80.575, 86.1498, 91.7055, 97.1671, 102.615, 108.013, 113.441, 118.862, 124.317, 129.767, 135.294, 163.462, 193.083, 224.394, 257.526, 292.434, 329.105, 367.443, 407.39, 491.813, 581.821, 677.162, 777.008, 881.301, 989.983, 1102.24, 1218.42, 1338.49, 1461.65, 1588.63, 1719.02, 1852.79, 1989.92, 2724.66, 3537.17, 4419.21, 5369.11, 6382.82, 7452.57, 8577.23, 9758.68, 11242.9, 12272.8, 13874.3, 14979.2, 16110.6, 16688.6, 17866, 19069.3, 19680.1, 20925.4, 24147.3, 27525.1, 31049.9, 34728.2, 38532.3, 42455.5, 46518.8, 50719.2, 55031.4, 59453.7, 83220.8, 109496, 137981, 168490};
-    double y[n] = {0.001, 0.0015, 0.002, 0.0025, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.0225, 0.025, 0.0275, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.3, 3.5, 3.8, 4, 4.2, 4.3, 4.5, 4.7, 4.8, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 12.5, 15, 17.5, 20};
+    const int n = 109;
+    double x[n] = {5.62012, 7.5217, 9.22644, 10.7891, 12.2458, 14.9232, 17.364, 19.6304, 21.7613, 23.7802, 25.7044, 27.5476, 31.8909, 35.949, 39.788, 43.4516, 46.9648, 50.3587, 53.6611, 56.8741, 63.0742, 69.0801, 74.8993, 80.575, 86.1498, 91.7055, 97.1671, 102.615, 108.013, 113.441, 118.862, 124.317, 129.767, 135.294, 163.462, 193.083, 224.394, 257.526, 292.434, 329.105, 367.443, 407.39, 491.813, 581.821, 677.162, 777.008, 881.301, 989.983, 1102.24, 1218.42, 1338.49, 1461.65, 1588.63, 1719.02, 1852.79, 1989.92, 2724.66, 3537.17, 4419.21, 5369.11, 6382.82, 7452.57, 8577.23, 9758.68, 11242.9, 12272.8, 13874.3, 14979.2, 16110.6, 16688.6, 17866, 19069.3, 19680.1, 20925.4, 24147.3, 27525.1, 31049.9, 34728.2, 38532.3, 42455.5, 46518.8, 50719.2, 55031.4, 59453.7, 83220.8, 109496, 137981, 168490, 234878, 270445, 307528, 385847, 468873, 556297, 647608, 742473, 840596, 941610, 1.04538e+06, 1.1517e+06, 1.26037e+06, 1.37111e+06, 1.48395e+06, 1.59864e+06, 1.71474e+06, 2.32002e+06, 2.95591e+06, 3.61505e+06, 4.29229e+06};
+    double y[n] = {0.001, 0.0015, 0.002, 0.0025, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.0225, 0.025, 0.0275, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.3, 3.5, 3.8, 4, 4.2, 4.3, 4.5, 4.7, 4.8, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 12.5, 15, 17.5, 20, 25, 27.5, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 125, 150, 175, 200};
     TGraph* g = new TGraph(n, x, y);
     return new TSpline3("splinePSTAR", g);
   }
@@ -1285,5 +1295,4 @@ namespace blip {
     printf("\n");
     
   }
-  
 }

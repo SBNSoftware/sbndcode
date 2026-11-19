@@ -75,7 +75,7 @@
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 #include "sbnobj/Common/Reco/CorrectedOpFlashTiming.h"
-#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 #include "lardataobj/AnalysisBase/T0.h"
 
 // Geometry and mapping
@@ -174,7 +174,7 @@ private:
     std::string fSpacePointLabel;
     std::string fOpHitsModuleLabel;
     std::string fOpFlashNewLabel;
-    std::string fSPECTDCLabel;
+    std::string fFrameShiftInfoLabel;
     std::string fFlashMatchingTool;
     
     bool fSaveCorrectionTree;
@@ -232,8 +232,7 @@ private:
     size_t fNOpChannels;
     double _fNuScore;
     double _fFMScore;
-    double fEventTriggerTime=-999999.;
-    double fRWMTime=-999999.;
+    double fFrameApplyAtCaf=0.; // MC: stays 0, no shift applied
     std::vector<double> fNuScore;
     std::vector<double> fFMScore;
     std::vector<double> fOpFlashTimeOld;
