@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+CaloAlg:
+{
+    MaxTrackHits: 10
+    MakeFit: true
+    UseHitRMSInFit: false
+    HitWidthTolInFit: 1.5
+    Verbose: 0
+}
+
+END_PROLOG

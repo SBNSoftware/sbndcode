@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+ChargeDensityAlg:
+{
+    ApplyRawSmoothing: true
+    ApplySmoothing: false
+    ApplyCumulativeSmoothing: false
+    NDriftPack: 4
+    NWirePack: 1
+    ExpoAvSmoothPar: 0.3
+    UnAvNeighbours: 1
+    CumulativeCut: 0.8
+    SlidingWindowN: 3
+    NSamplesBeginSlope: 3
+    MaxRadius: 90
+    UseHitWidth: true
+    DebugMode: false
+    CalculateScore: true
+    UseAlpha: false
+    UseIota: true
+    TMVAFilename: "FRANSSelectionTMVA_BDT_ViewCWithWidth_Iota.weights.xml"
+    OutputPath: "OutputLambdaAna"
+    Verbose: 0
+}
+
+END_PROLOG

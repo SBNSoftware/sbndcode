@@ -1,0 +1,23 @@
+BEGIN_PROLOG
+
+TPCLinesAlg:
+{
+    MinTrackHits: 3
+    MaxRadius: 250
+    DriftConversion: 1. 
+    MaxMeanOccupation: 2.5
+    MaxHoughTracks: 15
+    RemoveIsolatedHits: true
+    MaxNeighbourDistance: 2
+    MinNeighboursHits: 2
+    MinTrackGoodness: 10
+    CustomKinkPoint: false
+    ParallelTracksMaxD: 7
+    VertexAlgorithm: 1
+    View: 2
+    OutputPath: OutputLambdaAna
+    Verbose: 0
+    DebugMode: -1 
+}
+
+END_PROLOG

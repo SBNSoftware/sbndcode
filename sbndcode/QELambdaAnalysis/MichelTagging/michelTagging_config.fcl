@@ -1,0 +1,50 @@
+BEGIN_PROLOG
+
+MichelTagging:
+{
+  module_type:                    "MichelTagging"
+  MCTruthLabel:                   "generator"
+  MCParticleLabel:                "largeant"
+  MCT2MCPLabel:                   "largeant"
+  Track2HitLabel:                 "pandoraTrack"
+  Shower2HitLabel:                "pandoraShower"
+  POTLabel:                       "generator"
+  SliceLabel:                     "pandora"
+  SliceModuleLabel:               "pandoraSCE"
+  PFParticleLabel:                "pandora"
+  PFParticleMetadataLabel:        "pandora"
+  VertexLabel:                    "pandora"
+  TrackLabel:                     "pandoraTrack"
+  ShowerLabel:                    "pandoraShower"
+  CalorimetryLabel:               "pandoraCalo"
+  HitLabel:                       "gaushit"
+  Hit2SpacePointLabel:            "pandora"
+  BlipLabel:                      "blipreco"
+  TPCPMTBarycenterFMModuleLabel:  "tpcpmtbarycentermatching"
+
+  MaxVtxDist:        5
+  DistanceThreshold: 10
+  MinMuLength:       20
+  FV:                10
+
+  # MichelBDTConfig:    "MichelTagging_BDT.weights.xml"
+  # MichelBDTConfig:    "MichelTagging_BDT_noNTracks.weights.xml"
+  MichelBDTConfig:    "MichelTagging_BDT_devSamples.weights.xml"
+
+  MichelParams:
+  {
+    MaxResRange:        40 # cm
+    SlidingWindowSize:  5
+    MaxDEDx:            20
+    MaxRadius:          150 #55  # Radial max radius
+    AngleCut:           15
+    NSubHits:           5
+    NRadialIntervals:   100
+    AngleMaxRadius:     60
+    BlipMaxWireSpan:    3
+    BlipMaxDist:        50
+  }
+
+}
+
+END_PROLOG

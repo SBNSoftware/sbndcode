@@ -23,6 +23,9 @@
 #include "lightcalo_sbnd.fcl"
 #include "sbnd_lightpropagationcorrection_config.fcl"
 
+#include "QELambdaReco.fcl"
+#include "QELambdaReco_data.fcl"
+
 BEGIN_PROLOG
 
 sbnd_reco2_producers:{
@@ -100,6 +103,22 @@ sbnd_reco2_producers:{
 
     ### light calorimtery 
     lightcaloSCE : @local::sbnd_lightcalo_sce
+
+    ### QE Lambda Reconstruction
+    FRANSProducer: @local::FRANSProducer
+    pandoraLambda: @local::pandoraLambda
+    pandoraTrackLambda: @local::pandoraTrackLambda
+    pandoraCaloLambda: @local::pandoraCaloLambda
+    pandoraPidLambda: @local::pandoraPidLambda
+    LambdaPID: @local::LambdaPID
+
+    FRANSProducerData: @local::FRANSProducerData
+    pandoraLambdaData: @local::pandoraLambdaData
+    pandoraTrackLambdaData: @local::pandoraTrackLambdaData
+    pandoraCaloLambdaData: @local::pandoraCaloLambdaData
+    pandoraPidLambdaData: @local::pandoraPidLambdaData
+    LambdaPIDData: @local::LambdaPIDData
+
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -143,6 +162,12 @@ sbnd_reco2_producer_sequence: [
     , cvnSCE
     , blipreco
     , lightcaloSCE
+    , FRANSProducer
+    , pandoraLambda
+    , pandoraTrackLambda
+    , pandoraCaloLambda
+    , pandoraPidLambda
+    , LambdaPID
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
