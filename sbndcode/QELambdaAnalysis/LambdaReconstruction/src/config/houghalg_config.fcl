@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+HoughAlg:
+{
+    MaxRadiusLineHypothesis: 25
+    ThetaRes: 25
+    MaxDistanceTube: 10
+    MinHoughHits: 3
+    Verbose: 0
+}
+
+END_PROLOG

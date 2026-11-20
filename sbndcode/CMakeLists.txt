@@ -54,3 +54,6 @@ add_subdirectory(BlipRecoSBND)
 add_subdirectory(LightPropagationCorrection)
 
 add_subdirectory(CathodeFilter)
+
+# for QE Lambda reconstruction
+add_subdirectory(QELambdaAnalysis)

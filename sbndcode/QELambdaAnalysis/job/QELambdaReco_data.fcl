@@ -1,0 +1,84 @@
+#include "pandoramodules_sbnd.fcl"
+#include "particleid_sbnd.fcl"
+#include "fransproducer_config.fcl"
+#include "lambdapid_config.fcl"
+
+BEGIN_PROLOG
+
+FRANSProducerData: @local::FRANSProducer
+pandoraLambdaData: @local::sbnd_pandora
+pandoraTrackLambdaData: @local::sbnd_pandoraTrackCreation
+pandoraCaloLambdaData: @local::sbnd_gnewcalodata
+pandoraPidLambdaData: @local::sbnd_chi2pid
+LambdaPIDData: @local::LambdaPID
+
+# ----------------------------------------------------------------------
+# FRANS
+# ----------------------------------------------------------------------
+
+FRANSProducerData.ChargeDensityAlg.TMVAFilename:
+  "FRANSSelectionTMVA_BDT_ViewCWithWidth_Iota.weights.xml"
+
+FRANSProducerData.ChargeDensityAlg.UseAlpha: false
+FRANSProducerData.ChargeDensityAlg.UseIota: true
+FRANSProducerData.ChargeDensityAlg.UseHitWidth: true
+
+FRANSProducerData.MichelTagging.CalorimetryLabel: "pandoraCaloData"
+
+# ----------------------------------------------------------------------
+# PANDORA
+# ----------------------------------------------------------------------
+
+pandoraLambdaData.HitFinderModuleLabel: "FRANSProducerData"
+pandoraLambdaData.GeantModuleLabel: "FRANSProducerData"
+pandoraLambdaData.ConfigFile:
+  "PandoraSettings_Master_QELambda2ndPass_SBND.xml"
+
+pandoraLambdaData.EnableMCParticles: true
+pandoraLambdaData.ShouldRunSlicing: false
+pandoraLambdaData.ShouldPerformSliceId: false
+pandoraLambdaData.ShouldRunAllHitsCosmicReco: false
+pandoraLambdaData.ShouldRunStitching: false
+pandoraLambdaData.ShouldRunCosmicHitRemoval: false
+pandoraLambdaData.ShouldRunCosmicRecoOption: false
+pandoraLambdaData.ShouldRunNeutrinoRecoOption: true
+
+# ----------------------------------------------------------------------
+# PANDORA TRACKS
+# ----------------------------------------------------------------------
+
+pandoraTrackLambdaData.PFParticleLabel:
+  "pandoraLambdaData"
+
+
+# ----------------------------------------------------------------------
+# PANDORA CALORIMETRY
+# ----------------------------------------------------------------------
+
+pandoraCaloLambdaData.TrackModuleLabel:
+  "pandoraTrackLambdaData"
+
+pandoraCaloLambdaData.FieldDistortion: false
+pandoraCaloLambdaData.FieldDistortionEfield: false
+pandoraCaloLambdaData.TrackIsFieldDistortionCorrected: false
+
+
+# ----------------------------------------------------------------------
+# PANDORA PID
+# ----------------------------------------------------------------------
+
+pandoraPidLambdaData.TrackModuleLabel:
+  "pandoraTrackLambdaData"
+
+pandoraPidLambdaData.CalorimetryModuleLabel:
+  "pandoraCaloLambdaData"
+
+
+# ----------------------------------------------------------------------
+# LambdaPIDData
+# ----------------------------------------------------------------------
+
+LambdaPIDData.CalorimetryLabel: "pandoraCaloLambdaData"
+LambdaPIDData.ParticleIDLabel: "pandoraPidLambdaData"
+
+END_PROLOG

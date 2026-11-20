@@ -1,0 +1,145 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "pandoramodules_sbnd.fcl"
+#include "particleid_sbnd.fcl"
+
+#include "fransproducer_config.fcl"
+#include "lambdapid_config.fcl"
+
+process_name: QELambdaReco
+
+source:
+{
+  module_type: RootInput
+  maxEvents: -1
+}
+
+services:
+{
+  TFileService:
+  {
+    fileName: "hists_%ifb_%p-%tc.root"
+  }
+
+  @table::sbnd_services
+
+  BackTrackerService: @local::standard_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+// services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
+
+physics:
+{
+  producers:
+  {
+    FRANSProducer: @local::FRANSProducer
+
+    pandoraLambda:
+      @local::sbnd_pandora
+
+    pandoraTrackLambda:
+      @local::sbnd_pandoraTrackCreation
+
+    pandoraCaloLambda:
+      @local::sbnd_gnewcalomc
+
+    pandoraPidLambda:
+      @local::sbnd_chi2pid
+
+    LambdaPID:
+      @local::LambdaPID
+  }
+
+  simulate:
+  [
+    FRANSProducer,
+    pandoraLambda,
+    pandoraTrackLambda,
+    pandoraCaloLambda,
+    pandoraPidLambda,
+    LambdaPID
+  ]
+
+  stream1: [out1]
+
+  trigger_paths: [simulate]
+  end_paths: [stream1]
+}
+
+# ----------------------------------------------------------------------
+# FRANS
+# ----------------------------------------------------------------------
+
+physics.producers.FRANSProducer.ChargeDensityAlg.TMVAFilename:
+  "FRANSSelectionTMVA_BDT_ViewCWithWidth_Iota.weights.xml"
+
+physics.producers.FRANSProducer.ChargeDensityAlg.UseAlpha: false
+physics.producers.FRANSProducer.ChargeDensityAlg.UseIota: true
+physics.producers.FRANSProducer.ChargeDensityAlg.UseHitWidth: true
+
+
+# ----------------------------------------------------------------------
+# PANDORA
+# ----------------------------------------------------------------------
+
+physics.producers.pandoraLambda.HitFinderModuleLabel: "FRANSProducer"
+physics.producers.pandoraLambda.GeantModuleLabel: "FRANSProducer"
+physics.producers.pandoraLambda.ConfigFile:
+  "PandoraSettings_Master_QELambda2ndPass_SBND.xml"
+
+physics.producers.pandoraLambda.EnableMCParticles: true
+physics.producers.pandoraLambda.ShouldRunSlicing: false
+physics.producers.pandoraLambda.ShouldPerformSliceId: false
+physics.producers.pandoraLambda.ShouldRunAllHitsCosmicReco: false
+physics.producers.pandoraLambda.ShouldRunStitching: false
+physics.producers.pandoraLambda.ShouldRunCosmicHitRemoval: false
+physics.producers.pandoraLambda.ShouldRunCosmicRecoOption: false
+physics.producers.pandoraLambda.ShouldRunNeutrinoRecoOption: true
+
+
+# ----------------------------------------------------------------------
+# PANDORA TRACKS
+# ----------------------------------------------------------------------
+
+physics.producers.pandoraTrackLambda.PFParticleLabel:
+  "pandoraLambda"
+
+
+# ----------------------------------------------------------------------
+# PANDORA CALORIMETRY
+# ----------------------------------------------------------------------
+
+physics.producers.pandoraCaloLambda.TrackModuleLabel:
+  "pandoraTrackLambda"
+
+physics.producers.pandoraCaloLambda.FieldDistortion: false
+physics.producers.pandoraCaloLambda.FieldDistortionEfield: false
+physics.producers.pandoraCaloLambda.TrackIsFieldDistortionCorrected: false
+
+
+# ----------------------------------------------------------------------
+# PANDORA PID
+# ----------------------------------------------------------------------
+
+physics.producers.pandoraPidLambda.TrackModuleLabel:
+  "pandoraTrackLambda"
+
+physics.producers.pandoraPidLambda.CalorimetryModuleLabel:
+  "pandoraCaloLambda"
+
+
+# ----------------------------------------------------------------------
+# OUTPUT
+# ----------------------------------------------------------------------
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+
+    dataTier: "simulated"
+  }
+}
