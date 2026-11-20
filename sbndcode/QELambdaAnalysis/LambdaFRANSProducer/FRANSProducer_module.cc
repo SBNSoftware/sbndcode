@@ -87,7 +87,7 @@ qelambda::FRANSProducer::FRANSProducer(fhicl::ParameterSet const& p)
   if ( !sp.find_file(fPsetFRANS.TMVAFilename, file_name) )
     throw cet::exception("FRANSProducer") << "BDT file " <<
         fPsetFRANS.TMVAFilename << " not found in FW_SEARCH_PATH\n";
-  std::cout<<" BDT weights file name: "<<file_name<<std::endl;
+  // std::cout<<" BDT weights file name: "<<file_name<<std::endl;
   fPsetFRANS.TMVAFilename = file_name;
 
   pt = fFhiclPsetTrackFinder;
@@ -1225,7 +1225,11 @@ void qelambda::FRANSProducer::produce(art::Event &e)
     }
   }
 
-
+  // std::cout << "  *** lambdaProducts: " << std::endl;
+  // std::cout << "  ---   SliceID: " << lambdaProducts->SliceId << std::endl;
+  // std::cout << "  ---   FRANS Score: " << lambdaProducts->FransScore << std::endl;
+  // std::cout << "  --- Michel Score: " << lambdaProducts->MichelScore << std::endl;
+  
 
   // --- Fill the art event
   e.put(std::move(lambdaHitsVec));

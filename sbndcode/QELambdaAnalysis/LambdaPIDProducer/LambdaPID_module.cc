@@ -69,6 +69,9 @@ void qelambda::LambdaPID::produce(art::Event &e)
   fRecoStatus = false;
 
   auto putProduct = [&]() {
+    // std::cout << "  *** LambdaPID: " << std::endl;
+    // std::cout << "  ---   Proton KE: " << fLambdaPID.ProtonKE << std::endl;
+    // std::cout << "  ---   Pion KE: " << fLambdaPID.PionKE << std::endl;
     e.put(std::make_unique<qelambda::QELambdaPID>(fLambdaPID));
   };
 

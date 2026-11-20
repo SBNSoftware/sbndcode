@@ -78,6 +78,8 @@ pandoraPidLambdaData.CalorimetryModuleLabel:
 # LambdaPIDData
 # ----------------------------------------------------------------------
 
+LambdaPIDData.Reco2Label: "pandoraLambdaData"
+LambdaPIDData.TrackLabel: "pandoraTrackLambdaData"
 LambdaPIDData.CalorimetryLabel: "pandoraCaloLambdaData"
 LambdaPIDData.ParticleIDLabel: "pandoraPidLambdaData"
 

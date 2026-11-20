@@ -154,6 +154,10 @@ physics.producers.cafmaker.TrackCaloLabel: "pandoraCaloData"
 physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
 physics.producers.cafmaker.TrackLikePidLabel: "pandoraLikePidData"
 
+### QE Lambda Reco for data
+physics.producers.cafmaker.QELambdaFRANSLabel: "FRANSProducerData"
+physics.producers.cafmaker.QELambdaPIDLabel: "LambdaPIDData"
+
 # Include 3D barycenter flahs matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
