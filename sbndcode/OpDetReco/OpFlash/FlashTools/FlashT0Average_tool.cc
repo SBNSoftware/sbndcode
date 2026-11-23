@@ -12,7 +12,7 @@
 /// Only the highest-PE OpHit from each channel is used.
 /// Only OpHits above MinHitPE are considered.
 ///
-/// Created by Fran Nicolas, June 2022
+/// Created by Alejandro Sanchez-Castillo, Nov. 2026
 ////////////////////////////////////////////////////////////////////////
 
 #include "fhiclcpp/types/Atom.h"
@@ -79,10 +79,7 @@ namespace lightana{
     explicit FlashT0Average(art::ToolConfigTable<Config> const& config);
 
     // Method to calculate the OpFlash t0
-    double GetFlashT0(
-      double flash_peaktime,
-      LiteOpHitArray_t ophit_list
-    ) override;
+      double GetFlashT0( double flash_peaktime, LiteOpHitArray_t ophit_list ) override;
 
   private:
 
@@ -97,9 +94,7 @@ namespace lightana{
   };
 
 
-  FlashT0Average::FlashT0Average(
-    art::ToolConfigTable<Config> const& config
-  )
+  FlashT0Average::FlashT0Average( art::ToolConfigTable<Config> const& config )
     : fPreWindow  { config().PreWindow()  },
       fPostWindow { config().PostWindow() },
       fMinHitPE   { config().MinHitPE()   },
@@ -109,10 +104,7 @@ namespace lightana{
   }
 
 
-  double FlashT0Average::GetFlashT0(
-    double flash_time,
-    LiteOpHitArray_t ophit_list
-  ){
+  double FlashT0Average::GetFlashT0( double flash_time, LiteOpHitArray_t ophit_list ){
     // Store the highest-PE hit for each channel
     // channel -> (PE, peak_time)
     std::map<int, std::pair<double, double>> best_hit_per_channel;
@@ -139,24 +131,21 @@ namespace lightana{
       }
     }
 
-
     // Calculate weighted average
     //
     // Weight:
     //     w = PE / (PE + PE0)
     //
+
     fChannelWeights.assign(fWireReadout.NOpChannels(), 0.0);
     double weighted_time_sum = 0.0;
     double weight_sum = 0.0;
 
     for(const auto& [channel, hit] : best_hit_per_channel) {
-
-
       double pe   = hit.first;
       double time = hit.second;
 
       double weight = pe / (pe + fPE0);
-
       weighted_time_sum += weight * time;
       weight_sum += weight;
       fChannelWeights[channel] = weight;

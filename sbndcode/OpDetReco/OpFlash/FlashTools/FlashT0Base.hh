@@ -40,17 +40,11 @@ namespace lightana
 
 
     // Method to calculate the OpFlash t0
-    virtual double GetFlashT0(
-        double flash_peaktime,
-        LiteOpHitArray_t ophit_list
-    ) = 0;
+    virtual double GetFlashT0( double flash_peaktime, LiteOpHitArray_t ophit_list ) = 0;
+    
 
-
-    // Method to calculate the weighted average magnitude
-    double GetAverageMagnitude(
-        std::vector<double> const& MagnitudeVector
-    ) {
-
+    // Method to calculate the weighted average magnitude. Relevant to characterice photon ToF and particle ToF.
+    double GetAverageMagnitude(std::vector<double> const& MagnitudeVector) {
       // Check vector sizes
       if (MagnitudeVector.size() != fChannelWeights.size())
         throw art::Exception(art::errors::LogicError)
