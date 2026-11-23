@@ -6,4 +6,4 @@ physics.producers.generator.GXMLPATH:           "$SBNDCODE_DIR/scripts/GENIE/Sin
 physics.producers.generator.EventGeneratorList: "Default+SingleKaon"
 
 # Production AR25_20i splines plus the ones for DIS-CC-SINGLEK
-physics.producers.generator.XSecTable:          "gxspl-NUsmall-withSingleKaon.xml"
+physics.producers.generator.XSecTable: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/genie_splines/AR25_20i_00_000/v1/gxspl-NUsmall-withSingleKaon.xml"
