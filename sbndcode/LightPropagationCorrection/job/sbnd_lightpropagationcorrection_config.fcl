@@ -56,5 +56,7 @@ LightPropagationCorrectionSCE.TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycenterma
 
 LightPropagationCorrectionSCEMC: @local::LightPropagationCorrectionSCE
 LightPropagationCorrectionSCEMC.IsMC: true
+LightPropagationCorrectionSCEMC.VGroupVUV: 10.4 ## This is the "effective VUV group velocity that minimises the drift-dependent bias in MC. Additional information in docdb-49900."
+LightPropagationCorrectionSCEMC.VGroupVIS: 20.0 ## This is the "effective VIS group velocity that minimises the drift-dependent bias in MC. Additional information in docdb-49900."
 
 END_PROLOG
