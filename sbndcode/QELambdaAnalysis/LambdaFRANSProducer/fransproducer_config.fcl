@@ -12,8 +12,6 @@ FRANSProducer:
 {
   module_type:  "FRANSProducer"
 
-  MCTruthLabel: "generator"
-  MCLabel: "largeant"
   HitLabel: "gaushit"
   VertexLabel: "pandora"
   RecoLabel: "pandora"

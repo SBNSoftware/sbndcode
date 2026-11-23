@@ -36,8 +36,6 @@
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 
 // back tracking
-#include "larsim/MCCheater/ParticleInventoryService.h"
-#include "larsim/MCCheater/BackTrackerService.h"
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larsim/Utils/TruthMatchUtils.h"
@@ -47,9 +45,6 @@
 #include "larcorealg/Geometry/WireReadoutGeom.h"
 
 // truth includes
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "nusimdata/SimulationBase/MCNeutrino.h"
-#include "nusimdata/SimulationBase/MCParticle.h"
 #include "larcoreobj/SummaryData/POTSummary.h"
 
 // reco includes
@@ -70,14 +65,14 @@
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
 // FRANS includes
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/FRANS/ChargeDensity.h"
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/FRANS/ChargeDensityPset.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/FRANS/ChargeDensity.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/FRANS/ChargeDensityPset.h"
 // TPCLines includes
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/TPCLinesAlgo/TPCLinesParameters.h"
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/TPCLinesAlgo/TPCLinesAlgo.h"
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/EventHandle/SEventHandle.h"
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/SObjects/TPCSimpleTriangles.h"
-#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/src/SObjects/LambdaAnaTree.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/TPCLinesAlgo/TPCLinesParameters.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/TPCLinesAlgo/TPCLinesAlgo.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/EventHandle/SEventHandle.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/SObjects/TPCSimpleTriangles.h"
+#include "sbndcode/QELambdaAnalysis/LambdaReconstruction/SObjects/LambdaAnaTree.h"
 
 // ROOT inclides
 #include "TTree.h"
@@ -198,8 +193,6 @@ private:
   // void respondToCloseInputFile(const art::FileBlock& fb);
 
   // --- Configuration parameters
-  std::string fMCTruthLabel;
-  std::string fMCParticleLabel;
   std::string fHitLabel;
   std::string fVertexLabel;
   std::string fRecoLabel;
@@ -261,7 +254,6 @@ private:
 
   // --- Maps
   std::unordered_map<int, art::Ptr<recob::PFParticle>> fPfpIDToPfpMap;
-  std::map<art::Ptr<simb::MCTruth>, int> fMCTHitMap;
   std::map<int, int> fTrackIDHitMap;
   std::map<int, art::Ptr<recob::SpacePoint>> fhitToSpacePointMap;
 

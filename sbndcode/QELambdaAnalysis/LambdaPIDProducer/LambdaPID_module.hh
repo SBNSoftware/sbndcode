@@ -19,13 +19,7 @@
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "larsim/MCCheater/ParticleInventoryService.h"
-#include "larsim/MCCheater/BackTrackerService.h"
 #include "larsim/Utils/TruthMatchUtils.h"
-
-// truth includes
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "nusimdata/SimulationBase/MCParticle.h"
 
 // reco includes
 #include "lardataobj/RecoBase/PFParticle.h"

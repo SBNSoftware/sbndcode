@@ -26,8 +26,6 @@ namespace {
 // -------- Constructor
 qelambda::FRANSProducer::FRANSProducer(fhicl::ParameterSet const& p) 
   : EDProducer{p},
-  fMCTruthLabel( p.get< std::string >("MCTruthLabel") ),
-  fMCParticleLabel( p.get< std::string >("MCLabel") ),
   fHitLabel( p.get< std::string >("HitLabel") ),
   fVertexLabel( p.get< std::string >("VertexLabel") ),
   fRecoLabel( p.get< std::string >("RecoLabel") ),
@@ -182,9 +180,6 @@ qelambda::FRANSProducer::FRANSProducer(fhicl::ParameterSet const& p)
   produces<std::vector<recob::Hit>>();
   // Association with wires
   produces<art::Assns<recob::Wire, recob::Hit>>();
-  // MCParticle for lambda
-  produces<std::vector<simb::MCParticle>>();
-  produces<art::Assns<simb::MCTruth, simb::MCParticle, sim::GeneratedParticleInfo>>();
   // Lambda products
   produces<qelambda::QELambdaReco>();
 
@@ -927,8 +922,6 @@ void qelambda::FRANSProducer::produce(art::Event &e)
     emptyInfo.SetDefault();
     e.put(std::make_unique<std::vector<recob::Hit>>());
     e.put(std::make_unique<art::Assns<recob::Wire, recob::Hit>>());
-    e.put(std::make_unique<std::vector<simb::MCParticle>>());
-    e.put(std::make_unique<art::Assns<simb::MCTruth, simb::MCParticle, sim::GeneratedParticleInfo>>());
     e.put(std::make_unique<qelambda::QELambdaReco>(emptyInfo));
   };
 
@@ -936,8 +929,6 @@ void qelambda::FRANSProducer::produce(art::Event &e)
   // =========================
   //   Get handles
   // =========================
-  art::Handle<std::vector<simb::MCTruth>>     mctruthHandle;
-  art::Handle<std::vector<simb::MCParticle>>  mcparticleHandle;
   art::Handle<std::vector<recob::Slice>>      sliceHandle;
   art::Handle<std::vector<recob::PFParticle>> pfpHandle;
   art::Handle<std::vector<recob::Shower>>     showerHandle;
@@ -945,9 +936,6 @@ void qelambda::FRANSProducer::produce(art::Event &e)
   art::Handle<std::vector<recob::Cluster>>    clusterHandle;
   art::Handle<std::vector<recob::SpacePoint>> spHandle;
 
-
-  mctruthHandle = e.getHandle<std::vector<simb::MCTruth>>(fMCTruthLabel);
-  mcparticleHandle = e.getHandle<std::vector<simb::MCParticle>>(fMCParticleLabel);
   sliceHandle = e.getHandle<std::vector<recob::Slice>>(fRecoLabel);
   pfpHandle = e.getHandle<std::vector<recob::PFParticle>>(fRecoLabel);
   showerHandle = e.getHandle<std::vector<recob::Shower>>(fShowerLabel);
@@ -1176,55 +1164,6 @@ void qelambda::FRANSProducer::produce(art::Event &e)
     }
   }
 
-  // --- Add reconstructed hyperon vertex for second stage reconstruction
-  auto pPartColFirst = std::make_unique<std::vector<simb::MCParticle>>();
-  auto tpassn = std::make_unique<art::Assns<simb::MCTruth, simb::MCParticle, sim::GeneratedParticleInfo>>();
-
-  // Awful messy trick for now
-  // std::cout << "  --- Second round of MCParticles" << std::endl;
-
-  if (!mcparticleHandle.isValid()) {
-    mf::LogWarning("FRANSProducer") << "Invalid MCParticle collection, writing empty MCParticle products";
-  } else {
-    auto partCol = std::make_unique<std::vector<simb::MCParticle>>();
-
-    sim::MergeSimSourcesUtility MergeUtility{{0}};
-    art::PtrMaker<simb::MCParticle> const makePartPtr{e};
-
-    MergeUtility.MergeMCParticles(*partCol, *mcparticleHandle, 0);
-
-    const auto& listMap = MergeUtility.GetMCParticleListMap();
-
-    art::FindOneP<simb::MCTruth, sim::GeneratedParticleInfo> mctAssn(mcparticleHandle, e, fMCParticleLabel);
-
-    if (partCol->empty() || listMap.empty() || listMap.at(0).empty() ||
-        !mctAssn.isValid() || mctAssn.size() == 0) {
-      mf::LogWarning("FRANSProducer") << "Could not build MCParticle/MCTruth products, writing empty ones";
-    } else {
-      const auto& assocVectorPrimitive = listMap.at(0);
-
-      // Add just the first entry
-      tpassn->addSingle(mctAssn.at(0), makePartPtr(assocVectorPrimitive[0]), mctAssn.data(0).ref());
-
-      pPartColFirst->push_back(partCol->at(0));
-
-      // Add the hyperon vertex candidate
-      pPartColFirst->front().AddTrajectoryPoint(
-          TLorentzVector(fbestHyperonVertexX, fbestHyperonVertexY, fbestHyperonVertexZ, 0),
-          TLorentzVector(0, 0, 0, 0));
-
-      // Print front particle start/end points
-      // std::cout << "  --- Front Particle Start Point: "
-      //           << pPartColFirst->front().Vx() << " "
-      //           << pPartColFirst->front().Vy() << " "
-      //           << pPartColFirst->front().Vz() << std::endl;
-      // std::cout << "  --- Front Particle End Point: "
-      //           << pPartColFirst->front().EndX() << " "
-      //           << pPartColFirst->front().EndY() << " "
-      //           << pPartColFirst->front().EndZ() << std::endl;
-    }
-  }
-
   // std::cout << "  *** lambdaProducts: " << std::endl;
   // std::cout << "  ---   SliceID: " << lambdaProducts->SliceId << std::endl;
   // std::cout << "  ---   FRANS Score: " << lambdaProducts->FransScore << std::endl;
@@ -1234,7 +1173,5 @@ void qelambda::FRANSProducer::produce(art::Event &e)
   // --- Fill the art event
   e.put(std::move(lambdaHitsVec));
   e.put(std::move(lambdaHitsWireAssns));
-  e.put(std::move(pPartColFirst));
-  e.put(std::move(tpassn));
   e.put(std::move(lambdaProducts));
 }

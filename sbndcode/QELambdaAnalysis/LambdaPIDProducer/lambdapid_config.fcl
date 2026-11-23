@@ -4,8 +4,6 @@ LambdaPID:
 {
   module_type:  "LambdaPID"
 
-  MCTruthLabel: "generator"
-  MCLabel: "largeant"
   Reco2Label: "pandoraLambda"
   TrackLabel: "pandoraTrackLambda"
   CalorimetryLabel: "pandoraCaloLambda"
