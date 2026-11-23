@@ -1,0 +1,9 @@
+#include "prodgenie_corsika_proton_rockbox0p1_sbnd.fcl"
+
+# Default channel list plus GENIE's CC single kaon, DIS-CC-SINGLEK.
+# "Default+SingleKaon" is defined in GENIE/SingleKaon/EventGeneratorListAssembler.xml.
+physics.producers.generator.GXMLPATH:           "$SBNDCODE_DIR/scripts/GENIE/SingleKaon"
+physics.producers.generator.EventGeneratorList: "Default+SingleKaon"
+
+# Production AR25_20i splines plus the ones for DIS-CC-SINGLEK
+physics.producers.generator.XSecTable:          "gxspl-NUsmall-withSingleKaon.xml"
