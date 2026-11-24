@@ -20,47 +20,37 @@ LightPropagationCorrection:
     CalorimetryLabel: "pandoraCaloData"
     PandoraRangeLabel: "pandoraTrackRange"
     PandoraMCSLabel: "pandoraTrackMCS"
-    MCModuleLabel: "largeant"
-    MCTruthModuleLabel: ["generator"]
-	MCTruthInstanceLabel: [""]
-    MCTruthOrigin: [1]
-    MCTruthPDG: [12, 14, 16, -12, -14, -16]
-    SimDepProducer: "ionandscint" 
-    UseCheatMC: false
     UseMCVIS: false
 
     OpT0FinderModuleLabel: "opt0finder"
     TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
-    SPECTDCLabel: "tdcdecoder"
 
     VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
     VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
-    SpeedOfLight: 29.9
+    SpeedOfLight: 29.979
+
+    MIPdEdX: 2.1 # Average dEdX for MIPs
+    HIPdEdX: 4.5 # Average dEdX for HIPs
 
     FlashT0Config: @local::FlashT0SelectedChannels
     FlashGeoConfig: @local::FlashGeoThreshold
     AlgoConfig_tpc0: @local::SimpleFlashStandard
     AlgoConfig_tpc1: @local::SimpleFlashStandard
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
+    FlashMatchingTool: "BarycenterFM"
 
-    SaveSPECTDC: true
     SaveCorrectionTree: false
 
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
 
-    CherenkovRefractiveIndex: 1.23
-    CherenkovCosineTolerance: 5.0e-3
+    CherenkovRefractiveIndex: 1.23 # Refractive index for visible light ()
+    CherenkovCosineTolerance: 5.0e-3 
     CherenkovPMTRadius: 10
     CherenkovPMTRings: 4
     CherenkovPMTAzimuthSteps: 32
 
     DoPIDCorrection: true
-
-    OpDetXOffset: 0
-    CorrectOnlyVUV: false
-
-    FlashMatchingTool: "BarycenterFM"
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
