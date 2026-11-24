@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<alg_conf>
+
+<!--
+SBND: generator list for jobs that put this directory on GXMLPATH
+(e.g. prodgenie_corsika_proton_rockbox0p1_singlekaon_sbnd.fcl).
+
+Default+SingleKaon: the AR25_20i Default list (GENIE v3_06_02_sbn4 config/AR25_20i/TuneGeneratorList.xml)
+plus CC single kaon production, DIS-CC-SINGLEK.
+-->
+
+  <param_set name="Default+SingleKaon">
+     <param type="int" name="NGenerators">   19                                    </param>
+     <param type="alg" name="Generator-0">   genie::EventGenerator/QEL-CC                </param>
+     <param type="alg" name="Generator-1">   genie::EventGenerator/QEL-NC                </param>
+     <param type="alg" name="Generator-2">   genie::EventGenerator/RES-CC                </param>
+     <param type="alg" name="Generator-3">   genie::EventGenerator/RES-NC                </param>
+     <param type="alg" name="Generator-4">   genie::EventGenerator/DIS-CC                </param>
+     <param type="alg" name="Generator-5">   genie::EventGenerator/DIS-NC                </param>
+     <param type="alg" name="Generator-6">   genie::EventGenerator/COH-CC-PION           </param>
+     <param type="alg" name="Generator-7">   genie::EventGenerator/COH-NC-PION           </param>
+     <param type="alg" name="Generator-8">   genie::EventGenerator/DIS-CC-CHARM          </param>
+     <param type="alg" name="Generator-9">   genie::EventGenerator/QEL-CC-CHARM          </param>
+     <param type="alg" name="Generator-10">  genie::EventGenerator/NUE-EL                </param>
+     <param type="alg" name="Generator-11">  genie::EventGenerator/IMD                   </param>
+     <param type="alg" name="Generator-12">  genie::EventGenerator/IMD-ANH               </param>
+     <param type="alg" name="Generator-13">  genie::EventGenerator/DFR-CC                </param>
+     <param type="alg" name="Generator-14">  genie::EventGenerator/DFR-NC                </param>
+     <param type="alg" name="Generator-15">  genie::EventGenerator/QEL-CC-LAMBDA         </param>
+     <param type="alg" name="Generator-16">  genie::EventGenerator/MEC-CC                </param>
+     <param type="alg" name="Generator-17">  genie::EventGenerator/MEC-NC                </param>
+     <param type="alg" name="Generator-18">  genie::EventGenerator/DIS-CC-SINGLEK        </param>
+  </param_set>
+
+</alg_conf>
