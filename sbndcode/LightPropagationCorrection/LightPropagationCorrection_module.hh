@@ -165,7 +165,6 @@ private:
         double z = 0.0;
         double propagationTime = 0.0;
         int pfpID = -1;
-        int trackID = -1;
     };
 
     std::vector<ParticleSpacePoint_t> fParticleSpacePoints;
@@ -187,14 +186,21 @@ private:
     void FillLiteOpHit(std::vector<recob::OpHit> const& opHits,
                        std::vector<::lightana::LiteOpHit_t>& liteOpHits);
 
+    void FillFirstOpHit(double flash_time, 
+                        std::vector<recob::OpHit> const& all_opHits, 
+                        std::vector<recob::OpHit>& first_ophits);
+
+    ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, 
+                                                       ::lightana::LiteOpHitArray_t lite_hits_v);
+
+    void GetBoxTimeDiffMap(std::vector<recob::OpHit>& first_ophits);
+
     bool CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash,
                         sbn::CorrectedOpFlashTiming& correctedTiming,
                         art::FindManyP<recob::OpHit> const& flashToOpHitAssnsTPC0,
                         art::FindManyP<recob::OpHit> const& flashToOpHitAssnsTPC1);
 
-    ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(
-        ::lightana::LiteOpFlash_t const& flash,
-        ::lightana::LiteOpHitArray_t const& hits);
+
 
     // -------------------------------------------------------------------------
     // Debugging and output
@@ -210,9 +216,11 @@ private:
     // -------------------------------------------------------------------------
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
-    geo::GeometryCore const& fGeom;
 
     opdet::sbndPDMapAlg fPDSMap;
+    std::map<size_t, size_t> fChannelBoxMap;
+    std::map<size_t, size_t> fUncoatedChannelMap;
+    std::map<size_t, double> fBoxTimeDiffMap;
 
     trkf::TrackMomentumCalculator tmc;
 
@@ -250,7 +258,7 @@ private:
 
     size_t fNOpChannels = 0;
 
-    std::vector<double> fOpDetID;
+    std::vector<size_t> fOpDetID;
     std::vector<double> fOpDetX;
     std::vector<double> fOpDetY;
     std::vector<double> fOpDetZ;
@@ -277,6 +285,7 @@ private:
     double fCherenkovPMTRadius;
     unsigned int fCherenkovPMTRings;
     unsigned int fCherenkovPMTAzimuthSteps;
+    double fMaxCoatedUncoatedTimeDiff;
 
 
     // -------------------------------------------------------------------------

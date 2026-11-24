@@ -49,6 +49,7 @@ LightPropagationCorrection:
     CherenkovPMTRadius: 10
     CherenkovPMTRings: 4
     CherenkovPMTAzimuthSteps: 32
+    MaxCoatedUncoatedTimeDiff: 4
 
     DoPIDCorrection: true
 }

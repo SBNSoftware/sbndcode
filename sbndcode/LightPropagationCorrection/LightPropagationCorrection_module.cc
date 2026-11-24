@@ -8,7 +8,6 @@ namespace sbnd {
 
 sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet const& p)
     : EDProducer{p},
-    fGeom(*(lar::providerFrom<geo::Geometry>())),
     fReco2Label( p.get<std::string>("Reco2Label") ),
     fOpT0FinderModuleLabel( p.get<std::string>("OpT0FinderModuleLabel") ),
     fTPCPMTBarycenterFMModuleLabel( p.get<std::string>("TPCPMTBarycenterFMModuleLabel") ),
@@ -33,6 +32,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fCherenkovPMTRadius(p.get<double>("CherenkovPMTRadius")),
     fCherenkovPMTRings(p.get<unsigned int>("CherenkovPMTRings")),
     fCherenkovPMTAzimuthSteps( p.get<unsigned int>("CherenkovPMTAzimuthSteps")),
+    fMaxCoatedUncoatedTimeDiff( p.get<double>("MaxCoatedUncoatedTimeDiff") ),
     fFVx( p.get<std::vector<double>>("FVx") ),
     fFVy( p.get<std::vector<double>>("FVy") ),
     fFVz( p.get<std::vector<double>>("FVz") ),
@@ -52,6 +52,9 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
         fOpDetX.push_back(pdCenter.X());
         fOpDetY.push_back(pdCenter.Y());
         fOpDetZ.push_back(pdCenter.Z());
+        fChannelBoxMap[opch] = fPDSMap.pdBox(opch);
+        if(fPDSMap.pdType(opch)=="pmt_uncoated")
+            fUncoatedChannelMap[fPDSMap.pdBox(opch)] = opch;
     }
 
     // Initialize flash algo for both TPCs
@@ -117,8 +120,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     art::FindManyP<sbn::OpT0Finder> slice_opt0finder_assns(sliceHandle, e, fOpT0FinderModuleLabel);
     // Slice to TPCPMTBarycenterFM
     art::FindManyP<sbn::TPCPMTBarycenterMatch> slice_tpcpmtbarycentermatching_assns(sliceHandle, e, fTPCPMTBarycenterFMModuleLabel);
-    // Slice to hits
-    art::FindManyP<recob::Hit> slice_hit_assns (sliceHandle, e, fReco2Label);
     //Slice to PFParticles association
     art::FindManyP<recob::PFParticle> slice_pfp_assns (sliceHandle, e, fReco2Label);
     //PFP to vertex
@@ -181,7 +182,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         for (const art::Ptr<recob::PFParticle> &pfp : pfpVect){
             const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp.key());
             if (pfp->IsPrimary() &&( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) ){
-                const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp.key());
                 for (auto const pfpMeta : pfpMetaVec) {
                     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
                     if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
@@ -234,7 +234,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 }
             }
             if (!tracksuccess){
-                fAllPFPsCorrected=false;
                 // If it's not a track just assume speed of light propagation
                 GetParticlePropagationTimeLite(pfp->Self(), PFPSpacePointsVect, SPToHitAssoc);
             }
@@ -478,28 +477,95 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelSci
 }
 
 
-void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> const & OldOpHitList, std::vector<recob::OpHit> & newOpHitList)
+void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> const& OldOpHitList, std::vector<recob::OpHit>& newOpHitList)
 {
-    for (size_t i = 0; i < OldOpHitList.size(); ++i) {
-        int opCh = OldOpHitList.at(i)->OpChannel();
-        double channelCorrection = fTimeCorrectionPerChannelScintillation[opCh];
-        double newPeakTime = OldOpHitList.at(i)->StartTime()+OldOpHitList.at(i)->RiseTime() + channelCorrection/1000;
-        double newPeakTimeAbs = OldOpHitList.at(i)->PeakTimeAbs()+ channelCorrection/1000;
-        double newStartTime = OldOpHitList.at(i)->StartTime() + channelCorrection/1000;
-        double riseTime = OldOpHitList.at(i)->RiseTime();
-        unsigned int frame = OldOpHitList.at(i)->Frame();
-        double width = OldOpHitList.at(i)->Width();
-        double area = OldOpHitList.at(i)->Area();
-        double amplitude = OldOpHitList.at(i)->Amplitude();
-        double pe = OldOpHitList.at(i)->PE();
-        recob::OpHit newOpHit = recob::OpHit(opCh, newPeakTime, newPeakTimeAbs, newStartTime, riseTime, frame, width, area, amplitude, pe, 0.0);
-        newOpHitList.push_back(newOpHit);
+    newOpHitList.clear();
+
+    // First correct everything by scintillation propagation time
+    for (auto const& hit : OldOpHitList) {
+        const size_t opCh = hit->OpChannel();
+        if (opCh >= fNOpChannels) continue;
+
+        const double channelCorrection = fTimeCorrectionPerChannelScintillation[opCh];
+        const double newPeakTime = hit->StartTime() + hit->RiseTime() + channelCorrection / 1000.;
+        const double newPeakTimeAbs = hit->PeakTimeAbs() + channelCorrection / 1000.;
+        const double newStartTime = hit->StartTime() + channelCorrection / 1000.;
+
+        newOpHitList.emplace_back(opCh, newPeakTime, newPeakTimeAbs, newStartTime,
+                                  hit->RiseTime(), hit->Frame(), hit->Width(),
+                                  hit->Area(), hit->Amplitude(), hit->PE(), 0.0);
+    }
+
+    // Reconstruct flash to obtain its t0
+    ::lightana::LiteOpHitArray_t ophits;
+    FillLiteOpHit(newOpHitList, ophits);
+
+    const auto flash_v = _mgr.RecoFlash(ophits);
+    if (flash_v.empty()) return;
+    double flasht0 = 0.0;
+    for (const auto& lflash : flash_v) flasht0 = lflash.time;
+
+    // Get the first OpHit of each channel around the flash t0
+    std::vector<recob::OpHit> first_ophits;
+    FillFirstOpHit(flasht0, newOpHitList, first_ophits);
+    GetBoxTimeDiffMap(first_ophits);
+
+    // Apply Cherenkov correction based on the coated/uncoated time difference
+    for (auto& hit : newOpHitList) {
+        const size_t opCh = hit.OpChannel();
+        if (opCh >= fNOpChannels) continue;
+
+        const size_t box = fChannelBoxMap.at(opCh);
+        const double scintCorrection = fTimeCorrectionPerChannelScintillation[opCh];
+        const double cherenkovCorrection = fTimeCorrectionPerChannelCherenkov[opCh];
+
+        auto it = fBoxTimeDiffMap.find(box);
+        if (it == fBoxTimeDiffMap.end()) continue;
+        if (it->second > fMaxCoatedUncoatedTimeDiff && (std::abs(cherenkovCorrection) > std::abs(scintCorrection))) {
+            const double correction = (cherenkovCorrection - scintCorrection) / 1000.;
+
+            const double newPeakTime = hit.PeakTime() + correction;
+            const double newPeakTimeAbs = hit.PeakTimeAbs() + correction;
+            const double newStartTime = hit.StartTime() + correction;
+
+            hit = recob::OpHit(opCh, newPeakTime, newPeakTimeAbs, newStartTime,
+                               hit.RiseTime(), hit.Frame(), hit.Width(),
+                               hit.Area(), hit.Amplitude(), hit.PE(), 0.0);
+        }
     }
 }
 
 
+void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, std::vector<recob::OpHit> const& all_opHits, std::vector<recob::OpHit>& first_ophits)
+{
+    first_ophits.clear();
+    std::vector<double> firstTimePerChannel(fNOpChannels, std::numeric_limits<double>::max());
+    std::vector<bool> channelHasHit(fNOpChannels, false);
+
+    for (auto const& hit : all_opHits) {
+        if (hit.PeakTime() < flash_time + 0.01 && hit.PeakTime() > flash_time - 0.02 && hit.PE() > 20){
+            size_t channel = hit.OpChannel();
+            if (channel >= fNOpChannels) continue;
+            if (!channelHasHit[channel] || hit.PeakTime() < firstTimePerChannel[channel]) {
+                firstTimePerChannel[channel] = hit.PeakTime();
+                channelHasHit[channel] = true;
+            }
+        }
+    }
+
+    for (auto const& hit : all_opHits) {
+        size_t channel = hit.OpChannel();
+        if (channel < fNOpChannels && channelHasHit[channel] &&
+            hit.PeakTime() == firstTimePerChannel[channel]) {
+            first_ophits.push_back(hit);
+            channelHasHit[channel] = false;
+        }
+    }
+}
+
 void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> const& OpHitList, std::vector<::lightana::LiteOpHit_t>& LiteOpHitList)
 {
+    LiteOpHitList.clear();
     for (auto const& oph : OpHitList) {
         ::lightana::LiteOpHit_t loph;
         loph.peak_time = oph.StartTime()+oph.RiseTime();
@@ -508,6 +574,49 @@ void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> c
         LiteOpHitList.emplace_back(std::move(loph));
     }
 }
+
+::lightana::LiteOpHitArray_t sbnd::LightPropagationCorrection::GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, ::lightana::LiteOpHitArray_t lite_hits_v)
+{
+    ::lightana::LiteOpHitArray_t flash_hits_v;
+
+    for(auto const& hitidx : lite_flash.asshit_idx) {
+        flash_hits_v.emplace_back(std::move(lite_hits_v.at(hitidx)));
+    }
+
+    return flash_hits_v;
+}
+
+
+void sbnd::LightPropagationCorrection::GetBoxTimeDiffMap( std::vector<recob::OpHit>& first_ophits)
+{
+    fBoxTimeDiffMap.clear();
+    std::map<size_t, double> uncoatedTimePerBox;
+    std::map<size_t, std::vector<double>> coatedTimesPerBox;
+    size_t channel;
+    size_t box;
+
+    for (const auto& opHit : first_ophits) {
+        channel = opHit.OpChannel();
+        box = fChannelBoxMap.at(channel);
+        double peakTime = opHit.StartTime() + opHit.RiseTime();
+        auto it = fUncoatedChannelMap.find(box);
+        if (it == fUncoatedChannelMap.end()) continue;
+        if (channel == it->second)
+            uncoatedTimePerBox[box] = peakTime;
+        else
+            coatedTimesPerBox[box].push_back(peakTime);
+    }
+
+    for (const auto& [box, uncoatedTime] : uncoatedTimePerBox) {
+        if (!coatedTimesPerBox.count(box)) continue;
+        for (double coatedTime : coatedTimesPerBox.at(box)) {
+            double timeDiff = std::abs(coatedTime - uncoatedTime);
+            if (!fBoxTimeDiffMap.count(box) || timeDiff > fBoxTimeDiffMap[box])
+                fBoxTimeDiffMap[box] = timeDiff;
+        }
+    }
+}
+
 
 
 void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime, recob::OpFlash const& flash, std::vector<recob::OpHit> const& oldOpHitList, std::vector<recob::OpHit> const& newOpHitList){
@@ -576,7 +685,7 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
     this->FillLiteOpHit(newOpHitList, ophits);
     // Create the flash manager
     auto const flash_v = _mgr.RecoFlash(ophits);
-    if (flash_v.size() == 0) return false; // Return false if no flash is reconstructed
+    if (flash_v.size() != 1) return false; // Return false if no flash is reconstructed
     double originalFlashTime = flash->Time();
     double newFlashTime = 0.0;
     for (const auto& lflash :  flash_v) {
@@ -587,10 +696,6 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         double flasht0 = lflash.time;
         // Refine t0 calculation
         flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
-        recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
-        ( flasht0) / 1600., lflash.channel_pe,
-        0, 0, 1, // this are just default values
-        100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
         newFlashTime = flasht0;
         correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
@@ -601,19 +706,6 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         this->FillCorrectionTree(newFlashTime, *flash, oldOpHitList, newOpHitList);
     }
     return true;
-}
-
-
-::lightana::LiteOpHitArray_t sbnd::LightPropagationCorrection::GetAssociatedLiteHits(::lightana::LiteOpFlash_t const& lite_flash, ::lightana::LiteOpHitArray_t const& lite_hits_v)
-{
-    ::lightana::LiteOpHitArray_t flash_hits_v;
-    flash_hits_v.reserve(lite_flash.asshit_idx.size());
-
-    for (auto const& hitidx : lite_flash.asshit_idx) {
-        flash_hits_v.push_back(lite_hits_v.at(hitidx));
-    }
-
-    return flash_hits_v;
 }
 
 
@@ -702,26 +794,19 @@ double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindMany
 
 bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, double initial_momentum, art::FindManyP<anab::Calorimetry> const& track_to_calo_assns, art::Ptr<recob::Track> const& track, int PFPID ,int parentPFPID)
 {
-
     bool success=false;
     double total_time=0;
     // Particle mass in GeV/c^2
     double mass = 0.0;
     double constant_dedx;
 
-    if (std::abs(pdg) == 13)
-        //constant_dedx = 2.1;
-    constant_dedx = fMIPdEdX;
-    else if (std::abs(pdg) == 2212)
-    //constant_dedx = 4.5;
-    constant_dedx = fHIPdEdX;
-
-
-
-    if (std::abs(pdg) == 13)
-        mass = 0.105658;
-    else if (std::abs(pdg) == 2212)
-    mass = 0.938272;
+    if (std::abs(pdg) == 13) {
+        constant_dedx = fMIPdEdX;
+         mass = 0.105658;
+    } else if (std::abs(pdg) == 2212) {
+        constant_dedx = fHIPdEdX;
+        mass = 0.938272;
+    }
 
     // Retrieve calorimetry objects associated with the track
     std::vector<art::Ptr<anab::Calorimetry>> caloV = track_to_calo_assns.at(track.key());
