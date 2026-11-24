@@ -33,6 +33,9 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fCherenkovPMTRings(p.get<unsigned int>("CherenkovPMTRings")),
     fCherenkovPMTAzimuthSteps( p.get<unsigned int>("CherenkovPMTAzimuthSteps")),
     fMaxCoatedUncoatedTimeDiff( p.get<double>("MaxCoatedUncoatedTimeDiff") ),
+    fMinHitPE( p.get<double>("MinHitPE") ),
+    fPreWindow( p.get<double>("PreWindow") ),
+    fPostWindow( p.get<double>("PostWindow") ),
     fFVx( p.get<std::vector<double>>("FVx") ),
     fFVy( p.get<std::vector<double>>("FVy") ),
     fFVz( p.get<std::vector<double>>("FVz") ),
@@ -473,6 +476,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelSci
             continue;
         }
         fTimeCorrectionPerChannelScintillation[opdet] = -minPropTime;
+        std::cout << " Channel " << opdet << " scintillation time correction " << fTimeCorrectionPerChannelScintillation[opdet] << std::endl;
     }
 }
 
@@ -487,6 +491,7 @@ void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<rec
         if (opCh >= fNOpChannels) continue;
 
         const double channelCorrection = fTimeCorrectionPerChannelScintillation[opCh];
+        std::cout << " OpHit channel " << opCh << " old peak time " << hit->PeakTime() << " scintillation correction " << channelCorrection / 1000. << " cherenkov correction " << fTimeCorrectionPerChannelCherenkov[opCh] / 1000. << std::endl;
         const double newPeakTime = hit->StartTime() + hit->RiseTime() + channelCorrection / 1000.;
         const double newPeakTimeAbs = hit->PeakTimeAbs() + channelCorrection / 1000.;
         const double newStartTime = hit->StartTime() + channelCorrection / 1000.;
@@ -543,7 +548,7 @@ void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, std::ve
     std::vector<bool> channelHasHit(fNOpChannels, false);
 
     for (auto const& hit : all_opHits) {
-        if (hit.PeakTime() < flash_time + 0.01 && hit.PeakTime() > flash_time - 0.02 && hit.PE() > 20){
+        if (hit.PeakTime() < flash_time + fPostWindow && hit.PeakTime() > flash_time - fPreWindow && hit.PE() > fMinHitPE){
             size_t channel = hit.OpChannel();
             if (channel >= fNOpChannels) continue;
             if (!channelHasHit[channel] || hit.PeakTime() < firstTimePerChannel[channel]) {
@@ -701,6 +706,7 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
         correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
         correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
+        std::cout << " Original flash time: " << originalFlashTime << " New flash time: " << newFlashTime << std::endl;
     }
     if (fSaveCorrectionTree){
         this->FillCorrectionTree(newFlashTime, *flash, oldOpHitList, newOpHitList);
@@ -710,8 +716,8 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
 
 
 bool sbnd::LightPropagationCorrection::IsInFV(geo::Point_t const& start, geo::Point_t const& end){
-    bool startInFV = ( (abs(start.x()) > fFVx[0]) && (abs(start.x()) < fFVx[1]) && (start.y() > fFVy[0]) && (start.y() < fFVy[1]) && (start.z() > fFVz[0]) && (start.z() < fFVz[1]));
-    bool endInFV = ( (abs(end.x()) > fFVx[0]) && (abs(end.x()) < fFVx[1]) && (end.y() > fFVy[0]) && (end.y() < fFVy[1]) && (end.z() > fFVz[0]) && (end.z() < fFVz[1]));
+    bool startInFV = ( (start.x() > fFVx[0]) && (start.x() < fFVx[1]) && (start.y() > fFVy[0]) && (start.y() < fFVy[1]) && (start.z() > fFVz[0]) && (start.z() < fFVz[1]));
+    bool endInFV = ( (end.x() > fFVx[0]) && (end.x() < fFVx[1]) && (end.y() > fFVy[0]) && (end.y() < fFVy[1]) && (end.z() > fFVz[0]) && (end.z() < fFVz[1]));
 
     return startInFV && endInFV;
 }
@@ -1185,6 +1191,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
         // Preserve the sign convention of the existing correction.
         if (foundEmissionPoint) {
             fTimeCorrectionPerChannelCherenkov[opdet] = -minTotalTime;
+            std::cout << " Channel " << opdet << " cherenkov time correction " << fTimeCorrectionPerChannelCherenkov[opdet] << std::endl;   
         }
     }
 }

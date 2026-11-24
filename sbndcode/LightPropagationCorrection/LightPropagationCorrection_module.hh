@@ -287,6 +287,10 @@ private:
     unsigned int fCherenkovPMTAzimuthSteps;
     double fMaxCoatedUncoatedTimeDiff;
 
+    double fMinHitPE;
+    double fPreWindow;
+    double fPostWindow;
+
 
     // -------------------------------------------------------------------------
     // Fiducial volume and event selection

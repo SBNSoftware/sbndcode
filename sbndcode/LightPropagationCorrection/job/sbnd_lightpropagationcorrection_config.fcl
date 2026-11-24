@@ -38,6 +38,9 @@ LightPropagationCorrection:
     AlgoConfig_tpc1: @local::SimpleFlashStandard
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
     FlashMatchingTool: "BarycenterFM"
+    MinHitPE: @local::FlashT0SelectedChannels.MinHitPE
+    PreWindow: @local::FlashT0SelectedChannels.PreWindow
+    PostWindow: @local::FlashT0SelectedChannels.PostWindow
 
     SaveCorrectionTree: false
 
@@ -52,6 +55,10 @@ LightPropagationCorrection:
     MaxCoatedUncoatedTimeDiff: 4
 
     DoPIDCorrection: true
+
+    FVx: [-200,200]
+    FVy: [-200,200]
+    FVz: [0,500]
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
