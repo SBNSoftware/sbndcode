@@ -244,6 +244,11 @@ TrueSignalFilter::TrueSignalFilter(const Parameters& pset) :
             }
         }
 
+        std::vector<int> ignored_pdgs;
+        if (cfg.IgnoredPDGs(ignored_pdgs)) {
+            block.ignored_pdgs = ignored_pdgs;
+        }
+
         std::vector<int> disallowed_pdgs;
         if (cfg.DisallowedPDGs(disallowed_pdgs)) {
             block.disallowed_pdgs = disallowed_pdgs;
@@ -355,7 +360,7 @@ bool TrueSignalFilter::PassBlock(const art::Ptr<simb::MCTruth>& mc, const simb::
         const auto& part(mc->GetParticle(i));
         debug_log << kSpace << "MC particle list " << i << " " << part.PdgCode() << " STATUS=" << part.StatusCode() << ", E=" << part.E() << "\n";
         // only consider primaries
-        if (part.StatusCode() != 1 && !block.keep_bad_status) continue;
+        if (part.StatusCode() != 1 && !block.keep_bad_status.value_or(false)) continue;
 
         // don't count particles in the ignored list
         int pdg = part.PdgCode();
