@@ -243,6 +243,37 @@ sbnd_antinumu_hyperon_filter:
     ]
 }
 
+# Any hyperon (Lambda or Sigma) + anything, produced by numu or anti-numu.
+# Union of sbnd_numu_hyperon_filter and sbnd_antinumu_hyperon_filter (which
+# also contains every event of sbnd_qe_hyperon_filter)
+sbnd_numu_antinumu_hyperon_filter:
+{
+    module_type: TrueSignalFilter
+    GENIELabel: "generator"
+    Filters: [
+        {
+            NuPDGs: [ 14, -14 ]
+            RequiredPDGs: [ 3122 ]
+            InTPC: true
+        },
+        {
+            NuPDGs: [ 14, -14 ]
+            RequiredPDGs: [ 3212 ]
+            InTPC: true
+        },
+        {
+            NuPDGs: [ 14, -14 ]
+            RequiredPDGs: [ 3112 ]
+            InTPC: true
+        },
+        {
+            NuPDGs: [ 14, -14 ]
+            RequiredPDGs: [ 3222 ]
+            InTPC: true
+        }
+    ]
+}
+
 # DIS with GENIE hadronic W > 2.3 GeV, any flavor, CC or NC.
 # GENIE (AGKY) starts hadronizing DIS events with PYTHIA8 above W = 2.3 GeV,
 # so these are the events affected by the PYTHIA8 seeding bug fixed in
