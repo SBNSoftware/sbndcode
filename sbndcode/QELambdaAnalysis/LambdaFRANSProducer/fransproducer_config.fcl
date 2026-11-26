@@ -1,0 +1,55 @@
+#include "chargedensityalg_config.fcl"
+#include "houghalg_config.fcl"
+#include "tpclinesalg_config.fcl"
+#include "trackfinderalg_config.fcl"
+#include "vertexfinderalg_config.fcl"
+#include "caloalg_config.fcl"
+
+#include "michelTagging_config.fcl"
+
+BEGIN_PROLOG
+FRANSProducer:
+{
+  module_type:  "FRANSProducer"
+
+  HitLabel: "gaushit"
+  VertexLabel: "pandora"
+  RecoLabel: "pandora"
+  CRUMBSLabel: "crumbs"
+  TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
+  TrackLabel:       "pandoraTrack"
+  ShowerLabel:      "pandoraShower"
+  PFParticleMetadataLabel: "pandora"
+
+  View:             2
+  ApplyFiducialCut: true
+  BcFMScoreCut:     0.02
+
+  TrkLenCut:         5
+  ShwrECut:          30
+  VtxDistCut:        10 
+  ShwrNHits:         5 # >
+  nPrimPfpsCut1:     2 # >=
+  nPrimPfpsCut2:     6 # <
+  nPrimTrksCut1:     1 # >=
+  nPrimTrksCut2:     4 # <
+  nPrimShwrsCut1:    0 # >=
+  nPrimShwrsCut2:    3 # <
+  nPrimTrksExitCut:  2 # <
+  minGapCut:         1 # >
+
+  ## FRANS
+  ChargeDensityAlg: @local::ChargeDensityAlg
+  
+  ## TPCLines
+  HoughAlg: @local::HoughAlg
+  TrackFinderAlg: @local::TrackFinderAlg
+  VertexFinderAlg: @local::VertexFinderAlg
+  TPCLinesAlg: @local::TPCLinesAlg
+  CaloAlg: @local::CaloAlg
+
+  MichelTagging: @local::MichelTagging
+  
+}
+
+END_PROLOG

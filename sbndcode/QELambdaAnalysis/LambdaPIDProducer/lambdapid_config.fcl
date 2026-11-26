@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+LambdaPID:
+{
+  module_type:  "LambdaPID"
+
+  Reco2Label: "pandoraLambda"
+  TrackLabel: "pandoraTrackLambda"
+  CalorimetryLabel: "pandoraCaloLambda"
+  ParticleIDLabel: "pandoraPidLambda" 
+  UseBestView: false
+  UseNViews: 0
+}
+
+END_PROLOG

@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="FRANSObj" ClassVersion="17">
+   <version ClassVersion="17" checksum="1548731539"/>
+   <version ClassVersion="16" checksum="661602195"/>
+   <version ClassVersion="15" checksum="1998604636"/>
+   <version ClassVersion="14" checksum="136474899"/>
+   <version ClassVersion="13" checksum="1517148511"/>
+   <version ClassVersion="12" checksum="1864902054"/>
+   <version ClassVersion="11" checksum="290410819"/>
+   <version ClassVersion="10" checksum="1989369475"/>
+  </class>
+  <class name="art::Ptr<FRANSObj>"/>
+  <class name="art::PtrVector<FRANSObj>"/>
+  <class name="std::vector<art::Ptr<FRANSObj>>" />
+  <class name="std::vector<FRANSObj>" />
+  <class name="art::Wrapper<FRANSObj>" />
+  <class name="art::Wrapper<std::vector<FRANSObj>>" />
+
+</lcgdict>

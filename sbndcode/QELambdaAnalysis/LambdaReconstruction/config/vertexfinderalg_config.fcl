@@ -1,0 +1,26 @@
+BEGIN_PROLOG
+
+VertexFinderAlg:
+{
+    MaxDistToEdge: 4
+    RefineVertexIntersection: true
+    SlidingWindowN: 10
+    UseEdgesDiscard: true 
+    MaxTrackFractionInMain: 0.75
+    DecideMainTrack: true 
+    AddCollinearLines: false
+    VertexDistanceROI: 30
+    MinWires: 3
+    AngleTolerance: 15
+    TriangleInequalityTol: 1
+    VertexHitsTol: 2.
+    VertexHitsMinHits: 5
+    VertexCompactnessTol: 1.5
+    MinTrackOccupancy: 0.6
+    MinTrackGoodness: 20
+    MakeCalorimetry: false
+    Verbose: 0
+}
+
+END_PROLOG
+
