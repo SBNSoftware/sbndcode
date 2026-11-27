@@ -394,10 +394,6 @@ void sbnd::LightPropagationCorrection::endJob()
  */
 void sbnd::LightPropagationCorrection::ResetEventVars()
 {
-    fTrueVt=0.0;
-    fTrueVx = 0.0;
-    fTrueVy = 0.0;
-    fTrueVz = 0.0;
 
     if (fSaveCorrectionTree)
     {

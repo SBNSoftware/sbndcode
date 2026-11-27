@@ -317,11 +317,6 @@ private:
     double fRecoVy = 0.0;
     double fRecoVz = 0.0;
 
-    double fTrueVx = 0.0;
-    double fTrueVy = 0.0;
-    double fTrueVz = 0.0;
-    double fTrueVt = 0.0;
-
     int fNeutrinoID = -1;
     bool fAllPFPsCorrected = true;
 
