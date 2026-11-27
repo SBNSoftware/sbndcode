@@ -1,167 +1,243 @@
 
-// art includes
+#ifndef SBND_LIGHT_PROPAGATION_CORRECTION_MODULE_HH
+#define SBND_LIGHT_PROPAGATION_CORRECTION_MODULE_HH
+
+// -----------------------------------------------------------------------------
+// C++ standard library
+// -----------------------------------------------------------------------------
+
+#include <cstddef>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+// -----------------------------------------------------------------------------
+// ROOT
+// -----------------------------------------------------------------------------
+
+#include <TTree.h>
+
+// -----------------------------------------------------------------------------
+// art framework
+// -----------------------------------------------------------------------------
+
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/Run.h"
-#include "art/Framework/Principal/SubRun.h"
 #include "art/Persistency/Common/PtrMaker.h"
 #include "art/Utilities/make_tool.h"
-#include "canvas/Utilities/InputTag.h"
-#include "fhiclcpp/ParameterSet.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art_root_io/TFileService.h"
+
+// -----------------------------------------------------------------------------
+// canvas and FHiCL
+// -----------------------------------------------------------------------------
+
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
+#include "canvas/Utilities/InputTag.h"
+#include "fhiclcpp/ParameterSet.h"
 
-// ROOT and C++ includes
-#include <TTree.h>
-#include <string.h>
+// -----------------------------------------------------------------------------
+// LArSoft services and geometry
+// -----------------------------------------------------------------------------
 
-// Services
-#include "lardataalg/DetectorInfo/DetectorClocksData.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/Geometry/WireReadout.h"
+
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/AssociationUtil.h"
+#include "lardataalg/DetectorInfo/DetectorClocksData.h"
 
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 
-// G4 includes
-#include "lardataobj/Simulation/SimChannel.h"
-#include "lardataobj/Simulation/SimPhotons.h"
-#include "lardataobj/Simulation/SimEnergyDeposit.h"
+// -----------------------------------------------------------------------------
+// Reconstruction objects
+// -----------------------------------------------------------------------------
 
-// Reco includes
-// PDS
-#include "lardataobj/RecoBase/OpFlash.h"
-#include "lardataobj/RecoBase/OpHit.h"
-#include "lardataobj/RawData/OpDetWaveform.h"
-// TPC
-#include "lardataobj/RecoBase/Slice.h"
-#include "lardataobj/RecoBase/SpacePoint.h"
-#include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/PFParticle.h"
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "nusimdata/SimulationBase/MCNeutrino.h"
-#include "nusimdata/SimulationBase/MCParticle.h"
-#include "lardataobj/Simulation/SimEnergyDeposit.h"
-#include "lardataobj/Simulation/SimChannel.h"
-#include "lardataobj/RawData/RawDigit.h"
-#include "lardataobj/RecoBase/Track.h"
-#include "lardataobj/RecoBase/Shower.h"
-#include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Cluster.h"
+#include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/RecoBase/OpHit.h"
-#include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RawData/RawDigit.h"
-#include "lardataobj/RecoBase/Wire.h"
-#include "lardataobj/RecoBase/Vertex.h"
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/RecoBase/Slice.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Vertex.h"
+
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 #include "lardataobj/AnalysisBase/T0.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
 
-// CRT
-#include "sbnobj/SBND/CRT/CRTTrack.hh"
+// -----------------------------------------------------------------------------
+// Pandora and reconstruction algorithms
+// -----------------------------------------------------------------------------
 
-// Cosmic rejection includes
-#include "sbnobj/Common/Reco/OpT0FinderResult.h"
-#include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
-#include "sbnobj/Common/Reco/CRUMBSResult.h"
-#include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
+#include "larreco/RecoAlg/TrackMomentumCalculator.h"
+
+// -----------------------------------------------------------------------------
+// SBND data products and geometry
+// -----------------------------------------------------------------------------
+
 #include "sbnobj/Common/Reco/CorrectedOpFlashTiming.h"
-#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
-#include "lardataobj/AnalysisBase/T0.h"
+#include "sbnobj/Common/Reco/OpT0FinderResult.h"
+#include "sbnobj/Common/Reco/RangeP.h"
+#include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
+#include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
 
-// Geometry and mapping
-#include "larcore/Geometry/WireReadout.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-#include <iostream>
-#include <fstream>
 
-// Flash finder utilities
+// -----------------------------------------------------------------------------
+// Flash reconstruction and timing tools
+// -----------------------------------------------------------------------------
+
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderManager.h"
 #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
-#include "sbndcode/OpDetReco/OpFlash/FlashFinder/PECalib.h"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashGeoBase.hh"
 #include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashT0Base.hh"
-#include "sbndcode/OpDetReco/OpFlash/FlashTools/DriftEstimatorBase.hh"
-
-#define fXFidCut1 1.5
-#define fXFidCut2 190
-#define fYFidCut 190
-#define fZFidCut1 10
-#define fZFidCut2 490
-
-#define xdet_size 1000
-#define ydet_size 1000
-#define zmindet_size -500
-#define zmaxdet_size 1800
-
-#define fDefaulNeutrinoID 99999
 
 
 namespace sbnd {
-  class LightPropagationCorrection;
 
-}
+class LightPropagationCorrection : public art::EDProducer {
 
-class sbnd::LightPropagationCorrection : public art::EDProducer {
 public:
-    explicit LightPropagationCorrection(fhicl::ParameterSet const& p);
-    // The compiler-generated destructor is fine for non-base
-    // classes without bare pointers or other resource use.
 
-    // Plugins should not be copied or assigned.
+    // -------------------------------------------------------------------------
+    // Construction and framework interface
+    // -------------------------------------------------------------------------
+
+    explicit LightPropagationCorrection(fhicl::ParameterSet const& p);
+
     LightPropagationCorrection(LightPropagationCorrection const&) = delete;
     LightPropagationCorrection(LightPropagationCorrection&&) = delete;
     LightPropagationCorrection& operator=(LightPropagationCorrection const&) = delete;
     LightPropagationCorrection& operator=(LightPropagationCorrection&&) = delete;
 
-
 private:
 
-    // Required functions.
-    void produce(art::Event & e) override;
-    void endJob() override;
-    void beginJob() override;
+    // -------------------------------------------------------------------------
+    // art module lifecycle
+    // -------------------------------------------------------------------------
 
-    // Selected optional functions.
+    void produce(art::Event& e) override;
+    void beginJob() override;
+    void endJob() override;
+
+    // -------------------------------------------------------------------------
+    // Event and slice bookkeeping
+    // -------------------------------------------------------------------------
+
     void ResetEventVars();
     void ResetSliceInfo();
-    size_t HighestOpT0ScoreIdx(const std::vector< art::Ptr<sbn::OpT0Finder> >);
-    size_t HighestBFMScoreIdx(const std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > );
 
-    void GetPropagationTimeCorrectionPerChannel();
-    void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
-    void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
-    void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
-    ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
+    size_t HighestOpT0ScoreIdx(std::vector<art::Ptr<sbn::OpT0Finder>> const& opt0);
+    size_t HighestBFMScoreIdx(std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>> const& matches);
 
+    // -------------------------------------------------------------------------
+    // Particle identification and propagation time
+    // -------------------------------------------------------------------------
+
+    int GetTrackPID(art::FindManyP<anab::ParticleID> const& trackToPIDAssns, art::Ptr<recob::Track> const& track);
+
+    double GetTrackMomentum(int pdg, art::FindManyP<sbn::RangeP> const& muonRangeAssns, art::FindManyP<sbn::RangeP> const& protonRangeAssns, art::FindManyP<recob::MCSFitResult> const& muonMCSAssns, art::FindManyP<recob::MCSFitResult> const& protonMCSAssns, art::Ptr<recob::Track> const& track);
+
+    bool GetParticlePropagationTime(int pdg, double initialMomentum, art::FindManyP<anab::Calorimetry> const& trackToCaloAssns, art::Ptr<recob::Track> const& track, int pfpID, int parentPFPID);
+
+    void GetParticlePropagationTimeLite(int pfpID, std::vector<art::Ptr<recob::SpacePoint>> const& spacePoints, art::FindManyP<recob::Hit> const& spacePointToHitAssns);
+
+    bool IsInFV(geo::Point_t const& start, geo::Point_t const& end);
+
+    // -------------------------------------------------------------------------
+    // Particle trajectory representation
+    // -------------------------------------------------------------------------
+
+    struct ParticleSpacePoint_t {
+        double x = 0.0;
+        double y = 0.0;
+        double z = 0.0;
+        double propagationTime = 0.0;
+        int pfpID = -1;
+    };
+
+    std::vector<ParticleSpacePoint_t> fParticleSpacePoints;
+
+    // -------------------------------------------------------------------------
+    // Light propagation corrections
+    // -------------------------------------------------------------------------
+
+    void GetPropagationTimeCorrectionPerChannelScintillation();
+    void GetPropagationTimeCorrectionPerChannelCherenkov();
+
+    // -------------------------------------------------------------------------
+    // OpHit and OpFlash correction
+    // -------------------------------------------------------------------------
+
+    void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> const& oldOpHits,
+                          std::vector<recob::OpHit>& newOpHits);
+
+    void FillLiteOpHit(std::vector<recob::OpHit> const& opHits,
+                       std::vector<::lightana::LiteOpHit_t>& liteOpHits);
+
+    void FillFirstOpHit(double flash_time, 
+                        std::vector<recob::OpHit> const& all_opHits, 
+                        std::vector<recob::OpHit>& first_ophits);
+
+    ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, 
+                                                       ::lightana::LiteOpHitArray_t lite_hits_v);
+
+    void GetBoxTimeDiffMap(std::vector<recob::OpHit>& first_ophits);
+
+    bool CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash,
+                        sbn::CorrectedOpFlashTiming& correctedTiming,
+                        art::FindManyP<recob::OpHit> const& flashToOpHitAssnsTPC0,
+                        art::FindManyP<recob::OpHit> const& flashToOpHitAssnsTPC1);
+
+
+
+    // -------------------------------------------------------------------------
+    // Debugging and output
+    // -------------------------------------------------------------------------
+
+    void FillCorrectionTree(double& newFlashTime,
+                            recob::OpFlash const& flash,
+                            std::vector<recob::OpHit> const& oldOpHits,
+                            std::vector<recob::OpHit> const& newOpHits);
+
+    // -------------------------------------------------------------------------
+    // Detector geometry and services
+    // -------------------------------------------------------------------------
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
+
     opdet::sbndPDMapAlg fPDSMap;
-    //Flash finder manager
+    std::map<size_t, size_t> fChannelBoxMap;
+    std::map<size_t, size_t> fUncoatedChannelMap;
+    std::map<size_t, double> fBoxTimeDiffMap;
+
+    trkf::TrackMomentumCalculator tmc;
+
+    // -------------------------------------------------------------------------
+    // Flash reconstruction tools
+    // -------------------------------------------------------------------------
+
     ::lightana::FlashFinderManager _mgr;
     ::lightana::FlashFinderManager _mgr_tpc0;
     ::lightana::FlashFinderManager _mgr_tpc1;
 
-    // Tool for calculating the OpFlash Y and Z centers
     std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
-
-    // Tool for calculating the OpFlash t0
     std::unique_ptr<lightana::FlashT0Base> _flasht0calculator;
 
-    //Vector for PMT position
-    std::vector<double> fOpDetID;
-    std::vector<double> fOpDetX;
-    std::vector<double> fOpDetY;
-    std::vector<double> fOpDetZ;
+    // -------------------------------------------------------------------------
+    // Input labels
+    // -------------------------------------------------------------------------
 
     std::string fReco2Label;
     std::string fOpT0FinderModuleLabel;
@@ -169,73 +245,134 @@ private:
     std::string fOpFlashLabel_tpc0;
     std::string fOpFlashLabel_tpc1;
     std::string fSpacePointLabel;
-    std::string fOpHitsModuleLabel;
-    std::string fOpFlashNewLabel;
+    std::string fTPCTrackLabel;
+    std::string fParticleIDLabel;
+    std::string fCalorimetryLabel;
+    std::string fPandoraRangeLabel;
+    std::string fPandoraMCSLabel;
     std::string fFlashMatchingTool;
-    
-    bool fSaveCorrectionTree;
 
-    std::vector<double> fTimeCorrectionPerChannel;
+    // -------------------------------------------------------------------------
+    // Detector optical channel information
+    // -------------------------------------------------------------------------
+
+    size_t fNOpChannels = 0;
+
+    std::vector<size_t> fOpDetID;
+    std::vector<double> fOpDetX;
+    std::vector<double> fOpDetY;
+    std::vector<double> fOpDetZ;
+
+    std::vector<double> fTimeCorrectionPerChannelScintillation;
+    std::vector<double> fTimeCorrectionPerChannelCherenkov;
+
+    // -------------------------------------------------------------------------
+    // Particle and light propagation configuration
+    // -------------------------------------------------------------------------
+
+    inline constexpr double c_light = 29.9792458; // cm/ns
+    inline constexpr double muon_mass = 0.105658;  // GeV/c²
+    inline constexpr double proton_mass = 0.938272; // GeV/c²
+
+    bool fDoPIDCorrection;
+    bool fUseMCVIS;
+
+    double fVGroupVIS;
+    double fVGroupVUV;
+
+    double fMIPdEdX; // In MeV/cm, for muons
+    double fHIPdEdX; // In MeV/cm, for protons
+
+    double fMaxRRBeta; // Maximum residual range with zero KE for beta calculation
+
+    double fCherenkovRefractiveIndex;
+    double fCherenkovCosineTolerance;
+    double fCherenkovPMTRadius;
+    unsigned int fCherenkovPMTRings;
+    unsigned int fCherenkovPMTAzimuthSteps;
+    double fMaxCoatedUncoatedTimeDiff;
+
+    double fMinHitPE;
+    double fPreWindow;
+    double fPostWindow;
+
+
+    // -------------------------------------------------------------------------
+    // Fiducial volume and event selection
+    // -------------------------------------------------------------------------
+
+    std::vector<double> fFVx;
+    std::vector<double> fFVy;
+    std::vector<double> fFVz;
+
+    double fNuScoreThreshold;
+    double fFMScoreThreshold;
+    double fTrackScoreThreshold;
+
+    // -------------------------------------------------------------------------
+    // Reconstructed and true interaction vertices
+    // -------------------------------------------------------------------------
+
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
     double fRecoVz = 0.0;
 
-    //Space Point Variables
-    std::vector<double> fSpacePointX;
-    std::vector<double> fSpacePointY;
-    std::vector<double> fSpacePointZ;
-    std::vector<double> fSpacePointIntegral;
+    int fNeutrinoID = -1;
+    bool fAllPFPsCorrected = true;
 
-    //Charge Barycenter 
-    std::vector<double> fChargeBarycenterX{0.,0.};
-    std::vector<double> fChargeBarycenterY{0.,0.};
-    std::vector<double> fChargeBarycenterZ{0.,0.};
-    std::vector<double> fChargeWeightX{0.,0.};
-    std::vector<double> fChargeWeightY{0.,0.};
-    std::vector<double> fChargeWeightZ{0.,0.};
-    std::vector<double> fChargeTotalWeight{0.,0.};
+    // -------------------------------------------------------------------------
+    // Debugging configuration and ROOT output
+    // -------------------------------------------------------------------------
 
-    double fDriftDistance; // Total Drift Distance
-    double fSpeedOfLight; // Speed of light in mm/ns
-    double fVISLightPropTime;
-    double fKinkDistance;
-    double fVGroupVUV_I;
-    double fVGroupVIS;
-    double fVGroupVUV; // Speed of light in vacuum in mm/ns
-
-    double fNuScoreThreshold;
-    double fFMScoreThreshold;
-
+    bool fSaveCorrectionTree;
     bool fDebug;
 
     art::ServiceHandle<art::TFileService> tfs;
-    TTree *fTree;
+    TTree* fTree = nullptr;
 
-    int fEvent;
-    int fRun;
-    int fSubrun;
-    size_t fNOpChannels;
-    double _fNuScore;
-    double _fFMScore;
+    // -------------------------------------------------------------------------
+    // Event identifiers and scalar bookkeeping
+    // -------------------------------------------------------------------------
+
+    int fEvent = 0;
+    int fRun = 0;
+    int fSubrun = 0;
+
+    double _fNuScore = 0.0;
+    double _fFMScore = 0.0;
+
+    // -------------------------------------------------------------------------
+    // ROOT output vectors
+    // -------------------------------------------------------------------------
+
     std::vector<double> fNuScore;
     std::vector<double> fFMScore;
+
     std::vector<double> fOpFlashTimeOld;
     std::vector<double> fOpFlashTimeNew;
     std::vector<double> fOpFlashXCenter;
     std::vector<double> fOpFlashYCenter;
     std::vector<double> fOpFlashZCenter;
     std::vector<double> fOpFlashPE;
+
     std::vector<double> fSliceVx;
     std::vector<double> fSliceVy;
     std::vector<double> fSliceVz;
-    std::vector<std::vector<double>> fSliceSPX;
-    std::vector<std::vector<double>> fSliceSPY;
-    std::vector<std::vector<double>> fSliceSPZ;
+
+    std::vector<double> fSliceSPX;
+    std::vector<double> fSliceSPY;
+    std::vector<double> fSliceSPZ;
+    std::vector<double> fSliceSPT;
+    std::vector<double> fSliceSPID;
+
     std::vector<std::vector<double>> fOpHitOldTime;
     std::vector<std::vector<double>> fOpHitNewTime;
     std::vector<std::vector<double>> fOpHitPE;
     std::vector<std::vector<int>> fOpHitOpCh;
 };
 
+} // namespace sbnd
 
 DEFINE_ART_MODULE(sbnd::LightPropagationCorrection)
+
+#endif // SBND_LIGHT_PROPAGATION_CORRECTION_MODULE_HH

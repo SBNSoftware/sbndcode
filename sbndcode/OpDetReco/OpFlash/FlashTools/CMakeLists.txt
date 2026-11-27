@@ -5,7 +5,7 @@ cet_build_plugin(FlashGeoThreshold art::tool SOURCE FlashGeoThreshold_tool.cc LI
 
 cet_build_plugin(FlashT0FirstHit art::tool SOURCE FlashT0FirstHit_tool.cc LIBRARIES sbndcode_OpDetReco_OpFlash_FlashFinder )
 cet_build_plugin(FlashT0SelectedChannels art::tool SOURCE FlashT0SelectedChannels_tool.cc LIBRARIES sbndcode_OpDetReco_OpFlash_FlashFinder )
-
+cet_build_plugin(FlashT0Average art::tool SOURCE FlashT0Average_tool.cc LIBRARIES sbndcode_OpDetReco_OpFlash_FlashFinder )
 
 install_headers()
 install_fhicl()

@@ -15,27 +15,50 @@ LightPropagationCorrection:
     Reco2Label: "pandora"
     OpHitsModuleLabel: "ophitpmt"
     SpacePointLabel: "pandora"
+    TPCTrackLabel: "pandoraTrack"
+    ParticleIDLabel: "pandoraPidData"
+    CalorimetryLabel: "pandoraCaloData"
+    PandoraRangeLabel: "pandoraTrackRange"
+    PandoraMCSLabel: "pandoraTrackMCS"
+    UseMCVIS: false
+
     OpT0FinderModuleLabel: "opt0finder"
     TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
-    SPECTDCLabel: "tdcdecoder"
 
     VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
     VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
-    SpeedOfLight: 29.9
 
-    FlashT0Config: @local::FlashT0SelectedChannels
+    MIPdEdX: 2.1 # Average dEdX for MIPs
+    HIPdEdX: 4.5 # Average dEdX for HIPs
+
+    FlashT0Config: @local::FlashT0Average
     FlashGeoConfig: @local::FlashGeoThreshold
     AlgoConfig_tpc0: @local::SimpleFlashStandard
     AlgoConfig_tpc1: @local::SimpleFlashStandard
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
+    FlashMatchingTool: "BarycenterFM"
+    MinHitPE: @local::FlashT0Average.MinHitPE
+    PreWindow: @local::FlashT0Average.PreWindow
+    PostWindow: @local::FlashT0Average.PostWindow
 
-    SaveSPECTDC: true
     SaveCorrectionTree: false
 
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
+    TrackScoreThreshold: 0.5
 
-    FlashMatchingTool: "BarycenterFM"
+    CherenkovRefractiveIndex: 1.23 # Refractive index for visible light ()
+    CherenkovCosineTolerance: 5.0e-3 
+    CherenkovPMTRadius: 10
+    CherenkovPMTRings: 4
+    CherenkovPMTAzimuthSteps: 32
+    MaxCoatedUncoatedTimeDiff: 4
+
+    DoPIDCorrection: true
+
+    FVx: [-200,200]
+    FVy: [-200,200]
+    FVz: [0,500]
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
@@ -44,6 +67,9 @@ LightPropagationCorrection.AlgoConfig_tpc1.TPC: 1
 LightPropagationCorrectionSCE: @local::LightPropagationCorrection
 LightPropagationCorrectionSCE.Reco2Label: "pandoraSCE"
 LightPropagationCorrectionSCE.SpacePointLabel: "pandoraSCE"
+LightPropagationCorrectionSCE.TPCTrackLabel: "pandoraSCETrack"
+LightPropagationCorrectionSCE.ParticleIDLabel: "pandoraSCEPidData"
+LightPropagationCorrectionSCE.CalorimetryLabel: "pandoraSCECaloData"
 LightPropagationCorrectionSCE.OpT0FinderModuleLabel: "opt0finderSCE"
 LightPropagationCorrectionSCE.TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatchingSCE"
 
