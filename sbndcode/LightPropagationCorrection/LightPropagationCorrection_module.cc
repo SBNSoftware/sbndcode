@@ -672,7 +672,7 @@ void sbnd::LightPropagationCorrection::GetBoxTimeDiffMap( std::vector<recob::OpH
     for (const auto& [box, uncoatedTime] : uncoatedTimePerBox) {
         if (!coatedTimesPerBox.count(box)) continue;
         for (double coatedTime : coatedTimesPerBox.at(box)) {
-            double timeDiff = std::abs(coatedTime - uncoatedTime);
+            double timeDiff = coatedTime - uncoatedTime;
             if (!fBoxTimeDiffMap.count(box) || timeDiff > fBoxTimeDiffMap[box])
                 fBoxTimeDiffMap[box] = timeDiff;
         }
