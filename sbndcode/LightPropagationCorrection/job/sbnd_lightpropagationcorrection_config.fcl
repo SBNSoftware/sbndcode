@@ -31,15 +31,15 @@ LightPropagationCorrection:
     MIPdEdX: 2.1 # Average dEdX for MIPs
     HIPdEdX: 4.5 # Average dEdX for HIPs
 
-    FlashT0Config: @local::FlashT0SelectedChannels
+    FlashT0Config: @local::FlashT0Average
     FlashGeoConfig: @local::FlashGeoThreshold
     AlgoConfig_tpc0: @local::SimpleFlashStandard
     AlgoConfig_tpc1: @local::SimpleFlashStandard
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
     FlashMatchingTool: "BarycenterFM"
-    MinHitPE: @local::FlashT0SelectedChannels.MinHitPE
-    PreWindow: @local::FlashT0SelectedChannels.PreWindow
-    PostWindow: @local::FlashT0SelectedChannels.PostWindow
+    MinHitPE: @local::FlashT0Average.MinHitPE
+    PreWindow: @local::FlashT0Average.PreWindow
+    PostWindow: @local::FlashT0Average.PostWindow
 
     SaveCorrectionTree: false
 
