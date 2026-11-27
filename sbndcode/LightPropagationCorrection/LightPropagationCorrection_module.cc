@@ -1021,10 +1021,10 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
 
     if (std::abs(pdg) == 13) {
         constant_dedx = fMIPdEdX;
-        mass = 0.105658;
+        mass = muon_mass;
     } else if (std::abs(pdg) == 2212) {
         constant_dedx = fHIPdEdX;
-        mass = 0.938272;
+        mass = proton_mass;
     }
 
     // Retrieve calorimetry objects associated with the track
