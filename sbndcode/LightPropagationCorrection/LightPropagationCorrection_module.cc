@@ -6,6 +6,16 @@ namespace sbnd {
     class LightPropagationCorrection;
 }
 
+/**
+ * @brief Construct the light-propagation correction producer.
+ *
+ * Reads the producer configuration, caches optical detector geometry and
+ * PDS channel-to-box information, configures the flash reconstruction tools
+ * for both TPCs, and declares the output products.
+ *
+ * @param p FHiCL parameter set containing input labels, reconstruction
+ *          settings, detector parameters, selection thresholds and debug options.
+ */
 sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet const& p)
     : EDProducer{p},
     fReco2Label( p.get<std::string>("Reco2Label") ),
@@ -27,6 +37,7 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fVGroupVUV( p.get<double>("VGroupVUV") ),
     fMIPdEdX( p.get<double>("MIPdEdX") ),
     fHIPdEdX( p.get<double>("HIPdEdX") ),
+    fMaxRRBeta( p.get<double>("MaxRRBeta") ),
     fCherenkovRefractiveIndex( p.get<double>("CherenkovRefractiveIndex")),
     fCherenkovCosineTolerance( p.get<double>("CherenkovCosineTolerance") ),
     fCherenkovPMTRadius(p.get<double>("CherenkovPMTRadius")),
@@ -85,6 +96,21 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     produces<art::Assns<recob::OpFlash, sbn::CorrectedOpFlashTiming>>();
 }
 
+/**
+ * @brief Build corrected optical-flash timing products for one event.
+ *
+ * Reads the reconstructed slices and their associated particles, tracks,
+ * space points, optical flashes and flash-matching information. For each
+ * selected neutrino slice, it estimates particle propagation times, computes
+ * the scintillation and Cherenkov light-propagation corrections, corrects the
+ * associated OpHits, and reconstructs the corrected flash time.
+ *
+ * The corrected timing object is associated with both its source Slice and
+ * original OpFlash. Slices failing the configured selections, or for which a
+ * valid corrected flash cannot be reconstructed, are skipped.
+ *
+ * @param e art event containing the input products and receiving the outputs.
+ */
 void sbnd::LightPropagationCorrection::produce(art::Event & e)
 {
     fEvent = e.id().event();
@@ -172,7 +198,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     std::vector<art::Ptr<recob::PFParticle>> pfpVect;
     // --- Get the candidate slices
     for (size_t ix=0; ix<sliceVect.size(); ix++){
-        //std::cout << " New slice " << std::endl;
         ResetSliceInfo();
         // --- Get the slice
         auto & slice = sliceVect[ix];
@@ -231,7 +256,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 if (track_v.size() == 1) {
                     int pdg = GetTrackPID(track_to_pid_assns, track_v[0]);
                     if (pdg != -1) {
-                        double initial_momentum = GetTrackMomentum( pdg, track_rangeP_assns_muon, track_rangeP_assns_proton, track_MCS_assns_muon, track_MCS_assns_proton ,  track_v[0]);
+                        double initial_momentum = GetTrackMomentum(pdg, track_rangeP_assns_muon, track_rangeP_assns_proton, track_MCS_assns_muon, track_MCS_assns_proton ,  track_v[0]);
                         if (initial_momentum > 0) tracksuccess = GetParticlePropagationTime( pdg, initial_momentum, track_to_calo_assns, track_v[0], pfp->Self(), pfp->Parent() );
                     }
                 }
@@ -315,6 +340,13 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     return;
 }
 
+/**
+ * @brief Initialize optional diagnostic output.
+ *
+ * When SaveCorrectionTree is enabled, creates the diagnostic TTree and
+ * registers branches used to store event, slice, flash, space-point and
+ * OpHit timing information.
+ */
 void sbnd::LightPropagationCorrection::beginJob()
 {
     if (fSaveCorrectionTree)
@@ -345,10 +377,22 @@ void sbnd::LightPropagationCorrection::beginJob()
     }
 }
 
+/**
+ * @brief Perform end-of-job finalization.
+ *
+ * No additional finalization is currently required by this producer.
+ */
 void sbnd::LightPropagationCorrection::endJob()
 {
 }
 
+/**
+ * @brief Reset variables accumulated over the current event.
+ *
+ * Clears event-level diagnostic vectors and resets the stored event
+ * identifiers. Diagnostic variables are only reset when the correction tree
+ * is enabled.
+ */
 void sbnd::LightPropagationCorrection::ResetEventVars()
 {
     fTrueVt=0.0;
@@ -385,6 +429,13 @@ void sbnd::LightPropagationCorrection::ResetEventVars()
     }
 }
 
+/**
+ * @brief Find the highest-scoring OpT0Finder match in a slice.
+ *
+ * @param slcFM OpT0Finder objects associated with the slice.
+ * @return Index of the object with the largest score. Returns zero if the
+ *         input vector is empty.
+ */
 size_t sbnd::LightPropagationCorrection::HighestOpT0ScoreIdx(std::vector< art::Ptr<sbn::OpT0Finder> > const & slcFM)
 {
     // Gets the idx of the OpT0 object with the highest score
@@ -399,6 +450,13 @@ size_t sbnd::LightPropagationCorrection::HighestOpT0ScoreIdx(std::vector< art::P
     return highestIdx;
 }
 
+/**
+ * @brief Find the highest-scoring TPC-PMT barycenter match in a slice.
+ *
+ * @param slcFM TPCPMTBarycenterMatch objects associated with the slice.
+ * @return Index of the object with the largest score. Returns zero if the
+ *         input vector is empty.
+ */
 size_t sbnd::LightPropagationCorrection::HighestBFMScoreIdx(std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > const & slcFM)
 {
     // Gets the idx of the OpT0 object with the highest score
@@ -413,6 +471,13 @@ size_t sbnd::LightPropagationCorrection::HighestBFMScoreIdx(std::vector< art::Pt
     return highestIdx;
 }
 
+/**
+ * @brief Reset quantities that are specific to the current reconstructed slice.
+ *
+ * Clears the particle trajectory points, resets the reconstructed neutrino
+ * vertex and NuScore, and initializes both per-channel light-time correction
+ * vectors to zero.
+ */
 void sbnd::LightPropagationCorrection::ResetSliceInfo()
 {
     _fNuScore=-99999.0;
@@ -424,9 +489,21 @@ void sbnd::LightPropagationCorrection::ResetSliceInfo()
     fTimeCorrectionPerChannelCherenkov.assign(fNOpChannels, 0.0); // Reset the time correction vector for each channel
 }
 
+/**
+ * @brief Calculate the scintillation-light propagation correction per optical channel.
+ *
+ * For each optical detector, evaluates the total time for light to propagate
+ * from every stored particle space point to that detector. The propagation
+ * model depends on the detector type and on whether the MCVIS geometry
+ * approximation is enabled. The minimum particle-plus-photon propagation time
+ * is selected, and its negative is stored as the channel correction.
+ *
+ * Distances are in cm and propagation velocities are expected in cm/ns;
+ * consequently, the resulting correction is in ns.
+ */
 void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelScintillation()
 {
-    // Initialize the TimeCorrectionVector PerChannel
+    // Initialize one correction value per optical channel (time in ns).
     fTimeCorrectionPerChannelScintillation.assign(fNOpChannels, 0.0); // Initialize with zero or any default value
     // Implementation
     for (size_t opdet = 0; opdet < fOpDetID.size(); opdet++) {
@@ -437,6 +514,8 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelSci
         bool foundSP = false;
         for (size_t sp=0; sp<fParticleSpacePoints.size(); sp++)
         {
+            bool isInSameTPC = (fParticleSpacePoints[sp].x * _opDetX) > 0;
+            if(!isInSameTPC) continue; // Skip points not in the same TPC
             double dx = fParticleSpacePoints[sp].x - _opDetX;
             double dy = fParticleSpacePoints[sp].y - _opDetY;
             double dz = fParticleSpacePoints[sp].z - _opDetZ;
@@ -452,7 +531,9 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelSci
                 cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in cm
             }
 
+            // VIS model: wavelength shifting at the cathode followed by visible-light propagation to the detector.
             double lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
+            // Direct VUV propagation from the emission point to the optical detector.
             double lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in cm/ns for VUV
             double lightPropTime = 0;
             const std::string pdType = fPDSMap.pdType(opdet);
@@ -476,22 +557,33 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelSci
             continue;
         }
         fTimeCorrectionPerChannelScintillation[opdet] = -minPropTime;
-        std::cout << " Channel " << opdet << " scintillation time correction " << fTimeCorrectionPerChannelScintillation[opdet] << std::endl;
     }
 }
 
 
+/**
+ * @brief Apply the scintillation correction and, where selected, the Cherenkov correction to OpHits.
+ *
+ * First applies the per-channel scintillation correction to each input OpHit.
+ * It then reconstructs a preliminary flash, selects the first qualifying hit
+ * in each channel around that flash time, and compares coated and uncoated
+ * PMT timing within each PDS box. For boxes passing the configured timing
+ * difference requirement, the Cherenkov correction is used when its magnitude
+ * is larger than the scintillation correction.
+ *
+ * @param OldOpHitList Original OpHits associated with the flash.
+ * @param newOpHitList Output vector containing the corrected OpHits.
+ */
 void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> const& OldOpHitList, std::vector<recob::OpHit>& newOpHitList)
 {
     newOpHitList.clear();
 
-    // First correct everything by scintillation propagation time
+    // Apply the scintillation correction first; the Cherenkov decision is made below at box level.
     for (auto const& hit : OldOpHitList) {
         const size_t opCh = hit->OpChannel();
         if (opCh >= fNOpChannels) continue;
 
         const double channelCorrection = fTimeCorrectionPerChannelScintillation[opCh];
-        std::cout << " OpHit channel " << opCh << " old peak time " << hit->PeakTime() << " scintillation correction " << channelCorrection / 1000. << " cherenkov correction " << fTimeCorrectionPerChannelCherenkov[opCh] / 1000. << std::endl;
         const double newPeakTime = hit->StartTime() + hit->RiseTime() + channelCorrection / 1000.;
         const double newPeakTimeAbs = hit->PeakTimeAbs() + channelCorrection / 1000.;
         const double newStartTime = hit->StartTime() + channelCorrection / 1000.;
@@ -501,7 +593,7 @@ void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<rec
                                   hit->Area(), hit->Amplitude(), hit->PE(), 0.0);
     }
 
-    // Reconstruct flash to obtain its t0
+    // Reconstruct a preliminary flash to define the time window used for the box comparison.
     ::lightana::LiteOpHitArray_t ophits;
     FillLiteOpHit(newOpHitList, ophits);
 
@@ -515,7 +607,7 @@ void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<rec
     FillFirstOpHit(flasht0, newOpHitList, first_ophits);
     GetBoxTimeDiffMap(first_ophits);
 
-    // Apply Cherenkov correction based on the coated/uncoated time difference
+    // Apply the Cherenkov correction only in boxes whose coated/uncoated timing difference passes the configured cut.
     for (auto& hit : newOpHitList) {
         const size_t opCh = hit.OpChannel();
         if (opCh >= fNOpChannels) continue;
@@ -541,6 +633,17 @@ void sbnd::LightPropagationCorrection::CorrectOpHitTime(std::vector<art::Ptr<rec
 }
 
 
+/**
+ * @brief Select the earliest qualifying OpHit in each optical channel.
+ *
+ * A hit is accepted when its peak time lies inside the configured window
+ * around the flash time and its PE is above MinHitPE. At most one hit per
+ * channel is copied to the output.
+ *
+ * @param flash_time Reference flash time, in the same time units as OpHit peak times.
+ * @param all_opHits Input OpHits to examine.
+ * @param first_ophits Output vector containing the selected hits.
+ */
 void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, std::vector<recob::OpHit> const& all_opHits, std::vector<recob::OpHit>& first_ophits)
 {
     first_ophits.clear();
@@ -568,6 +671,12 @@ void sbnd::LightPropagationCorrection::FillFirstOpHit(double flash_time, std::ve
     }
 }
 
+/**
+ * @brief Convert recob::OpHit objects into the lightweight format used by lightana.
+ *
+ * @param OpHitList Input OpHits.
+ * @param LiteOpHitList Output lightweight OpHit array; cleared before filling.
+ */
 void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> const& OpHitList, std::vector<::lightana::LiteOpHit_t>& LiteOpHitList)
 {
     LiteOpHitList.clear();
@@ -580,6 +689,16 @@ void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> c
     }
 }
 
+/**
+ * @brief Retrieve the lightweight OpHits associated with a lightweight flash.
+ *
+ * Uses the hit indices stored in the flash to copy the corresponding entries
+ * from the supplied hit array.
+ *
+ * @param lite_flash Flash whose associated-hit indices are used.
+ * @param lite_hits_v Array containing the lightweight OpHits.
+ * @return Lightweight OpHit array associated with the flash.
+ */
 ::lightana::LiteOpHitArray_t sbnd::LightPropagationCorrection::GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, ::lightana::LiteOpHitArray_t lite_hits_v)
 {
     ::lightana::LiteOpHitArray_t flash_hits_v;
@@ -592,6 +711,15 @@ void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> c
 }
 
 
+/**
+ * @brief Calculate the largest coated-to-uncoated timing difference in each PDS box.
+ *
+ * Separates the selected first hits into uncoated and coated channels using
+ * the channel-to-box map. For each box with an uncoated hit and at least one
+ * coated hit, stores the largest absolute peak-time difference.
+ *
+ * @param first_ophits Selected first OpHits, normally one per channel.
+ */
 void sbnd::LightPropagationCorrection::GetBoxTimeDiffMap( std::vector<recob::OpHit>& first_ophits)
 {
     fBoxTimeDiffMap.clear();
@@ -624,6 +752,18 @@ void sbnd::LightPropagationCorrection::GetBoxTimeDiffMap( std::vector<recob::OpH
 
 
 
+/**
+ * @brief Store flash- and OpHit-level correction diagnostics.
+ *
+ * Records the original and corrected flash times, flash position and PE,
+ * reconstructed neutrino vertex, and (when Debug is enabled) particle
+ * space-point and OpHit information.
+ *
+ * @param newFlashTime Reconstructed flash time after applying the corrections.
+ * @param flash Original OpFlash associated with the slice.
+ * @param oldOpHitList Original OpHits associated with the flash.
+ * @param newOpHitList Corrected OpHits used for the new flash reconstruction.
+ */
 void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime, recob::OpFlash const& flash, std::vector<recob::OpHit> const& oldOpHitList, std::vector<recob::OpHit> const& newOpHitList){
     fOpHitOldTime.push_back({});
     fOpHitNewTime.push_back({});
@@ -663,6 +803,20 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
 }
 
 
+/**
+ * @brief Correct the timing of an OpFlash and fill its corrected timing object.
+ *
+ * Selects the OpHit association and flash-reconstruction manager corresponding
+ * to the TPC containing the flash. It corrects the associated OpHits,
+ * reconstructs a flash from them, refines its time using the configured
+ * FlashT0 tool, and fills the output timing quantities.
+ *
+ * @param flash Original OpFlash to correct.
+ * @param correctedOpFlashTiming Output object containing original and corrected timing information.
+ * @param flashToOpHitAssns_tpc0 OpFlash-to-OpHit associations for TPC 0.
+ * @param flashToOpHitAssns_tpc1 OpFlash-to-OpHit associations for TPC 1.
+ * @return true if a single corrected flash is reconstructed; false otherwise.
+ */
 bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> const& flash, sbn::CorrectedOpFlashTiming &correctedOpFlashTiming, const art::FindManyP<recob::OpHit>& flashToOpHitAssns_tpc0, const art::FindManyP<recob::OpHit>& flashToOpHitAssns_tpc1)
 {
     // Get the ophits associated to the flash
@@ -706,7 +860,6 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
         correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
         correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
-        std::cout << " Original flash time: " << originalFlashTime << " New flash time: " << newFlashTime << std::endl;
     }
     if (fSaveCorrectionTree){
         this->FillCorrectionTree(newFlashTime, *flash, oldOpHitList, newOpHitList);
@@ -715,6 +868,16 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
 }
 
 
+/**
+ * @brief Check whether both endpoints of a track lie inside the configured fiducial volume.
+ *
+ * The fiducial volume is defined by the lower and upper bounds in fFVx,
+ * fFVy and fFVz.
+ *
+ * @param start Track start position.
+ * @param end Track end position.
+ * @return true only if both endpoints are strictly inside all three coordinate bounds.
+ */
 bool sbnd::LightPropagationCorrection::IsInFV(geo::Point_t const& start, geo::Point_t const& end){
     bool startInFV = ( (start.x() > fFVx[0]) && (start.x() < fFVx[1]) && (start.y() > fFVy[0]) && (start.y() < fFVy[1]) && (start.z() > fFVz[0]) && (start.z() < fFVz[1]));
     bool endInFV = ( (end.x() > fFVx[0]) && (end.x() < fFVx[1]) && (end.y() > fFVy[0]) && (end.y() < fFVy[1]) && (end.z() > fFVz[0]) && (end.z() < fFVz[1]));
@@ -723,6 +886,18 @@ bool sbnd::LightPropagationCorrection::IsInFV(geo::Point_t const& start, geo::Po
 }
 
 
+/**
+ * @brief Identify a track as a muon or proton using collection-plane PID Chi2 values.
+ *
+ * Reads the ParticleID algorithm scores associated with the track, keeps
+ * Chi2 scores from plane 2, and applies the configured hard-coded muon/proton
+ * selection criteria.
+ *
+ * @param track_to_pid_assns Track-to-ParticleID associations.
+ * @param track Track whose PID hypothesis is evaluated.
+ * @return PDG code 13 for a muon, 2212 for a proton, or -1 if no hypothesis
+ *         satisfies the selection or the required scores are unavailable.
+ */
 int sbnd::LightPropagationCorrection::GetTrackPID(art::FindManyP<anab::ParticleID>  const& track_to_pid_assns, art::Ptr<recob::Track> const& track )
 {
     std::vector<art::Ptr<anab::ParticleID>> pidV = track_to_pid_assns.at(track.key());
@@ -759,11 +934,26 @@ int sbnd::LightPropagationCorrection::GetTrackPID(art::FindManyP<anab::ParticleI
     if (muonChi2<25 && protonChi2>95) return 13;
     else if ( protonChi2<=95) return 2212;
     else return -1;
-
 }
 
 
 
+/**
+ * @brief Retrieve the initial momentum estimate for a track under a given PID hypothesis.
+ *
+ * Uses the range-based momentum estimate for tracks whose two endpoints are
+ * inside the fiducial volume. Otherwise, uses the forward MCS momentum
+ * estimate. The requested particle hypothesis determines which association
+ * is read.
+ *
+ * @param pdg Particle PDG code (muon or proton).
+ * @param track_rangeP_assns_muon Track-to-muon RangeP associations.
+ * @param track_rangeP_assns_proton Track-to-proton RangeP associations.
+ * @param track_MCS_assns_muon Track-to-muon MCS-fit associations.
+ * @param track_MCS_assns_proton Track-to-proton MCS-fit associations.
+ * @param track Track for which the momentum is requested.
+ * @return Momentum in GeV/c, or a negative sentinel value if unavailable or unsupported.
+ */
 double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindManyP<sbn::RangeP> const& track_rangeP_assns_muon,  art::FindManyP<sbn::RangeP> const& track_rangeP_assns_proton, art::FindManyP<recob::MCSFitResult> const& track_MCS_assns_muon , art::FindManyP<recob::MCSFitResult> const& track_MCS_assns_proton  , art::Ptr<recob::Track> const& track )
 {
     double p_muon = -99999;
@@ -773,7 +963,6 @@ double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindMany
     geo::Point_t const& end = track->End();
 
     bool isContained = IsInFV(start, end);
-
     if (isContained){
         auto const& muonRange = track_rangeP_assns_muon.at(track.key());
         if (!muonRange.empty()){
@@ -792,14 +981,39 @@ double sbnd::LightPropagationCorrection::GetTrackMomentum(int pdg, art::FindMany
         if (!protonMCS.empty())
             p_proton = protonMCS[0]->fwdMomentum();
     }
-
+    
     if (pdg==13) return p_muon;
     else if (pdg == 2212) return p_proton;
     else return -9999;
 }
 
+/**
+ * @brief Estimate particle propagation times along a reconstructed track.
+ *
+ * Uses the track PID and initial momentum to estimate the particle velocity
+ * along its trajectory. Calorimetry points are ordered using decreasing
+ * residual range, and the time to each point is accumulated from the
+ * interaction vertex or from the closest stored point of the parent PFP.
+ *
+ * For contained tracks, the momentum at each point is obtained from the
+ * range-momentum calculator. For non-contained tracks, the kinetic energy is
+ * decreased using a constant dE/dx value selected by particle hypothesis.
+ * The resulting trajectory points and their accumulated propagation times
+ * are appended to fParticleSpacePoints.
+ *
+ * @param pdg Particle PDG code (muon or proton).
+ * @param initial_momentum Initial particle momentum in GeV/c.
+ * @param track_to_calo_assns Track-to-calorimetry associations.
+ * @param track Track whose trajectory is used.
+ * @param PFPID Self ID of the particle-flow particle associated with the track.
+ * @param parentPFPID Parent PFP ID, used to connect the trajectory to its parent.
+ * @return true if at least one suitable calorimetry object is processed; false otherwise.
+ */
 bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, double initial_momentum, art::FindManyP<anab::Calorimetry> const& track_to_calo_assns, art::Ptr<recob::Track> const& track, int PFPID ,int parentPFPID)
 {
+
+    std::vector<ParticleSpacePoint_t> particleSpacePoints; // Temporary vector to hold the space points for this track
+    
     bool success=false;
     double total_time=0;
     // Particle mass in GeV/c^2
@@ -808,7 +1022,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
 
     if (std::abs(pdg) == 13) {
         constant_dedx = fMIPdEdX;
-         mass = 0.105658;
+        mass = 0.105658;
     } else if (std::abs(pdg) == 2212) {
         constant_dedx = fHIPdEdX;
         mass = 0.938272;
@@ -933,7 +1147,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
         psp.z = xyz[first_idx].z();
         psp.propagationTime = total_time;
         psp.pfpID = PFPID;
-        fParticleSpacePoints.push_back(psp);
+        particleSpacePoints.push_back(psp);
 
         // Tell whether the particle is contained
         geo::Point_t const& start = track->Vertex();
@@ -941,16 +1155,14 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
 
         bool isContained = IsInFV(start, end);
 
-        // If is contained get the energy loss through range-momentum relation
+        // Contained tracks use the range-momentum relation to obtain the momentum at each residual range.
         if (isContained)
         {
             for (size_t i = 0; i < indices.size(); ++i) {
-
                 size_t idx = indices[i];
 
                 // First point: no previous calorimetry point
                 if (i > 0) {
-
                     size_t prev_idx = indices[i - 1];
                     ds = std::abs(rr[idx] - rr[prev_idx]);
                     momentum = tmc.GetTrackMomentum(rr[idx], pdg);
@@ -968,11 +1180,11 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                     psp.z = xyz[idx].z();
                     psp.propagationTime = total_time;
                     psp.pfpID = PFPID;
-                    fParticleSpacePoints.push_back(psp);
+                    particleSpacePoints.push_back(psp);
                 }
             }
         }
-        else //If not contained, assume a constant dEdX through the trajectory based on pid information
+        else // For non-contained tracks, approximate the energy loss with a PID-dependent constant dE/dx.
         {
             for (size_t i = 0; i < indices.size(); ++i) {
                 size_t idx = indices[i];
@@ -981,7 +1193,6 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                 if (i > 0) {
                     size_t prev_idx = indices[i - 1];
                     ds = std::abs(rr[idx] - rr[prev_idx]);
-
                     double dE = constant_dedx * ds / 1000;
                     kinetic_energy = std::max(0.0, kinetic_energy - dE);
                     if (kinetic_energy > 0.0){
@@ -991,23 +1202,45 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                         dt = ds / (beta * fSpeedOfLight);
                         total_time += dt;
                     }
+                    else if(rr[idx]<fMaxRRBeta){
+                        beta = 1.0;
+                        dt = ds / (beta * fSpeedOfLight);
+                        total_time += dt;
+                    }
+                    else return false;
+
                     ParticleSpacePoint_t  psp;
                     psp.x = xyz[idx].x();
                     psp.y = xyz[idx].y();
                     psp.z = xyz[idx].z();
                     psp.propagationTime = total_time;
                     psp.pfpID = PFPID;
-                    fParticleSpacePoints.push_back(psp);
+                    particleSpacePoints.push_back(psp);
                 }
             }
         }
 
+        for(const auto& psp : particleSpacePoints) {
+            fParticleSpacePoints.push_back(psp);
+        }
         success=true;
     }
     return success;
 }
 
 
+/**
+ * @brief Estimate particle propagation times using reconstructed space points.
+ *
+ * This fallback is used when the track-based PID and calorimetry calculation
+ * is unavailable. It keeps space points associated with collection-plane
+ * hits (plane 2) and estimates the propagation time from the reconstructed
+ * neutrino vertex assuming the particle travels at fSpeedOfLight.
+ *
+ * @param pfpID Self ID of the particle-flow particle.
+ * @param PFPSpacePointsVect Space points associated with the PFP.
+ * @param SPToHitAssoc SpacePoint-to-Hit associations used to identify the plane.
+ */
 void sbnd::LightPropagationCorrection::GetParticlePropagationTimeLite(int pfpID, std::vector<art::Ptr<recob::SpacePoint>> const& PFPSpacePointsVect, art::FindManyP<recob::Hit> const& SPToHitAssoc)
 {
     for (const art::Ptr<recob::SpacePoint> &SP: PFPSpacePointsVect){
@@ -1030,6 +1263,26 @@ void sbnd::LightPropagationCorrection::GetParticlePropagationTimeLite(int pfpID,
 }
 
 
+/**
+ * @brief Calculate the Cherenkov-light propagation correction per optical channel.
+ *
+ * Sorts the stored trajectory points by PFP and particle propagation time.
+ * For each optical detector, examines adjacent points belonging to the same
+ * PFP, estimates the particle beta from their spatial and temporal separation,
+ * and rejects segments below the Cherenkov threshold. The local trajectory
+ * direction defines the expected Cherenkov angle through
+ * cos(theta_C) = 1 / (beta * n).
+ *
+ * The PMT photocathode is approximated as a disk in the YZ plane. The disk
+ * center and a configurable set of points on concentric rings are tested
+ * against the Cherenkov-cone condition. The earliest compatible
+ * particle-plus-photon arrival time is stored with the same negative sign
+ * convention used by the scintillation correction.
+ *
+ * Distances are in cm, velocities in cm/ns, and the resulting correction is
+ * in ns. The cosine tolerance and PMT disk sampling are controlled by the
+ * corresponding configuration parameters.
+ */
 void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelCherenkov()
 {
     // Reset the Cherenkov correction for all optical channels.
@@ -1057,11 +1310,9 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
         if (fParticleSpacePoints[a].pfpID != fParticleSpacePoints[b].pfpID) {
             return fParticleSpacePoints[a].pfpID < fParticleSpacePoints[b].pfpID;
         }
-        return fParticleSpacePoints[a].propagationTime <
-        fParticleSpacePoints[b].propagationTime;
+        return fParticleSpacePoints[a].propagationTime < fParticleSpacePoints[b].propagationTime;
     }
     );
-
     // Loop over optical detectors.
     for (size_t opdet = 0; opdet < fOpDetID.size(); ++opdet) {
 
@@ -1071,7 +1322,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
 
         double minTotalTime = noTime;
         bool foundEmissionPoint = false;
-
         // Loop over spacepoints in sorted order.
         for (size_t j = 0; j < pointIndices.size(); ++j) {
 
@@ -1112,7 +1362,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             if (i0 == nPoints || i1 == nPoints) {
                 continue;
             }
-
             const double sx = fParticleSpacePoints[i1].x - fParticleSpacePoints[i0].x;
             const double sy = fParticleSpacePoints[i1].y - fParticleSpacePoints[i0].y;
             const double sz = fParticleSpacePoints[i1].z - fParticleSpacePoints[i0].z;
@@ -1128,7 +1377,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             double beta = segmentLength / (fSpeedOfLight * deltaTime);
             if (beta > 1.05 || beta <= 0.0) continue;
             beta = std::min(beta, 1.0);
-
             // No Cherenkov emission below threshold.
             if (beta * fCherenkovRefractiveIndex <= 1.0) {
                 continue;
@@ -1145,6 +1393,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             // Assumption: the PMT face lies in the YZ plane.
             auto testPMTPosition = [&](double qy, double qz) {
 
+
                 const double rx = opX - x;
                 const double ry = qy - y;
                 const double rz = qz - z;
@@ -1155,8 +1404,8 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
                 }
 
                 const double cosTheta = (ux*rx + uy*ry + uz*rz) / photonDistance;
-
-                // Require compatibility with the Cherenkov cone.
+                
+                // Compare the photon direction with the local track direction using the Cherenkov-cone condition.
                 if (std::abs(cosTheta - cosCherenkov) >=
                 fCherenkovCosineTolerance) {
                     return;
@@ -1165,7 +1414,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
                 // Calculate arrival time at this position on the PMT.
                 const double photonTime = photonDistance / fVGroupVIS;
                 const double totalTime = particleTime + photonTime;
-
+                
                 if (std::isfinite(totalTime) && totalTime < minTotalTime) {
                     minTotalTime = totalTime;
                     foundEmissionPoint = true;
@@ -1178,7 +1427,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             // Test concentric rings across the disk.
             for (unsigned int ir = 1; ir <= fCherenkovPMTRings; ++ir) {
                 const double radius = fCherenkovPMTRadius * static_cast<double>(ir) / fCherenkovPMTRings;
-
                 for (unsigned int ia = 0; ia < fCherenkovPMTAzimuthSteps; ++ia) {
                     const double phi = 2.0 * M_PI * static_cast<double>(ia) / fCherenkovPMTAzimuthSteps;
                     const double qy = opY + radius * std::cos(phi);
@@ -1191,7 +1439,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
         // Preserve the sign convention of the existing correction.
         if (foundEmissionPoint) {
             fTimeCorrectionPerChannelCherenkov[opdet] = -minTotalTime;
-            std::cout << " Channel " << opdet << " cherenkov time correction " << fTimeCorrectionPerChannelCherenkov[opdet] << std::endl;   
         }
     }
 }

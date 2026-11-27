@@ -46,6 +46,7 @@ LightPropagationCorrection:
 
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001
+    TrackScoreThreshold: 0.5
 
     CherenkovRefractiveIndex: 1.23 # Refractive index for visible light ()
     CherenkovCosineTolerance: 5.0e-3 

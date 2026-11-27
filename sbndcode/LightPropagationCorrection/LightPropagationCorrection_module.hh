@@ -280,6 +280,8 @@ private:
     double fMIPdEdX; // In MeV/cm, for muons
     double fHIPdEdX; // In MeV/cm, for protons
 
+    double fMaxRRBeta; // Maximum residual range with zero KE for beta calculation
+
     double fCherenkovRefractiveIndex;
     double fCherenkovCosineTolerance;
     double fCherenkovPMTRadius;
