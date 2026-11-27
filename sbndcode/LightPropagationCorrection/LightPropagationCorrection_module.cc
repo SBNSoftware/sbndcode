@@ -32,7 +32,6 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fFlashMatchingTool( p.get<std::string>("FlashMatchingTool") ),
     fDoPIDCorrection( p.get<bool>("DoPIDCorrection") ),
     fUseMCVIS( p.get<bool>("UseMCVIS") ),
-    fSpeedOfLight( p.get<double>("SpeedOfLight") ),
     fVGroupVIS( p.get<double>("VGroupVIS") ),
     fVGroupVUV( p.get<double>("VGroupVUV") ),
     fMIPdEdX( p.get<double>("MIPdEdX") ),
@@ -857,8 +856,8 @@ bool sbnd::LightPropagationCorrection::CorrectOpFlash(art::Ptr<recob::OpFlash> c
         flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
         newFlashTime = flasht0;
         correctedOpFlashTiming.OpFlashT0 = originalFlashTime;
-        correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
-        correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
+        correctedOpFlashTiming.NuToFLight = (Zcenter/c_light)/1000;
+        correctedOpFlashTiming.NuToFCharge = (fRecoVz/c_light)/1000;
         correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime;
     }
     if (fSaveCorrectionTree){
@@ -1100,7 +1099,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
             double dy = xyz[first_idx].y() - fRecoVy;
             double dz = xyz[first_idx].z() - fRecoVz;
             ds = std::sqrt(dx*dx + dy*dy + dz*dz);
-            dt = ds / (last_beta * fSpeedOfLight);
+            dt = ds / (last_beta * c_light);
             total_time += dt;
         }
         else{
@@ -1126,7 +1125,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                 double dy = xyz[first_idx].y() - fParticleSpacePoints[minIdx].y;
                 double dz = xyz[first_idx].z() - fParticleSpacePoints[minIdx].z;
                 ds = std::sqrt(dx*dx + dy*dy + dz*dz);
-                dt = ds / (last_beta * fSpeedOfLight);
+                dt = ds / (last_beta * c_light);
                 total_time += dt + fParticleSpacePoints[minIdx].propagationTime;
             }
             else
@@ -1135,7 +1134,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                 double dy = xyz[first_idx].y() - fRecoVy;
                 double dz = xyz[first_idx].z() - fRecoVz;
                 ds = std::sqrt(dx*dx + dy*dy + dz*dz);
-                dt = ds / (last_beta * fSpeedOfLight);
+                dt = ds / (last_beta * c_light);
                 total_time += dt;
             }
         }
@@ -1171,7 +1170,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                     beta = momentum / total_energy;
                     // Avoid negative kinetic energy
 
-                    dt = ds / (beta * fSpeedOfLight);
+                    dt = ds / (beta * c_light);
                     total_time += dt;
                     // Update kinetic energy after traversing the segment
                     ParticleSpacePoint_t  psp;
@@ -1199,12 +1198,12 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
                         total_energy = kinetic_energy + mass;
                         momentum = std::sqrt(total_energy * total_energy - mass * mass);
                         beta = momentum / total_energy;
-                        dt = ds / (beta * fSpeedOfLight);
+                        dt = ds / (beta * c_light);
                         total_time += dt;
                     }
                     else if(rr[idx]<fMaxRRBeta){
                         beta = 1.0;
-                        dt = ds / (beta * fSpeedOfLight);
+                        dt = ds / (beta * c_light);
                         total_time += dt;
                     }
                     else return false;
@@ -1235,7 +1234,7 @@ bool sbnd::LightPropagationCorrection::GetParticlePropagationTime( int pdg, doub
  * This fallback is used when the track-based PID and calorimetry calculation
  * is unavailable. It keeps space points associated with collection-plane
  * hits (plane 2) and estimates the propagation time from the reconstructed
- * neutrino vertex assuming the particle travels at fSpeedOfLight.
+ * neutrino vertex assuming the particle travels at c_light.
  *
  * @param pfpID Self ID of the particle-flow particle.
  * @param PFPSpacePointsVect Space points associated with the PFP.
@@ -1249,7 +1248,7 @@ void sbnd::LightPropagationCorrection::GetParticlePropagationTimeLite(int pfpID,
             double dx = SP->position().X() - fRecoVx;
             double dy = SP->position().Y() - fRecoVy;
             double dz = SP->position().Z() - fRecoVz;
-            double prop_time = std::sqrt(dx*dx + dy*dy + dz*dz) / fSpeedOfLight;
+            double prop_time = std::sqrt(dx*dx + dy*dy + dz*dz) / c_light;
             ParticleSpacePoint_t  psp;
             psp.x = SP->position().X();
             psp.y = SP->position().Y();
@@ -1288,7 +1287,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
     // Reset the Cherenkov correction for all optical channels.
     fTimeCorrectionPerChannelCherenkov.assign(fNOpChannels, 0.0);
 
-    if (fCherenkovRefractiveIndex <= 0.0 || fVGroupVIS <= 0.0 || fSpeedOfLight <= 0.0 || fCherenkovPMTRadius <= 0.0 || fCherenkovPMTRings == 0 || fCherenkovPMTAzimuthSteps == 0) {
+    if (fCherenkovRefractiveIndex <= 0.0 || fVGroupVIS <= 0.0 || fCherenkovPMTRadius <= 0.0 || fCherenkovPMTRings == 0 || fCherenkovPMTAzimuthSteps == 0) {
         throw std::runtime_error(
         "GetPropagationTimeCorrectionPerChannelCherenkov: "
         "invalid Cherenkov or PMT geometry parameters."
@@ -1374,7 +1373,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannelChe
             }
 
             // Estimate beta from the time between adjacent spacepoints.
-            double beta = segmentLength / (fSpeedOfLight * deltaTime);
+            double beta = segmentLength / (c_light * deltaTime);
             if (beta > 1.05 || beta <= 0.0) continue;
             beta = std::min(beta, 1.0);
             // No Cherenkov emission below threshold.

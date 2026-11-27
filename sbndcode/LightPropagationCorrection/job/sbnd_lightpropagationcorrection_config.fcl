@@ -27,7 +27,6 @@ LightPropagationCorrection:
 
     VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
     VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
-    SpeedOfLight: 29.979
 
     MIPdEdX: 2.1 # Average dEdX for MIPs
     HIPdEdX: 4.5 # Average dEdX for HIPs

@@ -270,10 +270,13 @@ private:
     // Particle and light propagation configuration
     // -------------------------------------------------------------------------
 
+    inline constexpr double c_light = 29.9792458; // cm/ns
+    inline constexpr double muon_mass = 0.105658;  // GeV/c²
+    inline constexpr double proton_mass = 0.938272; // GeV/c²
+
     bool fDoPIDCorrection;
     bool fUseMCVIS;
 
-    double fSpeedOfLight;
     double fVGroupVIS;
     double fVGroupVUV;
 
